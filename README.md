@@ -11,3 +11,12 @@
 | [mosaicml/mpt-7b](https://huggingface.co/mosaicml/mpt-7b)                                          | Model   | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) |
 | [mosaicml/mpt-7b-storywriter](https://huggingface.co/mosaicml/mpt-7b-storywriter)                  | Model   | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) |
 | [mosaicml/mpt-7b-instruct](https://huggingface.co/mosaicml/mpt-7b-instruct)                        | Model   | [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/)   |
+
+## The Flatpack AI Client (Rust) 🦀
+
+To use the client, follow these steps:
+
+1. git clone https://github.com/flatpack-ai/flatpack-ai.git
+2. Install Rust with https://www.rust-lang.org/tools/install
+3. cargo run
+4. http://localhost:8080
