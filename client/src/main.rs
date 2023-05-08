@@ -34,7 +34,7 @@ async fn index() -> impl Responder {
                 </select>
                 <br>
                 <label for="version">Version:</label>
-                <input type="text" id="version" name="version" value="0.4">
+                <input type="text" id="version" name="version" value="0.5">
                 <br>
                 <button id="create-container-button" type="submit">Assemble</button>
                 <br><br>
