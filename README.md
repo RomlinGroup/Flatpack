@@ -3,7 +3,7 @@
 > :warning: **Disclaimer:** This repository contains our research. Verify the information and do your own research (
 > DYOR). We assume no responsibility for accuracy or completeness.
 
-## Models and Datasets with Licenses Allowing Commercial Use (not ours) 📈
+## Commercial Use Allowed (No Affiliation) 📈
 
 | Name                                                                                                                 | Type    | License                                                           |
 |:---------------------------------------------------------------------------------------------------------------------|:--------|:------------------------------------------------------------------|
