@@ -25,7 +25,7 @@ async fn index() -> impl Responder {
     let html = r#"
         <html>
             <head>
-                <title>flatpack.ai</title>
+                <title>Flatpack AI</title>
             </head>
             <body>
                 <label for="container">Select a flatpack:</label>
