@@ -16,7 +16,7 @@
 
 To use the client, follow these steps:
 
-1. git clone https://github.com/flatpack-ai/flatpack-ai.git
+1. git clone https://github.com/romlingroup/flatpack-ai.git
 2. Install Rust with https://www.rust-lang.org/tools/install
 3. cargo run
 4. http://localhost:8080
