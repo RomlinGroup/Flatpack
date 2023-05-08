@@ -1,0 +1,19 @@
+<html lang="en">
+<head>
+    <title>Flatpack AI</title>
+</head>
+<body>
+<label for="container">Select a flatpack:</label>
+<select id="container" name="model_name">
+    <option value="romlin/flatpack-ai-docker">romlin/flatpack-ai-docker</option>
+</select>
+<br>
+<label for="version">Version:</label>
+<input type="text" id="version" name="version" value="0.5">
+<br>
+<button id="create-container-button" type="submit">Assemble</button>
+<br><br>
+<div id="create-container-result"></div>
+<script src="/static/js/main.js"></script>
+</body>
+</html>

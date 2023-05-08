@@ -38,8 +38,10 @@ pub async fn create_and_start_container(
     };
 
     let container_name = format!("{}_{}", model_name, version).replace(".", "-").replace("/", "-");
+
     let create_options = CreateContainerOptions {
         name: &container_name,
+        platform: Default::default(),
     };
 
     let container = docker
