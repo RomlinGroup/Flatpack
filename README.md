@@ -2,7 +2,7 @@
   <img src="https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/client/static/images/flatpack_ai_logo.svg" width="150" height="150" alt="Flatpack AI">
 </div>
 
-# Flatpack AI ✌️
+# We ❤️ Flatpack AI
 
 Flatpack AI will democratize AI by providing a modular and open platform for anyone to train their AI models from scratch with cutting-edge technology accessible to all. What flatpacks did for the furniture industry, we will do for the AI industry.
 
@@ -33,6 +33,6 @@ We constantly search for datasets and models suitable for future deployment as [
 | 🤗 [stablelm-base-alpha-3b](https://huggingface.co/stabilityai/stablelm-base-alpha-3b)               | Model   | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)   |
 | 🤗 [stablelm-base-alpha-7b](https://huggingface.co/stabilityai/stablelm-base-alpha-7b)               | Model   | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)   |
 
-### Friendly Notice ❤️
+### Friendly Notice 👋
 
 The Flatpack AI logo belongs to [Romlin Group AB](https://romlin.com) and is protected by copyright. Please note that the logo is NOT covered by the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) that applies to the source code in this repository. If you want to use the logo for anything besides GitHub shenanigans, please ask for permission first. Thanks a million for being super awesome and respectful!
