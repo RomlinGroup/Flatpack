@@ -2,11 +2,9 @@
   <img src="https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/client/static/images/flatpack_ai_logo.svg" width="200" height="200" alt="Flatpack AI">
 </div>
 
-# Flatpacks 🛠️
+# Flatpacks (coming soon) 🛠️
 
-We promise to not leave you searching for an Allen wrench or a lost screw (well, perhaps sometimes).
-
-Keep an eye on this space for updates.
+Keep an eye on this space for updates. We promise to not leave you searching for an Allen wrench or a lost screw (well, perhaps sometimes).
 
 ### Friendly Notice ❤️
 
