@@ -4,7 +4,7 @@
 
 # Warehouse (coming soon) 👀
 
-Training AI models, not your patience.
+Train AI models, not your patience.
 
 ## Registry 🚧
 
