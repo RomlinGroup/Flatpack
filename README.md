@@ -20,6 +20,8 @@ To use the client, follow these steps:
 
 ## Commercial Use Allowed (No Affiliation) 📈
 
+We are collecting datasets and models suitable for flatpacks, so if you know of any other great resources we should add to this list, please let us know.
+
 | Name                                                                                                 | Type    | License                                                           |
 |:-----------------------------------------------------------------------------------------------------|:--------|:------------------------------------------------------------------|
 | 🤗 [databricks-dolly-15k](https://huggingface.co/datasets/databricks/databricks-dolly-15k)           | Dataset | [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/)   |
