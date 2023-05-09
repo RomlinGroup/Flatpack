@@ -34,7 +34,7 @@ async fn handle_create_container(
 ) -> impl Responder {
     match create_container(&docker, &form.model_name, &form.version).await {
         Ok(_) => HttpResponse::Ok().body(format!(
-            "Assembling flatpack for model: {}, version: {}",
+            "✅ Assembled flatpack {}:{}",
             form.model_name, form.version
         )),
         Err(e) => HttpResponse::InternalServerError().body(format!("Error: {}", e)),
