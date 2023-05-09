@@ -20,7 +20,7 @@ To use the client, follow these steps:
 > :warning: **DISCLAIMER:** This repository contains our research. Verify the information and do your own research (
 > DYOR). We assume no responsibility for accuracy or completeness.
 
-We constantly search for datasets and models suitable for future deployment as [flatpacks](https://github.com/romlingroup/flatpack-ai/tree/main/flatpacks) (coming soon). Therefore, if you know of any high-quality datasets or models with commercially viable licenses, we would appreciate it if you submitted them via a pull request.
+We constantly search for datasets and models suitable for future deployment as [flatpacks](https://github.com/romlingroup/flatpack-ai/tree/main/warehouse) (coming soon). Therefore, if you know of any high-quality datasets or models with commercially viable licenses, we would appreciate it if you submitted them via a pull request.
 
 | Name                                                                                                 | Type    | License                                                           |
 |:-----------------------------------------------------------------------------------------------------|:--------|:------------------------------------------------------------------|
