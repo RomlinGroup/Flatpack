@@ -15,10 +15,10 @@ To use the client, follow these steps:
 3. cargo run
 4. http://localhost:8080
 
+## Commercial Use Allowed (No Affiliation) 📈
+
 > :warning: **Disclaimer:** This repository contains our research. Verify the information and do your own research (
 > DYOR). We assume no responsibility for accuracy or completeness.
-
-## Commercial Use Allowed (No Affiliation) 📈
 
 We are collecting datasets and models suitable for flatpacks, so if you know of any other great resources we should add to this list, please let us know.
 
