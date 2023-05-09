@@ -4,7 +4,7 @@
 
 # We ❤️ flatpack.ai
 
-Flatpack.AI will democratize AI by providing a modular and open platform for anyone to train their AI models from scratch with cutting-edge technology accessible to all. What flatpacks did for the furniture industry, we will do for the AI industry.
+flatpack.ai will democratize AI by providing a modular and open platform for anyone to train their AI models from scratch with cutting-edge technology accessible to all. What flatpacks did for the furniture industry, we will do for the AI industry.
 
 ## The flatpack.ai client (Rust) 🦀
 
