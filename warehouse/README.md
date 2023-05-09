@@ -6,7 +6,7 @@
 
 We promise to not leave you searching for an Allen wrench or a lost screw (well, perhaps sometimes).
 
-## Registry
+## Registry 🗄️
 
 Keep an eye on this space for updates.
 
