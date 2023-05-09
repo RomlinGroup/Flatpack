@@ -4,7 +4,9 @@
 
 # Flatpacks (coming soon) 🛠️
 
-We promise to not leave you searching for an Allen wrench or a lost screw (well, perhaps sometimes). Keep an eye on this space for updates.
+We promise to not leave you searching for an Allen wrench or a lost screw (well, perhaps sometimes).
+
+Keep an eye on this space for updates.
 
 ### Friendly Notice ❤️
 
