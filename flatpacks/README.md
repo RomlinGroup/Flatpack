@@ -4,7 +4,7 @@
 
 # Flatpack Warehouse 🛠️
 
-Welcome to the Flatpack Warehouse (coming soon)! We promise to not leave you searching for an Allen wrench or a lost screw (well, perhaps sometimes).
+We promise to not leave you searching for an Allen wrench or a lost screw (well, perhaps sometimes).
 
 ## Flatpacks
 
