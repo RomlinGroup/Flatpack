@@ -1,6 +1,6 @@
-<p style="text-align: center;">
+<div align="center">
   <img src="https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/client/static/images/flatpack_ai_logo.svg" width="200" height="200" alt="Flatpack AI">
-</p>
+</div>
 
 # Flatpack AI 🤖
 
