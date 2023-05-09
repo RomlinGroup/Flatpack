@@ -12,7 +12,7 @@ Keep an eye on this space for updates.
 
 | Name                                                                                                       | Type     | License                                                           |
 |:-----------------------------------------------------------------------------------------------------------|:---------|:------------------------------------------------------------------|
-| 📦 [temp.flatpack](https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/flatpacks/temp.flatpack) | Flatpack | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) |
+| 📦 [temp.flatpack](https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/temp.flatpack) | Flatpack | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) |
 
 ### Friendly Notice ❤️
 
