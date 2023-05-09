@@ -3,6 +3,15 @@
 > :warning: **Disclaimer:** This repository contains our research. Verify the information and do your own research (
 > DYOR). We assume no responsibility for accuracy or completeness.
 
+## The Flatpack AI Client (Rust) 🦀
+
+To use the client, follow these steps:
+
+1. git clone https://github.com/romlingroup/flatpack-ai.git
+2. Install Rust with https://www.rust-lang.org/tools/install
+3. cargo run
+4. http://localhost:8080
+
 ## Commercial Use Allowed (No Affiliation) 📈
 
 | Name                                                                                                 | Type    | License                                                           |
@@ -15,12 +24,3 @@
 | 🤗 [open_llama_7b_preview_300bt](https://huggingface.co/openlm-research/open_llama_7b_preview_300bt) | Model   | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) |
 | 🤗 [stablelm-base-alpha-3b](https://huggingface.co/stabilityai/stablelm-base-alpha-3b)               | Model   | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)   |
 | 🤗 [stablelm-base-alpha-7b](https://huggingface.co/stabilityai/stablelm-base-alpha-7b)               | Model   | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)   |
-
-## The Flatpack AI Client (Rust) 🦀
-
-To use the client, follow these steps:
-
-1. git clone https://github.com/romlingroup/flatpack-ai.git
-2. Install Rust with https://www.rust-lang.org/tools/install
-3. cargo run
-4. http://localhost:8080
