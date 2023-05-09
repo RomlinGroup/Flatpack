@@ -7,6 +7,8 @@
 > :warning: **Disclaimer:** This repository contains our research. Verify the information and do your own research (
 > DYOR). We assume no responsibility for accuracy or completeness.
 
+Flatpack AI will democratize AI by providing a modular and open platform for anyone to train their AI models from scratch with cutting-edge technology accessible to all. What flatpacks did for the furniture industry, we will do for the AI industry.
+
 ## The Flatpack AI Client (Rust) 🦀
 
 To use the client, follow these steps:
