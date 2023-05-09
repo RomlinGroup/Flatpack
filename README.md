@@ -33,4 +33,4 @@ To use the client, follow these steps:
 
 The Flatpack AI logo is a trademark of [Romlin Group AB](https://romlin.com), and its design is protected by copyright. Please note that the trademark is not registered. Standard trademark and copyright laws apply to the use of the logo. This logo is not covered by the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) that applies to the source code in this repository. If you wish to use the logo, please get in touch with us for permission.
 
-Keeping a fork of this repository with the logo is acceptable for GitHub use only, as long as the logo is not used in a way that infringes on the trademark or copyright.
+Keeping a fork of this repository with the logo is acceptable for GitHub use only as long as the logo is not used in a way that infringes on the trademark or copyright.
