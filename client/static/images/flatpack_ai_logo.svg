@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" id="Lager_1" data-name="Lager 1" viewBox="0 0 500 500">
+  <defs>
+    <style>.cls-1{fill:#5865f2;}.cls-2{fill:#fff;}</style>
+  </defs>
+  <polygon class="cls-1" points="500.09 159.65 250 0 -0.09 159.65 -0.1 342.53 250 500 500.1 342.53 500.09 159.65"></polygon>
+  <path class="cls-2" d="M429.47,175,250,60.36,70.48,175V289.33L250,402.35l179.5-113ZM250,86.46l147.6,94.23L250,269.34,102.37,180.69Zm0,289.89L92.47,277.19V200.41L250,295l157.49-94.6v76.78Z"></path>
+  <path class="cls-2" d="M250,135.1l-63.16,40.32,17.24,10.35,62.65-40Zm46.21,29.5-63.7,38.25L250,213.35l63.15-37.93Z"></path>
+</svg>
