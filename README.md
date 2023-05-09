@@ -2,7 +2,7 @@
   <img src="https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/client/static/images/flatpack_ai_logo.svg" width="200" height="200" alt="Flatpack AI">
 </div>
 
-# flatpack.ai ✌️
+# flatpack.ai 📦
 
 flatpack.ai will democratize AI by providing a modular and open platform for anyone to train their AI models from scratch with cutting-edge technology accessible to all. What flatpacks did for the furniture industry, we will do for the AI industry.
 
