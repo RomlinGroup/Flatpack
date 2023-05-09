@@ -1,3 +1,7 @@
+<p style="text-align: center;">
+  <img src="https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/client/static/images/flatpack_ai_logo.svg" width="200" height="200" alt="Flatpack AI">
+</p>
+
 # Flatpack AI 🤖
 
 > :warning: **Disclaimer:** This repository contains our research. Verify the information and do your own research (
