@@ -20,7 +20,7 @@ To use the client, follow these steps:
 > :warning: **Disclaimer:** This repository contains our research. Verify the information and do your own research (
 > DYOR). We assume no responsibility for accuracy or completeness.
 
-We are collecting datasets and models suitable for deployment as flatpacks. If you know of any datasets or models with commercially viable licenses, we would be grateful if you could add them to our list.
+We are searching for datasets and models suitable for future deployment as flatpacks. If you know of any datasets or models with commercially viable licenses, we would be grateful if you could submit them via a pull request.
 
 | Name                                                                                                 | Type    | License                                                           |
 |:-----------------------------------------------------------------------------------------------------|:--------|:------------------------------------------------------------------|
