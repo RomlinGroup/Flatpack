@@ -4,15 +4,15 @@
 
 # Warehouse (coming soon) 👀
 
-Train AI models - not your patience™
+Train AI models - not your patience.
 
 ## Registry 🚧
 
 Ahoy, brave explorer!
 
-| Name                                                                                                    | Type     | License                                                           |
-|:--------------------------------------------------------------------------------------------------------|:---------|:------------------------------------------------------------------|
-| [temp.flatpack](https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/temp.flatpack) | Flatpack | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) |
+| Name                                                                                          | Type     | License                                                           |
+|:----------------------------------------------------------------------------------------------|:---------|:------------------------------------------------------------------|
+| [template](https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/template) | Flatpack | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) |
 
 ### Friendly notice ❤️
 
