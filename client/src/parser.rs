@@ -10,8 +10,6 @@ pub struct Config {
     license: String,
     base_image: String,
     environment: HashMap<String, String>,
-    #[allow(dead_code)]
-    cloud: Vec<HashMap<String, String>>,
     port: Vec<HashMap<String, u16>>,
     directories: HashMap<String, String>,
     packages: HashMap<String, HashMap<String, String>>,

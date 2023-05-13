@@ -14,11 +14,6 @@ base_image = "nvidia/cuda:12.1.1-base-ubuntu22.04"
 [environment]
 model_name = "custom-gpt"
 
-# Cloud support
-[[cloud]]
-platform = "google_colab"
-supported = false
-
 # Port settings
 [[port]]
 external = 8080
