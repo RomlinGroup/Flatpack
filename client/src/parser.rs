@@ -1,3 +1,4 @@
+use dockerfile_parser::Dockerfile;
 use reqwest;
 use serde::Deserialize;
 use std::collections::HashMap;
@@ -77,6 +78,9 @@ pub async fn parse_toml_to_dockerfile(url: &str) -> Result<String, Box<dyn std::
             dockerfile.push_str(&format!("RUN wget {} -O {}\n", from_source, to_destination));
         }
     }
+
+    // Validate Dockerfile syntax
+    let _ = Dockerfile::parse(&dockerfile)?;
 
     Ok(dockerfile)
 }
