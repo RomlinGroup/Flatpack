@@ -23,3 +23,23 @@ createContainerButton.onclick = function () {
         "version": version
     }));
 };
+
+let testParserButton = document.getElementById("test-parser-button");
+let testParserResult = document.getElementById("test-parser-result");
+
+testParserButton.onclick = function () {
+    let tomlUrl = encodeURIComponent("http://example.com/path/to/file.toml");
+    let xhr = new XMLHttpRequest();
+    xhr.open("GET", "/test_parser/" + tomlUrl, true);
+    xhr.onload = function () {
+        if (xhr.status === 200) {
+            testParserResult.innerHTML = xhr.responseText;
+        } else {
+            testParserResult.innerHTML = "Error: " + (xhr.responseText || "Unknown error");
+        }
+    };
+    xhr.onerror = function () {
+        testParserResult.innerHTML = "Error: could not reach server";
+    };
+    xhr.send();
+};
