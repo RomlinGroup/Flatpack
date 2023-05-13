@@ -28,7 +28,7 @@ let testParserButton = document.getElementById("test-parser-button");
 let testParserResult = document.getElementById("test-parser-result");
 
 testParserButton.onclick = function () {
-    let tomlUrl = encodeURIComponent("http://example.com/path/to/file.toml");
+    let tomlUrl = encodeURIComponent("https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/custom-gpt/flatpack.toml");
     let xhr = new XMLHttpRequest();
     xhr.open("GET", "/test_parser/" + tomlUrl, true);
     xhr.onload = function () {
