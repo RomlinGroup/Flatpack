@@ -33,7 +33,7 @@ testParserButton.onclick = function () {
     xhr.open("GET", "/test_parser/" + tomlUrl, true);
     xhr.onload = function () {
         if (xhr.status === 200) {
-            testParserResult.innerHTML = xhr.responseText;
+            testParserResult.innerHTML = "[DEBUG] " + xhr.responseText;
         } else {
             testParserResult.innerHTML = "Error: " + (xhr.responseText || "Unknown error");
         }
