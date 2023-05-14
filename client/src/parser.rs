@@ -40,22 +40,23 @@ pub async fn parse_toml_to_dockerfile(url: &str) -> Result<String, Box<dyn std::
     }
 
     // Directories
-    for (_, value) in config.directories.iter() {
-        dockerfile.push_str(&format!("RUN mkdir -p {}\n", value));
-    }
+    dockerfile.push_str("\n# Create directories\n");
+    let directories: Vec<&str> = config.directories.values().map(|v| v.as_str()).collect();
+    dockerfile.push_str(&format!("RUN mkdir -p {}\n", directories.join(" ")));
 
     // Packages
     dockerfile.push_str("\n# Install packages\n");
     for (package_type, packages) in config.packages.iter() {
-        if package_type == "unix" {
-            for (package, _) in packages {
-                dockerfile.push_str(&format!("RUN apt-get install -y {}\n", package));
+        match package_type.as_str() {
+            "unix" => {
+                let package_list: Vec<&str> = packages.keys().map(|k| k.as_str()).collect();
+                dockerfile.push_str(&format!("RUN apt-get update && apt-get install -y {}\n", package_list.join(" ")));
             }
-        }
-        if package_type == "python" {
-            for (package, _) in packages {
-                dockerfile.push_str(&format!("RUN pip install {}\n", package));
+            "python" => {
+                let package_list: Vec<&str> = packages.keys().map(|k| k.as_str()).collect();
+                dockerfile.push_str(&format!("RUN pip install {}\n", package_list.join(" ")));
             }
+            _ => { /* Ignore unsupported package types */ }
         }
     }
 
