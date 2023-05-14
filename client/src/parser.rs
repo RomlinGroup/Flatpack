@@ -57,6 +57,11 @@ pub async fn parse_toml_to_dockerfile(url: &str) -> Result<String, Box<dyn std::
                 let package_list: Vec<&str> = packages.keys().map(|k| k.as_str()).collect();
                 dockerfile.push_str(&format!("RUN apt-get update && apt-get install -y {}\n", package_list.join(" ")));
             }
+            _ => { /* Ignore unsupported package types */ }
+        }
+    }
+    for (package_type, packages) in config.packages.iter() {
+        match package_type.as_str() {
             "python" => {
                 let package_list: Vec<&str> = packages.keys().map(|k| k.as_str()).collect();
                 dockerfile.push_str(&format!("RUN pip install {}\n", package_list.join(" ")));

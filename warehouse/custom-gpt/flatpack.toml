@@ -29,6 +29,14 @@ scripts = "/home/content/scripts"
 # Package dependencies
 [packages]
 
+[packages.unix]
+build-essential = "*"
+curl = "*"
+git = "*"
+python3-pip = "*"
+wget = "*"
+unzip = "*"
+
 [packages.python]
 keras = "*"
 matplotlib = "*"
@@ -42,14 +50,6 @@ seaborn = "*"
 spacy = "*"
 tensorflow = "*"
 torch = "*"
-
-[packages.unix]
-build-essential = "*"
-curl = "*"
-git = "*"
-python = "*"
-wget = "*"
-unzip = "*"
 
 # Dataset downloads
 [[dataset]]
