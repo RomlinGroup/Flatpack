@@ -1,42 +1,33 @@
-const createContainerButton = document.getElementById("create-container-button");
-const createContainerResult = document.getElementById("create-container-result");
 const testParserButton = document.getElementById("test-parser-button");
 const testParserResult = document.getElementById("test-parser-result");
+const testParserResultLabel = document.querySelector("label[for='test-parser-result']");
 
 const handleError = (element, error) => {
-    element.innerHTML = `Error: ${error || 'could not reach server'}`;
-}
-
-createContainerButton.onclick = async function () {
-    const model_name = document.getElementById("container").value;
-    const version = document.getElementById("version").value;
-
-    try {
-        const response = await fetch('/create', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json;charset=UTF-8'
-            },
-            body: JSON.stringify({
-                model_name,
-                version
-            })
-        });
-
-        createContainerResult.innerHTML = response.ok ? await response.text() : `Error: ${response.statusText}`;
-    } catch (error) {
-        handleError(createContainerResult, error);
-    }
+    element.value = `Error: ${error || 'Could not reach the server'}`;
 };
 
-testParserButton.onclick = async function () {
+const updateResult = (result) => {
+    const timestamp = new Date().toLocaleString();
+    testParserResult.value = result.trim();
+    testParserResultLabel.textContent = `Result (generated ${timestamp})`;
+};
+
+testParserButton.addEventListener("click", async () => {
     const tomlUrl = encodeURIComponent("https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/custom-gpt/flatpack.toml");
 
     try {
-        const response = await fetch(`/test_parser/${tomlUrl}`);
+        // Disable the button and show a progress indicator
+        testParserButton.disabled = true;
+        testParserButton.innerHTML = "Working...";
 
-        testParserResult.innerHTML = response.ok ? `[DEBUG] ${await response.text()}` : `Error: ${response.statusText || 'Unknown error'}`;
+        const response = await fetch(`/test_parser/${tomlUrl}`);
+        const result = response.ok ? await response.text() : `Error: ${response.statusText || 'Unknown error'}`;
+        updateResult(result);
     } catch (error) {
         handleError(testParserResult, error);
+    } finally {
+        // Re-enable the button and remove the progress indicator
+        testParserButton.disabled = false;
+        testParserButton.innerHTML = "Test Parser";
     }
-};
+});

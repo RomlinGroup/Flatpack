@@ -3,32 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <title>flatpack.ai</title>
+    <link rel="stylesheet" href="/static/css/reset.css">
+    <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
 <main>
-    <section>
-        <label for="container">Select a flatpack:</label>
-        <select id="container" name="model_name">
-            <option value="romlin/flatpack-ai-docker">romlin/flatpack-ai-docker</option>
-        </select>
-    </section>
-
-    <section>
-        <label for="version">Version:</label>
-        <input type="text" id="version" name="version" value="1.0">
-    </section>
-
-    <section>
-        <button id="create-container-button" type="submit">Assemble</button>
-    </section>
-
     <section>
         <button id="test-parser-button">Test Parser</button>
     </section>
 
     <section>
-        <div id="create-container-result"></div>
-        <div id="test-parser-result"></div>
+        <div class="test-parser-result">
+            <label for="test-parser-result">Result</label>
+            <textarea id="test-parser-result" autocomplete="off" readonly></textarea>
+        </div>
     </section>
 </main>
 
