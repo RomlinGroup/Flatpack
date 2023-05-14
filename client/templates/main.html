@@ -1,22 +1,37 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta charset="UTF-8">
     <title>flatpack.ai</title>
 </head>
 <body>
-<label for="container">Select a flatpack:</label>
-<select id="container" name="model_name">
-    <option value="romlin/flatpack-ai-docker">romlin/flatpack-ai-docker</option>
-</select>
-<br>
-<label for="version">Version:</label>
-<input type="text" id="version" name="version" value="1.0">
-<br>
-<button id="create-container-button" type="submit">Assemble</button>
-<br>
-<button id="test-parser-button">Test Parser</button>
-<br><br>
-<div id="create-container-result"></div>
-<div id="test-parser-result"></div>
+<main>
+    <section>
+        <label for="container">Select a flatpack:</label>
+        <select id="container" name="model_name">
+            <option value="romlin/flatpack-ai-docker">romlin/flatpack-ai-docker</option>
+        </select>
+    </section>
+
+    <section>
+        <label for="version">Version:</label>
+        <input type="text" id="version" name="version" value="1.0">
+    </section>
+
+    <section>
+        <button id="create-container-button" type="submit">Assemble</button>
+    </section>
+
+    <section>
+        <button id="test-parser-button">Test Parser</button>
+    </section>
+
+    <section>
+        <div id="create-container-result"></div>
+        <div id="test-parser-result"></div>
+    </section>
+</main>
+
 <script src="/static/js/main.js"></script>
 </body>
 </html>

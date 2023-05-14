@@ -1,45 +1,42 @@
-let createContainerButton = document.getElementById("create-container-button");
-let createContainerResult = document.getElementById("create-container-result");
+const createContainerButton = document.getElementById("create-container-button");
+const createContainerResult = document.getElementById("create-container-result");
+const testParserButton = document.getElementById("test-parser-button");
+const testParserResult = document.getElementById("test-parser-result");
 
-createContainerButton.onclick = function () {
-    let model_name = document.getElementById("container").value;
-    let version = document.getElementById("version").value;
+const handleError = (element, error) => {
+    element.innerHTML = `Error: ${error || 'could not reach server'}`;
+}
 
-    let xhr = new XMLHttpRequest();
-    xhr.open("POST", "/create", true);
-    xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
-    xhr.onload = function () {
-        if (xhr.status === 200) {
-            createContainerResult.innerHTML = xhr.responseText;
-        } else {
-            createContainerResult.innerHTML = "Error: " + xhr.responseText;
-        }
-    };
-    xhr.onerror = function () {
-        createContainerResult.innerHTML = "Error: could not reach server";
-    };
-    xhr.send(JSON.stringify({
-        "model_name": model_name,
-        "version": version
-    }));
+createContainerButton.onclick = async function () {
+    const model_name = document.getElementById("container").value;
+    const version = document.getElementById("version").value;
+
+    try {
+        const response = await fetch('/create', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json;charset=UTF-8'
+            },
+            body: JSON.stringify({
+                model_name,
+                version
+            })
+        });
+
+        createContainerResult.innerHTML = response.ok ? await response.text() : `Error: ${response.statusText}`;
+    } catch (error) {
+        handleError(createContainerResult, error);
+    }
 };
 
-let testParserButton = document.getElementById("test-parser-button");
-let testParserResult = document.getElementById("test-parser-result");
+testParserButton.onclick = async function () {
+    const tomlUrl = encodeURIComponent("https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/custom-gpt/flatpack.toml");
 
-testParserButton.onclick = function () {
-    let tomlUrl = encodeURIComponent("https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/custom-gpt/flatpack.toml");
-    let xhr = new XMLHttpRequest();
-    xhr.open("GET", "/test_parser/" + tomlUrl, true);
-    xhr.onload = function () {
-        if (xhr.status === 200) {
-            testParserResult.innerHTML = "[DEBUG] " + xhr.responseText;
-        } else {
-            testParserResult.innerHTML = "Error: " + (xhr.responseText || "Unknown error");
-        }
-    };
-    xhr.onerror = function () {
-        testParserResult.innerHTML = "Error: could not reach server";
-    };
-    xhr.send();
+    try {
+        const response = await fetch(`/test_parser/${tomlUrl}`);
+
+        testParserResult.innerHTML = response.ok ? `[DEBUG] ${await response.text()}` : `Error: ${response.statusText || 'Unknown error'}`;
+    } catch (error) {
+        handleError(testParserResult, error);
+    }
 };

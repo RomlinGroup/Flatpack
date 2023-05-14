@@ -1,7 +1,7 @@
 use dockerfile_parser::Dockerfile;
 use reqwest;
 use serde::Deserialize;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 #[derive(Deserialize)]
 pub struct Config {
@@ -10,12 +10,12 @@ pub struct Config {
     #[allow(dead_code)]
     license: String,
     base_image: String,
-    environment: HashMap<String, String>,
-    port: Vec<HashMap<String, u16>>,
-    directories: HashMap<String, String>,
-    packages: HashMap<String, HashMap<String, String>>,
-    dataset: Vec<HashMap<String, String>>,
-    file: Vec<HashMap<String, String>>,
+    environment: BTreeMap<String, String>,
+    port: Vec<BTreeMap<String, u16>>,
+    directories: BTreeMap<String, String>,
+    packages: BTreeMap<String, BTreeMap<String, String>>,
+    dataset: Vec<BTreeMap<String, String>>,
+    file: Vec<BTreeMap<String, String>>,
 }
 
 pub async fn parse_toml_to_dockerfile(url: &str) -> Result<String, Box<dyn std::error::Error>> {
