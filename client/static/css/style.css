@@ -45,6 +45,7 @@ button:hover {
     resize: none;
     border: 1px solid #ccc;
     padding: 10px;
+    margin-bottom: 15px;
     font-family: Arial, sans-serif;
     font-size: 14px;
     color: #333;

@@ -1,15 +1,14 @@
 const testParserButton = document.getElementById("test-parser-button");
 const testParserResult = document.getElementById("test-parser-result");
-const testParserResultLabel = document.querySelector("label[for='test-parser-result']");
+const downloadButton = document.getElementById("download-button");
 
 const handleError = (element, error) => {
     element.value = `Error: ${error || 'Could not reach the server'}`;
 };
 
 const updateResult = (result) => {
-    const timestamp = new Date().toLocaleString();
     testParserResult.value = result.trim();
-    testParserResultLabel.textContent = `Result (generated ${timestamp})`;
+    downloadButton.disabled = false;
 };
 
 testParserButton.addEventListener("click", async () => {
@@ -30,4 +29,21 @@ testParserButton.addEventListener("click", async () => {
         testParserButton.disabled = false;
         testParserButton.innerHTML = "Test Parser";
     }
+});
+
+downloadButton.addEventListener("click", () => {
+    const dockerfileContent = testParserResult.value;
+
+    if (dockerfileContent.trim() === "") {
+        alert("Please generate the Dockerfile first.");
+        return;
+    }
+
+    const blob = new Blob([dockerfileContent], {type: "text/plain"});
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = "Dockerfile";
+    anchor.click();
+    URL.revokeObjectURL(url);
 });
