@@ -31,6 +31,11 @@ pub async fn parse_toml_to_dockerfile(url: &str) -> Result<String, Box<dyn std::
     // Start building the Dockerfile string
     let mut dockerfile = String::new();
 
+    // Add comment indicating it was generated with flatpack.ai and the timestamp
+    let timestamp = chrono::Utc::now().format("%Y-%m-%d %H:%M:%S").to_string();
+    dockerfile.push_str(&format!("# Generated with flatpack.ai on {}\n", timestamp));
+    dockerfile.push_str("# Please do not manually modify this file\n\n");
+
     // Base Image
     dockerfile.push_str(&format!("FROM {}\n\n", config.base_image));
 
