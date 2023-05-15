@@ -17,7 +17,7 @@ pub struct Config {
     packages: BTreeMap<String, BTreeMap<String, String>>,
     dataset: Vec<BTreeMap<String, String>>,
     file: Vec<BTreeMap<String, String>>,
-    entrypoint: BTreeMap<String, String>,
+    entrypoint: BTreeMap<String, String>
 }
 
 pub async fn parse_toml_to_dockerfile(url: &str) -> Result<String, Box<dyn Error>> {
