@@ -62,5 +62,5 @@ to_destination = "/home/content/scripts/main.py"
 
 # Entrypoint
 [entrypoint]
-command = "python"
+command = "python3"
 file = "/home/content/scripts/main.py"
