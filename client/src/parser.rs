@@ -2,6 +2,7 @@ use dockerfile_parser::Dockerfile;
 use reqwest;
 use serde::Deserialize;
 use std::collections::BTreeMap;
+use std::error::Error;
 
 #[derive(Deserialize)]
 pub struct Config {
@@ -16,9 +17,10 @@ pub struct Config {
     packages: BTreeMap<String, BTreeMap<String, String>>,
     dataset: Vec<BTreeMap<String, String>>,
     file: Vec<BTreeMap<String, String>>,
+    entrypoint: BTreeMap<String, String>,
 }
 
-pub async fn parse_toml_to_dockerfile(url: &str) -> Result<String, Box<dyn std::error::Error>> {
+pub async fn parse_toml_to_dockerfile(url: &str) -> Result<String, Box<dyn Error>> {
     let response = reqwest::get(url).await?;
 
     if !response.status().is_success() {
@@ -44,36 +46,35 @@ pub async fn parse_toml_to_dockerfile(url: &str) -> Result<String, Box<dyn std::
         dockerfile.push_str(&format!("ENV {}={}\n", key, value));
     }
 
-    // Directories
     dockerfile.push_str("\n# Create directories\n");
     let directories: Vec<&str> = config.directories.values().map(|v| v.as_str()).collect();
     dockerfile.push_str(&format!("RUN mkdir -p {}\n", directories.join(" ")));
 
-    // Packages
     dockerfile.push_str("\n# Install packages\n");
     for (package_type, packages) in config.packages.iter() {
+        let package_list: Vec<&str> = packages.keys().map(|k| k.as_str()).collect();
         match package_type.as_str() {
             "unix" => {
-                let package_list: Vec<&str> = packages.keys().map(|k| k.as_str()).collect();
                 dockerfile.push_str(&format!("RUN apt-get update && apt-get install -y {}\n", package_list.join(" ")));
             }
-            _ => { /* Ignore unsupported package types */ }
-        }
-    }
-    for (package_type, packages) in config.packages.iter() {
-        match package_type.as_str() {
             "python" => {
-                let package_list: Vec<&str> = packages.keys().map(|k| k.as_str()).collect();
                 dockerfile.push_str(&format!("RUN pip install {}\n", package_list.join(" ")));
             }
-            _ => { /* Ignore unsupported package types */ }
+            _ => {
+                eprintln!("Warning: Unsupported package type '{}'. These packages will not be installed.", package_type);
+            }
         }
     }
 
     // Ports
+    dockerfile.push_str("\n# Expose ports\n");
     for port in config.port.iter() {
         if let Some(internal) = port.get("internal") {
             dockerfile.push_str(&format!("EXPOSE {}\n", internal));
+        }
+        // Note: Dockerfiles can't directly handle external ports. They need to be handled at runtime.
+        if let Some(external) = port.get("external") {
+            eprintln!("Info: External port {} specified. This needs to be mapped at runtime, e.g. with 'docker run -p {}:...'.", external, external);
         }
     }
 
@@ -82,16 +83,27 @@ pub async fn parse_toml_to_dockerfile(url: &str) -> Result<String, Box<dyn std::
     for dataset in config.dataset.iter() {
         if let (Some(from_source), Some(to_destination)) = (dataset.get("from_source"), dataset.get("to_destination")) {
             dockerfile.push_str(&format!("RUN wget {} -O {}\n", from_source, to_destination));
+        } else {
+            eprintln!("Warning: Invalid dataset entry. It should include both 'from_source' and 'to_destination'.");
         }
     }
     for file in config.file.iter() {
         if let (Some(from_source), Some(to_destination)) = (file.get("from_source"), file.get("to_destination")) {
             dockerfile.push_str(&format!("RUN wget {} -O {}\n", from_source, to_destination));
+        } else {
+            eprintln!("Warning: Invalid file entry. It should include both 'from_source' and 'to_destination'.");
         }
     }
 
-    // Validate Dockerfile syntax
-    let _ = Dockerfile::parse(&dockerfile)?;
+    // Entrypoint
+    dockerfile.push_str("\n# Entrypoint\n");
+    if let (Some(command), Some(file)) = (config.entrypoint.get("command"), config.entrypoint.get("file")) {
+        dockerfile.push_str(&format!("ENTRYPOINT [\"{}\", \"{}\"]\n", command, file));
+    }
 
-    Ok(dockerfile)
+    // Validate Dockerfile syntax
+    match Dockerfile::parse(&dockerfile) {
+        Ok(_) => Ok(dockerfile),
+        Err(e) => Err(format!("Error parsing Dockerfile: {}", e).into())
+    }
 }

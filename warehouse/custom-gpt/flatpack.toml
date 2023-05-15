@@ -59,3 +59,8 @@ to_destination = "/home/content/data/input.txt"
 [[file]]
 from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/custom-gpt/main.py"
 to_destination = "/home/content/scripts/main.py"
+
+# Entrypoint
+[entrypoint]
+command = "python"
+file = "/home/content/scripts/main.py"
