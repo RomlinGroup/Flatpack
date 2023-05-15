@@ -2,12 +2,26 @@ use actix_files::Files;
 use actix_web::{get, web, App, HttpResponse, HttpServer, Responder};
 use bollard::Docker;
 use std::io;
+use std::time::{SystemTime, UNIX_EPOCH};
+use tera::{Tera, Context};
 
 mod parser;
 
 #[get("/")]
 async fn index() -> HttpResponse {
-    let html = include_str!("../templates/main.html");
+    let tera = Tera::new("templates/**/*").unwrap();
+
+    // Get the current timestamp
+    let start = SystemTime::now();
+    let since_the_epoch = start.duration_since(UNIX_EPOCH)
+        .expect("Time went backwards");
+    let timestamp = since_the_epoch.as_secs();
+
+    let mut context = Context::new();
+    context.insert("timestamp", &timestamp.to_string());
+
+    let html = tera.render("main.html", &context).unwrap();
+
     HttpResponse::Ok().body(html)
 }
 
