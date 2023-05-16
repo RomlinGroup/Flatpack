@@ -4,6 +4,9 @@
 
 # flatpack.ai 🤖
 
+> :warning: **DISCLAIMER:** This repository contains our research. Verify the information and do your own research (
+> DYOR). We assume no responsibility for accuracy or completeness.
+
 flatpack.ai will democratize AI by providing a modular and open platform for anyone to train their AI models from scratch with cutting-edge technology accessible to all. What flatpacks did for the furniture industry, we will do for the AI industry.
 
 ## The flatpack.ai client (Rust) 🦀
@@ -17,9 +20,6 @@ To use the client, follow these steps:
 5. Visit http://localhost:8080
 
 ## Commercial use allowed (no affiliation) 📈
-
-> :warning: **DISCLAIMER:** This repository contains our research. Verify the information and do your own research (
-> DYOR). We assume no responsibility for accuracy or completeness.
 
 We constantly search for datasets and models suitable for future deployment as [flatpacks](https://github.com/romlingroup/flatpack-ai/tree/main/warehouse) (coming soon). Therefore, if you know of any high-quality datasets or models with commercially viable licenses, we would appreciate it if you submitted them via a pull request.
 
