@@ -1,7 +1,8 @@
 use actix_files::Files;
 use actix_web::{get, web, App, HttpResponse, HttpServer, Responder};
 use bollard::Docker;
-use std::io;
+use std::fs::File;
+use std::io::Write;
 use std::time::{SystemTime, UNIX_EPOCH};
 use structopt::StructOpt;
 use tera::{Tera, Context};
@@ -47,7 +48,7 @@ enum Opt {
 }
 
 #[actix_web::main]
-async fn main() -> io::Result<()> {
+async fn main() -> std::io::Result<()> {
     let opt = Opt::from_args();
 
     match opt {
@@ -55,7 +56,9 @@ async fn main() -> io::Result<()> {
             let file_path = path.to_str().unwrap_or_default().to_string();
             match parser::parse_toml_to_dockerfile(&file_path).await {
                 Ok(dockerfile) => {
-                    println!("{}", dockerfile);
+                    // Write the Containerfile to a local file
+                    let mut file = File::create("Containerfile").expect("Could not create file");
+                    file.write_all(dockerfile.as_bytes()).expect("Could not write to file");
                     return Ok(());
                 }
                 Err(e) => {
@@ -64,6 +67,7 @@ async fn main() -> io::Result<()> {
                 }
             }
         }
+
         Opt::RunServer => {
             let docker = Docker::connect_with_local_defaults().unwrap();
 
