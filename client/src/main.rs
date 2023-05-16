@@ -3,6 +3,7 @@ use actix_web::{get, web, App, HttpResponse, HttpServer, Responder};
 use bollard::Docker;
 use std::io;
 use std::time::{SystemTime, UNIX_EPOCH};
+use structopt::StructOpt;
 use tera::{Tera, Context};
 
 mod parser;
@@ -34,18 +35,48 @@ async fn test_parser(path: web::Path<String>) -> impl Responder {
     }
 }
 
+#[derive(StructOpt)]
+#[structopt(name = "flatpack", about = "flatpack.ai CLI")]
+enum Opt {
+    Parse {
+        /// TOML file path
+        #[structopt(parse(from_os_str))]
+        path: std::path::PathBuf,
+    },
+    RunServer,
+}
+
 #[actix_web::main]
 async fn main() -> io::Result<()> {
-    let docker = Docker::connect_with_local_defaults().unwrap();
+    let opt = Opt::from_args();
 
-    HttpServer::new(move || {
-        App::new()
-            .app_data(web::Data::new(docker.clone()))
-            .service(Files::new("/static", "static").show_files_listing())
-            .service(index)
-            .service(test_parser)
-    })
-        .bind("127.0.0.1:8080")?
-        .run()
-        .await
+    match opt {
+        Opt::Parse { path } => {
+            let file_path = path.to_str().unwrap_or_default().to_string();
+            match parser::parse_toml_to_dockerfile(&file_path).await {
+                Ok(dockerfile) => {
+                    println!("{}", dockerfile);
+                    return Ok(());
+                }
+                Err(e) => {
+                    eprintln!("Error when parsing TOML: {}", e);
+                    std::process::exit(1);
+                }
+            }
+        }
+        Opt::RunServer => {
+            let docker = Docker::connect_with_local_defaults().unwrap();
+
+            HttpServer::new(move || {
+                App::new()
+                    .app_data(web::Data::new(docker.clone()))
+                    .service(Files::new("/static", "static").show_files_listing())
+                    .service(index)
+                    .service(test_parser)
+            })
+                .bind("127.0.0.1:8080")?
+                .run()
+                .await
+        }
+    }
 }

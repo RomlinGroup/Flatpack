@@ -16,6 +16,7 @@ futures-util = "0.3.28" # MIT OR Apache-2.0
 reqwest = { version = "0.11.17", features = ["json"] } # MIT OR Apache-2.0
 serde = { version = "1.0.163", features = ["derive"] } # MIT OR Apache-2.0
 serde_json = "1.0.96" # MIT OR Apache-2.0
+structopt = "0.3.26" # MIT OR Apache-2.0
 tera = "1.18.1" # MIT
 tokio = { version = "1.28.1", features = ["full"] } # MIT
 toml = "0.7.3" # MIT OR Apache-2.0

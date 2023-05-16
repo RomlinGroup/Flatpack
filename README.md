@@ -12,8 +12,9 @@ To use the client, follow these steps:
 
 1. git clone https://github.com/romlingroup/flatpack-ai.git
 2. Install Rust with https://www.rust-lang.org/tools/install
-3. cargo run
-4. http://localhost:8080
+3. To parse a file, run: `cargo run -- parse /path/to/your/file.toml`
+4. To start the server, run: `cargo run -- run-server`
+5. Visit http://localhost:8080
 
 ## Commercial use allowed (no affiliation) 📈
 
