@@ -43,7 +43,7 @@ downloadButton.addEventListener("click", () => {
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement("a");
     anchor.href = url;
-    anchor.download = "Dockerfile";
+    anchor.download = "Containerfile";
     anchor.click();
     URL.revokeObjectURL(url);
 });
