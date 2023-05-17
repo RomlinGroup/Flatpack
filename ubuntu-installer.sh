@@ -2,22 +2,18 @@
 
 # Check if bc and curl are installed
 if ! command -v bc &> /dev/null || ! command -v curl &> /dev/null; then
-    echo "This script requires bc and curl. Installing them now..."
-    sudo apt update
-    sudo apt install -y bc curl
+    echo "This script requires bc and curl. You need to install them manually."
+    exit 1
 fi
 
 # Get the Ubuntu version
-UBUNTU_VERSION=$(dpkg-query --showformat='${Version}' --show base-files | cut -d '.' -f 1,2)
+UBUNTU_VERSION=$(lsb_release -rs)
 
 # Check if the version is less than 20.04
 if (( $(echo "$UBUNTU_VERSION < 20.04" | bc -l) )); then
     echo "This script requires Ubuntu 20.04 or higher. Exiting."
     exit 1
 fi
-
-# Update the package lists for upgrades and new package installations
-sudo apt update
 
 # Check if Rust is already installed
 if ! command -v rustc &> /dev/null; then
@@ -26,10 +22,9 @@ if ! command -v rustc &> /dev/null; then
 
     # Add Rust to PATH manually
     echo 'source $HOME/.cargo/env' >> ~/.bashrc
-    source ~/.bashrc
 else
     echo "Rust is already installed. Skipping installation."
 fi
 
 # Check the installation by printing the version
-rustc --version
+bash -c "source $HOME/.cargo/env; rustc --version"
