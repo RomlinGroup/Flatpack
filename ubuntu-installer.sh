@@ -1,6 +1,7 @@
 #!/bin/bash
+set -e
+set -u
 
-# Prompt the user before proceeding with each major step
 function prompt_continue {
   read -rp "Continue? (y/n) " choice
   case "$choice" in
@@ -16,71 +17,67 @@ function prompt_continue {
   esac
 }
 
-echo "🔎 Checking if bc and curl are installed..."
+REQUIRED_PACKAGES="bc curl build-essential libssl-dev pkg-config apt-transport-https ca-certificates software-properties-common"
+MISSING_PACKAGES=""
 
-# Check if bc and curl are installed
-if ! command -v bc &>/dev/null || ! command -v curl &>/dev/null; then
-  echo "❗ This script requires bc and curl. Installing them now..."
+for pkg in $REQUIRED_PACKAGES; do
+  if ! dpkg -l | grep -q "^ii  $pkg"; then
+    MISSING_PACKAGES+="$pkg "
+  fi
+done
+
+if [ -n "${MISSING_PACKAGES}" ]; then
+  echo "🔎 The following packages are missing and will be installed: $MISSING_PACKAGES"
   prompt_continue
   sudo apt update
-  sudo apt install -y bc curl
-else
-  echo "✔️ bc and curl are installed."
+  sudo apt install -y "$MISSING_PACKAGES"
 fi
 
-echo "🔎 Checking Ubuntu version..."
-
-# Get the Ubuntu version
-UBUNTU_VERSION=$(lsb_release -rs)
-
-# Check if the version is less than 20.04
-if (($(echo "$UBUNTU_VERSION < 20.04" | bc -l))); then
-  echo "❗ This script requires Ubuntu 20.04 or higher. Exiting."
-  exit 1
-else
-  echo "✔️ Ubuntu version is $UBUNTU_VERSION, which is supported."
-fi
-
-echo "🔎 Checking if C compiler (usually gcc) is installed..."
-
-# Check if cc is installed (cc is usually a symlink to gcc)
-if ! command -v cc &>/dev/null; then
-  echo "❗ This script requires a C compiler (usually gcc). Installing it now..."
+if ! command -v docker &>/dev/null; then
+  echo "🐳 Docker is not installed. Installing it now..."
   prompt_continue
-  sudo apt update
-  sudo apt install -y build-essential
+
+  curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+
+  if ! grep -q "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" /etc/apt/sources.list /etc/apt/sources.list.d/*; then
+    sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+    sudo apt update
+  fi
+
+  if sudo apt install -y docker-ce docker-ce-cli containerd.io; then
+    echo "✔️ Docker installed successfully."
+  else
+    echo "❗ Docker installation failed. Exiting."
+    exit 1
+  fi
 else
-  echo "✔️ C compiler is installed."
+  echo "🐳 Docker is already installed."
 fi
 
-echo "🔎 Checking if OpenSSL and pkg-config are installed..."
-
-# Check if OpenSSL and pkg-config are installed
-if ! command -v openssl &>/dev/null || ! command -v pkg-config &>/dev/null; then
-  echo "❗ This script requires OpenSSL and pkg-config. Installing them now..."
-  prompt_continue
-  sudo apt update
-  sudo apt install -y libssl-dev pkg-config
-else
-  echo "✔️ OpenSSL and pkg-config are installed."
-fi
-
-echo "🔎 Checking if Rust is installed..."
-
-# Check if Rust is already installed
 if ! command -v rustc &>/dev/null; then
   echo "🦀 Rust is not installed. Installing it now..."
   prompt_continue
   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
-  # Add Rust to PATH manually
   echo "source $HOME/.cargo/env" >>~/.bashrc
   # shellcheck disable=SC1090
   source ~/.bashrc
+
+  if command -v rustc &>/dev/null; then
+    echo "✔️ Rust installed successfully."
+  else
+    echo "❗ Rust installation failed. Exiting."
+    exit 1
+  fi
 else
-  echo "🦀 Rust is already installed. Skipping installation."
+  echo "🦀 Rust is already installed."
 fi
 
 # Check the installation by printing the version
 echo "🦀 Checking Rust installation..."
 bash -c "source $HOME/.cargo/env; rustc --version"
+
+echo "🐳 Checking Docker installation..."
+bash -c "docker --version"
+
+echo "✔️ All necessary tools are installed. You are ready to go!"
