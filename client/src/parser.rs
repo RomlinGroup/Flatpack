@@ -113,14 +113,8 @@ pub async fn parse_toml_to_dockerfile(url: &str) -> Result<String, Box<dyn Error
             eprintln!("Warning: Invalid script entry. It should include both 'command' and 'file'.");
         }
     }
-    // Note: Only the last script will be used as CMD.
-    if let Some(last_script) = config.script.last() {
-        if let (Some(command), Some(file)) = (last_script.get("command"), last_script.get("file")) {
-            dockerfile.push_str(&format!("CMD [\"{}\", \"{}\"]\n", command, file));
-        } else {
-            eprintln!("Warning: Invalid script entry. It should include both 'command' and 'file'.");
-        }
-    }
+    // Add CMD to keep the container running indefinitely.
+    dockerfile.push_str("CMD [\"tail\", \"-f\", \"/dev/null\"]\n");
 
     // Validate Dockerfile syntax
     match Dockerfile::parse(&dockerfile) {
