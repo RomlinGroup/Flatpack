@@ -6,18 +6,19 @@ use std::error::Error;
 
 #[derive(Deserialize)]
 pub struct Config {
-    #[allow(dead_code)]
-    version: String,
+    base_image: String,
+    dataset: Vec<BTreeMap<String, String>>,
+    directories: BTreeMap<String, String>,
+    environment: BTreeMap<String, String>,
+    file: Vec<BTreeMap<String, String>>,
+    git: Vec<BTreeMap<String, String>>,
     #[allow(dead_code)]
     license: String,
-    base_image: String,
-    environment: BTreeMap<String, String>,
-    port: Vec<BTreeMap<String, u16>>,
-    directories: BTreeMap<String, String>,
     packages: BTreeMap<String, BTreeMap<String, String>>,
-    dataset: Vec<BTreeMap<String, String>>,
-    file: Vec<BTreeMap<String, String>>,
-    entrypoint: BTreeMap<String, String>,
+    port: Vec<BTreeMap<String, u16>>,
+    script: Vec<BTreeMap<String, String>>,
+    #[allow(dead_code)]
+    version: String,
 }
 
 pub async fn parse_toml_to_dockerfile(url: &str) -> Result<String, Box<dyn Error>> {
@@ -93,10 +94,32 @@ pub async fn parse_toml_to_dockerfile(url: &str) -> Result<String, Box<dyn Error
         }
     }
 
-    // Entrypoint
-    dockerfile.push_str("\n# Entrypoint\n");
-    if let (Some(command), Some(file)) = (config.entrypoint.get("command"), config.entrypoint.get("file")) {
-        dockerfile.push_str(&format!("ENTRYPOINT [\"{}\", \"{}\"]\n", command, file));
+    // Git repositories
+    dockerfile.push_str("\n# Clone git repositories\n");
+    for git in config.git.iter() {
+        if let (Some(from_source), Some(to_destination)) = (git.get("from_source"), git.get("to_destination")) {
+            dockerfile.push_str(&format!("RUN git clone {} {}\n", from_source, to_destination));
+        } else {
+            eprintln!("Warning: Invalid git entry. It should include both 'from_source' and 'to_destination'.");
+        }
+    }
+
+    // Scripts
+    dockerfile.push_str("\n# Scripts\n");
+    for script in config.script.iter() {
+        if let (Some(command), Some(file)) = (script.get("command"), script.get("file")) {
+            dockerfile.push_str(&format!("RUN {} {}\n", command, file));
+        } else {
+            eprintln!("Warning: Invalid script entry. It should include both 'command' and 'file'.");
+        }
+    }
+    // Note: Only the last script will be used as CMD.
+    if let Some(last_script) = config.script.last() {
+        if let (Some(command), Some(file)) = (last_script.get("command"), last_script.get("file")) {
+            dockerfile.push_str(&format!("CMD [\"{}\", \"{}\"]\n", command, file));
+        } else {
+            eprintln!("Warning: Invalid script entry. It should include both 'command' and 'file'.");
+        }
     }
 
     // Validate Dockerfile syntax
