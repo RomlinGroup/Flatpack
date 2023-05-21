@@ -54,7 +54,5 @@ from_source = "https://github.com/karpathy/nanoGPT"
 to_destination = "/home/content/nanoGPT"
 
 [[script]]
-
-[[script]]
 command = "python3"
 file = "/home/content/scripts/main.py"
