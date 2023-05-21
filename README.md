@@ -28,6 +28,7 @@ We constantly search for datasets and models suitable for future deployment as [
 | Name                                                                                              | Type    | License                                                           |
 |:--------------------------------------------------------------------------------------------------|:--------|:------------------------------------------------------------------|
 | [databricks-dolly-15k](https://huggingface.co/datasets/databricks/databricks-dolly-15k)           | Dataset | [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/)   |
+| [Cerebras-GPT-13B](https://huggingface.co/cerebras/Cerebras-GPT-13B)                              | Model   | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) |
 | [mpt-7b](https://huggingface.co/mosaicml/mpt-7b)                                                  | Model   | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) |
 | [mpt-7b-instruct](https://huggingface.co/mosaicml/mpt-7b-instruct)                                | Model   | [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/)   |
 | [mpt-7b-storywriter](https://huggingface.co/mosaicml/mpt-7b-storywriter)                          | Model   | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) |
