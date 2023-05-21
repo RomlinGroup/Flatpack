@@ -113,8 +113,8 @@ pub async fn parse_toml_to_dockerfile(url: &str) -> Result<String, Box<dyn Error
             eprintln!("Warning: Invalid script entry. It should include both 'command' and 'file'.");
         }
     }
-    // Add CMD to keep the container running indefinitely.
-    dockerfile.push_str("CMD [\"tail\", \"-f\", \"/dev/null\"]\n");
+    // Add CMD to run the script and keep the container running indefinitely.
+    dockerfile.push_str("CMD [\"python3\", \"main.py\", \"&&\", \"tail\", \"-f\", \"/dev/null\"]\n");
 
     // Validate Dockerfile syntax
     match Dockerfile::parse(&dockerfile) {

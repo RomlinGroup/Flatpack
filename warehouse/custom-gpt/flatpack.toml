@@ -29,17 +29,13 @@ wget = "*"
 unzip = "*"
 
 [packages.python]
-keras = "*"
-matplotlib = "*"
-nltk = "*"
+datasets = "*"
 numpy = "*"
-pandas = "*"
-plotly = "*"
-scikit-learn = "*"
-seaborn = "*"
-spacy = "*"
-tensorflow = "*"
+tiktoken = "*"
+transformers = "*"
 torch = "*"
+tqdm = "*"
+wandb = "*"
 
 [[dataset]]
 from_source = "https://raw.githubusercontent.com/karpathy/char-rnn/master/data/tinyshakespeare/input.txt"
@@ -55,4 +51,8 @@ to_destination = "/home/content/nanoGPT"
 
 [[script]]
 command = "python3"
-file = "/home/content/scripts/main.py"
+file = "/home/content/nanoGPT/data/shakespeare_char/prepare.py"
+
+[[script]]
+command = "python3"
+file = "/home/content/nanoGPT/data/shakespeare_char/train.py /home/content/nanoGPT/config/train_shakespeare_char.py"
