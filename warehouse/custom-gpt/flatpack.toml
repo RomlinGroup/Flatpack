@@ -1,32 +1,23 @@
 # flatpack.toml
-# WIP (2023-05-15)
+# WIP (2023-05-21)
 
-# Version number
 version = "0.0.1"
-
-# License information
 license = "apache-2.0"
-
-# Base image
 base_image = "nvidia/cuda:12.1.1-base-ubuntu22.04"
 
-# Environment variables
 [environment]
 model_name = "custom-gpt"
 
-# Port settings
 [[port]]
 external = 8080
 internal = 80
 
-# Directory paths
 [directories]
 checkpoints = "/home/content/checkpoints"
 data = "/home/content/data"
 models = "/home/content/models"
 scripts = "/home/content/scripts"
 
-# Package dependencies
 [packages]
 
 [packages.unix]
@@ -50,17 +41,20 @@ spacy = "*"
 tensorflow = "*"
 torch = "*"
 
-# Dataset downloads
 [[dataset]]
 from_source = "https://raw.githubusercontent.com/karpathy/char-rnn/master/data/tinyshakespeare/input.txt"
 to_destination = "/home/content/data/input.txt"
 
-# File downloads
 [[file]]
 from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/custom-gpt/main.py"
 to_destination = "/home/content/scripts/main.py"
 
-# Entrypoint
-[entrypoint]
+[[git]]
+from_source = "https://github.com/karpathy/nanoGPT"
+to_destination = "/home/content/nanoGPT"
+
+[[script]]
+
+[[script]]
 command = "python3"
 file = "/home/content/scripts/main.py"
