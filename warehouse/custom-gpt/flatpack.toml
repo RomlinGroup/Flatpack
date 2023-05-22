@@ -51,8 +51,10 @@ to_destination = "/home/content/nanoGPT"
 
 [[script]]
 command = "python3"
-args = "/home/content/nanoGPT/data/shakespeare_char/prepare.py"
+args = "data/shakespeare_char/prepare.py"
+working_directory = "/home/content/nanoGPT"
 
 [[script]]
 command = "python3"
-args = "/home/content/nanoGPT/data/shakespeare_char/train.py /home/content/nanoGPT/config/train_shakespeare_char.py"
+args = "data/shakespeare_char/train.py config/train_shakespeare_char.py"
+working_directory = "/home/content/nanoGPT"
