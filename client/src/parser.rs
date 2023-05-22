@@ -110,7 +110,9 @@ pub async fn parse_toml_to_dockerfile(url: &str) -> Result<String, Box<dyn Error
     dockerfile.push_str("\n# Scripts\n");
     for script in config.script.iter() {
         if let (Some(command), Some(args)) = (script.get("command"), script.get("args")) {
-            dockerfile.push_str(&format!("WORKDIR {}\n", config.working_directory.as_deref().unwrap_or_default()));
+            if let Some(working_directory) = config.working_directory.as_deref() {
+                dockerfile.push_str(&format!("WORKDIR {}\n", working_directory));
+            }
             dockerfile.push_str(&format!("RUN {} {}\n", command, args));
         } else {
             eprintln!("Warning: Invalid script entry. It should include both 'command' and 'args'.");
