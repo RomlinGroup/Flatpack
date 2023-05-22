@@ -112,11 +112,11 @@ pub async fn parse_toml_to_dockerfile(url: &str) -> Result<String, Box<dyn Error
                 dockerfile.push_str(&format!("WORKDIR {}\n", working_directory));
             }
             dockerfile.push_str(&format!("RUN {} {}\n", command, args));
-            dockerfile.push_str("WORKDIR /\n"); // Reset working directory to root after each script
         } else {
             eprintln!("Warning: Invalid script entry. It should include both 'command' and 'args'.");
         }
     }
+    dockerfile.push_str("WORKDIR /\n"); // Reset working directory to root after all scripts
 
     // Validate Dockerfile syntax
     match Dockerfile::parse(&dockerfile) {
