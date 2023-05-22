@@ -107,14 +107,12 @@ pub async fn parse_toml_to_dockerfile(url: &str) -> Result<String, Box<dyn Error
     // Scripts
     dockerfile.push_str("\n# Scripts\n");
     for script in config.script.iter() {
-        if let (Some(command), Some(file)) = (script.get("command"), script.get("file")) {
-            dockerfile.push_str(&format!("RUN {} {}\n", command, file));
+        if let (Some(command), Some(args)) = (script.get("command"), script.get("args")) {
+            dockerfile.push_str(&format!("RUN {} {}\n", command, args));
         } else {
-            eprintln!("Warning: Invalid script entry. It should include both 'command' and 'file'.");
+            eprintln!("Warning: Invalid script entry. It should include both 'command' and 'args'.");
         }
     }
-    // Add CMD to run the script and keep the container running indefinitely.
-    dockerfile.push_str("CMD [\"python3\", \"main.py\", \"&&\", \"tail\", \"-f\", \"/dev/null\"]\n");
 
     // Validate Dockerfile syntax
     match Dockerfile::parse(&dockerfile) {
