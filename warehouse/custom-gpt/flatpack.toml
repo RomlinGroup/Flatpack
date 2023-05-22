@@ -56,5 +56,5 @@ working_directory = "/home/content/nanoGPT"
 
 [[script]]
 command = "python3"
-args = "data/shakespeare_char/train.py config/train_shakespeare_char.py"
+args = "train.py config/train_shakespeare_char.py"
 working_directory = "/home/content/nanoGPT"
