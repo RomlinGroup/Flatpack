@@ -17,8 +17,6 @@ pub struct Config {
     packages: BTreeMap<String, BTreeMap<String, String>>,
     port: Vec<BTreeMap<String, u16>>,
     script: Vec<BTreeMap<String, String>>,
-    #[serde(default)]
-    working_directory: Option<String>,
     #[allow(dead_code)]
     version: String,
 }
@@ -110,7 +108,7 @@ pub async fn parse_toml_to_dockerfile(url: &str) -> Result<String, Box<dyn Error
     dockerfile.push_str("\n# Scripts\n");
     for script in config.script.iter() {
         if let (Some(command), Some(args)) = (script.get("command"), script.get("args")) {
-            if let Some(working_directory) = config.working_directory.as_deref() {
+            if let Some(working_directory) = script.get("working_directory") {
                 dockerfile.push_str(&format!("WORKDIR {}\n", working_directory));
             }
             dockerfile.push_str(&format!("RUN {} {}\n", command, args));
