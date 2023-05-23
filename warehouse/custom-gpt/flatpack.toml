@@ -21,10 +21,6 @@ scripts = "/home/content/scripts"
 [packages]
 
 [packages.unix]
-git = "*"
-py3-pip = "*"
-wget = "*"
-unzip = "*"
 
 [packages.python]
 datasets = "*"
