@@ -21,10 +21,10 @@ scripts = "/home/content/scripts"
 [packages]
 
 [packages.unix]
-build-essential = "*"
+build-base = "*"
 curl = "*"
 git = "*"
-python3-pip = "*"
+py3-pip = "*"
 wget = "*"
 unzip = "*"
 
@@ -49,12 +49,12 @@ to_destination = "/home/content/scripts/main.py"
 from_source = "https://github.com/karpathy/nanoGPT"
 to_destination = "/home/content/nanoGPT"
 
-[[script]]
+[[run]]
 command = "python3"
 args = "data/shakespeare_char/prepare.py"
 working_directory = "/home/content/nanoGPT"
 
-[[script]]
+[[cmd]]
 command = "python3"
 args = "train.py config/train_shakespeare_char.py --device=cpu --compile=False --eval_iters=20 --log_interval=1 --block_size=64 --batch_size=12 --n_layer=4 --n_head=4 --n_embd=128 --max_iters=2000 --lr_decay_iters=2000 --dropout=0.0"
 working_directory = "/home/content/nanoGPT"

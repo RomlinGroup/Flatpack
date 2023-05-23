@@ -16,7 +16,8 @@ pub struct Config {
     license: String,
     packages: BTreeMap<String, BTreeMap<String, String>>,
     port: Vec<BTreeMap<String, u16>>,
-    script: Vec<BTreeMap<String, String>>,
+    run: Vec<BTreeMap<String, String>>,
+    cmd: Vec<BTreeMap<String, String>>,
     #[allow(dead_code)]
     version: String,
 }
@@ -107,23 +108,39 @@ pub async fn parse_toml_to_dockerfile(url: &str) -> Result<String, Box<dyn Error
         }
     }
 
-    // Scripts
-    dockerfile.push_str("\n# Scripts\n");
-    for script in config.script.iter() {
-        if let (Some(command), Some(args)) = (script.get("command"), script.get("args")) {
-            if let Some(working_directory) = script.get("working_directory") {
+    // RUN commands
+    dockerfile.push_str("\n# Run Commands\n");
+    for run in config.run.iter() {
+        if let (Some(command), Some(args)) = (run.get("command"), run.get("args")) {
+            if let Some(working_directory) = run.get("working_directory") {
                 dockerfile.push_str(&format!("WORKDIR {}\n", working_directory));
             }
             dockerfile.push_str(&format!("RUN {} {}\n", command, args));
         } else {
-            eprintln!("Warning: Invalid script entry. It should include both 'command' and 'args'.");
+            eprintln!("Warning: Invalid run entry. It should include both 'command' and 'args'.");
+        }
+    }
+
+    // CMD commands
+    dockerfile.push_str("\n# CMD Commands\n");
+    if config.cmd.len() != 1 {
+        return Err("Invalid number of CMD entries. There should be exactly one CMD entry.".into());
+    }
+    for cmd in config.cmd.iter() {
+        if let (Some(command), Some(args)) = (cmd.get("command"), cmd.get("args")) {
+            if let Some(working_directory) = cmd.get("working_directory") {
+                dockerfile.push_str(&format!("WORKDIR {}\n", working_directory));
+            }
+            dockerfile.push_str(&format!("CMD {} {}\n", command, args));
+        } else {
+            return Err("Invalid CMD entry. It should include both 'command' and 'args'.".into());
         }
     }
     dockerfile.push_str("WORKDIR /\n"); // Reset working directory to root after all scripts
 
-    // Validate Dockerfile syntax
+    // Validate Containerfile syntax
     match Dockerfile::parse(&dockerfile) {
         Ok(_) => Ok(dockerfile),
-        Err(e) => Err(format!("Error parsing Dockerfile: {}", e).into())
+        Err(e) => Err(format!("Error parsing Containerfile: {}", e).into())
     }
 }
