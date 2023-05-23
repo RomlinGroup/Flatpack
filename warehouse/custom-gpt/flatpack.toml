@@ -21,6 +21,7 @@ scripts = "/home/content/scripts"
 [packages]
 
 [packages.unix]
+py3-pip = "*"
 
 [packages.python]
 datasets = "*"
