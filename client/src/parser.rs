@@ -62,7 +62,13 @@ pub async fn parse_toml_to_dockerfile(url: &str) -> Result<String, Box<dyn Error
     if let Some(unix_packages) = config.packages.get("unix") {
         let package_list: Vec<String> = unix_packages
             .iter()
-            .map(|(package, version)| format!("{}={} --no-cache", package, version))
+            .map(|(package, version)| {
+                if version == "*" || version.is_empty() {
+                    format!("{}", package)  // If version is not specified or "*", get the latest version
+                } else {
+                    format!("{}={}", package, version)  // If version is specified, get that version
+                }
+            })
             .collect();
         dockerfile.push_str(&format!(" && apk add {}", package_list.join(" ")));
     }
@@ -70,7 +76,13 @@ pub async fn parse_toml_to_dockerfile(url: &str) -> Result<String, Box<dyn Error
     if let Some(python_packages) = config.packages.get("python") {
         let package_list: Vec<String> = python_packages
             .iter()
-            .map(|(package, version)| format!("{}=={} --no-cache-dir", package, version))
+            .map(|(package, version)| {
+                if version == "*" || version.is_empty() {
+                    format!("{}", package)  // If version is not specified or "*", get the latest version
+                } else {
+                    format!("{}=={}", package, version)  // If version is specified, get that version
+                }
+            })
             .collect();
         dockerfile.push_str(&format!(
             " && pip install {}",
@@ -145,8 +157,22 @@ pub async fn parse_toml_to_dockerfile(url: &str) -> Result<String, Box<dyn Error
             if let Some(working_directory) = cmd.get("working_directory") {
                 dockerfile.push_str(&format!("WORKDIR {}\n", working_directory));
             }
-            let cmd_args = serde_json::to_string(&[command, args])?;
-            dockerfile.push_str(&format!("CMD {}\n", cmd_args));
+            // We need to handle command and args separately
+            dockerfile.push_str("CMD [");
+            dockerfile.push_str("\"");
+            dockerfile.push_str(command);
+            dockerfile.push_str("\", ");
+            // Splitting the args into separate strings
+            let cmd_args: Vec<&str> = args.split(' ').collect();
+            for (i, arg) in cmd_args.iter().enumerate() {
+                dockerfile.push_str("\"");
+                dockerfile.push_str(arg);
+                dockerfile.push_str("\"");
+                if i != cmd_args.len() - 1 {
+                    dockerfile.push_str(", ");
+                }
+            }
+            dockerfile.push_str("]\n");
         } else {
             return Err("Invalid CMD entry. It should include both 'command' and 'args'.".into());
         }

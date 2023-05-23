@@ -26,7 +26,6 @@ py3-pip = "*"
 [packages.python]
 datasets = "*"
 numpy = "*"
-tiktok = "*"
 transformers = "*"
 torch = "*"
 tqdm = "*"
