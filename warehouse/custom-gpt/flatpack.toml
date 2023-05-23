@@ -3,7 +3,7 @@
 
 version = "0.0.2"
 license = "apache-2.0"
-base_image = "alpine:3.18.0"
+base_image = "python:alpine3.18"
 
 [environment]
 model_name = "custom-gpt"
@@ -21,7 +21,6 @@ scripts = "/home/content/scripts"
 [packages]
 
 [packages.unix]
-py3-pip = "*"
 
 [packages.python]
 datasets = "*"
