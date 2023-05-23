@@ -64,5 +64,4 @@ working_directory = "/home/content"
 
 [[cmd]]
 command = "bash"
-args = "train.sh"
-working_directory = "/home/content"
+args = "/home/content/train.sh"
