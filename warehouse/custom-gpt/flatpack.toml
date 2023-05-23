@@ -21,10 +21,17 @@ scripts = "/home/content/scripts"
 [packages]
 
 [packages.unix]
+build-essential = "*"
+curl = "*"
+git = "*"
+python3-pip = "*"
+wget = "*"
+unzip = "*"
 
 [packages.python]
 datasets = "*"
 numpy = "*"
+tiktoken = "*"
 transformers = "*"
 torch = "*"
 tqdm = "*"

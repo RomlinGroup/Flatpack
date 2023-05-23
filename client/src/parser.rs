@@ -57,7 +57,7 @@ pub async fn parse_toml_to_dockerfile(url: &str) -> Result<String, Box<dyn Error
     dockerfile.push_str("\n# Install packages\n");
 
     // Update package list and upgrade all packages
-    dockerfile.push_str("RUN apk update && rm -rf /var/cache/apk/*");
+    dockerfile.push_str("RUN apt-get update && apt-get upgrade -y");
 
     if let Some(unix_packages) = config.packages.get("unix") {
         let package_list: Vec<String> = unix_packages
@@ -70,8 +70,10 @@ pub async fn parse_toml_to_dockerfile(url: &str) -> Result<String, Box<dyn Error
                 }
             })
             .collect();
-        dockerfile.push_str(&format!(" && apk add {}", package_list.join(" ")));
+        dockerfile.push_str(&format!(" && apt-get install -y {}", package_list.join(" ")));
     }
+
+    dockerfile.push_str(" && rm -rf /var/lib/apt/lists/*");
 
     if let Some(python_packages) = config.packages.get("python") {
         let package_list: Vec<String> = python_packages
