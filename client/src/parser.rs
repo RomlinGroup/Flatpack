@@ -109,7 +109,7 @@ pub async fn parse_toml_to_dockerfile(url: &str) -> Result<String, Box<dyn Error
     }
 
     // RUN commands
-    dockerfile.push_str("\n# Run Commands\n");
+    dockerfile.push_str("\n# RUN commands\n");
     for run in config.run.iter() {
         if let (Some(command), Some(args)) = (run.get("command"), run.get("args")) {
             if let Some(working_directory) = run.get("working_directory") {
@@ -121,8 +121,8 @@ pub async fn parse_toml_to_dockerfile(url: &str) -> Result<String, Box<dyn Error
         }
     }
 
-    // CMD commands
-    dockerfile.push_str("\n# CMD Commands\n");
+    // CMD command
+    dockerfile.push_str("\n# CMD command\n");
     if config.cmd.len() != 1 {
         return Err("Invalid number of CMD entries. There should be exactly one CMD entry.".into());
     }
