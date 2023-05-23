@@ -44,6 +44,10 @@ to_destination = "/home/content/data/input.txt"
 from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/custom-gpt/main.py"
 to_destination = "/home/content/scripts/main.py"
 
+[[file]]
+from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/custom-gpt/train.sh"
+to_destination = "/home/content/train.sh"
+
 [[git]]
 from_source = "https://github.com/karpathy/nanoGPT"
 to_destination = "/home/content/nanoGPT"
@@ -53,7 +57,12 @@ command = "python3"
 args = "data/shakespeare_char/prepare.py"
 working_directory = "/home/content/nanoGPT"
 
+[[run]]
+command = "chmod"
+args = "+x train.sh"
+working_directory = "/home/content"
+
 [[cmd]]
-command = "python3"
-args = "train.py config/train_shakespeare_char.py --device=cpu --compile=False --eval_iters=20 --log_interval=1 --block_size=64 --batch_size=12 --n_layer=4 --n_head=4 --n_embd=128 --max_iters=2000 --lr_decay_iters=2000 --dropout=0.0"
-working_directory = "/home/content/nanoGPT"
+command = "bash"
+args = "train.sh"
+working_directory = "/home/content"
