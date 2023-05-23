@@ -140,9 +140,6 @@ pub async fn parse_toml_to_dockerfile(url: &str) -> Result<String, Box<dyn Error
     dockerfile.push_str("\n# RUN commands\n");
     for run in config.run.iter() {
         if let (Some(command), Some(args)) = (run.get("command"), run.get("args")) {
-            if let Some(working_directory) = run.get("working_directory") {
-                dockerfile.push_str(&format!("WORKDIR {}\n", working_directory));
-            }
             dockerfile.push_str(&format!("RUN {} {}\n", command, args));
         } else {
             eprintln!("Warning: Invalid run entry. It should include both 'command' and 'args'.");
@@ -156,9 +153,6 @@ pub async fn parse_toml_to_dockerfile(url: &str) -> Result<String, Box<dyn Error
     }
     for cmd in config.cmd.iter() {
         if let (Some(command), Some(args)) = (cmd.get("command"), cmd.get("args")) {
-            if let Some(working_directory) = cmd.get("working_directory") {
-                dockerfile.push_str(&format!("WORKDIR {}\n", working_directory));
-            }
             // We need to handle command and args separately
             dockerfile.push_str("CMD [");
             dockerfile.push_str("\"");
@@ -179,7 +173,6 @@ pub async fn parse_toml_to_dockerfile(url: &str) -> Result<String, Box<dyn Error
             return Err("Invalid CMD entry. It should include both 'command' and 'args'.".into());
         }
     }
-    dockerfile.push_str("WORKDIR /\n"); // Reset working directory to root after all scripts
 
     // Validate Containerfile syntax
     match Dockerfile::parse(&dockerfile) {

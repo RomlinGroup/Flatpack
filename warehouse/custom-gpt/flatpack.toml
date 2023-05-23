@@ -54,13 +54,11 @@ to_destination = "/home/content/nanoGPT"
 
 [[run]]
 command = "python3"
-args = "data/shakespeare_char/prepare.py"
-working_directory = "/home/content/nanoGPT"
+args = "/home/content/nanoGPT/data/shakespeare_char/prepare.py"
 
 [[run]]
 command = "chmod"
-args = "+x train.sh"
-working_directory = "/home/content"
+args = "+x /home/content/train.sh"
 
 [[cmd]]
 command = "bash"
