@@ -1,7 +1,7 @@
 # flatpack.toml
 # WIP (2023-05-23)
 
-version = "0.0.2"
+version = "0.0.3"
 license = "apache-2.0"
 base_image = "ubuntu:20.04"
 
