@@ -59,6 +59,10 @@ async fn main() -> std::io::Result<()> {
                     // Write the Containerfile to a local file
                     let mut file = File::create("Containerfile").expect("Could not create file");
                     file.write_all(dockerfile.as_bytes()).expect("Could not write to file");
+
+                    // Print the generated Dockerfile
+                    println!("Dockerfile generated:\n{}", dockerfile);
+
                     return Ok(());
                 }
                 Err(e) => {

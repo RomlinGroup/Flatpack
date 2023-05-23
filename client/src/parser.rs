@@ -140,7 +140,11 @@ pub async fn parse_toml_to_dockerfile(url: &str) -> Result<String, Box<dyn Error
 
     // Validate Containerfile syntax
     match Dockerfile::parse(&dockerfile) {
-        Ok(_) => Ok(dockerfile),
+        Ok(_) => {
+            // Add feedback message when the build is complete
+            dockerfile.push_str("\n# Build complete! 🎉\n");
+            Ok(dockerfile)
+        },
         Err(e) => Err(format!("Error parsing Containerfile: {}", e).into())
     }
 }
