@@ -3,7 +3,7 @@
 
 version = "0.0.1"
 license = "apache-2.0"
-base_image = "nvidia/cuda:12.1.1-base-ubuntu22.04"
+base_image = "alpine:3.18.0"
 
 [environment]
 model_name = "custom-gpt"
