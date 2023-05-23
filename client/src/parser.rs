@@ -57,17 +57,29 @@ pub async fn parse_toml_to_dockerfile(url: &str) -> Result<String, Box<dyn Error
     dockerfile.push_str("\n# Install packages\n");
 
     // Update package list and upgrade all packages
-    dockerfile.push_str("RUN apk update && apk upgrade\n");
+    dockerfile.push_str("RUN apk update && rm -rf /var/cache/apk/*");
 
     if let Some(unix_packages) = config.packages.get("unix") {
-        let package_list: Vec<&str> = unix_packages.keys().map(|k| k.as_str()).collect();
-        dockerfile.push_str(&format!("RUN apk add {}\n", package_list.join(" ")));
+        let package_list: Vec<String> = unix_packages
+            .iter()
+            .map(|(package, version)| format!("{}={} --no-cache", package, version))
+            .collect();
+        dockerfile.push_str(&format!(" && apk add {}", package_list.join(" ")));
     }
 
     if let Some(python_packages) = config.packages.get("python") {
-        let package_list: Vec<&str> = python_packages.keys().map(|k| k.as_str()).collect();
-        dockerfile.push_str(&format!("RUN pip install {}\n", package_list.join(" ")));
+        let package_list: Vec<String> = python_packages
+            .iter()
+            .map(|(package, version)| format!("{}=={} --no-cache-dir", package, version))
+            .collect();
+        dockerfile.push_str(&format!(
+            " && pip install {}",
+            package_list.join(" ")
+        ));
     }
+
+    // Add a newline before EXPOSE ports
+    dockerfile.push_str("\n");
 
     // Ports
     dockerfile.push_str("\n# Expose ports\n");
@@ -81,8 +93,9 @@ pub async fn parse_toml_to_dockerfile(url: &str) -> Result<String, Box<dyn Error
         }
     }
 
-    // Dataset and file downloads
+    // Download datasets and files
     dockerfile.push_str("\n# Download datasets and files\n");
+
     for dataset in config.dataset.iter() {
         if let (Some(from_source), Some(to_destination)) = (dataset.get("from_source"), dataset.get("to_destination")) {
             dockerfile.push_str(&format!("RUN wget {} -O {}\n", from_source, to_destination));
@@ -90,6 +103,7 @@ pub async fn parse_toml_to_dockerfile(url: &str) -> Result<String, Box<dyn Error
             eprintln!("Warning: Invalid dataset entry. It should include both 'from_source' and 'to_destination'.");
         }
     }
+
     for file in config.file.iter() {
         if let (Some(from_source), Some(to_destination)) = (file.get("from_source"), file.get("to_destination")) {
             dockerfile.push_str(&format!("RUN wget {} -O {}\n", from_source, to_destination));
@@ -131,7 +145,8 @@ pub async fn parse_toml_to_dockerfile(url: &str) -> Result<String, Box<dyn Error
             if let Some(working_directory) = cmd.get("working_directory") {
                 dockerfile.push_str(&format!("WORKDIR {}\n", working_directory));
             }
-            dockerfile.push_str(&format!("CMD {} {}\n", command, args));
+            let cmd_args = serde_json::to_string(&[command, args])?;
+            dockerfile.push_str(&format!("CMD {}\n", cmd_args));
         } else {
             return Err("Invalid CMD entry. It should include both 'command' and 'args'.".into());
         }
@@ -144,7 +159,7 @@ pub async fn parse_toml_to_dockerfile(url: &str) -> Result<String, Box<dyn Error
             // Add feedback message when the build is complete
             dockerfile.push_str("\n# Build complete! 🎉\n");
             Ok(dockerfile)
-        },
+        }
         Err(e) => Err(format!("Error parsing Containerfile: {}", e).into())
     }
 }
