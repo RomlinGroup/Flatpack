@@ -22,7 +22,9 @@ scripts = "/home/content/scripts"
 
 [packages.unix]
 curl = "*"
+gcc = "*"
 git = "*"
+python3-dev = "*"
 wget = "*"
 unzip = "*"
 
