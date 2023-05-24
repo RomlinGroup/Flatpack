@@ -7,6 +7,8 @@ cd "$WORK_DIR" || exit
 # Define configuration variables
 TRAIN_SCRIPT="train.py"
 TRAIN_CONFIG="config/train_shakespeare_char.py"
+SAMPLE_SCRIPT="sample.py"
+SAMPLE_CONFIG="--out_dir=out-shakespeare-char"
 DEVICE="cpu"
 COMPILE_FLAG="--compile=False"
 EVAL_ITERS="--eval_iters=20"
@@ -51,6 +53,18 @@ python3 "$TRAIN_SCRIPT" "$TRAIN_CONFIG" \
 # Check the exit status
 if [ $? -eq 0 ]; then
   log_info "✅ Training completed successfully!"
+
+  log_info "🤖 Starting sampling..."
+
+  # Run the sample script
+  python3 "$SAMPLE_SCRIPT" "$SAMPLE_CONFIG" || handle_error "❌ Sampling failed. Please check the logs above for details."
+
+  if [ $? -eq 0 ]; then
+    log_info "✅ Sampling completed successfully!"
+  else
+    handle_error "❌ Sampling failed. Please check the logs above for details."
+  fi
+
 else
   handle_error "❌ Training failed. Please check the logs above for details."
 fi
