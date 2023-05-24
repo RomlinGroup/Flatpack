@@ -73,7 +73,8 @@ pub async fn parse_toml_to_dockerfile(url: &str) -> Result<String, Box<dyn Error
         dockerfile.push_str(&format!(" && apt-get install -y {}", package_list.join(" ")));
     }
 
-    dockerfile.push_str(" && rm -rf /var/lib/apt/lists/*");
+    // Remove unnecessary packages and clear apt cache
+    dockerfile.push_str(" && apt-get autoremove -y && apt-get clean && rm -rf /var/lib/apt/lists/*");
 
     if let Some(python_packages) = config.packages.get("python") {
         let package_list: Vec<String> = python_packages
