@@ -16,7 +16,7 @@ BATCH_SIZE="--batch_size=12"
 N_LAYER="--n_layer=4"
 N_HEAD="--n_head=4"
 N_EMBD="--n_embd=128"
-MAX_ITERS="--max_iters=2000"
+MAX_ITERS="--max_iters=10000"
 LR_DECAY_ITERS="--lr_decay_iters=2000"
 DROPOUT="--dropout=0.0"
 
