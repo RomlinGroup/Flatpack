@@ -23,7 +23,7 @@ scripts = "/home/content/scripts"
 [packages.unix]
 gcc = "*"
 git = "*"
-python3-dev = "*"
+psutil = "*"
 python3-pip = "*"
 wget = "*"
 

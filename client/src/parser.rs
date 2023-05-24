@@ -41,22 +41,22 @@ pub async fn parse_toml_to_dockerfile(url: &str) -> Result<String, Box<dyn Error
     dockerfile.push_str("# It is not intended for manual editing.\n\n");
 
     // Base image
-    dockerfile.push_str(&format!("FROM {}\n\n", config.base_image));
-
-    // Environment variables
-    for (key, value) in config.environment.iter() {
-        dockerfile.push_str(&format!("ENV {}={}\n", key, value));
-    }
+    dockerfile.push_str(&format!("FROM {}\n", config.base_image));
 
     // Create directories
     dockerfile.push_str("\n# Create directories\n");
     let directories: Vec<&str> = config.directories.values().map(|v| v.as_str()).collect();
     dockerfile.push_str(&format!("RUN mkdir -p {}\n", directories.join(" ")));
 
+    // Environment variables
+    for (key, value) in config.environment.iter() {
+        dockerfile.push_str(&format!("ENV {}={}\n", key, value));
+    }
+
     // Install packages
     dockerfile.push_str("\n# Install packages\n");
 
-    // Update package list and upgrade all packages
+    // Update package list
     dockerfile.push_str("RUN apt-get update && apt-get upgrade -y");
 
     if let Some(unix_packages) = config.packages.get("unix") {
@@ -70,9 +70,13 @@ pub async fn parse_toml_to_dockerfile(url: &str) -> Result<String, Box<dyn Error
                 }
             })
             .collect();
-        dockerfile.push_str(&format!(" && apt-get install -y {}", package_list.join(" ")));
+        dockerfile.push_str(&format!(" && apt-get install -y --no-install-recommends {}", package_list.join(" ")));
     }
 
+    // Remove unnecessary packages
+    dockerfile.push_str(" && apt-get remove -y gcc && apt-get autoremove -y && apt-get clean");
+
+    // Clear apt cache
     dockerfile.push_str(" && rm -rf /var/lib/apt/lists/*");
 
     if let Some(python_packages) = config.packages.get("python") {
