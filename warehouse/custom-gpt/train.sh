@@ -56,6 +56,9 @@ if [ $? -eq 0 ]; then
 
   log_info "🤖 Starting sampling..."
 
+  # Modify the sample script to use CPU
+  sed -i -e "s/device = 'cuda'/device = 'cpu'/g" $SAMPLE_SCRIPT
+
   # Run the sample script
   python3 "$SAMPLE_SCRIPT" "$SAMPLE_CONFIG" || handle_error "❌ Sampling failed. Please check the logs above for details."
 
