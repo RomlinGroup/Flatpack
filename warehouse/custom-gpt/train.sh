@@ -22,7 +22,7 @@ DROPOUT="--dropout=0.0"
 
 # Logging function
 log_info() {
-  echo "ℹ️  $1"
+  echo "$1"
 }
 
 # Error handling function
