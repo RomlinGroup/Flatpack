@@ -1,9 +1,9 @@
 # flatpack.toml
 # WIP (2023-05-23)
 
-version = "0.0.4"
+version = "0.0.5"
 license = "apache-2.0"
-base_image = "python:3.11-slim-buster"
+base_image = "debian:stable-slim"
 
 [environment]
 model_name = "custom-gpt"
@@ -21,12 +21,10 @@ scripts = "/home/content/scripts"
 [packages]
 
 [packages.unix]
-curl = "*"
 gcc = "*"
 git = "*"
 python3-dev = "*"
 wget = "*"
-unzip = "*"
 
 [packages.python]
 datasets = "*"
