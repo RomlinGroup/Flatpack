@@ -12,6 +12,23 @@ label,
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
+select {
+    width: 100%;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 0;
+    color: #333;
+    background-color: #fff;
+    box-sizing: border-box;
+    transition: border-color 0.3s ease;
+    margin-bottom: 15px;
+    font-size: 18px;
+}
+
+select:focus {
+    border-color: #007BFF;
+}
+
 button {
     width: 100%;
     padding: 15px;
@@ -43,7 +60,7 @@ main {
     margin: 30px auto;
     padding: 30px;
     background-color: #fff;
-    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
 label {

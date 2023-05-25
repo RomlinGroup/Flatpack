@@ -1,6 +1,7 @@
 const testParserButton = document.getElementById("test-parser-button");
 const testParserResult = document.getElementById("test-parser-result");
 const downloadButton = document.getElementById("download-button");
+const flatpackSelector = document.getElementById("flatpack-selector");
 
 const handleError = (element, error) => {
     element.value = `Error: ${error || 'Could not reach the server'}`;
@@ -8,14 +9,24 @@ const handleError = (element, error) => {
 
 const updateResult = (result) => {
     testParserResult.value = result.trim();
-    downloadButton.disabled = false;
+
+    // Only enable the Download button if the result doesn't start with "Error"
+    downloadButton.disabled = result.trim().startsWith('Error');
 };
 
 testParserButton.addEventListener("click", async () => {
-    const tomlUrl = encodeURIComponent("https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/nanogpt-shakespeare/flatpack.toml");
+    const selectedFlatpack = flatpackSelector.value;
+
+    // If no flatpack is selected, show a message in the textarea and stop the execution of the function
+    if (!selectedFlatpack) {
+        testParserResult.value = 'Please select a flatpack.';
+        downloadButton.disabled = true;  // Disable the Download button
+        return;
+    }
+
+    const tomlUrl = encodeURIComponent(`https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/${selectedFlatpack}/flatpack.toml`);
 
     try {
-        // Disable the button and show a progress indicator
         testParserButton.disabled = true;
         testParserButton.innerHTML = "Working...";
 
@@ -25,7 +36,6 @@ testParserButton.addEventListener("click", async () => {
     } catch (error) {
         handleError(testParserResult, error);
     } finally {
-        // Re-enable the button and remove the progress indicator
         testParserButton.disabled = false;
         testParserButton.innerHTML = "Test Parser";
     }
