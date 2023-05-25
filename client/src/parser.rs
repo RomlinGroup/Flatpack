@@ -12,8 +12,6 @@ pub struct Config {
     environment: BTreeMap<String, String>,
     file: Vec<BTreeMap<String, String>>,
     git: Vec<BTreeMap<String, String>>,
-    #[allow(dead_code)]
-    license: String,
     packages: BTreeMap<String, BTreeMap<String, String>>,
     port: Vec<BTreeMap<String, u16>>,
     run: Vec<BTreeMap<String, String>>,

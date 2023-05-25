@@ -21,6 +21,12 @@ To use the client, follow these steps:
 4. To start the server, run: `cargo run -- run-server`
 5. Visit http://localhost:8080
 
+## Podman 🦭
+
+1. Download [Podman](https://podman.io/) ([Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0))
+2. `podman build -t nanogpt-shakespeare -f Containerfile .`
+3. `podman run -it nanogpt-shakespeare:latest`
+
 ## Commercial use allowed (no affiliation) 📈
 
 We constantly search for datasets and models suitable for future deployment as [flatpacks](https://github.com/romlingroup/flatpack-ai/tree/main/warehouse) (coming soon). Therefore, if you know of any high-quality datasets or models with commercially viable licenses, we would appreciate it if you submitted them via a pull request.
