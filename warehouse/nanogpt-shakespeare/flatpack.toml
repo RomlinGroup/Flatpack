@@ -1,8 +1,7 @@
 # flatpack.toml
-# WIP (2023-05-23)
+# WIP (2023-05-25)
 
 version = "0.0.5"
-license = "apache-2.0"
 base_image = "debian:stable-slim"
 
 [environment]
