@@ -12,7 +12,7 @@ const updateResult = (result) => {
 };
 
 testParserButton.addEventListener("click", async () => {
-    const tomlUrl = encodeURIComponent("https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/custom-gpt/flatpack.toml");
+    const tomlUrl = encodeURIComponent("https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/nanogpt-shakespeare/flatpack.toml");
 
     try {
         // Disable the button and show a progress indicator

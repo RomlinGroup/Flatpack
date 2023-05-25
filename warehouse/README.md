@@ -10,9 +10,9 @@ Train AI models - not your patience
 
 Ahoy, brave explorer!
 
-| Name                                                                                    | Type     | License                                                           |
-|:----------------------------------------------------------------------------------------|:---------|:------------------------------------------------------------------|
-| [custom-gpt](https://github.com/romlingroup/flatpack-ai/tree/main/warehouse/custom-gpt) | Flatpack | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) |
+| Name                                                                                                      | Type     | License                                                           |
+|:----------------------------------------------------------------------------------------------------------|:---------|:------------------------------------------------------------------|
+| [nanogpt-shakespeare](https://github.com/romlingroup/flatpack-ai/tree/main/warehouse/nanogpt-shakespeare) | Flatpack | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) |
 
 ### Friendly notice ❤️
 

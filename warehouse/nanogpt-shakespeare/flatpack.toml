@@ -6,7 +6,7 @@ license = "apache-2.0"
 base_image = "debian:stable-slim"
 
 [environment]
-model_name = "custom-gpt"
+model_name = "nanogpt-shakespeare"
 
 [[port]]
 external = 8080
@@ -40,7 +40,7 @@ from_source = "https://raw.githubusercontent.com/karpathy/char-rnn/master/data/t
 to_destination = "/home/content/data/input.txt"
 
 [[file]]
-from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/custom-gpt/train.sh"
+from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/nanogpt-shakespeare/train.sh"
 to_destination = "/home/content/train.sh"
 
 [[git]]
