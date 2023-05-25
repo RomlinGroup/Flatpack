@@ -21,7 +21,7 @@ To use the client, follow these steps:
 4. To start the server, run: `cargo run -- run-server`
 5. Visit http://localhost:8080
 
-## Podman 🦭
+## Container (Podman) 🦭
 
 1. Download [Podman](https://podman.io/) ([Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0))
 2. `podman build -t nanogpt-shakespeare -f Containerfile .`
