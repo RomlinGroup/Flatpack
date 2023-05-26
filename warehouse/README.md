@@ -6,7 +6,7 @@
 
 Train AI models - not your patience
 
-## Registry 🚧
+## Registry 📦
 
 Ahoy, brave explorer!
 
