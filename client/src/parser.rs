@@ -183,3 +183,67 @@ pub async fn parse_toml_to_dockerfile(url: &str) -> Result<String, Box<dyn Error
         Err(e) => Err(format!("Error parsing Containerfile: {}", e).into())
     }
 }
+
+pub async fn parse_toml_to_pyenv_script(url: &str) -> Result<String, Box<dyn Error>> {
+    // The beginning of this function is the same as parse_toml_to_dockerfile...
+    let response = reqwest::get(url).await?;
+    if !response.status().is_success() {
+        return Err(format!("Failed to get file from URL: server responded with status code {}", response.status()).into());
+    }
+    let res = response.text().await?;
+    let config: Config = toml::from_str(&res)?;
+    let mut script = String::new();
+
+    script.push_str("#!/bin/bash\n");
+
+    // Create directories
+    for (_, directory) in &config.directories {
+        script.push_str(&format!("mkdir -p {}\n", directory));
+    }
+
+    // Set environment variables
+    for (key, value) in &config.environment {
+        script.push_str(&format!("export {}={}\n", key, value));
+    }
+
+    // Install Python packages
+    if let Some(python_packages) = config.packages.get("python") {
+        let package_list: Vec<String> = python_packages
+            .iter()
+            .map(|(package, version)| {
+                if version == "*" || version.is_empty() {
+                    format!("{}", package)  // If version is not specified or "*", get the latest version
+                } else {
+                    format!("{}=={}", package, version)  // If version is specified, get that version
+                }
+            })
+            .collect();
+        script.push_str(&format!(
+            "pip install {}\n",
+            package_list.join(" ")
+        ));
+    }
+
+    // Download datasets and files
+    for dataset in &config.dataset {
+        if let (Some(from_source), Some(to_destination)) = (dataset.get("from_source"), dataset.get("to_destination")) {
+            script.push_str(&format!("wget {} -O {}\n", from_source, to_destination));
+        }
+    }
+
+    // Git repositories
+    for git in &config.git {
+        if let (Some(from_source), Some(to_destination)) = (git.get("from_source"), git.get("to_destination")) {
+            script.push_str(&format!("git clone {} {}\n", from_source, to_destination));
+        }
+    }
+
+    // RUN commands
+    for run in &config.run {
+        if let (Some(command), Some(args)) = (run.get("command"), run.get("args")) {
+            script.push_str(&format!("{} {}\n", command, args));
+        }
+    }
+
+    Ok(script)
+}

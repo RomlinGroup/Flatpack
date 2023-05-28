@@ -11,7 +11,7 @@
 <main>
     <section>
         <select id="flatpack-selector">
-            <option value="">Select a flatpack</option>
+            <option value="">Select flatpack</option>
             <option value="nanogpt-shakespeare">nanogpt-shakespeare</option>
         </select>
         <button id="test-parser-button">Test Parser</button>
@@ -19,10 +19,14 @@
 
     <section>
         <div class="test-parser-result">
-            <label for="test-parser-result">Result</label>
+            <label for="test-parser-result">🦭 Containerfile</label>
             <textarea id="test-parser-result" autocomplete="off" readonly></textarea>
-            <button id="download-button" disabled>Download Containerfile</button>
         </div>
+        <div class="test-parser-pyenv-result">
+            <label for="test-parser-pyenv-result">🐍 Pyenv</label>
+            <textarea id="test-parser-pyenv-result" autocomplete="off" readonly></textarea>
+        </div>
+        <button id="download-button" disabled>Download Containerfile</button>
     </section>
 </main>
 

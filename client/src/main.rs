@@ -36,6 +36,15 @@ async fn test_parser(path: web::Path<String>) -> impl Responder {
     }
 }
 
+#[get("/test_pyenv_parser/{path}")]
+async fn test_pyenv_parser(path: web::Path<String>) -> impl Responder {
+    let url = path.into_inner();
+    match parser::parse_toml_to_pyenv_script(&url).await {
+        Ok(pyenv_script) => HttpResponse::Ok().content_type("text/plain").body(pyenv_script),
+        Err(e) => HttpResponse::InternalServerError().content_type("text/plain").body(format!("Error when parsing TOML: {}", e)),
+    }
+}
+
 #[derive(StructOpt)]
 #[structopt(name = "flatpack", about = "flatpack.ai CLI")]
 enum Opt {
@@ -60,8 +69,8 @@ async fn main() -> std::io::Result<()> {
                     let mut file = File::create("Containerfile").expect("Could not create file");
                     file.write_all(dockerfile.as_bytes()).expect("Could not write to file");
 
-                    // Print the generated Dockerfile
-                    println!("Dockerfile generated:\n{}", dockerfile);
+                    // Print the generated Containerfile
+                    println!("Containerfile generated:\n{}", dockerfile);
 
                     return Ok(());
                 }
@@ -74,13 +83,13 @@ async fn main() -> std::io::Result<()> {
 
         Opt::RunServer => {
             let docker = Docker::connect_with_local_defaults().unwrap();
-
             HttpServer::new(move || {
                 App::new()
                     .app_data(web::Data::new(docker.clone()))
                     .service(Files::new("/static", "static").show_files_listing())
                     .service(index)
                     .service(test_parser)
+                    .service(test_pyenv_parser)
             })
                 .bind("127.0.0.1:8080")?
                 .run()

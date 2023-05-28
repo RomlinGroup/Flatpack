@@ -1,5 +1,6 @@
 const testParserButton = document.getElementById("test-parser-button");
 const testParserResult = document.getElementById("test-parser-result");
+const testParserPyenvResult = document.getElementById("test-parser-pyenv-result");
 const downloadButton = document.getElementById("download-button");
 const flatpackSelector = document.getElementById("flatpack-selector");
 
@@ -9,9 +10,11 @@ const handleError = (element, error) => {
 
 const updateResult = (result) => {
     testParserResult.value = result.trim();
-
     // Only enable the Download button if the result doesn't start with "Error"
     downloadButton.disabled = result.trim().startsWith('Error');
+
+    // Test
+    testParserPyenvResult.value = "Hello, World!"
 };
 
 testParserButton.addEventListener("click", async () => {
@@ -45,7 +48,7 @@ downloadButton.addEventListener("click", () => {
     const dockerfileContent = testParserResult.value;
 
     if (dockerfileContent.trim() === "") {
-        alert("Please generate the Dockerfile first.");
+        alert("Please generate the Containerfile first.");
         return;
     }
 
@@ -56,4 +59,10 @@ downloadButton.addEventListener("click", () => {
     anchor.download = "Containerfile";
     anchor.click();
     URL.revokeObjectURL(url);
+});
+
+// Reset the dropdown on page load
+window.addEventListener('load', function () {
+    const dropdown = document.getElementById('flatpack-selector');
+    dropdown.selectedIndex = 0; // Set the selected index to the first option (index 0)
 });
