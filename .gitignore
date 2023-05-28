@@ -9,3 +9,6 @@
 
 # Ignore build artifacts in the target directory
 target/
+
+client/pyenv.sh
+client/Containerfile
