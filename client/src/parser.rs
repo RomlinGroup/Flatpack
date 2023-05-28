@@ -185,26 +185,39 @@ pub async fn parse_toml_to_dockerfile(url: &str) -> Result<String, Box<dyn Error
 }
 
 pub async fn parse_toml_to_pyenv_script(url: &str) -> Result<String, Box<dyn Error>> {
-    // The beginning of this function is the same as parse_toml_to_dockerfile...
     let response = reqwest::get(url).await?;
     if !response.status().is_success() {
         return Err(format!("Failed to get file from URL: server responded with status code {}", response.status()).into());
     }
     let res = response.text().await?;
     let config: Config = toml::from_str(&res)?;
+    let model_name = config.environment.get("model_name").ok_or("Missing model_name in flatpack.toml")?;
     let mut script = String::new();
 
     script.push_str("#!/bin/bash\n");
 
+    // Create a new project directory
+    script.push_str(&format!("mkdir -p ./{}\n", model_name));
+
     // Create directories
-    for (_, directory) in &config.directories {
-        script.push_str(&format!("mkdir -p {}\n", directory));
+    script.push_str("# Create directories\n");
+    for (_directory_name, directory_path) in &config.directories {
+        let formatted_directory_path = directory_path.trim_start_matches('/');
+        let without_home_content = formatted_directory_path.trim_start_matches("home/content/");
+        script.push_str(&format!("mkdir -p ./{}/{}\n", model_name, without_home_content));
     }
 
     // Set environment variables
     for (key, value) in &config.environment {
-        script.push_str(&format!("export {}={}\n", key, value));
+        script.push_str(&format!("export {}={}\n", key, value.replace("/home/content/", &format!("./{}/", model_name))));
     }
+
+    // Navigate to the project directory
+    script.push_str(&format!("cd ./{}/\n", model_name));
+
+    // Create a new pyenv environment and activate it
+    script.push_str("pyenv virtualenv 3.11.3 myenv\n");
+    script.push_str("pyenv activate myenv\n");
 
     // Install Python packages
     if let Some(python_packages) = config.packages.get("python") {
@@ -227,23 +240,27 @@ pub async fn parse_toml_to_pyenv_script(url: &str) -> Result<String, Box<dyn Err
     // Download datasets and files
     for dataset in &config.dataset {
         if let (Some(from_source), Some(to_destination)) = (dataset.get("from_source"), dataset.get("to_destination")) {
-            script.push_str(&format!("wget {} -O {}\n", from_source, to_destination));
+            script.push_str(&format!("wget {} -P ./{}/{}\n", from_source, model_name, to_destination.replace("/home/content/", "")));
         }
     }
 
     // Git repositories
     for git in &config.git {
         if let (Some(from_source), Some(to_destination)) = (git.get("from_source"), git.get("to_destination")) {
-            script.push_str(&format!("git clone {} {}\n", from_source, to_destination));
+            script.push_str(&format!("git clone {} ./{}/{}\n", from_source, model_name, to_destination.replace("/home/content/", "")));
         }
     }
 
     // RUN commands
     for run in &config.run {
         if let (Some(command), Some(args)) = (run.get("command"), run.get("args")) {
-            script.push_str(&format!("{} {}\n", command, args));
+            script.push_str(&format!("{} {}\n", command, args.replace("/home/content/", "")));
         }
     }
+
+    // Add pyenv command to the script
+    script.push_str("\n# Set up pyenv\n");
+    script.push_str("pyenv init -\n");
 
     Ok(script)
 }

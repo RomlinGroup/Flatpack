@@ -63,6 +63,8 @@ async fn main() -> std::io::Result<()> {
     match opt {
         Opt::Parse { path } => {
             let file_path = path.to_str().unwrap_or_default().to_string();
+
+            // Generate Dockerfile
             match parser::parse_toml_to_dockerfile(&file_path).await {
                 Ok(dockerfile) => {
                     // Write the Containerfile to a local file
@@ -71,11 +73,27 @@ async fn main() -> std::io::Result<()> {
 
                     // Print the generated Containerfile
                     println!("Containerfile generated:\n{}", dockerfile);
+                }
+                Err(e) => {
+                    eprintln!("Error when parsing TOML to Dockerfile: {}", e);
+                    std::process::exit(1);
+                }
+            }
+
+            // Generate Pyenv script
+            match parser::parse_toml_to_pyenv_script(&file_path).await {
+                Ok(pyenv_script) => {
+                    // Write the pyenv script to a local file
+                    let mut file = File::create("pyenv.sh").expect("Could not create file");
+                    file.write_all(pyenv_script.as_bytes()).expect("Could not write to file");
+
+                    // Print the generated Pyenv script
+                    println!("Pyenv script generated:\n{}", pyenv_script);
 
                     return Ok(());
                 }
                 Err(e) => {
-                    eprintln!("Error when parsing TOML: {}", e);
+                    eprintln!("Error when parsing TOML to Pyenv script: {}", e);
                     std::process::exit(1);
                 }
             }

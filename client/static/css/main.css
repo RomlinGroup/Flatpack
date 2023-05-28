@@ -8,7 +8,8 @@ body {
 
 button,
 label,
-.test-parser-result textarea {
+.test-parser-result textarea,
+.test-parser-pyenv-result textarea {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
@@ -78,7 +79,6 @@ label {
     padding: 10px;
     background: #333;
     color: #fff;
-    box-sizing: border-box;
     margin-bottom: 0;
 }
 
@@ -94,7 +94,6 @@ label {
     padding: 10px;
     background: #333;
     color: #fff;
-    box-sizing: border-box;
     margin-bottom: 15px;
 }
 
