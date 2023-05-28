@@ -196,6 +196,9 @@ pub async fn parse_toml_to_pyenv_script(url: &str) -> Result<String, Box<dyn Err
 
     script.push_str("#!/bin/bash\n");
 
+    // Check if pyenv is installed, and if not, ask for user permission to install it
+    script.push_str("command -v pyenv >/dev/null 2>&1 || { echo >&2 \"pyenv not found.\"; read -p \"Do you wish to install pyenv? (y/n) \" -n 1 -r; echo; if [[ $REPLY =~ ^[Yy]$ ]]; then curl https://pyenv.run | bash; else echo \"pyenv is required. Exiting...\"; exit 1; fi; }\n");
+
     // Create a new project directory
     script.push_str(&format!("mkdir -p ./{}\n", model_name));
 
@@ -240,6 +243,13 @@ pub async fn parse_toml_to_pyenv_script(url: &str) -> Result<String, Box<dyn Err
     // Download datasets and files
     for dataset in &config.dataset {
         if let (Some(from_source), Some(to_destination)) = (dataset.get("from_source"), dataset.get("to_destination")) {
+            script.push_str(&format!("wget {} -P ./{}/{}\n", from_source, model_name, to_destination.replace("/home/content/", "")));
+        }
+    }
+
+    // Download files
+    for file in &config.file {
+        if let (Some(from_source), Some(to_destination)) = (file.get("from_source"), file.get("to_destination")) {
             script.push_str(&format!("wget {} -P ./{}/{}\n", from_source, model_name, to_destination.replace("/home/content/", "")));
         }
     }
