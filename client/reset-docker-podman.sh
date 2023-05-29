@@ -29,6 +29,7 @@ reset_docker() {
 # Function to reset Podman
 reset_podman() {
   echo "🦭 Resetting the entire local Podman environment!"
+  trap 'catch_err $?; exit' ERR
   # Stop and remove all Podman containers
   containers=$(podman ps -a -q)
   if [ -n "$containers" ]; then
@@ -49,6 +50,11 @@ reset_podman() {
   echo "♻️ Cleaning up unused Podman objects and networks."
   podman volume prune -f
   podman network prune -f
+}
+
+catch_err() {
+  echo "Podman encountered an error and may not be running or properly configured."
+  echo "Skipping Podman cleanup."
 }
 
 # Prompt the user for confirmation
