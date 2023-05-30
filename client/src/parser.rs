@@ -196,14 +196,10 @@ pub async fn parse_toml_to_pyenv_script(url: &str) -> Result<String, Box<dyn Err
 
     script.push_str("#!/bin/bash\n");
 
-    // Check if pyenv is installed, and if not, ask for user permission to install it
-    script.push_str("command -v pyenv >/dev/null 2>&1 || { echo >&2 \"pyenv not found.\"; read -p \"Do you wish to install pyenv? (y/n) \" -n 1 -r; echo; if [[ $REPLY =~ ^[Yy]$ ]]; then curl https://pyenv.run | bash; else echo \"pyenv is required. Exiting...\"; exit 1; fi; }\n");
-
     // Create a new project directory
     script.push_str(&format!("mkdir -p ./{}\n", model_name));
 
     // Create directories
-    script.push_str("# Create directories\n");
     for (_directory_name, directory_path) in &config.directories {
         let formatted_directory_path = directory_path.trim_start_matches('/');
         let without_home_content = formatted_directory_path.trim_start_matches("home/content/");
