@@ -196,8 +196,6 @@ pub async fn parse_toml_to_pyenv_script(url: &str) -> Result<String, Box<dyn Err
 
     script.push_str("#!/bin/bash\n");
 
-    script.push_str("brew install pyenv pyenv-virtualenv\n");
-
     // Create a new project directory
     script.push_str(&format!("mkdir -p ./{}\n", model_name));
 
