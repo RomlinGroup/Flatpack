@@ -215,7 +215,7 @@ pub async fn parse_toml_to_pyenv_script(url: &str) -> Result<String, Box<dyn Err
     script.push_str(&format!("cd ./{}/\n", model_name));
 
     // Create a new pyenv environment and activate it
-    script.push_str("pyenv install 3.11.3\n")
+    script.push_str("pyenv install 3.11.3\n");
     script.push_str("pyenv virtualenv 3.11.3 myenv\n");
     script.push_str("pyenv activate myenv\n");
 
