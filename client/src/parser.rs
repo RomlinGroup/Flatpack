@@ -196,6 +196,28 @@ pub async fn parse_toml_to_pyenv_script(url: &str) -> Result<String, Box<dyn Err
 
     script.push_str("#!/bin/bash\n");
 
+    script.push_str("if ! command -v pyenv >/dev/null; then\n");
+    script.push_str("  echo \"pyenv not found. Please install pyenv.\"\n");
+    script.push_str("  exit 1\n");
+    script.push_str("fi\n");
+
+    script.push_str("if ! command -v wget >/dev/null; then\n");
+    script.push_str("  echo \"wget not found. Please install wget.\"\n");
+    script.push_str("  exit 1\n");
+    script.push_str("fi\n");
+
+    script.push_str("if ! command -v git >/dev/null; then\n");
+    script.push_str("  echo \"git not found. Please install git.\"\n");
+    script.push_str("  exit 1\n");
+    script.push_str("fi\n");
+
+    script.push_str("export PYENV_ROOT=\"$HOME/.pyenv\"\n");
+    script.push_str("export PATH=\"$PYENV_ROOT/bin:$PATH\"\n");
+    script.push_str("if command -v pyenv 1>/dev/null 2>&1; then\n");
+    script.push_str("  eval \"$(pyenv init -)\"\n");
+    script.push_str("  eval \"$(pyenv virtualenv-init -)\"\n");
+    script.push_str("fi\n");
+
     // Create a new project directory
     script.push_str(&format!("mkdir -p ./{}\n", model_name));
 
@@ -215,9 +237,11 @@ pub async fn parse_toml_to_pyenv_script(url: &str) -> Result<String, Box<dyn Err
     script.push_str(&format!("cd ./{}/\n", model_name));
 
     // Create a new pyenv environment and activate it
-    script.push_str("pyenv install 3.11.3\n");
-    script.push_str("pyenv virtualenv 3.11.3 myenv\n");
-    script.push_str("pyenv activate myenv\n");
+    let version = "3.11.3";
+    let env_name = "myenv";
+    script.push_str(&format!("if ! pyenv versions | grep -q {0}; then\n  pyenv install {0}\nfi\n", version));
+    script.push_str(&format!("if ! pyenv virtualenvs | grep -q {0}; then\n  pyenv virtualenv {1} {0}\nfi\n", env_name, version));
+    script.push_str(&format!("pyenv activate {}\n", env_name));
 
     // Install Python packages
     if let Some(python_packages) = config.packages.get("python") {
@@ -264,9 +288,6 @@ pub async fn parse_toml_to_pyenv_script(url: &str) -> Result<String, Box<dyn Err
             script.push_str(&format!("{} {}\n", command, args.replace("/home/content/", "")));
         }
     }
-
-    // Add pyenv command to the script
-    script.push_str("pyenv init -\n");
 
     Ok(script)
 }
