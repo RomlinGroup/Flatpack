@@ -3,12 +3,14 @@
 OS=$(uname)
 if [ "$OS" = "Darwin" ]; then
   echo "Running on macOS"
+  WORK_DIR="/nanoGPT"
+  DEVICE="gpu"
 else
   echo "Not running on macOS"
+  WORK_DIR="/home/content/nanoGPT"
+  DEVICE="cpu"
 fi
 
-# Set the working directory
-WORK_DIR="/home/content/nanoGPT"
 cd "$WORK_DIR" || exit
 
 # Define configuration variables
@@ -16,7 +18,6 @@ TRAIN_SCRIPT="train.py"
 TRAIN_CONFIG="config/train_shakespeare_char.py"
 SAMPLE_SCRIPT="sample.py"
 SAMPLE_CONFIG="--out_dir=out-shakespeare-char"
-DEVICE="cpu"
 COMPILE_FLAG="--compile=False"
 EVAL_ITERS="--eval_iters=20"
 LOG_INTERVAL="--log_interval=1"
