@@ -8,7 +8,7 @@
 
 >:warning: **DISCLAIMER:** This repository contains our research. Verify the information and do your own research (DYOR). We assume no responsibility for accuracy or completeness.
 
-> **😱 Regarding AI fearmongering:** [At what specific date in the future, if the apocalypse hasn't happened, will you finally admit to being wrong?](https://bigthink.com/pessimists-archive/ai-fear-overpopulation/) (Archie McKenzie 2023) / [Fearmongering is a technique that has benefited many people over the ages.](https://www.youtube.com/watch?v=2ZbRKxZ2cjM) (Fred L. Smith, Jr. 2019) / [You don't stop the technology; you monitor our conduct as human beings in the face of it.](https://www.youtube.com/watch?v=cfd0p9HhMKM) (Neil deGrasse Tyson 2015)
+> **😱 Regarding AI fearmongering:** [Fear of AI is this century's overpopulation scare](https://bigthink.com/pessimists-archive/ai-fear-overpopulation/) (Big Think 2023) / [How politicians and groups can profit from fearmongering](https://www.youtube.com/watch?v=2ZbRKxZ2cjM) (Acton Institute 2019)
 
 
 flatpack.ai will democratize AI by providing a modular and open platform for anyone to train their AI models from scratch with cutting-edge technology accessible to all. What flatpacks did for the furniture industry, we will do for the AI industry.
