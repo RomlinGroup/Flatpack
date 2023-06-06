@@ -44,6 +44,8 @@ We constantly search for datasets and models suitable for future deployment as [
 | [stablelm-base-alpha-3b](https://huggingface.co/stabilityai/stablelm-base-alpha-3b)               | Model   | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)   |
 | [stablelm-base-alpha-7b](https://huggingface.co/stabilityai/stablelm-base-alpha-7b)               | Model   | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)   |
 
+> 💀 **Regarding AI fearmongering:** [At what specific date in the future, if the apocalypse hasn't happened, will you finally admit to being wrong?](https://bigthink.com/pessimists-archive/ai-fear-overpopulation/)
+
 ### Friendly notice ❤️
 
 The flatpack.ai logo belongs to [Romlin Group AB](https://romlin.com) and is protected by copyright. Please note that the logo is NOT covered by the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) that applies to the source code in this repository. If you want to use the logo for anything besides GitHub shenanigans, please ask for permission first. Thanks a million for being super awesome and respectful!

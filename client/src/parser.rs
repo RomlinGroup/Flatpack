@@ -264,7 +264,7 @@ pub async fn parse_toml_to_pyenv_script(url: &str) -> Result<String, Box<dyn Err
     // Download datasets and files
     for dataset in &config.dataset {
         if let (Some(from_source), Some(to_destination)) = (dataset.get("from_source"), dataset.get("to_destination")) {
-            script.push_str(&format!("wget {} -P ./{}/{}\n", from_source, model_name, to_destination.replace("/home/content/", "")));
+            script.push_str(&format!("wget {} -P ./{}\n", from_source, to_destination.replace("/home/content/", "")));
         }
     }
 
@@ -285,7 +285,9 @@ pub async fn parse_toml_to_pyenv_script(url: &str) -> Result<String, Box<dyn Err
     // RUN commands
     for run in &config.run {
         if let (Some(command), Some(args)) = (run.get("command"), run.get("args")) {
-            script.push_str(&format!("{} {}\n", command, args.replace("/home/content/", "")));
+            // replace "/home/content/" with "./{model_name}/"
+            let replaced_args = args.replace("/home/content/", &format!("./{}/", model_name));
+            script.push_str(&format!("{} {}\n", command, replaced_args));
         }
     }
 
