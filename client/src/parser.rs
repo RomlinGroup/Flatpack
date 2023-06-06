@@ -233,9 +233,6 @@ pub async fn parse_toml_to_pyenv_script(url: &str) -> Result<String, Box<dyn Err
         script.push_str(&format!("export {}={}\n", key, value.replace("/home/content/", &format!("./{}/", model_name))));
     }
 
-    // Navigate to the project directory
-    script.push_str(&format!("cd ./{}/\n", model_name));
-
     // Create a new pyenv environment and activate it
     let version = "3.11.3";
     let env_name = "myenv";
