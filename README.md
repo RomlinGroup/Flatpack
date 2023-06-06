@@ -44,7 +44,7 @@ We constantly search for datasets and models suitable for future deployment as [
 | [stablelm-base-alpha-3b](https://huggingface.co/stabilityai/stablelm-base-alpha-3b)               | Model   | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)   |
 | [stablelm-base-alpha-7b](https://huggingface.co/stabilityai/stablelm-base-alpha-7b)               | Model   | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)   |
 
-> 💀 **Regarding AI fearmongering:** [At what specific date in the future, if the apocalypse hasn't happened, will you finally admit to being wrong?](https://bigthink.com/pessimists-archive/ai-fear-overpopulation/) (Big Think 2023) / [How politicians and groups can profit from fearmongering](https://www.youtube.com/watch?v=2ZbRKxZ2cjM) (Acton Institute 2019)
+>💀 **Regarding AI fearmongering:** [At what specific date in the future, if the apocalypse hasn't happened, will you finally admit to being wrong?](https://bigthink.com/pessimists-archive/ai-fear-overpopulation/) (Big Think 2023) / [How politicians and groups can profit from fearmongering](https://www.youtube.com/watch?v=2ZbRKxZ2cjM) (Acton Institute 2019)
 
 ### Friendly notice ❤️
 
