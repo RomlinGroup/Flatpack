@@ -1,5 +1,12 @@
 #!/bin/sh
 
+OS=$(uname)
+if [ "$OS" = "Darwin" ]; then
+  echo "Running on macOS"
+else
+  echo "Not running on macOS"
+fi
+
 # Set the working directory
 WORK_DIR="/home/content/nanoGPT"
 cd "$WORK_DIR" || exit
