@@ -3,7 +3,7 @@
 OS=$(uname)
 if [ "$OS" = "Darwin" ]; then
   echo "Running on macOS"
-  WORK_DIR="/nanoGPT"
+  WORK_DIR="nanoGPT"
   DEVICE="gpu"
 else
   echo "Not running on macOS"
