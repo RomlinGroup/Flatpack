@@ -36,6 +36,12 @@ To use the client, follow these steps:
 3. `pyenv activate myenv`
 4. `./train.sh`
 
+Do not forget to clean up
+
+1. `source deactivate`
+2. `pyenv virtualenv-delete myenv`
+3. `sudo rm -r nanogpt-shakespeare`
+
 ## Commercial use allowed (no affiliation) 📈
 
 We constantly search for datasets and models suitable for future deployment as [flatpacks](https://github.com/romlingroup/flatpack-ai/tree/main/warehouse) (coming soon). Therefore, if you know of any high-quality datasets or models with commercially viable licenses, we would appreciate it if you submitted them via a pull request.
