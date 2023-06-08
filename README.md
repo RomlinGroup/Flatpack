@@ -46,18 +46,19 @@ Do not forget to clean up
 
 We constantly search for datasets and models suitable for future deployment as [flatpacks](https://github.com/romlingroup/flatpack-ai/tree/main/warehouse) (coming soon). Therefore, if you know of any high-quality datasets or models with commercially viable licenses, we would appreciate it if you submitted them via a pull request.
 
-| Name                                                                                              | Type    | License                                                           |
-|:--------------------------------------------------------------------------------------------------|:--------|:------------------------------------------------------------------|
-| [databricks-dolly-15k](https://huggingface.co/datasets/databricks/databricks-dolly-15k)           | Dataset | [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/)   |
-| [Cerebras-GPT-13B](https://huggingface.co/cerebras/Cerebras-GPT-13B)                              | Model   | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) |
-| [mpt-7b](https://huggingface.co/mosaicml/mpt-7b)                                                  | Model   | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) |
-| [mpt-7b-instruct](https://huggingface.co/mosaicml/mpt-7b-instruct)                                | Model   | [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/)   |
-| [mpt-7b-storywriter](https://huggingface.co/mosaicml/mpt-7b-storywriter)                          | Model   | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) |
-| [open_llama_3b_350bt_preview](https://huggingface.co/openlm-research/open_llama_3b_350bt_preview) | Model   | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) |
-| [open_llama_7b_400bt_preview](https://huggingface.co/openlm-research/open_llama_7b_400bt_preview) | Model   | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) |
-| [pythia-12b](https://huggingface.co/EleutherAI/pythia-12b)                                        | Model   | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) |
-| [stablelm-base-alpha-3b](https://huggingface.co/stabilityai/stablelm-base-alpha-3b)               | Model   | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)   |
-| [stablelm-base-alpha-7b](https://huggingface.co/stabilityai/stablelm-base-alpha-7b)               | Model   | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)   |
+| Name                                                                                    | Type    | License                                                           |
+|:----------------------------------------------------------------------------------------|:--------|:------------------------------------------------------------------|
+| [databricks-dolly-15k](https://huggingface.co/datasets/databricks/databricks-dolly-15k) | Dataset | [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/)   |
+| [Cerebras-GPT-13B](https://huggingface.co/cerebras/Cerebras-GPT-13B)                    | Model   | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) |
+| [mpt-7b](https://huggingface.co/mosaicml/mpt-7b)                                        | Model   | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) |
+| [mpt-7b-instruct](https://huggingface.co/mosaicml/mpt-7b-instruct)                      | Model   | [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/)   |
+| [mpt-7b-storywriter](https://huggingface.co/mosaicml/mpt-7b-storywriter)                | Model   | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) |
+| [open_llama_3b](https://huggingface.co/openlm-research/open_llama_3b)                   | Model   | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) |
+| [open_llama_7b](https://huggingface.co/openlm-research/open_llama_7b)                   | Model   | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) |
+| [open_llama_13b_600bt](https://huggingface.co/openlm-research/open_llama_13b_600bt)     | Model   | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) |
+| [pythia-12b](https://huggingface.co/EleutherAI/pythia-12b)                              | Model   | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) |
+| [stablelm-base-alpha-3b](https://huggingface.co/stabilityai/stablelm-base-alpha-3b)     | Model   | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)   |
+| [stablelm-base-alpha-7b](https://huggingface.co/stabilityai/stablelm-base-alpha-7b)     | Model   | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)   |
 
 ### Friendly notice ❤️
 
