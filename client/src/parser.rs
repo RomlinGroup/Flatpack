@@ -253,7 +253,7 @@ pub async fn parse_toml_to_pyenv_script(url: &str) -> Result<String, Box<dyn Err
             })
             .collect();
         script.push_str(&format!(
-            "pip install {}\n",
+            "python -m pip install {}\n",
             package_list.join(" ")
         ));
     }
@@ -278,7 +278,7 @@ pub async fn parse_toml_to_pyenv_script(url: &str) -> Result<String, Box<dyn Err
             let repo_path = format!("./{}/{}", model_name, to_destination.replace("/home/content/", ""));
             script.push_str(&format!("echo 'Cloning repository from: {}'\n", from_source));
             script.push_str(&format!("git clone {} {}\n", from_source, repo_path));
-            script.push_str(&format!("if [ -f {}/requirements.txt ]; then\n  echo 'Found requirements.txt, installing dependencies...'\n  cd {}\n  pip install -r requirements.txt\n  cd -\nelse\n  echo 'No requirements.txt found.'\nfi\n", repo_path, repo_path));
+            script.push_str(&format!("if [ -f {}/requirements.txt ]; then\n  echo 'Found requirements.txt, installing dependencies...'\n  cd {}\n  python -m pip install -r requirements.txt\n  cd -\nelse\n  echo 'No requirements.txt found.'\nfi\n", repo_path, repo_path));
         }
     }
 
