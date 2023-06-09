@@ -12,6 +12,7 @@ Ahoy, brave explorer!
 
 | Name                                                                                                      | Type     |
 |:----------------------------------------------------------------------------------------------------------|:---------|
+| [nanogpt-gpt2](https://github.com/romlingroup/flatpack-ai/tree/main/warehouse/nanogpt-gpt2)               | Flatpack |
 | [nanogpt-shakespeare](https://github.com/romlingroup/flatpack-ai/tree/main/warehouse/nanogpt-shakespeare) | Flatpack |
 
 ### Friendly notice ❤️
