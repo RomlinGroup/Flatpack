@@ -1,11 +1,11 @@
 # flatpack.toml
-# WIP (2023-05-25)
+# WIP (2023-06-09)
 
-version = "0.0.5"
+version = "0.0.1"
 base_image = "debian:stable-slim"
 
 [environment]
-model_name = "nanogpt-shakespeare"
+model_name = "nanogpt-gpt2"
 
 [[port]]
 external = 8080
@@ -39,7 +39,7 @@ from_source = "https://raw.githubusercontent.com/karpathy/char-rnn/master/data/t
 to_destination = "/home/content/data/input.txt"
 
 [[file]]
-from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/nanogpt-shakespeare/train.sh"
+from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/nanogpt-gpt2/train.sh"
 to_destination = "/home/content/train.sh"
 
 [[git]]
@@ -48,7 +48,7 @@ to_destination = "/home/content/nanoGPT"
 
 [[run]]
 command = "python3"
-args = "/home/content/nanoGPT/data/shakespeare_char/prepare.py"
+args = "/home/content/nanoGPT/data/openwebtext/prepare.py"
 
 [[run]]
 
