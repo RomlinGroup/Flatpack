@@ -106,6 +106,16 @@ pub async fn parse_toml_to_dockerfile(url: &str) -> Result<String, Box<dyn Error
         }
     }
 
+    // Git repositories
+    dockerfile.push_str("\n# Clone git repositories\n");
+    for git in config.git.iter() {
+        if let (Some(from_source), Some(to_destination)) = (git.get("from_source"), git.get("to_destination")) {
+            dockerfile.push_str(&format!("RUN git clone {} {}\n", from_source, to_destination));
+        } else {
+            eprintln!("Warning: Invalid git entry. It should include both 'from_source' and 'to_destination'.");
+        }
+    }
+
     // Download datasets and files
     dockerfile.push_str("\n# Download datasets and files\n");
 
@@ -122,16 +132,6 @@ pub async fn parse_toml_to_dockerfile(url: &str) -> Result<String, Box<dyn Error
             dockerfile.push_str(&format!("RUN wget {} -O {}\n", from_source, to_destination));
         } else {
             eprintln!("Warning: Invalid file entry. It should include both 'from_source' and 'to_destination'.");
-        }
-    }
-
-    // Git repositories
-    dockerfile.push_str("\n# Clone git repositories\n");
-    for git in config.git.iter() {
-        if let (Some(from_source), Some(to_destination)) = (git.get("from_source"), git.get("to_destination")) {
-            dockerfile.push_str(&format!("RUN git clone {} {}\n", from_source, to_destination));
-        } else {
-            eprintln!("Warning: Invalid git entry. It should include both 'from_source' and 'to_destination'.");
         }
     }
 
@@ -258,6 +258,16 @@ pub async fn parse_toml_to_pyenv_script(url: &str) -> Result<String, Box<dyn Err
         ));
     }
 
+    // Git repositories
+    for git in &config.git {
+        if let (Some(from_source), Some(to_destination)) = (git.get("from_source"), git.get("to_destination")) {
+            let repo_path = format!("./{}/{}", model_name, to_destination.replace("/home/content/", ""));
+            script.push_str(&format!("echo 'Cloning repository from: {}'\n", from_source));
+            script.push_str(&format!("git clone {} {}\n", from_source, repo_path));
+            script.push_str(&format!("if [ -f {}/requirements.txt ]; then\n  echo 'Found requirements.txt, installing dependencies...'\n  cd {}\n  python -m pip install -r requirements.txt\n  cd -\nelse\n  echo 'No requirements.txt found.'\nfi\n", repo_path, repo_path));
+        }
+    }
+
     // Download datasets and files
     for dataset in &config.dataset {
         if let (Some(from_source), Some(to_destination)) = (dataset.get("from_source"), dataset.get("to_destination")) {
@@ -269,16 +279,6 @@ pub async fn parse_toml_to_pyenv_script(url: &str) -> Result<String, Box<dyn Err
     for file in &config.file {
         if let (Some(from_source), Some(to_destination)) = (file.get("from_source"), file.get("to_destination")) {
             script.push_str(&format!("wget {} -O ./{}/{}\n", from_source, model_name, to_destination.replace("/home/content/", "")));
-        }
-    }
-
-    // Git repositories
-    for git in &config.git {
-        if let (Some(from_source), Some(to_destination)) = (git.get("from_source"), git.get("to_destination")) {
-            let repo_path = format!("./{}/{}", model_name, to_destination.replace("/home/content/", ""));
-            script.push_str(&format!("echo 'Cloning repository from: {}'\n", from_source));
-            script.push_str(&format!("git clone {} {}\n", from_source, repo_path));
-            script.push_str(&format!("if [ -f {}/requirements.txt ]; then\n  echo 'Found requirements.txt, installing dependencies...'\n  cd {}\n  python -m pip install -r requirements.txt\n  cd -\nelse\n  echo 'No requirements.txt found.'\nfi\n", repo_path, repo_path));
         }
     }
 

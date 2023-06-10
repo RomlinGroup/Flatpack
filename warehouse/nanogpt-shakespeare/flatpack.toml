@@ -34,6 +34,10 @@ torch = "*"
 tqdm = "*"
 wandb = "*"
 
+[[git]]
+from_source = "https://github.com/karpathy/nanoGPT"
+to_destination = "/home/content/nanoGPT"
+
 [[dataset]]
 from_source = "https://raw.githubusercontent.com/karpathy/char-rnn/master/data/tinyshakespeare/input.txt"
 to_destination = "/home/content/data/input.txt"
@@ -41,10 +45,6 @@ to_destination = "/home/content/data/input.txt"
 [[file]]
 from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/nanogpt-shakespeare/train.sh"
 to_destination = "/home/content/train.sh"
-
-[[git]]
-from_source = "https://github.com/karpathy/nanoGPT"
-to_destination = "/home/content/nanoGPT"
 
 [[run]]
 command = "python3"
