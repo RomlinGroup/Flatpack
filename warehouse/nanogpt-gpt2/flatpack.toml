@@ -52,7 +52,7 @@ to_destination = "/home/content/train.sh"
 
 [[run]]
 command = "python3"
-args = "/home/content/nanoGPT/data/shakespeare_char/prepare.py"
+args = "/home/content/nanoGPT/data/shakespeare/prepare.py"
 
 [[run]]
 
