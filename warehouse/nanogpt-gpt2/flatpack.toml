@@ -43,10 +43,6 @@ from_source = "https://raw.githubusercontent.com/karpathy/char-rnn/master/data/t
 to_destination = "/home/content/data/input.txt"
 
 [[file]]
-from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/nanogpt-gpt2/finetune_shakespeare.py"
-to_destination = "/home/content/nanoGPT/config/finetune_shakespeare.py"
-
-[[file]]
 from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/nanogpt-gpt2/train.sh"
 to_destination = "/home/content/train.sh"
 
