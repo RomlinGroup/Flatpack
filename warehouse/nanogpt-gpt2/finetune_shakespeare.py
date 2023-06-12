@@ -10,6 +10,6 @@ init_from = 'gpt2'
 always_save_checkpoint = True
 batch_size = 1
 gradient_accumulation_steps = 32
-max_iters = 20
+max_iters = 1000
 learning_rate = 3e-5
 decay_lr = False
