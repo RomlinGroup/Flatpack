@@ -46,6 +46,10 @@ to_destination = "/home/content/data/input.txt"
 from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/nanogpt-gpt2/train.sh"
 to_destination = "/home/content/train.sh"
 
+[[file]]
+from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/nanogpt-gpt2/finetune_shakespeare.py"
+to_destination = "/home/content/nanoGPT/config/finetune_shakespeare.py"
+
 [[run]]
 command = "python3"
 args = "/home/content/nanoGPT/data/shakespeare/prepare.py"
