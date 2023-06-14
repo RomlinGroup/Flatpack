@@ -23,13 +23,13 @@ To use the client, follow these steps:
 4. To start the server, run: `cargo run -- run-server`
 5. Visit http://localhost:8080
 
-## Containerfile (Podman) 🦭
+## Containerfile 🦭
 
 1. Install [Podman](https://podman.io/) ([Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0))
 2. `podman build -t nanogpt-shakespeare -f Containerfile .`
 3. `podman run -it nanogpt-shakespeare:latest`
 
-## Pyenv (macOS) 🐍
+## Bash 🐧
 
 1. `./pyenv_macos.sh`
 2. `cd nanogpt-shakespeare`
