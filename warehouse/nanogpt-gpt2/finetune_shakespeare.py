@@ -13,6 +13,6 @@ gradient_accumulation_steps = 32
 max_iters = 1000
 learning_rate = 1e-6
 decay_lr = True
-warmup_iters = 200
+warmup_iters = 0
 lr_decay_iters = max_iters
 min_lr = learning_rate/10
