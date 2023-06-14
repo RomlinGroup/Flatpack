@@ -23,4 +23,4 @@ else
   cd "/content/nanogpt-gpt2/nanoGPT" || exit
 fi
 
-python train.py config/finetune_shakespeare_char.py --device=$DEVICE --compile=False
+python train.py config/finetune_shakespeare.py --device=$DEVICE --compile=False
