@@ -17,10 +17,10 @@ if [[ $IS_COLAB -eq 0 ]]; then
     WORK_DIR="/home/content/nanoGPT"
     DEVICE="cpu"
   fi
-
-  cd "$WORK_DIR" || exit
 else
-  cd "/content/nanogpt-gpt2/nanoGPT" || exit
+  WORK_DIR="/content/nanogpt-gpt2/nanoGPT"
+  DEVICE="cuda"
 fi
 
-python train.py config/finetune_shakespeare.py --device=$DEVICE --compile=False
+cd "$WORK_DIR" || exit
+python train.py config/train_shakespeare.py --device=$DEVICE --compile=False
