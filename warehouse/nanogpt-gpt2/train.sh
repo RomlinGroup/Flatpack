@@ -23,4 +23,4 @@ else
 fi
 
 cd "$WORK_DIR" || exit
-python train.py config/train_shakespeare.py --device=$DEVICE --compile=False
+python train.py config/finetune_shakespeare.py --device=$DEVICE --compile=False
