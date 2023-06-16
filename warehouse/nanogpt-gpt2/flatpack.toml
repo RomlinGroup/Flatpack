@@ -37,6 +37,7 @@ wandb = "*"
 [[git]]
 from_source = "https://github.com/romlingroup/nanoGPT"
 to_destination = "/home/content/nanoGPT"
+branch = "cuda-availability"
 
 [[dataset]]
 from_source = "https://raw.githubusercontent.com/karpathy/char-rnn/master/data/tinyshakespeare/input.txt"
