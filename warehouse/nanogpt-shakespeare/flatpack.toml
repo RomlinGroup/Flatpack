@@ -35,7 +35,7 @@ tqdm = "*"
 wandb = "*"
 
 [[git]]
-from_source = "https://github.com/romlingroup/nanoGPT/tree/master"
+from_source = "https://github.com/romlingroup/nanoGPT"
 to_destination = "/home/content/nanoGPT"
 
 [[dataset]]
