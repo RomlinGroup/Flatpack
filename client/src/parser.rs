@@ -109,10 +109,21 @@ pub async fn parse_toml_to_dockerfile(url: &str) -> Result<String, Box<dyn Error
     // Git repositories
     dockerfile.push_str("\n# Clone git repositories\n");
     for git in config.git.iter() {
-        if let (Some(from_source), Some(to_destination)) = (git.get("from_source"), git.get("to_destination")) {
-            dockerfile.push_str(&format!("RUN git clone {} {}\n", from_source, to_destination));
+        if let Some(from_source) = &git.from_source {
+            if let Some(to_destination) = &git.to_destination {
+                if let Some(branch) = &git.branch {
+                    dockerfile.push_str(&format!("RUN git clone -b {} {} {}\n", branch, from_source, to_destination));
+                } else if let Some(tag) = &git.tag {
+                    dockerfile.push_str(&format!("RUN git clone {} {}\n", from_source, to_destination));
+                    dockerfile.push_str(&format!("RUN cd {} && git checkout tags/{} -b tag_branch\n", to_destination, tag));
+                } else {
+                    dockerfile.push_str(&format!("RUN git clone {} {}\n", from_source, to_destination));
+                }
+            } else {
+                eprintln!("Warning: Invalid git entry. It should include 'to_destination'.");
+            }
         } else {
-            eprintln!("Warning: Invalid git entry. It should include both 'from_source' and 'to_destination'.");
+            eprintln!("Warning: Invalid git entry. It should include 'from_source'.");
         }
     }
 
@@ -274,10 +285,18 @@ pub async fn parse_toml_to_pyenv_script(url: &str) -> Result<String, Box<dyn Err
 
     // Git repositories
     for git in &config.git {
-        if let (Some(from_source), Some(to_destination)) = (git.get("from_source"), git.get("to_destination")) {
+        if let (Some(from_source), Some(to_destination)) = (&git.from_source, &git.to_destination) {
             let repo_path = format!("./{}/{}", model_name, to_destination.replace("/home/content/", ""));
             script.push_str(&format!("echo 'Cloning repository from: {}'\n", from_source));
-            script.push_str(&format!("git clone {} {}\n", from_source, repo_path));
+            if let Some(branch) = &git.branch {
+                script.push_str(&format!("git clone -b {} {} {}\n", branch, from_source, repo_path));
+            } else if let Some(tag) = &git.tag {
+                script.push_str(&format!("git clone {} {}\n", from_source, repo_path));
+                script.push_str(&format!("cd {} && git checkout tags/{} -b tag_branch\n", repo_path, tag));
+                script.push_str("cd - || exit\n");
+            } else {
+                script.push_str(&format!("git clone {} {}\n", from_source, repo_path));
+            }
             script.push_str(&format!("if [ -f {}/requirements.txt ]; then\n  echo 'Found requirements.txt, installing dependencies...'\n  cd {} || exit\n  python -m pip install -r requirements.txt\n  cd - || exit\nelse\n  echo 'No requirements.txt found.'\nfi\n", repo_path, repo_path));
         }
     }

@@ -35,8 +35,10 @@ tqdm = "*"
 wandb = "*"
 
 [[git]]
-from_source = "https://github.com/karpathy/nanoGPT"
+from_source = "https://github.com/romlingroup/nanoGPT"
 to_destination = "/home/content/nanoGPT"
+branch = "master" # You can use this or the tag field, but not both at the same time.
+#tag = "v1.0" # You can use this or the branch field, but not both at the same time.
 
 [[dataset]]
 from_source = "https://raw.githubusercontent.com/karpathy/char-rnn/master/data/tinyshakespeare/input.txt"
