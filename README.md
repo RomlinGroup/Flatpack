@@ -55,12 +55,13 @@ We constantly search for datasets and models suitable for future deployment as [
 | [falcon-7b-instruct](https://huggingface.co/tiiuae/falcon-7b-instruct)                  | Model   | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) |
 | [falcon-40b](https://huggingface.co/tiiuae/falcon-40b)                                  | Model   | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) |
 | [falcon-40b-instruct](https://huggingface.co/tiiuae/falcon-40b-instruct)                | Model   | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) |
+| [h2ogpt-oasst1-falcon-40b](https://huggingface.co/h2oai/h2ogpt-oasst1-falcon-40b)       | Model   | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) |
 | [mpt-7b](https://huggingface.co/mosaicml/mpt-7b)                                        | Model   | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) |
 | [mpt-7b-instruct](https://huggingface.co/mosaicml/mpt-7b-instruct)                      | Model   | [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/)   |
 | [mpt-7b-storywriter](https://huggingface.co/mosaicml/mpt-7b-storywriter)                | Model   | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) |
 | [open_llama_3b](https://huggingface.co/openlm-research/open_llama_3b)                   | Model   | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) |
 | [open_llama_7b](https://huggingface.co/openlm-research/open_llama_7b)                   | Model   | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) |
-| [open_llama_13b_600bt](https://huggingface.co/openlm-research/open_llama_13b_600bt)     | Model   | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) |
+| [open_llama_13b](https://huggingface.co/openlm-research/open_llama_13b)                 | Model   | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) |
 | [pythia-12b](https://huggingface.co/EleutherAI/pythia-12b)                              | Model   | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) |
 | [stablelm-base-alpha-3b](https://huggingface.co/stabilityai/stablelm-base-alpha-3b)     | Model   | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)   |
 | [stablelm-base-alpha-7b](https://huggingface.co/stabilityai/stablelm-base-alpha-7b)     | Model   | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)   |
