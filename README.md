@@ -31,7 +31,7 @@ To use the client, follow these steps:
 
 ## Bash 🐧
 
-1. `./pyenv_macos.sh`
+1. `./flatpack.sh`
 2. `cd nanogpt-shakespeare`
 3. `pyenv activate myenv`
 4. `./train.sh`
