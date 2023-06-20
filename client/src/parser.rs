@@ -169,11 +169,11 @@ pub async fn parse_toml_to_dockerfile(url: &str) -> Result<String, Box<dyn Error
 
     // CMD command
     dockerfile.push_str("\n# CMD command\n");
-    if let Some(run_vec) = &config.run {
-        if config.cmd.len() != 1 {
+    if let Some(cmd_vec) = &config.cmd {
+        if cmd_vec.len() != 1 {
             return Err("Invalid number of CMD entries. There should be exactly one CMD entry.".into());
         }
-        for cmd in config.cmd.iter() {
+        for cmd in cmd_vec.iter() {
             if let (Some(command), Some(args)) = (cmd.get("command"), cmd.get("args")) {
                 // We need to handle command and args separately
                 dockerfile.push_str("CMD [");
