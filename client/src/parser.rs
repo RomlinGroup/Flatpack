@@ -169,34 +169,30 @@ pub async fn parse_toml_to_dockerfile(url: &str) -> Result<String, Box<dyn Error
 
     // CMD command
     dockerfile.push_str("\n# CMD command\n");
-    if let Some(cmd_vec) = &config.cmd {
-        if cmd_vec.len() != 1 {
-            return Err("Invalid number of CMD entries. There should be exactly one CMD entry.".into());
-        }
-        for cmd in cmd_vec.iter() {
-            if let (Some(command), Some(args)) = (cmd.get("command"), cmd.get("args")) {
-                // We need to handle command and args separately
-                dockerfile.push_str("CMD [");
+    if config.cmd.len() != 1 {
+        return Err("Invalid number of CMD entries. There should be exactly one CMD entry.".into());
+    }
+    for cmd in config.cmd.iter() {
+        if let (Some(command), Some(args)) = (cmd.get("command"), cmd.get("args")) {
+            // We need to handle command and args separately
+            dockerfile.push_str("CMD [");
+            dockerfile.push_str("\"");
+            dockerfile.push_str(command);
+            dockerfile.push_str("\", ");
+            // Splitting the args into separate strings
+            let cmd_args: Vec<&str> = args.split(' ').collect();
+            for (i, arg) in cmd_args.iter().enumerate() {
                 dockerfile.push_str("\"");
-                dockerfile.push_str(command);
-                dockerfile.push_str("\", ");
-                // Splitting the args into separate strings
-                let cmd_args: Vec<&str> = args.split(' ').collect();
-                for (i, arg) in cmd_args.iter().enumerate() {
-                    dockerfile.push_str("\"");
-                    dockerfile.push_str(arg);
-                    dockerfile.push_str("\"");
-                    if i != cmd_args.len() - 1 {
-                        dockerfile.push_str(", ");
-                    }
+                dockerfile.push_str(arg);
+                dockerfile.push_str("\"");
+                if i != cmd_args.len() - 1 {
+                    dockerfile.push_str(", ");
                 }
-                dockerfile.push_str("]\n");
-            } else {
-                return Err("Invalid CMD entry. It should include both 'command' and 'args'.".into());
             }
+            dockerfile.push_str("]\n");
+        } else {
+            return Err("Invalid CMD entry. It should include both 'command' and 'args'.".into());
         }
-    } else {
-        dockerfile.push_str("# Found no CMD entry, proceeding without it.\n");
     }
 
     // Validate Containerfile syntax

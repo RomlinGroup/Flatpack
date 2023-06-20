@@ -109,7 +109,7 @@ async fn main() -> std::io::Result<()> {
                     .service(test_parser)
                     .service(test_pyenv_parser)
             })
-                .bind("127.0.0.1:8080")?
+                .bind("127.0.0.1:1337")?
                 .run()
                 .await
         }
