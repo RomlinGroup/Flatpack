@@ -40,6 +40,6 @@ from_source = "https://github.com/romlingroup/roop"
 to_destination = "/home/content/roop"
 branch = "master"
 
-[[run]]
+[[cmd]]
 command = "python"
 args = "/home/content/roop/run.py"
