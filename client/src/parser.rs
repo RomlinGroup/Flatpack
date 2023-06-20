@@ -7,14 +7,14 @@ use std::error::Error;
 #[derive(Deserialize)]
 pub struct Config {
     base_image: String,
-    dataset: Vec<BTreeMap<String, String>>,
-    directories: BTreeMap<String, String>,
+    dataset: Option<Vec<BTreeMap<String, String>>>,
+    directories: Option<BTreeMap<String, String>>,
     environment: BTreeMap<String, String>,
-    file: Vec<BTreeMap<String, String>>,
+    file: Option<Vec<BTreeMap<String, String>>>,
     git: Vec<BTreeMap<String, String>>,
-    packages: BTreeMap<String, BTreeMap<String, String>>,
+    packages: Option<BTreeMap<String, BTreeMap<String, String>>>,
     port: Vec<BTreeMap<String, u16>>,
-    run: Vec<BTreeMap<String, String>>,
+    run: Option<Vec<BTreeMap<String, String>>>,
     cmd: Vec<BTreeMap<String, String>>,
     #[allow(dead_code)]
     version: String,
@@ -43,8 +43,14 @@ pub async fn parse_toml_to_dockerfile(url: &str) -> Result<String, Box<dyn Error
 
     // Create directories
     dockerfile.push_str("\n# Create directories\n");
-    let directories: Vec<&str> = config.directories.values().map(|v| v.as_str()).collect();
-    dockerfile.push_str(&format!("RUN mkdir -p {}\n", directories.join(" ")));
+    if let Some(directories_map) = &config.directories {
+        for (_directory_name, directory_path) in directories_map {
+            let directories: Vec<&str> = directory_path.split_whitespace().collect();
+            dockerfile.push_str(&format!("RUN mkdir -p {}\n", directories.join(" ")));
+        }
+    } else {
+        dockerfile.push_str("# Found no directories, proceeding without it.\n");
+    }
 
     // Environment variables
     for (key, value) in config.environment.iter() {
@@ -57,38 +63,42 @@ pub async fn parse_toml_to_dockerfile(url: &str) -> Result<String, Box<dyn Error
     // Update package list
     dockerfile.push_str("RUN apt-get update && apt-get upgrade -y");
 
-    if let Some(unix_packages) = config.packages.get("unix") {
-        let package_list: Vec<String> = unix_packages
-            .iter()
-            .map(|(package, version)| {
-                if version == "*" || version.is_empty() {
-                    format!("{}", package)  // If version is not specified or "*", get the latest version
-                } else {
-                    format!("{}={}", package, version)  // If version is specified, get that version
-                }
-            })
-            .collect();
-        dockerfile.push_str(&format!(" && apt-get install -y {}", package_list.join(" ")));
-    }
+    if let Some(packages) = &config.packages {
+        if let Some(unix_packages) = packages.get("unix") {
+            let package_list: Vec<String> = unix_packages
+                .iter()
+                .map(|(package, version)| {
+                    if version == "*" || version.is_empty() {
+                        format!("{}", package)  // If version is not specified or "*", get the latest version
+                    } else {
+                        format!("{}={}", package, version)  // If version is specified, get that version
+                    }
+                })
+                .collect();
+            dockerfile.push_str(&format!(" && apt-get install -y {}", package_list.join(" ")));
+        }
 
-    // Remove unnecessary packages and clear apt cache
-    dockerfile.push_str(" && apt-get autoremove -y && apt-get clean && rm -rf /var/lib/apt/lists/*");
+        // Remove unnecessary packages and clear apt cache
+        dockerfile.push_str(" && apt-get autoremove -y && apt-get clean && rm -rf /var/lib/apt/lists/*");
 
-    if let Some(python_packages) = config.packages.get("python") {
-        let package_list: Vec<String> = python_packages
-            .iter()
-            .map(|(package, version)| {
-                if version == "*" || version.is_empty() {
-                    format!("{}", package)  // If version is not specified or "*", get the latest version
-                } else {
-                    format!("{}=={}", package, version)  // If version is specified, get that version
-                }
-            })
-            .collect();
-        dockerfile.push_str(&format!(
-            " && pip install {}",
-            package_list.join(" ")
-        ));
+        if let Some(python_packages) = packages.get("python") {
+            let package_list: Vec<String> = python_packages
+                .iter()
+                .map(|(package, version)| {
+                    if version == "*" || version.is_empty() {
+                        format!("{}", package)  // If version is not specified or "*", get the latest version
+                    } else {
+                        format!("{}=={}", package, version)  // If version is specified, get that version
+                    }
+                })
+                .collect();
+            dockerfile.push_str(&format!(
+                " && pip install {}",
+                package_list.join(" ")
+            ));
+        }
+    } else {
+        dockerfile.push_str("# Found no packages, proceeding without them.\n");
     }
 
     // Add a newline before EXPOSE ports
@@ -119,30 +129,42 @@ pub async fn parse_toml_to_dockerfile(url: &str) -> Result<String, Box<dyn Error
     // Download datasets and files
     dockerfile.push_str("\n# Download datasets and files\n");
 
-    for dataset in config.dataset.iter() {
-        if let (Some(from_source), Some(to_destination)) = (dataset.get("from_source"), dataset.get("to_destination")) {
-            dockerfile.push_str(&format!("RUN wget {} -O {}\n", from_source, to_destination));
-        } else {
-            eprintln!("Warning: Invalid dataset entry. It should include both 'from_source' and 'to_destination'.");
+    if let Some(dataset_vec) = &config.dataset {
+        for dataset in dataset_vec.iter() {
+            if let (Some(from_source), Some(to_destination)) = (dataset.get("from_source"), dataset.get("to_destination")) {
+                dockerfile.push_str(&format!("RUN wget {} -O {}\n", from_source, to_destination));
+            } else {
+                eprintln!("Warning: Invalid dataset entry. It should include both 'from_source' and 'to_destination'.");
+            }
         }
+    } else {
+        dockerfile.push_str("# Found no datasets, proceeding without them.\n");
     }
 
-    for file in config.file.iter() {
-        if let (Some(from_source), Some(to_destination)) = (file.get("from_source"), file.get("to_destination")) {
-            dockerfile.push_str(&format!("RUN wget {} -O {}\n", from_source, to_destination));
-        } else {
-            eprintln!("Warning: Invalid file entry. It should include both 'from_source' and 'to_destination'.");
+    if let Some(file_vec) = &config.file {
+        for file in file_vec.iter() {
+            if let (Some(from_source), Some(to_destination)) = (file.get("from_source"), file.get("to_destination")) {
+                dockerfile.push_str(&format!("RUN wget {} -O {}\n", from_source, to_destination));
+            } else {
+                eprintln!("Warning: Invalid file entry. It should include both 'from_source' and 'to_destination'.");
+            }
         }
+    } else {
+        dockerfile.push_str("# Found no files, proceeding without them.\n");
     }
 
     // RUN commands
     dockerfile.push_str("\n# RUN commands\n");
-    for run in config.run.iter() {
-        if let (Some(command), Some(args)) = (run.get("command"), run.get("args")) {
-            dockerfile.push_str(&format!("RUN {} {}\n", command, args));
-        } else {
-            eprintln!("Warning: Invalid run entry. It should include both 'command' and 'args'.");
+    if let Some(run_vec) = &config.run {
+        for run in run_vec.iter() {
+            if let (Some(command), Some(args)) = (run.get("command"), run.get("args")) {
+                dockerfile.push_str(&format!("RUN {} {}\n", command, args));
+            } else {
+                eprintln!("Warning: Invalid run entry. It should include both 'command' and 'args'.");
+            }
         }
+    } else {
+        dockerfile.push_str("# Found no run commands, proceeding without them.\n");
     }
 
     // CMD command
@@ -234,10 +256,14 @@ pub async fn parse_toml_to_pyenv_script(url: &str) -> Result<String, Box<dyn Err
     script.push_str(&format!("mkdir -p ./{}\n", model_name));
 
     // Create directories
-    for (_directory_name, directory_path) in &config.directories {
-        let formatted_directory_path = directory_path.trim_start_matches('/');
-        let without_home_content = formatted_directory_path.trim_start_matches("home/content/");
-        script.push_str(&format!("mkdir -p ./{}/{}\n", model_name, without_home_content));
+    if let Some(directories_map) = &config.directories {
+        for (_directory_name, directory_path) in directories_map {
+            let formatted_directory_path = directory_path.trim_start_matches('/');
+            let without_home_content = formatted_directory_path.trim_start_matches("home/content/");
+            script.push_str(&format!("mkdir -p ./{}/{}\n", model_name, without_home_content));
+        }
+    } else {
+        script.push_str("# Found no directories, proceeding without it.\n");
     }
 
     // Set environment variables
@@ -255,21 +281,23 @@ pub async fn parse_toml_to_pyenv_script(url: &str) -> Result<String, Box<dyn Err
     script.push_str("fi\n");
 
     // Install Python packages
-    if let Some(python_packages) = config.packages.get("python") {
-        let package_list: Vec<String> = python_packages
-            .iter()
-            .map(|(package, version)| {
-                if version == "*" || version.is_empty() {
-                    format!("{}", package)  // If version is not specified or "*", get the latest version
-                } else {
-                    format!("{}=={}", package, version)  // If version is specified, get that version
-                }
-            })
-            .collect();
-        script.push_str(&format!(
-            "python -m pip install {}\n",
-            package_list.join(" ")
-        ));
+    if let Some(packages) = &config.packages {
+        if let Some(python_packages) = packages.get("python") {
+            let package_list: Vec<String> = python_packages
+                .iter()
+                .map(|(package, version)| {
+                    if version == "*" || version.is_empty() {
+                        format!("{}", package)  // If version is not specified or "*", get the latest version
+                    } else {
+                        format!("{}=={}", package, version)  // If version is specified, get that version
+                    }
+                })
+                .collect();
+            script.push_str(&format!(
+                "python -m pip install {}\n",
+                package_list.join(" ")
+            ));
+        }
     }
 
     // Git repositories
@@ -283,26 +311,38 @@ pub async fn parse_toml_to_pyenv_script(url: &str) -> Result<String, Box<dyn Err
     }
 
     // Download datasets and files
-    for dataset in &config.dataset {
-        if let (Some(from_source), Some(to_destination)) = (dataset.get("from_source"), dataset.get("to_destination")) {
-            script.push_str(&format!("wget {} -O ./{}/{}\n", from_source, model_name, to_destination.replace("/home/content/", "")));
+    if let Some(dataset_vec) = &config.dataset {
+        for dataset in dataset_vec {
+            if let (Some(from_source), Some(to_destination)) = (dataset.get("from_source"), dataset.get("to_destination")) {
+                script.push_str(&format!("wget {} -O ./{}/{}\n", from_source, model_name, to_destination.replace("/home/content/", "")));
+            }
         }
+    } else {
+        script.push_str("# Found no datasets, proceeding without them.\n");
     }
 
     // Download files
-    for file in &config.file {
-        if let (Some(from_source), Some(to_destination)) = (file.get("from_source"), file.get("to_destination")) {
-            script.push_str(&format!("wget {} -O ./{}/{}\n", from_source, model_name, to_destination.replace("/home/content/", "")));
+    if let Some(file_vec) = &config.file {
+        for file in file_vec.iter() {
+            if let (Some(from_source), Some(to_destination)) = (file.get("from_source"), file.get("to_destination")) {
+                script.push_str(&format!("wget {} -O ./{}/{}\n", from_source, model_name, to_destination.replace("/home/content/", "")));
+            }
         }
+    } else {
+        script.push_str("# Found no files, proceeding without them.\n");
     }
 
     // RUN commands
-    for run in &config.run {
-        if let (Some(command), Some(args)) = (run.get("command"), run.get("args")) {
-            // replace "/home/content/" with "./{model_name}/"
-            let replaced_args = args.replace("/home/content/", &format!("./{}/", model_name));
-            script.push_str(&format!("{} {}\n", command, replaced_args));
+    if let Some(run_vec) = &config.run {
+        for run in run_vec {
+            if let (Some(command), Some(args)) = (run.get("command"), run.get("args")) {
+                // replace "/home/content/" with "./{model_name}/"
+                let replaced_args = args.replace("/home/content/", &format!("./{}/", model_name));
+                script.push_str(&format!("{} {}\n", command, replaced_args));
+            }
         }
+    } else {
+        script.push_str("# Found no run commands, proceeding without them.\n");
     }
 
     Ok(script)

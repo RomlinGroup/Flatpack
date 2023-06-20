@@ -52,7 +52,6 @@ command = "python"
 args = "/home/content/nanoGPT/data/shakespeare_char/prepare.py"
 
 [[run]]
-
 command = "chmod"
 args = "+x /home/content/train.sh"
 

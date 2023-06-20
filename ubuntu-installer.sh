@@ -5,9 +5,9 @@ set -u
 function prompt_continue {
   read -rp "Continue? (y/n) " choice
   case "$choice" in
-  y | Y) echo "😊 Proceeding..." ;;
+  y | Y) echo "😊Proceeding..." ;;
   n | N)
-    echo "👋 Exiting script."
+    echo "👋Exiting script."
     exit 1
     ;;
   *)
