@@ -26,7 +26,7 @@ python3-pip = "*"
 wget = "*"
 
 [[git]]
-from_source = "https://github.com/Lightning-AI/lit-gpt"
+from_source = "https://github.com/romlingroup/lit-gpt"
 to_destination = "/home/content/lit-gpt"
 branch = "main"
 
