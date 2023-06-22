@@ -1,1 +1,24 @@
 #!/bin/bash
+
+if [[ "${COLAB_GPU}" == "1" ]]; then
+  echo "Running in Google Colab environment"
+  IS_COLAB=1
+else
+  echo "Not running in Google Colab environment"
+  IS_COLAB=0
+fi
+
+if [[ $IS_COLAB -eq 0 ]]; then
+  OS=$(uname)
+  if [ "$OS" = "Darwin" ]; then
+    WORK_DIR="lit-gpt"
+  else
+    WORK_DIR="/home/content/lit-gpt"
+  fi
+else
+  WORK_DIR="/content/lit-parrot-redpajama/lit-gpt"
+fi
+
+cd "$WORK_DIR" || exit
+python scripts/prepare_alpaca.py --checkpoint_dir checkpoints/stabilityai/stablelm-base-alpha-3b
+python finetune/lora.py --checkpoint_dir checkpoints/stabilityai/stablelm-base-alpha-3b
