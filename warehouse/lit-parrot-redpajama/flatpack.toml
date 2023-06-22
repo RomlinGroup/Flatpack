@@ -28,7 +28,7 @@ wget = "*"
 [[git]]
 from_source = "https://github.com/Lightning-AI/lit-gpt"
 to_destination = "/home/content/lit-gpt"
-branch = "master"
+branch = "main"
 
 [[run]]
 command = "python"
