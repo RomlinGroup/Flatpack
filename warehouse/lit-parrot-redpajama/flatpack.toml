@@ -25,15 +25,6 @@ git = "*"
 python3-pip = "*"
 wget = "*"
 
-[packages.python]
-datasets = "*"
-numpy = "*"
-tiktoken = "*"
-transformers = "*"
-torch = "*"
-tqdm = "*"
-wandb = "*"
-
 [[git]]
 from_source = "https://github.com/Lightning-AI/lit-gpt"
 to_destination = "/home/content/lit-gpt"
