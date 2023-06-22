@@ -10,10 +10,11 @@ Train AI models - not your patience
 
 Ahoy, brave explorer!
 
-| Name                                                                                                      | Type     |
-|:----------------------------------------------------------------------------------------------------------|:---------|
-| [nanogpt-gpt2](https://github.com/romlingroup/flatpack-ai/tree/main/warehouse/nanogpt-gpt2)               | Flatpack |
-| [nanogpt-shakespeare](https://github.com/romlingroup/flatpack-ai/tree/main/warehouse/nanogpt-shakespeare) | Flatpack |
+| Name                                                                                                        | Type     |
+|:------------------------------------------------------------------------------------------------------------|:---------|
+| [lit-parrot-redpajama](https://github.com/romlingroup/flatpack-ai/tree/main/warehouse/lit-parrot-redpajama) | Flatpack |
+| [nanogpt-gpt2](https://github.com/romlingroup/flatpack-ai/tree/main/warehouse/nanogpt-gpt2)                 | Flatpack |
+| [nanogpt-shakespeare](https://github.com/romlingroup/flatpack-ai/tree/main/warehouse/nanogpt-shakespeare)   | Flatpack |
 
 ### Friendly notice ❤️
 
