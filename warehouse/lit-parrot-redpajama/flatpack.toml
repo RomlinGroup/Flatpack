@@ -35,6 +35,10 @@ from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/wa
 to_destination = "/home/content/train.sh"
 
 [[run]]
+command = "pip"
+args = "install --index-url https://download.pytorch.org/whl/nightly/cu118 --pre 'torch>=2.1.0dev'"
+
+[[run]]
 command = "chmod"
 args = "+x /home/content/train.sh"
 
