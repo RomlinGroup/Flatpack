@@ -1,5 +1,5 @@
 # flatpack.toml
-# WIP (2023-06-09)
+# WIP (2023-06-22)
 
 version = "0.0.1"
 base_image = "debian:stable-slim"
