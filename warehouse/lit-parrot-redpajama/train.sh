@@ -20,5 +20,8 @@ else
 fi
 
 cd "$WORK_DIR" || exit
+pip install huggingface_hub
+python scripts/download.py --repo_id stabilityai/stablelm-base-alpha-3b
+python scripts/convert_hf_checkpoint.py --checkpoint_dir checkpoints/stabilityai/stablelm-base-alpha-3b
 python scripts/prepare_alpaca.py --checkpoint_dir checkpoints/stabilityai/stablelm-base-alpha-3b
 python finetune/lora.py --checkpoint_dir checkpoints/stabilityai/stablelm-base-alpha-3b
