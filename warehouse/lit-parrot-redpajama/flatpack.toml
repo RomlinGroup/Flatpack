@@ -29,3 +29,11 @@ wget = "*"
 from_source = "https://github.com/Lightning-AI/lit-gpt"
 to_destination = "/home/content/lit-gpt"
 branch = "main"
+
+[[run]]
+command = "chmod"
+args = "+x /home/content/train.sh"
+
+[[cmd]]
+command = "bash"
+args = "/home/content/train.sh"
