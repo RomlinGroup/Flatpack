@@ -29,11 +29,3 @@ wget = "*"
 from_source = "https://github.com/Lightning-AI/lit-gpt"
 to_destination = "/home/content/lit-gpt"
 branch = "main"
-
-[[run]]
-command = "python"
-args = "/home/content/lit-gpt/scripts/prepare_redpajama.py"
-
-[[cmd]]
-command = "python"
-args = "/home/content/lit-gpt/finetune/adapter_v2.py"
