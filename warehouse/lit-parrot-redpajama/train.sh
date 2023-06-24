@@ -30,6 +30,6 @@ sed -i 's#DATA_FILE_NAME = "alpaca_data_cleaned_archive.json"#DATA_FILE_NAME = "
 python scripts/prepare_alpaca.py --checkpoint_dir checkpoints/stabilityai/stablelm-base-alpha-3b
 
 # Change the values of batch_size and micro_batch_size in lora.py
-sed -i 's/batch_size = 128/batch_size = 32/' finetune/lora.py
-sed -i 's/micro_batch_size = 4/micro_batch_size = 8/' finetune/lora.py
+sed -i 's/batch_size = 128/batch_size = 64/' finetune/lora.py
+sed -i 's/micro_batch_size = 4/micro_batch_size = 2/' finetune/lora.py
 python finetune/lora.py --precision bf16-true --checkpoint_dir checkpoints/stabilityai/stablelm-base-alpha-3b
