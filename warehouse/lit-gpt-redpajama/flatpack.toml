@@ -5,7 +5,7 @@ version = "0.0.1"
 base_image = "debian:stable-slim"
 
 [environment]
-model_name = "lit-parrot-redpajama"
+model_name = "lit-gpt-redpajama"
 
 [[port]]
 external = 8080
@@ -31,7 +31,7 @@ to_destination = "/home/content/lit-gpt"
 branch = "main"
 
 [[file]]
-from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/lit-parrot-redpajama/train.sh"
+from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/lit-gpt-redpajama/train.sh"
 to_destination = "/home/content/train.sh"
 
 [[run]]
