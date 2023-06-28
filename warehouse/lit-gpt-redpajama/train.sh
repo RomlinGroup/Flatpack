@@ -16,7 +16,7 @@ if [[ $IS_COLAB -eq 0 ]]; then
     WORK_DIR="/home/content/lit-gpt"
   fi
 else
-  WORK_DIR="/content/lit-parrot-redpajama/lit-gpt"
+  WORK_DIR="/content/lit-gpt-redpajama/lit-gpt"
 fi
 
 cd "$WORK_DIR" || exit
