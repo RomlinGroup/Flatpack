@@ -36,6 +36,10 @@ to_destination = "/home/content/train.sh"
 
 [[run]]
 command = "pip"
+args = "install huggingface_hub"
+
+[[run]]
+command = "pip"
 args = "install --pre torch torchvision torchaudio --index-url https://download.pytorch.org/whl/nightly/cu118"
 
 [[run]]
