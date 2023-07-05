@@ -36,6 +36,11 @@ To use the client, follow these steps:
 3. `pyenv activate myenv`
 4. `./train.sh`
 
+## Colab 🚀
+
+1. `!bash /content/flatpack.sh`
+2. `!bash /content/lit-gpt-redpajama/train.sh`
+
 Do not forget to clean up
 
 1. `source deactivate`
