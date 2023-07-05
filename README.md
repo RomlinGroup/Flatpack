@@ -36,16 +36,16 @@ To use the client, follow these steps:
 3. `pyenv activate myenv`
 4. `./train.sh`
 
-## Colab 🚀
-
-1. `!bash /content/flatpack.sh`
-2. `!bash /content/lit-gpt-redpajama/train.sh`
-
 Do not forget to clean up
 
 1. `source deactivate`
 2. `pyenv virtualenv-delete myenv`
 3. `sudo rm -r nanogpt-shakespeare`
+
+## Colab 🚀
+
+1. `!bash /content/flatpack.sh`
+2. `!bash /content/lit-gpt-redpajama/train.sh`
 
 ## Commercial use allowed (no affiliation) 📈
 
