@@ -40,7 +40,7 @@ args = "install huggingface_hub"
 
 [[run]]
 command = "pip"
-args = "install --index-url https://download.pytorch.org/whl/nightly/cu118 --pre 'torch==2.1.0.dev20230625+cu118'"
+args = "install --index-url https://download.pytorch.org/whl/nightly/cu118 --pre 'torch>=2.1.0dev'"
 
 [[run]]
 command = "chmod"
