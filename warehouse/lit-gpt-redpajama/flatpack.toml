@@ -43,6 +43,10 @@ command = "pip"
 args = "install --index-url https://download.pytorch.org/whl/nightly/cu118 --pre 'torch>=2.1.0dev'"
 
 [[run]]
+command = "pip"
+args = "uninstall -y torchaudio"
+
+[[run]]
 command = "chmod"
 args = "+x /home/content/train.sh"
 
