@@ -28,7 +28,7 @@ wget = "*"
 [[git]]
 from_source = "https://github.com/romlingroup/lit-gpt"
 to_destination = "/home/content/lit-gpt"
-branch = "frozen-2023-06-30"
+branch = "main"
 
 [[file]]
 from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/lit-gpt-redpajama/train.sh"
