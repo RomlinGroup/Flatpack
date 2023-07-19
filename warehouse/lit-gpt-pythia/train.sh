@@ -20,11 +20,11 @@ else
 fi
 
 cd "$WORK_DIR" || exit
-python scripts/download.py --repo_id EleutherAI/pythia-70m
-python scripts/convert_hf_checkpoint.py --checkpoint_dir checkpoints/EleutherAI/pythia-70m
+python scripts/download.py --repo_id EleutherAI/pythia-1b
+python scripts/convert_hf_checkpoint.py --checkpoint_dir checkpoints/EleutherAI/pythia-1b
 
 # Change the values of DATA_FILE_URL and DATA_FILE_NAME in prepare_alpaca.py
 sed -i 's#DATA_FILE_URL = "https://raw.githubusercontent.com/tloen/alpaca-lora/main/alpaca_data_cleaned_archive.json"#DATA_FILE_URL = "https://raw.githubusercontent.com/romlingroup/OpenAlpaca/main/openalpaca.json"#' scripts/prepare_alpaca.py
 sed -i 's#DATA_FILE_NAME = "alpaca_data_cleaned_archive.json"#DATA_FILE_NAME = "openalpaca.json"#' scripts/prepare_alpaca.py
-python scripts/prepare_alpaca.py --checkpoint_dir checkpoints/EleutherAI/pythia-70m
-python finetune/adapter.py --checkpoint_dir checkpoints/EleutherAI/pythia-70m --precision 32-true
+python scripts/prepare_alpaca.py --checkpoint_dir checkpoints/EleutherAI/pythia-1b
+python finetune/adapter.py --checkpoint_dir checkpoints/EleutherAI/pythia-1b
