@@ -27,8 +27,4 @@ python scripts/convert_hf_checkpoint.py --checkpoint_dir checkpoints/EleutherAI/
 sed -i 's#DATA_FILE_URL = "https://raw.githubusercontent.com/tloen/alpaca-lora/main/alpaca_data_cleaned_archive.json"#DATA_FILE_URL = "https://raw.githubusercontent.com/romlingroup/OpenAlpaca/main/openalpaca.json"#' scripts/prepare_alpaca.py
 sed -i 's#DATA_FILE_NAME = "alpaca_data_cleaned_archive.json"#DATA_FILE_NAME = "openalpaca.json"#' scripts/prepare_alpaca.py
 python scripts/prepare_alpaca.py --checkpoint_dir checkpoints/EleutherAI/pythia-70m
-
-# Change the values of batch_size and micro_batch_size in lora.py
-sed -i 's/batch_size = 128/batch_size = 128/' finetune/lora.py
-sed -i 's/micro_batch_size = 4/micro_batch_size = 4/' finetune/lora.py
-python finetune/lora.py --checkpoint_dir checkpoints/EleutherAI/pythia-70m --precision 32-true
+python finetune/adapter.py --checkpoint_dir checkpoints/EleutherAI/pythia-70m --precision 32-true
