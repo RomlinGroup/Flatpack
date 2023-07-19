@@ -31,4 +31,4 @@ python scripts/prepare_alpaca.py --checkpoint_dir checkpoints/EleutherAI/pythia-
 # Change the values of batch_size and micro_batch_size in lora.py
 sed -i 's/batch_size = 128/batch_size = 128/' finetune/lora.py
 sed -i 's/micro_batch_size = 4/micro_batch_size = 4/' finetune/lora.py
-python finetune/lora.py --checkpoint_dir checkpoints/EleutherAI/pythia-70m --precision 16-true
+python finetune/lora.py --checkpoint_dir checkpoints/EleutherAI/pythia-70m --precision 32-true
