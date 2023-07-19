@@ -31,4 +31,4 @@ python scripts/prepare_alpaca.py --checkpoint_dir checkpoints/stabilityai/stable
 # Change the values of batch_size and micro_batch_size in lora.py
 sed -i 's/batch_size = 128/batch_size = 64/' finetune/lora.py
 sed -i 's/micro_batch_size = 4/micro_batch_size = 2/' finetune/lora.py
-python finetune/lora.py --checkpoint_dir checkpoints/stabilityai/stablelm-base-alpha-3b --precision 32-true
+python finetune/lora.py --checkpoint_dir checkpoints/stabilityai/stablelm-base-alpha-3b --precision 16-true
