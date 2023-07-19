@@ -16,19 +16,19 @@ if [[ $IS_COLAB -eq 0 ]]; then
     WORK_DIR="/home/content/lit-gpt"
   fi
 else
-  WORK_DIR="/content/lit-gpt-redpajama/lit-gpt"
+  WORK_DIR="/content/lit-gpt-pythia/lit-gpt"
 fi
 
 cd "$WORK_DIR" || exit
-python scripts/download.py --repo_id stabilityai/stablelm-base-alpha-3b
-python scripts/convert_hf_checkpoint.py --checkpoint_dir checkpoints/stabilityai/stablelm-base-alpha-3b
+python scripts/download.py --repo_id EleutherAI/pythia-70m
+python scripts/convert_hf_checkpoint.py --checkpoint_dir checkpoints/EleutherAI/pythia-70m
 
 # Change the values of DATA_FILE_URL and DATA_FILE_NAME in prepare_alpaca.py
 sed -i 's#DATA_FILE_URL = "https://raw.githubusercontent.com/tloen/alpaca-lora/main/alpaca_data_cleaned_archive.json"#DATA_FILE_URL = "https://raw.githubusercontent.com/romlingroup/OpenAlpaca/main/openalpaca.json"#' scripts/prepare_alpaca.py
 sed -i 's#DATA_FILE_NAME = "alpaca_data_cleaned_archive.json"#DATA_FILE_NAME = "openalpaca.json"#' scripts/prepare_alpaca.py
-python scripts/prepare_alpaca.py --checkpoint_dir checkpoints/stabilityai/stablelm-base-alpha-3b
+python scripts/prepare_alpaca.py --checkpoint_dir checkpoints/EleutherAI/pythia-70m
 
 # Change the values of batch_size and micro_batch_size in lora.py
-sed -i 's/batch_size = 128/batch_size = 2/' finetune/lora.py
-sed -i 's/micro_batch_size = 4/micro_batch_size = 1/' finetune/lora.py
-python finetune/lora.py --checkpoint_dir checkpoints/stabilityai/stablelm-base-alpha-3b --precision 16-true
+sed -i 's/batch_size = 128/batch_size = 128/' finetune/lora.py
+sed -i 's/micro_batch_size = 4/micro_batch_size = 4/' finetune/lora.py
+python finetune/lora.py --checkpoint_dir checkpoints/EleutherAI/pythia-70m --precision 16-true
