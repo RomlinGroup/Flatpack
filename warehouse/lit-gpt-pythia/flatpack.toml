@@ -8,7 +8,7 @@ base_image = "debian:stable-slim"
 model_name = "lit-gpt-pythia"
 
 [[port]]
-external = 8080
+external = 1337
 internal = 80
 
 [directories]
