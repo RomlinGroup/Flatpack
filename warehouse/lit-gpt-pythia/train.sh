@@ -27,4 +27,4 @@ python scripts/convert_hf_checkpoint.py --checkpoint_dir checkpoints/EleutherAI/
 sed -i 's#DATA_FILE_URL = "https://raw.githubusercontent.com/tloen/alpaca-lora/main/alpaca_data_cleaned_archive.json"#DATA_FILE_URL = "https://raw.githubusercontent.com/romlingroup/OpenAlpaca/main/openalpaca.json"#' scripts/prepare_alpaca.py
 sed -i 's#DATA_FILE_NAME = "alpaca_data_cleaned_archive.json"#DATA_FILE_NAME = "openalpaca.json"#' scripts/prepare_alpaca.py
 python scripts/prepare_alpaca.py --checkpoint_dir checkpoints/EleutherAI/pythia-1b
-python finetune/adapter.py --checkpoint_dir checkpoints/EleutherAI/pythia-1b
+python finetune/adapter.py --checkpoint_dir checkpoints/EleutherAI/pythia-1b --precision 32-true
