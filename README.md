@@ -48,7 +48,7 @@ Do not forget to clean up
 
 ## Commercial use allowed (no affiliation) 📈
 
->⚖️ **Legal perspectives:** ["At what specific date in the future, if the apocalypse hasn't happened, will you finally admit to being wrong?"](https://bigthink.com/pessimists-archive/ai-fear-overpopulation/) (Archie McKenzie 2023) / ["Fearmongering is a technique that has benefited many people over the ages."](https://www.youtube.com/watch?v=2ZbRKxZ2cjM) (Fred L. Smith, Jr. 2019)
+>⚖️ **Legal perspective:** ["Are ChatGPT, Bard and Dolly 2.0 Trained On Pirated Content?"](https://www.searchenginejournal.com/are-chatgpt-bard-and-dolly-2-0-trained-on-pirated-content/) (Roger Montti 2023)
 
 We constantly search for datasets and models suitable for future deployment as [flatpacks](https://github.com/romlingroup/flatpack-ai/tree/main/warehouse) (coming soon). Therefore, if you know of any high-quality datasets or models with commercially viable licenses, we would appreciate it if you submitted them via a pull request.
 
