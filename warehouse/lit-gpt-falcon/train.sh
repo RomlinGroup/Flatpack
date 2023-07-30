@@ -20,15 +20,16 @@ else
 fi
 
 cd "$WORK_DIR" || exit
-python scripts/download.py --repo_id tiiuae/falcon-7b-instruct
-python scripts/convert_hf_checkpoint.py --checkpoint_dir checkpoints/tiiuae/falcon-7b-instruct
+python scripts/download.py --repo_id tiiuae/falcon-7b
+python scripts/convert_hf_checkpoint.py \
+  --checkpoint_dir checkpoints/tiiuae/falcon-7b
 
 python scripts/prepare_alpaca.py \
   --destination_path data/alpaca \
-  --checkpoint_dir checkpoints/tiiuae/falcon-7b-instruct
+  --checkpoint_dir checkpoints/tiiuae/falcon-7b
 
 python finetune/adapter_v2.py \
   --data_dir data/alpaca \
-  --checkpoint_dir checkpoints/tiiuae/falcon-7b-instruct \
+  --checkpoint_dir checkpoints/tiiuae/falcon-7b \
   --out_dir out/adapter/alpaca \
-  --precision 16-mixed
+  --precision 32-true
