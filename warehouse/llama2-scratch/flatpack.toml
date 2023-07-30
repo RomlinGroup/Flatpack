@@ -44,14 +44,6 @@ from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/wa
 to_destination = "/home/content/train.sh"
 
 [[run]]
-command = "python"
-args = "/home/content/llama2.c/tinystories.py download"
-
-[[run]]
-command = "python"
-args = "/home/content/llama2.c/tinystories.py pretokenize"
-
-[[run]]
 command = "chmod"
 args = "+x /home/content/train.sh"
 
