@@ -28,8 +28,8 @@ python scripts/prepare_alpaca.py \
   --destination_path data/alpaca \
   --checkpoint_dir checkpoints/tiiuae/falcon-7b
 
-python finetune/adapter_v2.py \
+python finetune/lora.py \
   --data_dir data/alpaca \
   --checkpoint_dir checkpoints/tiiuae/falcon-7b \
   --out_dir out/adapter/alpaca \
-  --precision 16-true
+  --precision bf16-true
