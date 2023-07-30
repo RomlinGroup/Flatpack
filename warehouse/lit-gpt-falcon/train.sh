@@ -30,4 +30,5 @@ python scripts/prepare_alpaca.py \
 python finetune/adapter_v2.py \
   --data_dir data/alpaca \
   --checkpoint_dir checkpoints/tiiuae/falcon-7b-instruct \
-  --out_dir out/adapter/alpaca
+  --out_dir out/adapter/alpaca \
+  --precision 32-true
