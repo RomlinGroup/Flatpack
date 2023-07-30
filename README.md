@@ -44,7 +44,7 @@ Do not forget to clean up
 ## Colab 🚀
 
 1. `!bash /content/flatpack.sh`
-2. `!bash /content/lit-gpt-pythia/train.sh`
+2. `!bash /content/nanogpt-shakespeare/train.sh`
 
 ## Commercial use allowed (no affiliation) 📈
 
