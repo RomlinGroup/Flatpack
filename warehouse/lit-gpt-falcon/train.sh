@@ -32,4 +32,4 @@ python finetune/adapter_v2.py \
   --data_dir data/alpaca \
   --checkpoint_dir checkpoints/tiiuae/falcon-7b \
   --out_dir out/adapter/alpaca \
-  --precision 32-true
+  --precision 16-true
