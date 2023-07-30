@@ -32,4 +32,4 @@ python finetune/lora.py \
   --data_dir data/alpaca \
   --checkpoint_dir checkpoints/tiiuae/falcon-7b \
   --out_dir out/adapter/alpaca \
-  --precision bf16-true
+  --quantize bnb.nf4-dq

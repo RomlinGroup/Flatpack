@@ -28,7 +28,7 @@ wget = "*"
 [[git]]
 from_source = "https://github.com/romlingroup/lit-gpt"
 to_destination = "/home/content/lit-gpt"
-branch = "main"
+branch = "patrickhwood"
 
 [[file]]
 from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/lit-gpt-falcon/train.sh"
