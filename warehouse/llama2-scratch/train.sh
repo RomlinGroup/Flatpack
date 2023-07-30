@@ -23,4 +23,6 @@ else
 fi
 
 cd "$WORK_DIR" || exit
+python tinystories.py download
+python tinystories.py pretokenize
 python train.py
