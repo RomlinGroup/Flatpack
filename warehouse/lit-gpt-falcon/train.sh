@@ -28,7 +28,7 @@ python scripts/prepare_alpaca.py \
   --destination_path data/alpaca \
   --checkpoint_dir checkpoints/tiiuae/falcon-7b
 
-sed -i 's/micro_batch_size = 4/micro_batch_size = 1/' finetune/lora.py
+sed -i 's/micro_batch_size = 4/micro_batch_size = 2/' finetune/lora.py
 
 python finetune/lora.py \
   --data_dir data/alpaca \
