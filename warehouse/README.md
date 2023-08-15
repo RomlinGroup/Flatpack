@@ -16,6 +16,7 @@ Ahoy, brave explorer!
 | [llama2-scratch](https://github.com/romlingroup/flatpack-ai/tree/main/warehouse/llama2-scratch)           | Flatpack |
 | [nanogpt-gpt2](https://github.com/romlingroup/flatpack-ai/tree/main/warehouse/nanogpt-gpt2)               | Flatpack |
 | [nanogpt-shakespeare](https://github.com/romlingroup/flatpack-ai/tree/main/warehouse/nanogpt-shakespeare) | Flatpack |
+| [transformer-scratch](https://github.com/romlingroup/flatpack-ai/tree/main/warehouse/transformer-scratch) | Flatpack |
 
 ### Friendly notice ❤️
 
