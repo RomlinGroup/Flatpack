@@ -37,7 +37,7 @@ wandb = "*"
 [[git]]
 from_source = "https://github.com/romlingroup/transformer"
 to_destination = "/home/content/transformer"
-branch = "master"
+branch = "overfitting"
 
 [[file]]
 from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/transformer-scratch/train.sh"
