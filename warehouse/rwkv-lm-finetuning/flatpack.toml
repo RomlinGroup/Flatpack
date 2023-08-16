@@ -27,7 +27,10 @@ wget = "*"
 
 [packages.python]
 datasets = "*"
+deepspeed = "*"
+ninja = "*"
 numpy = "*"
+pytorch-lightning = "*"
 tiktoken = "*"
 transformers = "*"
 torch = "*"
