@@ -40,7 +40,7 @@ wandb = "*"
 [[git]]
 from_source = "https://github.com/romlingroup/RWKV-LM"
 to_destination = "/home/content/RWKV-LM"
-branch = "master"
+branch = "main"
 
 [[file]]
 from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/rwkv-lm-finetuning/train.sh"
