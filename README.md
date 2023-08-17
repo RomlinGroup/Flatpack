@@ -14,7 +14,7 @@
 
 ## Prototyping (Rust) 🦀
 
-Please be aware that this is still in the experimental phase. We advise against using it for production purposes. As we iterate and refine, we embrace a "fail fast, learn faster" approach. Everything is up for revision, and nothing is set in stone; we constantly try new angles and challenge our assumptions.
+We are still in the experimental phase, and advise against using flatpack.ai for production purposes. As we iterate and refine, we embrace a "fail fast, learn faster" approach. Everything is up for revision, and nothing is set in stone.
 
 1. git clone https://github.com/romlingroup/flatpack-ai.git
 2. Install Rust with https://www.rust-lang.org/tools/install
