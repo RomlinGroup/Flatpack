@@ -22,7 +22,7 @@ To use the client, follow these steps:
 4. To start the server, run: `cargo run -- run-server`
 5. Visit http://localhost:1337
 
-## Bash 🐧
+### Bash 🐧
 
 1. `./flatpack.sh`
 2. `cd nanogpt-shakespeare`
@@ -35,12 +35,12 @@ Do not forget to clean up
 2. `pyenv virtualenv-delete myenv`
 3. `sudo rm -r nanogpt-shakespeare`
 
-## Colab 🚀
+### Colab 🚀
 
 1. `!bash /content/flatpack.sh`
 2. `!bash /content/nanogpt-shakespeare/train.sh`
 
-## Containerfile 🦭
+### Containerfile 🦭
 
 1. Install [Podman](https://podman.io/) ([Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0))
 2. `podman build -t nanogpt-shakespeare -f Containerfile .`
