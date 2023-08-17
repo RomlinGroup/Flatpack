@@ -12,7 +12,7 @@
 
 (OPEN SOURCE) flatpack.ai will democratize AI by providing a modular and open platform for anyone to train their AI models from scratch with cutting-edge technology accessible to all. What flatpacks did for the furniture industry, we will do for the AI industry.
 
-## The flatpack.ai client (Rust) 🦀
+## Prototyping (Rust) 🦀
 
 To use the client, follow these steps:
 
@@ -21,12 +21,6 @@ To use the client, follow these steps:
 3. To parse a file, run: `cargo run -- parse /path/to/your/file.toml`
 4. To start the server, run: `cargo run -- run-server`
 5. Visit http://localhost:1337
-
-## Containerfile 🦭
-
-1. Install [Podman](https://podman.io/) ([Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0))
-2. `podman build -t nanogpt-shakespeare -f Containerfile .`
-3. `podman run -it nanogpt-shakespeare:latest`
 
 ## Bash 🐧
 
@@ -45,6 +39,12 @@ Do not forget to clean up
 
 1. `!bash /content/flatpack.sh`
 2. `!bash /content/nanogpt-shakespeare/train.sh`
+
+## Containerfile 🦭
+
+1. Install [Podman](https://podman.io/) ([Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0))
+2. `podman build -t nanogpt-shakespeare -f Containerfile .`
+3. `podman run -it nanogpt-shakespeare:latest`
 
 ## Commercial use allowed (no affiliation) 📈
 
