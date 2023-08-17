@@ -14,6 +14,8 @@
 
 \* *For pre-training, consider it primary education, while fine-tuning is akin to college or university.*
 
+`pip install flatpack`
+
 ## Prototyping (Rust) 🦀
 
 flatpack.ai is experimental; please avoid using it for production.

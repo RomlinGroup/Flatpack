@@ -12,3 +12,6 @@ target/
 
 client/pyenv.sh
 client/Containerfile
+package/flatpack/build
+package/flatpack/dist
+package/flatpack/flatpack.egg-info
