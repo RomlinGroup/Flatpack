@@ -14,11 +14,9 @@
 
 ## Prototyping (Rust) 🦀
 
-Please note: We are in the experimental phase, trying different approaches and testing functionalities. The following instructions are for prototyping purposes.
+Please note: We are in the experimental phase, trying different approaches and testing functionalities.
 
-We appreciate your understanding and feedback.
-
-To use the client, follow these steps:
+The following instructions are for prototyping purposes.
 
 1. git clone https://github.com/romlingroup/flatpack-ai.git
 2. Install Rust with https://www.rust-lang.org/tools/install
