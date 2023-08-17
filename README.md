@@ -14,7 +14,7 @@
 
 ## Prototyping (Rust) 🦀
 
-We are still in the experimental phase and advise against using flatpack.ai for production purposes.
+flatpack.ai is experimental; please avoid using it for production.
 
 1. `git clone https://github.com/romlingroup/flatpack-ai.git`
 2. Install Rust with https://www.rust-lang.org/tools/install
