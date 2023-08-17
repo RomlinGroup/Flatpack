@@ -16,7 +16,7 @@
 
 We are still in the experimental phase and advise against using flatpack.ai for production purposes.
 
-1. git clone https://github.com/romlingroup/flatpack-ai.git
+1. `git clone https://github.com/romlingroup/flatpack-ai.git`
 2. Install Rust with https://www.rust-lang.org/tools/install
 3. To parse a file, run: `cargo run -- parse /path/to/your/file.toml`
 4. To start the server, run: `cargo run -- run-server`
