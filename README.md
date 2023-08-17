@@ -14,6 +14,10 @@
 
 ## Prototyping (Rust) 🦀
 
+Please note: We are in the experimental phase, trying different approaches and testing functionalities. The following instructions are for prototyping purposes.
+
+We appreciate your understanding and feedback.
+
 To use the client, follow these steps:
 
 1. git clone https://github.com/romlingroup/flatpack-ai.git
