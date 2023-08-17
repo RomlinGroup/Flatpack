@@ -12,7 +12,7 @@
 
 (OPEN SOURCE) flatpack.ai will democratize AI by providing a modular and open platform for anyone to train their AI models from scratch* with cutting-edge technology accessible to all. What flatpacks did for the furniture industry, we will do for the AI industry.
 
-\* *For pre-training, consider it primary education, while fine-tuning is akin to university or college.*
+\* *For pre-training, consider it primary education, while fine-tuning is akin to college or university.*
 
 ## Prototyping (Rust) 🦀
 
