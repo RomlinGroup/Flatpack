@@ -5,9 +5,10 @@ with open("README.md", "r") as f:
 
 setup(
     name="flatpack",
-    version="0.0.1",
+    version="0.0.4",
     packages=find_packages(),
     install_requires=[
+        "requests"
     ],
     author="Romlin Group AB",
     author_email="hello@romlin.com",
@@ -15,8 +16,8 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     entry_points={
-        'console_scripts': [
-            'flatpack=flatpack.main:main',
+        "console_scripts": [
+            "flatpack=flatpack.main:main"
         ],
     }
 )
