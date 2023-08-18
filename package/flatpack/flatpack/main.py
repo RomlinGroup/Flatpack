@@ -1,4 +1,3 @@
-
 import requests
 import sys
 
@@ -56,6 +55,8 @@ def main():
         print(list_directories())
     elif command == "test":
         print("[TEST]")
+    elif command == "version":
+            print("[VERSION]")
     else:
         print(f"Unknown command: {command}")
 
