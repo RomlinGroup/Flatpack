@@ -18,7 +18,6 @@ def fetch_github_dirs():
     directories = [item['name'] for item in data if item['type'] == 'dir']
     return sorted(directories)
 
-
 def install(directory_name):
     # Check if the directory exists
     existing_dirs = fetch_github_dirs()
