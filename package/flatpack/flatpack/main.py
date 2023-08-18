@@ -1,3 +1,4 @@
+
 import requests
 import sys
 
@@ -18,7 +19,14 @@ def fetch_github_dirs():
     directories = [item['name'] for item in data if item['type'] == 'dir']
     return sorted(directories)
 
+
 def install(directory_name):
+    # Check if the directory exists
+    existing_dirs = fetch_github_dirs()
+    if directory_name not in existing_dirs:
+        print(f"Error: The directory '{directory_name}' does not exist.")
+        return
+
     toml_content = fetch_flatpack_toml_from_dir(directory_name)
     if toml_content:
         print(f"Contents of flatpack.toml in {directory_name}:\n{toml_content}\n")
