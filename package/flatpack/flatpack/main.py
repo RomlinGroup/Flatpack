@@ -38,7 +38,7 @@ def list_directories():
 def main():
     if len(sys.argv) < 2:
         print("Usage: flatpack.ai <command>")
-        print("Available commands: help, list, test, install")
+        print("Available commands: help, install, list, test")
         return
 
     command = sys.argv[1]
