@@ -46,7 +46,7 @@ def main():
         print("[HELP]")
     elif command == "install":
         if len(sys.argv) < 3:
-            print("Please specify a directory name for the install command.")
+            print("Please specify a flatpack for the install command.")
             return
         directory_name = sys.argv[2]
         install(directory_name)
