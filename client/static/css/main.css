@@ -79,7 +79,7 @@ label {
     padding: 10px;
     background: #333;
     color: #fff;
-    margin-bottom: 0;
+    margin-bottom: 15px;
 }
 
 .test-parser-result textarea:focus {
@@ -94,7 +94,7 @@ label {
     padding: 10px;
     background: #333;
     color: #fff;
-    margin-bottom: 15px;
+    margin-bottom: 0;
 }
 
 .test-parser-pyenv-result textarea:focus {
