@@ -18,7 +18,7 @@ if [[ $IS_COLAB -eq 0 ]]; then
     DEVICE="cpu"
   fi
 else
-  WORK_DIR="/content/nanogpt-gpt2/nanoGPT"
+  WORK_DIR="/content/nanogpt-shakespeare/nanoGPT"
   DEVICE="cuda"
 fi
 

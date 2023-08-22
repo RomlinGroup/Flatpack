@@ -7,7 +7,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use structopt::StructOpt;
 use tera::{Tera, Context};
 
-mod parser;
+mod parsing;
 
 #[get("/")]
 async fn index() -> HttpResponse {
@@ -30,7 +30,7 @@ async fn index() -> HttpResponse {
 #[get("/test_parser/{path}")]
 async fn test_parser(path: web::Path<String>) -> impl Responder {
     let url = path.into_inner();
-    match parser::parse_toml_to_dockerfile(&url).await {
+    match parsing::containerfile::parse_toml_to_dockerfile(&url).await { // updated this line
         Ok(dockerfile) => HttpResponse::Ok().content_type("text/plain").body(dockerfile),
         Err(e) => HttpResponse::InternalServerError().content_type("text/plain").body(format!("Error when parsing TOML: {}", e)),
     }
@@ -39,7 +39,7 @@ async fn test_parser(path: web::Path<String>) -> impl Responder {
 #[get("/test_pyenv_parser/{path}")]
 async fn test_pyenv_parser(path: web::Path<String>) -> impl Responder {
     let url = path.into_inner();
-    match parser::parse_toml_to_pyenv_script(&url).await {
+    match parsing::bash::parse_toml_to_pyenv_script(&url).await {
         Ok(pyenv_script) => HttpResponse::Ok().content_type("text/plain").body(pyenv_script),
         Err(e) => HttpResponse::InternalServerError().content_type("text/plain").body(format!("Error when parsing TOML: {}", e)),
     }
@@ -65,7 +65,7 @@ async fn main() -> std::io::Result<()> {
             let file_path = path.to_str().unwrap_or_default().to_string();
 
             // Generate Dockerfile
-            match parser::parse_toml_to_dockerfile(&file_path).await {
+            match parsing::containerfile::parse_toml_to_dockerfile(&file_path).await {
                 Ok(dockerfile) => {
                     // Write the Containerfile to a local file
                     let mut file = File::create("Containerfile").expect("Could not create file");
@@ -81,7 +81,7 @@ async fn main() -> std::io::Result<()> {
             }
 
             // Generate Pyenv script
-            match parser::parse_toml_to_pyenv_script(&file_path).await {
+            match parsing::bash::parse_toml_to_pyenv_script(&file_path).await {
                 Ok(pyenv_script) => {
                     // Write the pyenv script to a local file
                     let mut file = File::create("pyenv.sh").expect("Could not create file");
