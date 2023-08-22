@@ -15,6 +15,7 @@
 \* *For pre-training, consider it primary education, while fine-tuning is akin to college or university.*
 
 `pip install flatpack`
+
 https://pypi.org/project/flatpack
 
 ## Prototyping (Rust) 🦀
