@@ -19,8 +19,6 @@ Ahoy, brave explorer!
 | [rwkv-lm-finetuning](https://github.com/romlingroup/flatpack-ai/tree/main/warehouse/rwkv-lm-finetuning)   | Flatpack |
 | [transformer-scratch](https://github.com/romlingroup/flatpack-ai/tree/main/warehouse/transformer-scratch) | Flatpack |
 
-
-
 ## Friendly notice ❤️
 
 The flatpack.ai logo belongs to [Romlin Group AB](https://romlin.com) and is protected by copyright. Please note that
