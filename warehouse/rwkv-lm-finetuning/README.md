@@ -9,6 +9,6 @@ We have no official affiliation or association with PENG Bo, nor are we endorsed
 
 flatpack.ai is experimental; please avoid using it for production.
 
-## train.sh (fine-tune)
+## train.sh (fine-tuning)
 
 Coming soon.

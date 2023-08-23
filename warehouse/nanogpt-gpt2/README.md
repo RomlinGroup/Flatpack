@@ -9,7 +9,7 @@ We have no official affiliation or association with Andrej Karpathy, nor are we 
 
 flatpack.ai is experimental; please avoid using it for production.
 
-## train.sh (fine-tune)
+## train.sh (fine-tuning)
 
 Model: [gpt2-xl](https://huggingface.co/gpt2-xl) ([MIT License](https://huggingface.co/gpt2-xl))
 

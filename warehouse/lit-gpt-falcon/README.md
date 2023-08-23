@@ -9,7 +9,7 @@ We have no official affiliation or association with Lightning AI, nor are we end
 
 flatpack.ai is experimental; please avoid using it for production.
 
-## train.sh (fine-tune)
+## train.sh (fine-tuning)
 
 Model: [tiiuae/falcon-7b](https://huggingface.co/tiiuae/falcon-7b) ([Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0))
 
