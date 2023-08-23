@@ -8,3 +8,7 @@
 We have no official affiliation or association with Andrej Karpathy, nor are we endorsed or authorized by him. For the official Andrej Karpathy website, please visit [https://karpathy.ai](https://karpathy.ai).
 
 flatpack.ai is experimental; please avoid using it for production.
+
+## train.sh (scratch)
+
+Dataset: [roneneldan/TinyStories](https://raw.githubusercontent.com/tloen/alpaca-lora/main/alpaca_data_cleaned_archive.json) ([CDLA-Sharing-1.0](https://huggingface.co/datasets/roneneldan/TinyStories#license-cdla-sharing-10))

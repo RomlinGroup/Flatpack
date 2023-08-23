@@ -8,3 +8,7 @@
 We have no official affiliation or association with PENG Bo, nor are we endorsed or authorized by him. For the official RWKV Language Model website, please visit [https://www.rwkv.com](https://www.rwkv.com).
 
 flatpack.ai is experimental; please avoid using it for production.
+
+## train.sh (fine-tune)
+
+Coming soon.
