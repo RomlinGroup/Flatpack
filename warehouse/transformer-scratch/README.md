@@ -11,7 +11,7 @@ flatpack.ai is experimental; please avoid using it for production.
 
 ## train.sh (scratch)
 
-Dataset: [english.txt](https://raw.githubusercontent.com/romlingroup/transformer/master/data/english.txt) ([the exclusive property of the European Parliament](https://joint-research-centre.ec.europa.eu/language-technology-resources/dcep-digital-corpus-european-parliament_en#Usage%20Conditions)) via https://github.com/bashnick/transformer (please see below for details).
+Dataset: [english.txt](https://github.com/bashnick/transformer/raw/master/data/english.txt) ([the exclusive property of the European Parliament](https://joint-research-centre.ec.europa.eu/language-technology-resources/dcep-digital-corpus-european-parliament_en#Usage%20Conditions)) via https://github.com/bashnick/transformer (please see below for details).
 
 > Data is taken from the DCEP: Digital Corpus of the European Parliament. It has a variety of document types, from press releases to session and legislative documents related to European Parliament's activities and bodies. The current version of the corpus contains documents that were produced between 2001 and 2012 ([Nikolay Bashlykov 2023](https://github.com/bashnick/transformer)).
 
