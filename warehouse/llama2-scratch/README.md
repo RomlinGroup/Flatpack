@@ -12,5 +12,5 @@ flatpack.ai is experimental; please avoid using it for production.
 
 ## train.sh (scratch)
 
-Dataset: [roneneldan/TinyStories](https://huggingface.co/datasets/roneneldan/TinyStories) ([CDLA-Sharing-1.0](https://huggingface.co/datasets/roneneldan/TinyStories#license-cdla-sharing-10))
+Dataset: [roneneldan/TinyStories](https://huggingface.co/datasets/roneneldan/TinyStories) ([CDLA-Sharing-1.0](https://cdla.dev/sharing-1-0/))
 > Dataset containing synthetically generated (by GPT-3.5 and GPT-4) short stories that only use a small vocabulary. Described in the following paper: https://arxiv.org/abs/2305.07759 ([Ronen Eldan 2023](https://huggingface.co/datasets/roneneldan/TinyStories)).
