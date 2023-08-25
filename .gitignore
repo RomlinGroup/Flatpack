@@ -15,3 +15,4 @@ client/Containerfile
 package/flatpack/build
 package/flatpack/dist
 package/flatpack/flatpack.egg-info
+package/flatpack/flatpack.sh
