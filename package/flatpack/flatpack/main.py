@@ -73,19 +73,18 @@ def main():
     """Main function that interprets user commands."""
 
     print("""
-    -----------------------------------------------------------
+    ---------------------------------------------------
     DISCLAIMER:
-    By proceeding with this installation, you acknowledge that
-    the creators and maintainers of this script are not
-    responsible for any damage, loss of data, or any other
-    unintended consequences that may arise from its use.
 
-    Use this script at your own risk. Ensure you have backups
-    of important data.
+    Unless required by law or agreed in writing, the
+    software is provided "AS IS", WITHOUT WARRANTIES
+    OR CONDITIONS of any kind, express or implied.
 
-    To accept and continue with the installation, type 'YES'.
-    To decline and exit, type 'NO'.
-    -----------------------------------------------------------
+    You bear the risks of using or redistributing
+    the software.
+
+    To accept, type 'YES'. To decline, type 'NO'.
+    ---------------------------------------------------
     """)
 
     while True:
