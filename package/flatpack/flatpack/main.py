@@ -74,7 +74,7 @@ def main():
 
     print("""
     ---------------------------------------------------
-    DISCLAIMER:
+    DISCLAIMER (PLACEHOLDER):
 
     Unless required by law or agreed in writing, the
     software is provided "AS IS", WITHOUT WARRANTIES
