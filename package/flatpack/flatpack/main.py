@@ -93,10 +93,10 @@ def main():
         if user_response == "YES":
             break
         elif user_response == "NO":
-            print("Installation aborted by user.")
+            print("❌ Installation aborted by user.")
             exit(0)
         else:
-            print("Invalid input. Please type 'YES' to accept or 'NO' to decline.")
+            print("❌ Invalid input. Please type 'YES' to accept or 'NO' to decline.")
 
     if len(sys.argv) < 2:
         print("Usage: flatpack.ai <command>")
