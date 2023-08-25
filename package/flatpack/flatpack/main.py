@@ -6,6 +6,59 @@ import toml
 from .parsers import parse_toml_to_pyenv_script
 
 
+def colorize(text, color):
+    colors = {
+        "red": "\033[91m",
+        "green": "\033[92m",
+        "yellow": "\033[93m",
+        "blue": "\033[94m",
+        "magenta": "\033[95m",
+        "cyan": "\033[96m",
+        "white": "\033[97m",
+        "grey": "\033[90m",
+        "default": "\033[0m"  # Resets the color
+    }
+    return colors[color] + text + colors["default"]
+
+
+def display_disclaimer(directory_name: str):
+    disclaimer_template = """
+    -----------------------------------------------------
+    STOP HERE AND READ BEFORE YOU USE OUR INSTALLER ✋
+    https://pypi.org/project/flatpack
+    Copyright 2023 Romlin Group AB
+
+    Licensed under the Apache License, Version 2.0
+    (the "License"); you may NOT use this Python package
+    except in compliance with the License. You may obtain
+    a copy of the License at:
+
+    https://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in
+    writing, software distributed under the License is
+    distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
+    OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing
+    permissions and limitations under the License.
+    {please_note}
+    To accept, type 'YES'. To decline, type 'NO'.
+    -----------------------------------------------------
+    """
+
+    please_note_content = """
+    PLEASE NOTE: The flatpack you are about to install is
+    governed by its own licenses and terms, separate from
+    this installer. You may find further details at:
+
+    {}
+    """.format(directory_name)
+
+    please_note_colored = colorize(please_note_content, "yellow")
+
+    print(disclaimer_template.format(please_note=please_note_colored))
+
+
 def fetch_flatpack_toml_from_dir(directory_name: str) -> str:
     """Fetch the flatpack.toml content from a specified GitHub directory."""
     base_url = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse"
@@ -72,29 +125,8 @@ def list_directories() -> str:
 def main():
     """Main function that interprets user commands."""
 
-    print("""
-            -----------------------------------------------------
-            STOP BEFORE YOU USE OUR INSTALLER ✋
-            https://pypi.org/project/flatpack
-            Copyright 2023 Romlin Group AB
-
-            Licensed under the Apache License, Version 2.0
-            (the "License"); you may NOT use this Python package
-            except in compliance with the License. You may obtain
-            a copy of the License at
-
-            https://www.apache.org/licenses/LICENSE-2.0
-
-            Unless required by applicable law or agreed to in
-            writing, software distributed under the License is
-            distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
-            OR CONDITIONS OF ANY KIND, either express or implied.
-            See the License for the specific language governing
-            permissions and limitations under the License.
-
-            To accept, type 'YES'. To decline, type 'NO'.
-            -----------------------------------------------------
-            """)
+    directory_name = sys.argv[2]
+    display_disclaimer(directory_name)
 
     while True:
         user_response = input().strip().upper()
@@ -118,7 +150,6 @@ def main():
         if len(sys.argv) < 3:
             print("❌ Please specify a flatpack for the install command.")
             return
-        directory_name = sys.argv[2]
         install(directory_name)
     elif command == "list":
         print(list_directories())
