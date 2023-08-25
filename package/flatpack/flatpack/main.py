@@ -74,7 +74,7 @@ def main():
 
     print("""
             -----------------------------------------------------
-            DISCLAIMER ✋
+            STOP BEFORE YOU USE OUR INSTALLER ✋
             https://pypi.org/project/flatpack
             Copyright 2023 Romlin Group AB
 
