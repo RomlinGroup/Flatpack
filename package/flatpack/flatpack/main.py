@@ -41,7 +41,7 @@ def install(directory_name: str):
 
     toml_content = fetch_flatpack_toml_from_dir(directory_name)
     if toml_content:
-        #print(f"Contents of flatpack.toml in {directory_name}:\n{toml_content}\n")
+        # print(f"Contents of flatpack.toml in {directory_name}:\n{toml_content}\n")
 
         # Save the TOML content to a temporary file
         with open('temp_flatpack.toml', 'w') as f:
@@ -71,6 +71,33 @@ def list_directories() -> str:
 
 def main():
     """Main function that interprets user commands."""
+
+    print("""
+    -----------------------------------------------------------
+    DISCLAIMER:
+    By proceeding with this installation, you acknowledge that
+    the creators and maintainers of this script are not
+    responsible for any damage, loss of data, or any other
+    unintended consequences that may arise from its use.
+
+    Use this script at your own risk. Ensure you have backups
+    of important data.
+
+    To accept and continue with the installation, type 'YES'.
+    To decline and exit, type 'NO'.
+    -----------------------------------------------------------
+    """)
+
+    while True:
+        user_response = input().strip().upper()
+        if user_response == "YES":
+            break
+        elif user_response == "NO":
+            print("Installation aborted by user.")
+            exit(0)
+        else:
+            print("Invalid input. Please type 'YES' to accept or 'NO' to decline.")
+
     if len(sys.argv) < 2:
         print("Usage: flatpack.ai <command>")
         print("Available commands: help, install, list, test, version")
