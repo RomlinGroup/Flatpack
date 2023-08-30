@@ -24,7 +24,7 @@ def colorize(text, color):
 def display_disclaimer(directory_name: str):
     disclaimer_template = """
     -----------------------------------------------------
-    STOP HERE AND READ BEFORE YOU USE OUR INSTALLER ✋
+    STOP AND READ BEFORE YOU PROCEED ✋
     https://pypi.org/project/flatpack
     Copyright 2023 Romlin Group AB
 
