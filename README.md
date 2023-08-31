@@ -19,9 +19,9 @@ https://pypi.org/project/flatpack
 
 ## Inspiration ⭐
 
-> **Micro-LLMs:** Basically I think there will be a lot of interest in training or finetuning custom micro-LLMs (think ~100M - ~1B params, but let's say up to ~10B params) across a large diversity of applications, and deploying them in edge-adjacent environments (think MCUs, phones, web browsers, laptops, etc.). ([Andrej Karpathy 2023](https://github.com/karpathy/llama2.c))
+> **Micro-LLMs:** "Basically I think there will be a lot of interest in training or finetuning custom micro-LLMs (think ~100M - ~1B params, but let's say up to ~10B params) across a large diversity of applications, and deploying them in edge-adjacent environments (think MCUs, phones, web browsers, laptops, etc.)." ([Andrej Karpathy 2023](https://github.com/karpathy/llama2.c))
 
-> **Standardisation:** Without standards, there can be no improvement. (Taiichi Ohno)
+> **Standardisation:** "Without standards, there can be no improvement." (Taiichi Ohno)
 
 ## Prototyping (Rust) 🦀
 
