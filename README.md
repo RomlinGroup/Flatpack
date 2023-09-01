@@ -17,6 +17,10 @@ https://pypi.org/project/flatpack
 
 `pip install flatpack`
 
+## Micro-LLMs 🤏
+
+[Micro-LLMs](https://github.com/karpathy/llama2.c#contributing), or scaled-down language models with around 100 million to 10 billion parameters, offer a compelling solution to the deployment and scalability challenges associated with traditional [large language models (LLMs)](https://en.wikipedia.org/wiki/Large_language_model). Their smaller size allows for rapid fine-tuning, enabling organizations to adapt quickly to market changes or specific requirements. Micro-LLMs can be deployed in edge-adjacent environments like laptops, microprocessors, or smartphones, benefiting from [edge computing](https://en.wikipedia.org/wiki/Edge_computing) to facilitate low-latency and privacy-conscious applications. These characteristics make micro-LLMs broadly accessible, energy-efficient, and specialized, even to smaller teams or individual developers. Overall, micro-LLMs represent a logical step in the evolution of language models, effectively merging the capabilities of LLMs with the practical needs of real-world applications.
+
 ## Inspiration ⭐
 
 > **Micro-LLMs:** "Basically I think there will be a lot of interest in training or finetuning custom micro-LLMs (think ~100M - ~1B params, but let's say up to ~10B params) across a large diversity of applications, and deploying them in edge-adjacent environments (think MCUs, phones, web browsers, laptops, etc.)." ([Andrej Karpathy 2023](https://github.com/karpathy/llama2.c))
