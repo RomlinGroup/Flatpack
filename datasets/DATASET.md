@@ -24,7 +24,7 @@
 
 - **[Field 1]:** [Type, Description]
 - **[Field 2]:** [Type, Description]
-- **[Field 3]:** [Type, Description]
+- **[Field N]:** [Type, Description]
 
 ### Target Variable (If Any)
 
@@ -47,7 +47,7 @@ Detail any steps taken to preprocess or clean the data.
   {
     "[Field 1]": "[Example Value]",
     "[Field 2]": "[Example Value]",
-    "[Field 3]": "[Example Value]"
+    "[Field N]": "[Example Value]"
   }
 ]
 ```
