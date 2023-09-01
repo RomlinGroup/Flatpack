@@ -17,6 +17,10 @@ https://pypi.org/project/flatpack
 
 `pip install flatpack`
 
+## DATASET.md 📖
+
+[DATASET.md](https://dataset.md) is our Markdown template created to serve as a standard for capturing the essentials of any dataset.
+
 ## Micro-LLMs 🤏
 
 [Micro-LLMs](https://github.com/karpathy/llama2.c#contributing) (credit to Andrej Karpathy)*, or scaled-down language models with around 100 million to 10 billion parameters, offer a compelling solution to the deployment and scalability challenges associated with traditional [large language models (LLMs)](https://en.wikipedia.org/wiki/Large_language_model). Their smaller size allows for rapid pre-training and fine-tuning, enabling organizations to adapt quickly to market changes or specific requirements.
