@@ -25,7 +25,7 @@ Micro-LLMs can be deployed in edge-adjacent environments like laptops, microproc
 
 Overall, micro-LLMs represent a logical step in the evolution of language models, effectively merging the capabilities of LLMs with the practical needs of real-world applications.
 
-\* *We recognize that "micro-LLMs" are oxymoronic, combining 'micro' and 'large.' However, the term aptly captures the essence of these 'micro' but still powerful versions of large language models.*
+\* *We recognize that "micro-LLMs" are oxymoronic, combining 'micro' and 'large.' However, the term aptly captures the essence of these scaled-down but still powerful versions of large language models.*
 
 ## Inspiration ⭐
 
