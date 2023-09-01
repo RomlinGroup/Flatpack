@@ -3,4 +3,4 @@
 
 ## DATASET.md 📖
 
-[DATASET.md](https://dataset.md) is our Markdown template designed to serve as a universal standard for capturing the essential characteristics of any dataset.
+[DATASET.md](https://dataset.md) is our Markdown template designed to serve as a universal standard for capturing the essential characteristics of any dataset. It aims to streamline the documentation process, ensuring that all pertinent information about the dataset is readily available.
