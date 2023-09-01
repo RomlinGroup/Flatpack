@@ -27,7 +27,9 @@ Overall, micro-LLMs represent a logical step in the evolution of language models
 
 \* *We recognize that "micro-LLMs" are oxymoronic, combining 'micro' and 'large.' However, the term aptly captures the essence of these scaled-down but still powerful versions of large language models.*
 
-## Inspiration ⭐
+## Inspiration (no affiliation) ⭐
+
+> **Ardunio:** "There was once a barrier between the electronics, design, and programming world and the rest of the world. Arduino has broken down that barrier." ([Arduino 2021](https://www.arduino.cc/en/about))
 
 > **Micro-LLMs:** "Basically I think there will be a lot of interest in training or finetuning custom micro-LLMs (think ~100M - ~1B params, but let's say up to ~10B params) across a large diversity of applications, and deploying them in edge-adjacent environments (think MCUs, phones, web browsers, laptops, etc.)." ([Andrej Karpathy 2023](https://github.com/karpathy/llama2.c))
 
