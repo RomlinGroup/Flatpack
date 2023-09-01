@@ -24,7 +24,7 @@
 
 - **[Field 1]:** [Type, Description]
 - **[Field 2]:** [Type, Description]
-- **[Field N]:** [Type, Description]
+- **[Field 3]:** [Type, Description]
 
 ### Target Variable (If Any)
 
