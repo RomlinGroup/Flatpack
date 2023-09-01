@@ -42,16 +42,15 @@ Detail any steps taken to preprocess or clean the data.
 
 ## Sample Records
 
-\```json
+```json
 [
-{
-"[Field 1]": "[Example Value]",
-"[Field 2]": "[Example Value]",
-"[Field N]": "[Example Value]"
-},
-...
+  {
+    "[Field 1]": "[Example Value]",
+    "[Field 2]": "[Example Value]",
+    "[Field N]": "[Example Value]"
+  }
 ]
-\```
+```
 
 ## Recommended Usage
 
