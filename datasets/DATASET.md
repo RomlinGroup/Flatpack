@@ -9,7 +9,7 @@
 ## Metadata
 
 - **Source:** [Original source of the dataset, including citations or URLs]
-- **Contributors:** [Names or organizations contributing to the dataset]
+- **Contributors:** [Names or organisations contributing to the dataset]
 - **License:** [Terms under which the dataset is made available]
 - **Date of Collection:** [Date when the dataset was compiled or collected]
 
@@ -70,4 +70,4 @@ For more information or questions, please reach out to:
 
 - **Name:** [Your Name]
 - **Email:** [Your Email]
-- **Affiliation:** [Your Institution/Organization]
+- **Affiliation:** [Your Organisation]
