@@ -21,7 +21,6 @@ https://pypi.org/project/flatpack
 
 - template.fpk
     - DATASET.md
-    - flatpack.sha256
     - flatpack.toml
     - README.md
     - train.sh
