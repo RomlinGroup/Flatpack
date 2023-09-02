@@ -17,6 +17,15 @@ https://pypi.org/project/flatpack
 
 `pip install flatpack`
 
+## Flatpack (FPK) 📦
+
+- template.fpk
+    - DATASET.md
+    - flatpack.sha256
+    - flatpack.toml
+    - README.md
+    - train.sh
+
 ## DATASET.md 📖
 
 [DATASET.md](https://github.com/romlingroup/flatpack-ai/blob/main/datasets/DATASET.md) is our meticulously crafted Markdown template (under development), established to act as a standard for encapsulating the essentials of any dataset. By streamlining the documentation process, this template ensures that all relevant details about the dataset are easily accessible, facilitating seamless collaboration and utilization.
