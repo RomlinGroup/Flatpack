@@ -21,6 +21,8 @@ https://pypi.org/project/flatpack
 
 [DATASET.md](https://github.com/romlingroup/flatpack-ai/blob/main/datasets/DATASET.md) is our meticulously crafted Markdown template (under development), established to act as a standard for encapsulating the essentials of any dataset. By streamlining the documentation process, this template ensures that all relevant details about the dataset are easily accessible, facilitating seamless collaboration and utilization.
 
+Markdown is ideal for documenting datasets because it is lightweight, easy to archive, and ensures that the accompanying documentation remains synchronized with the data it describes. Keeping the data and documentation in sync is crucial for maintaining the integrity and reproducibility of research. Additionally, the dataset and its Markdown documentation can be archived in a version-controlled environment, creating a cohesive historical record.
+
 Once completed, it will be a mandatory component in all flatpacks.
 
 ## Micro-LLMs 🤏
@@ -110,6 +112,10 @@ Before utilizing any dataset or model for commercial purposes, seeking guidance 
 | [pythia-12b](https://huggingface.co/EleutherAI/pythia-12b)                              | Model   | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)                      |
 | [stablelm-base-alpha-3b](https://huggingface.co/stabilityai/stablelm-base-alpha-3b)     | Model   | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)                        |
 | [stablelm-base-alpha-7b](https://huggingface.co/stabilityai/stablelm-base-alpha-7b)     | Model   | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)                        |
+
+## License
+
+This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
 
 ## Friendly notice ❤️
 
