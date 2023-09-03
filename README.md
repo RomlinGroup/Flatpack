@@ -9,10 +9,7 @@
 > :warning: **DISCLAIMER:** This repository contains our research. Verify the information and do your own research (
 > DYOR). We assume no responsibility for accuracy or completeness.
 
-> 😱 **Regarding AI fearmongering:
-** ["At what specific date in the future, if the apocalypse hasn't happened, will you finally admit to being wrong?"](https://bigthink.com/pessimists-archive/ai-fear-overpopulation/) (
-> Archie McKenzie 2023) / ["Fearmongering is a technique that has benefited many people over the ages."](https://www.youtube.com/watch?v=2ZbRKxZ2cjM) (
-      Fred L. Smith, Jr. 2019)
+> 😱 **Regarding AI fearmongering:** ["At what specific date in the future, if the apocalypse hasn't happened, will you finally admit to being wrong?"](https://bigthink.com/pessimists-archive/ai-fear-overpopulation/) (Archie McKenzie 2023) / ["Fearmongering is a technique that has benefited many people over the ages."](https://www.youtube.com/watch?v=2ZbRKxZ2cjM) (Fred L. Smith, Jr. 2019)
 
 (OPEN SOURCE) flatpack.ai will democratize AI by providing a modular and open platform for anyone to train their AI
 models from scratch* with cutting-edge technology accessible to all. What flatpacks did for the furniture industry, we
@@ -162,9 +159,7 @@ Do not forget to clean up
 
 ## Commercial use allowed (no affiliation) 📈
 
-> ⚖️ **Legal perspectives:
-** ["Questions and Answers – New EU copyright rules"](https://ec.europa.eu/commission/presscorner/detail/en/qanda_21_2821) (
-> European Commission 2021) / ["Are ChatGPT, Bard and Dolly 2.0 Trained On Pirated Content?"](https://www.searchenginejournal.com/are-chatgpt-bard-and-dolly-2-0-trained-on-pirated-content/) (Roger Montti 2023) / ["Llama copyright drama: Meta stops disclosing what data it uses to train the company's giant AI models"](https://www.businessinsider.com/meta-llama-2-data-train-ai-models-2023-7) (Alistair Barr 2023) / ["Generative Artificial Intelligence and Copyright Law"](https://crsreports.congress.gov/product/pdf/LSB/LSB10922) (Congressional Research Service 2023) / ["EU legislates disclosure of copyright data used to train AI"](https://www.theregister.com/2023/05/01/eu_ai_act_adds_new/) (Katyanna Quach 2023) / ["Artificial intelligence and copyright"](https://en.wikipedia.org/wiki/Artificial_intelligence_and_copyright) (Wikipedia 2023)
+> ⚖️ **Legal perspectives:** ["Questions and Answers – New EU copyright rules"](https://ec.europa.eu/commission/presscorner/detail/en/qanda_21_2821) (European Commission 2021) / ["Are ChatGPT, Bard and Dolly 2.0 Trained On Pirated Content?"](https://www.searchenginejournal.com/are-chatgpt-bard-and-dolly-2-0-trained-on-pirated-content/) (Roger Montti 2023) / ["Llama copyright drama: Meta stops disclosing what data it uses to train the company's giant AI models"](https://www.businessinsider.com/meta-llama-2-data-train-ai-models-2023-7) (Alistair Barr 2023) / ["Generative Artificial Intelligence and Copyright Law"](https://crsreports.congress.gov/product/pdf/LSB/LSB10922) (Congressional Research Service 2023) / ["EU legislates disclosure of copyright data used to train AI"](https://www.theregister.com/2023/05/01/eu_ai_act_adds_new/) (Katyanna Quach 2023) / ["Artificial intelligence and copyright"](https://en.wikipedia.org/wiki/Artificial_intelligence_and_copyright) (Wikipedia 2023)
 
 We constantly search for datasets and models suitable for future deployment
 as [flatpacks](https://github.com/romlingroup/flatpack-ai/tree/main/warehouse) (FPK). Therefore, if you know of any
