@@ -18,3 +18,5 @@ package/flatpack/build
 package/flatpack/dist
 package/flatpack/flatpack.egg-info
 package/flatpack/flatpack.sh
+utilities/compress_and_sign_fpk/private_key.pem
+utilities/compress_and_sign_fpk/public_key.pem
