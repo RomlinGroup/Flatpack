@@ -42,7 +42,7 @@ To run the test script, use the following command-line options:
 
 - `-i` or `--input`: Specifies the input file or folder (e.g., `hello_world.txt`).
 - `-o` or `--output`: Specifies where the compressed file will be saved (e.g., `compressed_file.fpk`).
-- `-s` or `--signed`: Specifies where the signed file will be saved (e.g., `final_file.fpk`).
+- `-s` or `--signed`: Specifies where the signed file will be saved (e.g., `signed_file.fpk`).
 - `-p` or `--private_key`: Specifies the path to the private key used for signing (e.g., `private_key.pem`).
 - `--hash_size`: (Optional) Specifies the hash size for signing. The default is `256`.
 - `--passphrase`: (Optional) Specifies the passphrase for the private key. The default is `None`.
@@ -50,7 +50,7 @@ To run the test script, use the following command-line options:
 ##### Example command
 
 ```bash
-python test_compress_and_sign_fpk.py -i hello_world -o compressed_file.fpk -s compressed_and_signed_file.fpk -p private_key.pem --hash_size 256 --passphrase YourPassphraseHere
+python test_compress_and_sign_fpk.py -i hello_world -o compressed_file.fpk -s signed_file.fpk -p private_key.pem --hash_size 256 --passphrase YourPassphraseHere
 ```
 
 ## DATASET.md 📖
