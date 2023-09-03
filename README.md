@@ -31,7 +31,7 @@ pip install flatpack
     - README.md
     - train.sh
 
-### Compression and signing 🔑
+### Compression and signing ✅
 
 The key is used exclusively for verifying the authenticity and integrity of a flatpack (FPK), ensuring it has not been
 tampered with and originates from a trusted source.
