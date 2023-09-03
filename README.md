@@ -40,7 +40,7 @@ openssl rsa -pubout -in private_key.pem -out public_key.pem
 
 To run the test script, use the following command-line options:
 
-- `-i` or `--input`: Specifies the input file or folder (e.g., `hello_world.txt`).
+- `-i` or `--input`: Specifies the input file or folder (e.g., `hello_world`).
 - `-o` or `--output`: Specifies where the compressed file will be saved (e.g., `compressed_file.fpk`).
 - `-s` or `--signed`: Specifies where the signed file will be saved (e.g., `signed_file.fpk`).
 - `-p` or `--private_key`: Specifies the path to the private key used for signing (e.g., `private_key.pem`).
