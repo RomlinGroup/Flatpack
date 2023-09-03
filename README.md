@@ -37,7 +37,7 @@ The key is used exclusively for verifying the authenticity and integrity of a fl
 tampered with and originates from a trusted source.
 
 > **Security note:** This project utilizes 4096-bit RSA keys for data signing. Breaking such encryption with current
-> classical computing resources* is computationally prohibitive. The analogy often used is that it would be akin to
+> classical computing resources is computationally prohibitive*. The analogy often used is that it would be akin to
 > cataloguing every star in the known universe - multiple times.
 
 > \* ["Post-quantum cryptography"](https://en.wikipedia.org/wiki/Post-quantum_cryptography) (Wikipedia 2023) / ["Did China Break The Quantum Barrier?"](https://www.forbes.com/sites/arthurherman/2023/01/10/did-china-break-the-quantum-barrier/) (Arthur Herman 2023) / ["No, RSA Encryption Isn't Obsolete"](https://www.aei.org/foreign-and-defense-policy/no-rsa-encryption-isnt-obsolete/) (Jason Blessing 2023)
