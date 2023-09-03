@@ -36,7 +36,7 @@ openssl genpkey -algorithm RSA -out private_key.pem -aes256
 ```bash
 openssl rsa -pubout -in private_key.pem -out public_key.pem
 ```
-### Command-line options for the test script
+#### Command-line options for the test script
 
 To run the test script, use the following command-line options:
 
@@ -47,7 +47,7 @@ To run the test script, use the following command-line options:
 - `--hash_size`: (Optional) Specifies the hash size for signing. The default is `256`.
 - `--passphrase`: (Optional) Specifies the passphrase for the private key. The default is `None`.
 
-#### Example command
+##### Example command
 
 ```bash
 python test_compress_and_sign_fpk.py -i hello_world -o compressed_file.fpk -s compressed_and_signed_file.fpk -p private_key.pem --hash_size 256 --passphrase YourPassphraseHere
