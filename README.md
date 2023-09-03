@@ -29,6 +29,8 @@ pip install flatpack
 
 ### Compression and signing 🔒
 
+The key is used exclusively for verifying the authenticity and integrity of the flatpack, ensuring it has not been tampered with and originates from a trusted source.
+
 ```bash
 openssl genpkey -algorithm RSA -out private_key.pem -aes256
 ```
