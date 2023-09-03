@@ -33,7 +33,7 @@ pip install flatpack
 
 ### Code signing
 
-Our platform employs [RSA keys](https://en.wikipedia.org/wiki/RSA_(cryptosystem)) to authenticate and ensure the integrity of flatpacks (FPK), which may include both code and data essential for training artificial intelligence models. Maintaining the integrity of these flatpacks is crucial, as any compromise in code or data integrity could significantly affect the performance and reliability of the generated AI models.
+Our platform employs [RSA keys](https://en.wikipedia.org/wiki/RSA_(cryptosystem)) to authenticate and ensure the integrity of flatpacks (FPK), which may include both code and data essential for training artificial intelligence models. Maintaining the integrity of these flatpacks is crucial, as any compromise in code or data integrity could significantly affect the reliability and security of the generated AI models.
 
 > **Security note:** This project utilizes 4096-bit RSA keys for code signing. Breaking such encryption with current
 > classical computing resources is computationally prohibitive*. The analogy often used is that it would be akin to
