@@ -10,6 +10,8 @@
 # Ignore build artifacts in the target directory
 target/
 
+__pycache__/
+
 client/pyenv.sh
 client/Containerfile
 package/flatpack/build
