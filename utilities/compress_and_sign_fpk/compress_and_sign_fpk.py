@@ -41,7 +41,7 @@ def compress_data(input_path, output_path):
 
 
 # Function to sign data
-def sign_data(output_path, signed_path, private_key_path, hash_size=256, passphrase=None):
+def sign_data(output_path, signed_path, private_key_path, hash_size=512, passphrase=None):
     try:
         # Validate hash size
         if hash_size not in [256, 384, 512]:
