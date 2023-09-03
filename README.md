@@ -27,7 +27,7 @@ pip install flatpack
     - README.md
     - train.sh
 
-### Compression and signing (test) 🔒
+### Compression and signing 🔒
 
 ```bash
 openssl genpkey -algorithm RSA -out private_key.pem -aes256
