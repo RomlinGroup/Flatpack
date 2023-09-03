@@ -33,7 +33,7 @@ pip install flatpack
 
 ### Code signing
 
-The [RSA key](https://en.wikipedia.org/wiki/RSA_(cryptosystem) is used exclusively for verifying the authenticity and integrity of a flatpack (FPK), ensuring it has not been
+The [RSA key](https://en.wikipedia.org/wiki/RSA_(cryptosystem)) is used exclusively for verifying the authenticity and integrity of a flatpack (FPK), ensuring it has not been
 tampered with and originates from a trusted source.
 
 > **Security note:** This project utilizes 4096-bit RSA keys for code signing. Breaking such encryption with current
