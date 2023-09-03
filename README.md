@@ -27,7 +27,7 @@ pip install flatpack
     - README.md
     - train.sh
 
-### Compress and sign
+### Compression and signing
 
 ```bash
 openssl genpkey -algorithm RSA -out private_key.pem -aes256
@@ -51,6 +51,12 @@ To run the test script, use the following command-line options:
 
 ```bash
 python test_compress_and_sign_fpk.py -i hello_world -o compressed_file.fpk -s signed_file.fpk -p private_key.pem --hash_size 256 --passphrase YourPassphraseHere
+```
+
+##### Verification
+
+```bash
+python verify_signed_data_function_with_cli.py --signed_file signed_file.fpk --public_key public_key.pem
 ```
 
 ## DATASET.md 📖
