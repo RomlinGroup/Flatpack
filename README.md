@@ -56,7 +56,7 @@ python test_compress_and_sign_fpk.py -i hello_world -o compressed_file.fpk -s si
 ##### Verification
 
 ```bash
-python verify_signed_data_function_with_cli.py --signed_file signed_file.fpk --public_key public_key.pem
+python verify_signed_data_with_cli.py --signed_file signed_file.fpk --public_key public_key.pem
 ```
 
 ## DATASET.md 📖
