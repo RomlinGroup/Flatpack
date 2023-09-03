@@ -61,7 +61,7 @@ To run the test script, use the following command-line options:
 - `-o` or `--output`: Specifies where the compressed file will be saved (e.g., `compressed_file.fpk`).
 - `-s` or `--signed`: Specifies where the signed file will be saved (e.g., `signed_file.fpk`).
 - `-p` or `--private_key`: Specifies the path to the private key used for signing (e.g., `private_key.pem`).
-- `--hash_size`: (Optional) Specifies the hash size for signing. The default is `256`.
+- `--hash_size`: (Optional) Specifies the hash size for signing. The default is `512`.
 - `--passphrase`: (Optional) Specifies the passphrase for the private key. The default is `None`.
 
 ##### Example
