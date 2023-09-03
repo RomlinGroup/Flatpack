@@ -36,7 +36,7 @@ pip install flatpack
 The key is used exclusively for verifying the authenticity and integrity of a flatpack (FPK), ensuring it has not been
 tampered with and originates from a trusted source.
 
-> **Security note:** This project utilizes 4096-bit [RSA keys](https://en.wikipedia.org/wiki/RSA_(cryptosystem)) for data signing. Breaking such encryption with current
+> **Security note:** This project utilizes 4096-bit [RSA keys](https://en.wikipedia.org/wiki/RSA_(cryptosystem)) for code signing. Breaking such encryption with current
 > classical computing resources is computationally prohibitive*. The analogy often used is that it would be akin to
 > cataloguing every star in the known universe - multiple times.
 
@@ -57,8 +57,8 @@ To run the test script, use the following command-line options:
 - `-i` or `--input`: Specifies the input file or folder (e.g., `hello_world`).
 - `-o` or `--output`: Specifies where the compressed file will be saved (e.g., `compressed_file.fpk`).
 - `-s` or `--signed`: Specifies where the signed file will be saved (e.g., `signed_file.fpk`).
-- `-p` or `--private_key`: Specifies the path to the private key used for signing (e.g., `private_key.pem`).
-- `--hash_size`: (Optional) Specifies the hash size for signing. The default is `256`.
+- `-p` or `--private_key`: Specifies the path to the private key used for code signing (e.g., `private_key.pem`).
+- `--hash_size`: (Optional) Specifies the hash size for code signing. The default is `256`.
 - `--passphrase`: (Optional) Specifies the passphrase for the private key. The default is `None`.
 
 ##### Example
