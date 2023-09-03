@@ -38,7 +38,7 @@ pip install flatpack
 
 ### Compression and signing 🔒
 
-The key is used exclusively for verifying the authenticity and integrity of a flatpack, ensuring it has not been
+The key is used exclusively for verifying the authenticity and integrity of a flatpack (FPK), ensuring it has not been
 tampered with and originates from a trusted source.
 
 > **Security Note**: This project utilizes 4096-bit RSA keys for data signing. Breaking such encryption with current
