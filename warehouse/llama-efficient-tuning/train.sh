@@ -25,7 +25,7 @@ fi
 cd "$WORK_DIR" || exit
 python src/train_bash.py \
     --stage pt \
-    --model_name_or_path tiiuae/falcon-7b-instruct \
+    --model_name_or_path tiiuae/falcon-7b \
     --do_train \
     --dataset wiki_demo \
     --template default \
