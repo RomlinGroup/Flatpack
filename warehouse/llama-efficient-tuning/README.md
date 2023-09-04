@@ -12,4 +12,7 @@ flatpack.ai is experimental; please avoid using it for production.
 
 ## train.sh (fine-tuning)
 
-Coming soon.
+Model: [tiiuae/falcon-7b](https://huggingface.co/tiiuae/falcon-7b) ([Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0))
+> Falcon-7B is a 7B parameters causal decoder-only model built by [TII](https://www.tii.ae/) and trained on 1,500B tokens of [RefinedWeb](https://huggingface.co/datasets/tiiuae/falcon-refinedweb) enhanced with curated corpora. It is made available under the Apache 2.0 license ([Technology Innovation Institute 2023](https://huggingface.co/tiiuae/falcon-7b)).
+
+Dataset: [wiki_demo](https://github.com/hiyouga/LLaMA-Efficient-Tuning/blob/main/data/wiki_demo.txt) ([CC BY-SA 4.0](https://en.wikipedia.org/wiki/Wikipedia:Text_of_the_Creative_Commons_Attribution-ShareAlike_4.0_International_License))

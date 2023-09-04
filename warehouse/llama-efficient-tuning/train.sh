@@ -23,4 +23,22 @@ else
 fi
 
 cd "$WORK_DIR" || exit
-python train_model.py
+python src/train_bash.py \
+    --stage pt \
+    --model_name_or_path tiiuae/falcon-7b-instruct \
+    --do_train \
+    --dataset wiki_demo \
+    --template default \
+    --finetuning_type lora \
+    --lora_target query_key_value \
+    --output_dir /content/output \
+    --overwrite_cache \
+    --per_device_train_batch_size 4 \
+    --gradient_accumulation_steps 4 \
+    --lr_scheduler_type cosine \
+    --logging_steps 10 \
+    --save_steps 1000 \
+    --learning_rate 5e-5 \
+    --num_train_epochs 100000 \
+    --plot_loss \
+    --fp16
