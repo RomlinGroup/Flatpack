@@ -125,19 +125,6 @@ def list_directories() -> str:
 def main():
     """Main function that interprets user commands."""
 
-    directory_name = sys.argv[2]
-    display_disclaimer(directory_name)
-
-    while True:
-        user_response = input().strip().upper()
-        if user_response == "YES":
-            break
-        elif user_response == "NO":
-            print("❌ Installation aborted by user.")
-            exit(0)
-        else:
-            print("❌ Invalid input. Please type 'YES' to accept or 'NO' to decline.")
-
     if len(sys.argv) < 2:
         print("Usage: flatpack.ai <command>")
         print("Available commands: help, install, list, test, version")
@@ -150,6 +137,20 @@ def main():
         if len(sys.argv) < 3:
             print("❌ Please specify a flatpack for the install command.")
             return
+
+        directory_name = sys.argv[2]
+        display_disclaimer(directory_name)
+
+        while True:
+            user_response = input().strip().upper()
+            if user_response == "YES":
+                break
+            elif user_response == "NO":
+                print("❌ Installation aborted by user.")
+                exit(0)
+            else:
+                print("❌ Invalid input. Please type 'YES' to accept or 'NO' to decline.")
+
         install(directory_name)
     elif command == "list":
         print(list_directories())

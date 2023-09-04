@@ -38,7 +38,7 @@ wandb = "*"
 [[git]]
 from_source = "https://github.com/romlingroup/LLaMA-Efficient-Tuning"
 to_destination = "/home/content/LLaMA-Efficient-Tuning"
-branch = "master"
+branch = "main"
 
 [[file]]
 from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/llama-efficient-tuning/train.sh"
