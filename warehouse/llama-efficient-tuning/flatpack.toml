@@ -27,6 +27,7 @@ wget = "*"
 
 [packages.python]
 datasets = "*"
+einops = "*"
 numpy = "*"
 tiktoken = "*"
 transformers = "*"
@@ -42,10 +43,6 @@ branch = "master"
 [[file]]
 from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/llama-efficient-tuning/train.sh"
 to_destination = "/home/content/train.sh"
-
-[[run]]
-command = "pip"
-args = "install einops"
 
 [[run]]
 command = "chmod"
