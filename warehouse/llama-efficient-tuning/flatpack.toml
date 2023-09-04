@@ -44,6 +44,10 @@ from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/wa
 to_destination = "/home/content/train.sh"
 
 [[run]]
+command = "pip"
+args = "install einops"
+
+[[run]]
 command = "chmod"
 args = "+x /home/content/train.sh"
 
