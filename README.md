@@ -6,8 +6,7 @@
 
 [![pip install flatpack](https://img.shields.io/badge/pip%20install-flatpack-5865f2)](https://pypi.org/project/flatpack/) [![Rust](https://github.com/romlingroup/flatpack-ai/actions/workflows/rust.yml/badge.svg)](https://github.com/romlingroup/flatpack-ai/actions/workflows/rust.yml)
 
-> :warning: **DISCLAIMER:** This repository contains our research. Verify the information and do your own research (
-> DYOR). We assume no responsibility for accuracy or completeness.
+> :warning: **DISCLAIMER:** This repository contains our research. Verify the information and do your own research (DYOR). We assume no responsibility for accuracy or completeness.
 
 > 😱 **Regarding AI fearmongering:** ["At what specific date in the future, if the apocalypse hasn't happened, will you finally admit to being wrong?"](https://bigthink.com/pessimists-archive/ai-fear-overpopulation/) (Archie McKenzie 2023) / ["Fearmongering is a technique that has benefited many people over the ages."](https://www.youtube.com/watch?v=2ZbRKxZ2cjM) (Fred L. Smith, Jr. 2019)
 
@@ -37,9 +36,7 @@ Our platform uses [RSA keys](https://en.wikipedia.org/wiki/RSA_(cryptosystem)) t
 
 The unimpeachable integrity of these flatpacks is paramount, as any compromise could have far-reaching implications on the reliability and security of the AI models generated and deployed.
 
-> **Security note:** This project utilizes 4096-bit RSA keys for code signing. Breaking such encryption with current
-> classical computing resources is computationally prohibitive*. The analogy often used is that it would be akin to
-> cataloguing every star in the known universe - multiple times.
+> **Security note:** This project utilizes 4096-bit RSA keys for code signing. Breaking such encryption with current classical computing resources is computationally prohibitive*. The analogy often used is that it would be akin to cataloguing every star in the known universe - multiple times.
 
 > \* ["Post-quantum cryptography"](https://en.wikipedia.org/wiki/Post-quantum_cryptography) (Wikipedia 2023) / ["Did China Break The Quantum Barrier?"](https://www.forbes.com/sites/arthurherman/2023/01/10/did-china-break-the-quantum-barrier/) (Arthur Herman 2023) / ["No, RSA Encryption Isn't Obsolete"](https://www.aei.org/foreign-and-defense-policy/no-rsa-encryption-isnt-obsolete/) (Jason Blessing 2023) / ["Toward Quantum Resilient Security Keys"](https://security.googleblog.com/2023/08/toward-quantum-resilient-security-keys.html) (Google 2023)
 
@@ -109,18 +106,11 @@ essence of these scaled-down but still powerful versions of large language model
 
 ## Inspiration (no affiliation) ⭐
 
-> **Arduino:** "There was once a barrier between the electronics, design, and programming world and the rest of the
-> world. Arduino has broken down that barrier." ([Arduino 2021](https://www.arduino.cc/en/about))
+> **Arduino:** "There was once a barrier between the electronics, design, and programming world and the rest of the world. Arduino has broken down that barrier." ([Arduino 2021](https://www.arduino.cc/en/about))
 
-> **Micro-LLMs:** "Basically I think there will be a lot of interest in training or finetuning custom micro-LLMs (
-> think ~100M - ~1B params, but let's say up to ~10B params) across a large diversity of applications, and deploying
-> them
-> in edge-adjacent environments (think MCUs, phones, web browsers, laptops,
-> etc.)." ([Andrej Karpathy 2023](https://github.com/karpathy/llama2.c))
+> **Micro-LLMs:** "Basically I think there will be a lot of interest in training or finetuning custom micro-LLMs (think ~100M - ~1B params, but let's say up to ~10B params) across a large diversity of applications, and deploying them in edge-adjacent environments (think MCUs, phones, web browsers, laptops, etc.)." ([Andrej Karpathy 2023](https://github.com/karpathy/llama2.c))
 
-> **Raspberry Pi Foundation:** "The Raspberry Pi Foundation is a UK-based charity with the mission to enable young
-> people to realise their full potential through the power of computing and digital
-> technologies." ([Raspberry Pi Foundation 2023](https://www.raspberrypi.org/about/))
+> **Raspberry Pi Foundation:** "The Raspberry Pi Foundation is a UK-based charity with the mission to enable young people to realise their full potential through the power of computing and digital technologies." ([Raspberry Pi Foundation 2023](https://www.raspberrypi.org/about/))
 
 > **Standardisation:** "Without standards, there can be no improvement." (Taiichi Ohno)
 
