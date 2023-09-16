@@ -4,19 +4,18 @@
 
 # flatpack.ai
 
-[![pip install flatpack](https://img.shields.io/badge/pip%20install-flatpack-5865f2)](https://pypi.org/project/flatpack/) [![Rust](https://github.com/romlingroup/flatpack-ai/actions/workflows/rust.yml/badge.svg)](https://github.com/romlingroup/flatpack-ai/actions/workflows/rust.yml)
+[![pip install flatpack](https://img.shields.io/badge/pip%20install-flatpack-5865f2)](https://pypi.org/project/flatpack/)
+[![Rust](https://github.com/romlingroup/flatpack-ai/actions/workflows/rust.yml/badge.svg)](https://github.com/romlingroup/flatpack-ai/actions/workflows/rust.yml)
 
-> :warning: **DISCLAIMER:** This repository contains our research.
-> Verify the information and do your own research (DYOR). We assume no
-> responsibility for accuracy or completeness.
+> :warning: **DISCLAIMER:** This repository contains our research. Verify the information and do your own research (DYOR). We assume no responsibility for accuracy or completeness.
 
 > 😱 **Regarding AI fearmongering:** ["At what specific date in the future, if the apocalypse hasn't happened, will you finally admit to being wrong?"](https://bigthink.com/pessimists-archive/ai-fear-overpopulation/) (Archie McKenzie 2023) / ["Fearmongering is a technique that has benefited many people over the ages."](https://www.youtube.com/watch?v=2ZbRKxZ2cjM) (Fred L. Smith, Jr. 2019)
 
 (OPEN SOURCE) flatpack.ai will democratize AI by providing a modular and open platform for anyone to train their AI
-models from scratch* with cutting-edge technology accessible to all. What flatpacks did for the furniture industry, we
+models from scratch\* with cutting-edge technology accessible to all. What flatpacks did for the furniture industry, we
 will do for the AI industry.
 
-\* *For pre-training, consider it primary education, while fine-tuning is akin to college or university.*
+\* _For pre-training, consider it primary education, while fine-tuning is akin to college or university._
 
 https://pypi.org/project/flatpack
 
@@ -27,18 +26,18 @@ pip install flatpack
 ## Flatpack (FPK) 📦
 
 - template.fpk
-    - DATASET.md
-    - flatpack.toml
-    - README.md
-    - train.sh
+  - DATASET.md
+  - flatpack.toml
+  - README.md
+  - train.sh
 
 ### Code signing
 
-Our platform uses [RSA keys](https://en.wikipedia.org/wiki/RSA_(cryptosystem)) to authenticate and safeguard the integrity of flatpacks (FPK) - packages that may encompass both code and data vital for training artificial intelligence models.
+Our platform uses [RSA keys](<https://en.wikipedia.org/wiki/RSA_(cryptosystem)>) to authenticate and safeguard the integrity of flatpacks (FPK) - packages that may encompass both code and data vital for training artificial intelligence models.
 
 The unimpeachable integrity of these flatpacks is paramount, as any compromise could have far-reaching implications on the reliability and security of the AI models generated and deployed.
 
-> **Security note:** This project utilizes 4096-bit RSA keys for code signing. Breaking such encryption with current classical computing resources is computationally prohibitive*. The analogy often used is that it would be akin to cataloguing every star in the known universe - multiple times.
+> **Security note:** This project utilizes 4096-bit RSA keys for code signing. Breaking such encryption with current classical computing resources is computationally prohibitive\*. The analogy often used is that it would be akin to cataloguing every star in the known universe - multiple times.
 
 > \* ["Post-quantum cryptography"](https://en.wikipedia.org/wiki/Post-quantum_cryptography) (Wikipedia 2023) / ["Did China Break The Quantum Barrier?"](https://www.forbes.com/sites/arthurherman/2023/01/10/did-china-break-the-quantum-barrier/) (Arthur Herman 2023) / ["No, RSA Encryption Isn't Obsolete"](https://www.aei.org/foreign-and-defense-policy/no-rsa-encryption-isnt-obsolete/) (Jason Blessing 2023) / ["Toward Quantum Resilient Security Keys"](https://security.googleblog.com/2023/08/toward-quantum-resilient-security-keys.html) (Google 2023)
 
@@ -88,7 +87,7 @@ Once completed, it will be a mandatory component in all flatpacks.
 
 ## Micro-LLMs 🤏
 
-[Micro-LLMs](https://github.com/karpathy/llama2.c#contributing) (credit to Andrej Karpathy)*, or scaled-down language
+[Micro-LLMs](https://github.com/karpathy/llama2.c#contributing) (credit to Andrej Karpathy)\*, or scaled-down language
 models with around 100 million to 10 billion parameters, offer a compelling solution to the deployment and scalability
 challenges associated with
 traditional [large language models (LLMs)](https://en.wikipedia.org/wiki/Large_language_model). Their smaller size
@@ -103,8 +102,8 @@ energy-efficient, and specialized, even to smaller teams or individual developer
 Overall, micro-LLMs represent a logical step in the evolution of language models, effectively merging the capabilities
 of LLMs with the practical needs of real-world applications.
 
-\* *We recognize that "micro-LLMs" are oxymoronic, combining 'micro' and 'large.' However, the term aptly captures the
-essence of these scaled-down but still powerful versions of large language models.*
+\* _We recognize that "micro-LLMs" are oxymoronic, combining 'micro' and 'large.' However, the term aptly captures the
+essence of these scaled-down but still powerful versions of large language models._
 
 ## Inspiration (no affiliation) ⭐
 
@@ -159,13 +158,13 @@ as [flatpacks](https://github.com/romlingroup/flatpack-ai/tree/main/warehouse) (
 high-quality datasets or models with commercially viable licenses, we would appreciate it if you submitted them via a
 pull request.
 
-*Before utilizing any dataset or model for commercial purposes, seeking guidance from a legal adviser is crucial to
+_Before utilizing any dataset or model for commercial purposes, seeking guidance from a legal adviser is crucial to
 understand the legality within your jurisdiction. Unauthorized use of content may result in severe legal consequences.
 Opt for datasets and models with transparent, commercially viable licenses, subject to review by legal experts.
 Maintaining transparency about data sources is vital to address legal and ethical concerns. This list of provided models
 or datasets is intended solely for research purposes; exercise due diligence by independently verifying their licensing
 and authenticity before any commercial application. Consult legal counsel to ensure compliance with relevant laws and
-regulations if needed.*
+regulations if needed._
 
 | Name                                                                                    | Type    | License                                                                                                   |
 |:----------------------------------------------------------------------------------------|:--------|:----------------------------------------------------------------------------------------------------------|
