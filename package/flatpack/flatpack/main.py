@@ -51,7 +51,7 @@ def display_disclaimer(directory_name: str):
     governed by its own licenses and terms, separate from
     this installer. You may find further details at:
 
-    https://fpk.ai/{}
+    https://fpk.ai/w/{}
     """.format(directory_name)
 
     please_note_colored = colorize(please_note_content, "yellow")
