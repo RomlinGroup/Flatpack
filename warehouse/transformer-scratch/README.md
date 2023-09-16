@@ -1,8 +1,7 @@
 # transformer-scratch
 [![pip install flatpack](https://img.shields.io/badge/pip%20install-flatpack-5865f2)](https://pypi.org/project/flatpack/)
 
-> :warning: **DISCLAIMER:** This repository contains our research. Verify the information and do your own research (
-> DYOR). We assume no responsibility for accuracy or completeness.
+> :warning: **DISCLAIMER:** This repository contains our research. Verify the information and do your own research (DYOR). We assume no responsibility for accuracy or completeness.
 
 `transformer-scratch` offers a flatpack.ai adaptation of [transformer](https://github.com/bashnick/transformer) by Nikolay Bashlykov, licensed under the [MIT License](https://github.com/bashnick/transformer/blob/master/README.md).
 

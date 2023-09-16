@@ -1,8 +1,7 @@
 # lit-gpt-falcon
 [![pip install flatpack](https://img.shields.io/badge/pip%20install-flatpack-5865f2)](https://pypi.org/project/flatpack/)
 
-> :warning: **DISCLAIMER:** This repository contains our research. Verify the information and do your own research (
-> DYOR). We assume no responsibility for accuracy or completeness.
+> :warning: **DISCLAIMER:** This repository contains our research. Verify the information and do your own research (DYOR). We assume no responsibility for accuracy or completeness.
 
 `lit-gpt-falcon` offers a flatpack.ai adaptation of [Lit-GPT](https://github.com/Lightning-AI/lit-gpt) by Lightning AI, licensed under the [Apache License 2.0](https://github.com/Lightning-AI/lit-gpt/blob/main/LICENSE).
 

@@ -1,8 +1,7 @@
 # llama2-scratch
 [![pip install flatpack](https://img.shields.io/badge/pip%20install-flatpack-5865f2)](https://pypi.org/project/flatpack/)
 
-> :warning: **DISCLAIMER:** This repository contains our research. Verify the information and do your own research (
-> DYOR). We assume no responsibility for accuracy or completeness.
+> :warning: **DISCLAIMER:** This repository contains our research. Verify the information and do your own research (DYOR). We assume no responsibility for accuracy or completeness.
 
 `llama2-scratch` offers a flatpack.ai adaptation of [llama2.c](https://github.com/karpathy/llama2.c) by Andrej Karpathy, licensed under the [MIT License](https://github.com/karpathy/llama2.c/blob/master/LICENSE).
 

@@ -1,8 +1,7 @@
 # llama-efficient-tuning
 [![pip install flatpack](https://img.shields.io/badge/pip%20install-flatpack-5865f2)](https://pypi.org/project/flatpack/)
 
-> :warning: **DISCLAIMER:** This repository contains our research. Verify the information and do your own research (
-> DYOR). We assume no responsibility for accuracy or completeness.
+> :warning: **DISCLAIMER:** This repository contains our research. Verify the information and do your own research (DYOR). We assume no responsibility for accuracy or completeness.
 
 `llama-efficient-tuning` offers a flatpack.ai adaptation of [LLaMA-Efficient-Tuning](https://github.com/hiyouga/LLaMA-Efficient-Tuning) by Yaowei Zheng, licensed under the [Apache License 2.0](https://github.com/hiyouga/LLaMA-Efficient-Tuning/blob/main/LICENSE).
 
