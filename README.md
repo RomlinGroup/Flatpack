@@ -159,13 +159,13 @@ as [flatpacks](https://github.com/romlingroup/flatpack-ai/tree/main/warehouse) (
 high-quality datasets or models with commercially viable licenses, we would appreciate it if you submitted them via a
 pull request.
 
-Before utilizing any dataset or model for commercial purposes, seeking guidance from a legal adviser is crucial to
+*Before utilizing any dataset or model for commercial purposes, seeking guidance from a legal adviser is crucial to
 understand the legality within your jurisdiction. Unauthorized use of content may result in severe legal consequences.
 Opt for datasets and models with transparent, commercially viable licenses, subject to review by legal experts.
 Maintaining transparency about data sources is vital to address legal and ethical concerns. This list of provided models
 or datasets is intended solely for research purposes; exercise due diligence by independently verifying their licensing
 and authenticity before any commercial application. Consult legal counsel to ensure compliance with relevant laws and
-regulations if needed.
+regulations if needed.*
 
 | Name                                                                                    | Type    | License                                                                                                   |
 |:----------------------------------------------------------------------------------------|:--------|:----------------------------------------------------------------------------------------------------------|
