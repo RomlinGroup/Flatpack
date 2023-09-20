@@ -4,7 +4,7 @@
 cd "$(dirname "$0")"
 
 # Prompt for confirmation with a warning emoji
-echo -e "⚠️  WARNING"
+echo -e "⚠️ WARNING!"
 read -p "Are you sure you want to reset? [y/N]: " confirmation
 
 if [[ $confirmation != [yY] ]]; then
