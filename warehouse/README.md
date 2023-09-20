@@ -15,7 +15,7 @@ Ahoy, brave explorer!
 |:----------------------------------------------------------------------------------------------------------------|:---------|:----|
 | [lit-gpt-falcon](https://github.com/romlingroup/flatpack-ai/tree/main/warehouse/lit-gpt-falcon)                 | Flatpack | No  |
 | [llama-efficient-tuning](https://github.com/romlingroup/flatpack-ai/tree/main/warehouse/llama-efficient-tuning) | Flatpack | No  |
-| [llama2-scratch](https://github.com/romlingroup/flatpack-ai/tree/main/warehouse/llama2-scratch)                 | Flatpack | No  |
+| [llama2-scratch](https://github.com/romlingroup/flatpack-ai/tree/main/warehouse/llama2-scratch)                 | Flatpack | Yes |
 | [nanogpt-gpt2](https://github.com/romlingroup/flatpack-ai/tree/main/warehouse/nanogpt-gpt2)                     | Flatpack | No  |
 | [nanogpt-shakespeare](https://github.com/romlingroup/flatpack-ai/tree/main/warehouse/nanogpt-shakespeare)       | Flatpack | No  |
 | [rwkv-lm-finetuning](https://github.com/romlingroup/flatpack-ai/tree/main/warehouse/rwkv-lm-finetuning)         | Flatpack | No  |

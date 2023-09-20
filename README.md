@@ -63,7 +63,8 @@ To run the test script, use the following command-line options:
 ##### Example
 
 ```bash
-python test_compress_and_sign_fpk.py -i hello_world -o compressed_file.fpk -s signed_file.fpk -p private_key.pem --hash_size 256 --passphrase YourPassphraseHere
+PASSPHRASE=$(python -c 'import getpass; print(getpass.getpass("Enter the passphrase: "))')
+python test_compress_and_sign_fpk.py -i hello_world -o compressed_file.fpk -s signed_file.fpk -p private_key.pem --hash_size 256 --passphrase "$PASSPHRASE"
 ```
 
 ##### Verification
