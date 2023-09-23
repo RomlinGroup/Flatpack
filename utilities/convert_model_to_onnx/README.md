@@ -1,7 +1,7 @@
 # convert_model_to_onnx
 
 ```bash
-./convert_model_to_onnx.sh
+./convert_model_to_onnx.sh gpt2
 ```
 
 ```bash
