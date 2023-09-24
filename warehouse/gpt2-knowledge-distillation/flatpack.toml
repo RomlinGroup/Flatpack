@@ -37,7 +37,7 @@ wandb = "*"
 [[git]]
 from_source = "https://github.com/romlingroup/GPT2-Knowledge-Distillation"
 to_destination = "/home/content/GPT2-Knowledge-Distillation"
-branch = "master"
+branch = "main"
 
 [[file]]
 from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/gpt2-knowledge-distillation/device.sh"
