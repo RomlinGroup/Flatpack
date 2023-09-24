@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # === BEGIN USER CUSTOMIZATION ===
-export REPO_NAME=llama2
+export REPO_NAME=llama2.c
 export FLATPACK_NAME=llama2-scratch
 # === END USER CUSTOMIZATION ===
 

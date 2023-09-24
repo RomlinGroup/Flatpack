@@ -25,14 +25,14 @@ fi
 if [[ $IS_COLAB -eq 0 ]]; then
   OS=$(uname)
   if [ "$OS" = "Darwin" ]; then
-    WORK_DIR="$REPO_NAME.c"
+    WORK_DIR="$REPO_NAME"
     DEVICE="mps"
   else
-    WORK_DIR="/home/content/$REPO_NAME.c"
+    WORK_DIR="/home/content/$REPO_NAME"
     DEVICE="cpu"
   fi
 else
-  WORK_DIR="/content/$FLATPACK_NAME/$REPO_NAME.c"
+  WORK_DIR="/content/$FLATPACK_NAME/$REPO_NAME"
   DEVICE="cuda"
 fi
 
