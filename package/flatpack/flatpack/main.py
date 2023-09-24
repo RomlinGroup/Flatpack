@@ -79,7 +79,9 @@ def fetch_github_dirs() -> list:
     if response.status_code != 200:
         return ["❌ Error fetching data from GitHub"]
 
-    directories = [item['name'] for item in response.json() if item['type'] == 'dir']
+    # Exclude the 'archive' directory from the list of directories
+    directories = [item['name'] for item in response.json() if
+                   item['type'] == 'dir' and item['name'].lower() != 'archive']
     return sorted(directories)
 
 
