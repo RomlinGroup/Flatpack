@@ -40,8 +40,16 @@ to_destination = "/home/content/llama2.c"
 branch = "master"
 
 [[file]]
+from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/llama2-scratch/device.sh"
+to_destination = "/home/content/device.sh"
+
+[[file]]
 from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/llama2-scratch/train.sh"
 to_destination = "/home/content/train.sh"
+
+[[run]]
+command = "chmod"
+args = "+x /home/content/device.sh"
 
 [[run]]
 command = "chmod"
