@@ -1,34 +1,43 @@
 name: Test Build PyPI Package
 
-on: [push, pull_request]
+on: [ push, pull_request ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
-      
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: '3.x'
-        
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install setuptools wheel twine
-        
-    - name: Build package
-      working-directory: package
-      run: |
-        python setup.py sdist bdist_wheel
-        
-    - name: Check package
-      working-directory: package
-      run: |
-        twine check dist/*
-        
-    - name: Install package
-      run: |
-        pip install package/dist/*.whl
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Print working directory
+        run: pwd
+
+      - name: List contents of root directory
+        run: ls -al
+
+      - name: List contents of package directory
+        run: ls -al package
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install setuptools wheel twine
+
+      - name: Build package
+        working-directory: package
+        run: |
+          python setup.py sdist bdist_wheel
+
+      - name: Check package
+        working-directory: package
+        run: |
+          twine check dist/*
+
+      - name: Install package
+        run: |
+          pip install package/dist/*.whl
