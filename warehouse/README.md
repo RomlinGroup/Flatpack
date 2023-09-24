@@ -5,7 +5,7 @@
 # Warehouse (coming soon) 👀
 [![pip install flatpack](https://img.shields.io/badge/pip%20install-flatpack-5865f2)](https://pypi.org/project/flatpack/)
 
-Train AI models - not your patience
+flatpack.ai is experimental; please avoid using it for production.
 
 ## Registry 📦
 
