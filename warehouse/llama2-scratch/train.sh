@@ -1,28 +1,14 @@
 #!/bin/bash
 
-if [[ "${COLAB_GPU}" == "1" ]]; then
-  echo "Running in Google Colab environment"
-  IS_COLAB=1
-else
-  echo "Not running in Google Colab environment"
-  IS_COLAB=0
-fi
+# === BEGIN USER CUSTOMIZATION ===
+export REPO_NAME=llama2
+export FLATPACK_NAME=llama2-scratch
+# === END USER CUSTOMIZATION ===
 
-if [[ $IS_COLAB -eq 0 ]]; then
-  OS=$(uname)
-  if [ "$OS" = "Darwin" ]; then
-    WORK_DIR="llama2.c"
-    DEVICE="mps"
-  else
-    WORK_DIR="/home/content/llama2.c"
-    DEVICE="cpu"
-  fi
-else
-  WORK_DIR="/content/llama2-scratch/llama2.c"
-  DEVICE="cuda"
-fi
+source ./device.sh || { echo "Error: Failed to source device.sh" >&2; exit 1; }
 
-cd "$WORK_DIR" || exit
+# === BEGIN USER CUSTOMIZATION ===
 python tinystories.py download
 python tinystories.py pretokenize
 python train.py
+# === END USER CUSTOMIZATION ===
