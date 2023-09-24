@@ -12,7 +12,7 @@ flatpack.ai is experimental; please avoid using it for production.
 ## train.sh
 
 Model: [gpt2](https://huggingface.co/gpt2) ([Modified MIT License](https://github.com/openai/gpt-2/blob/master/LICENSE))
-> This is the smallest version of GPT-2, with 124M parameters ([GPT-2 2022](https://huggingface.co/gpt2)).
+> This model was developed by researchers at OpenAI to help us understand how the capabilities of language model capabilities scale as a function of the size of the models (by parameter count) combined with very large internet-scale datasets (WebText) ([OpenAI 2019](https://github.com/openai/gpt-2/blob/master/model_card.md)).
 
 Dataset: [tinyshakespeare](https://raw.githubusercontent.com/karpathy/char-rnn/master/data/tinyshakespeare/input.txt) ([Public Domain](https://creativecommons.org/publicdomain/zero/1.0/))
 > 40,000 lines of Shakespeare from a variety of Shakespeare's plays. Featured in Andrej Karpathy's blog post 'The Unreasonable Effectiveness of Recurrent Neural Networks': http://karpathy.github.io/2015/05/21/rnn-effectiveness/ ([TensorFlow 2023](https://www.tensorflow.org/datasets/catalog/tiny_shakespeare)).
