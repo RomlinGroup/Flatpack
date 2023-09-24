@@ -8,7 +8,6 @@ export FLATPACK_NAME=gpt2-knowledge-distillation
 source ./device.sh || { echo "Error: Failed to source device.sh" >&2; exit 1; }
 
 # === BEGIN USER CUSTOMIZATION ===
-cd data/shakespeare
-python prepare.py
+python data/shakespeare/prepare.py
 bash run_adamw/train_student.sh
 # === END USER CUSTOMIZATION ===
