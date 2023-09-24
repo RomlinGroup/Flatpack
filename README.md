@@ -120,40 +120,6 @@ essence of these scaled-down but still powerful versions of large language model
 
 > **Standardisation:** "Without standards, there can be no improvement." (Taiichi Ohno)
 
-## Prototyping (Rust) 🦀
-
-flatpack.ai is experimental; please avoid using it for production.
-
-1. `git clone https://github.com/romlingroup/flatpack-ai.git`
-2. Install Rust with https://www.rust-lang.org/tools/install
-3. To parse a file, run: `cargo run -- parse /path/to/your/file.toml`
-4. To start the server, run: `cargo run -- run-server`
-5. Visit http://localhost:1337
-
-### Bash 🐧
-
-1. `./flatpack.sh`
-2. `cd nanogpt-shakespeare`
-3. `pyenv activate myenv`
-4. `./train.sh`
-
-Do not forget to clean up
-
-1. `source deactivate`
-2. `pyenv virtualenv-delete myenv`
-3. `sudo rm -r nanogpt-shakespeare`
-
-### Colab 🚀
-
-1. `!bash /content/flatpack.sh`
-2. `!bash /content/nanogpt-shakespeare/train.sh`
-
-### Containerfile 🦭
-
-1. Install [Podman](https://podman.io/) ([Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0))
-2. `podman build -t nanogpt-shakespeare -f Containerfile .`
-3. `podman run -it nanogpt-shakespeare:latest`
-
 ## Commercial use allowed (no affiliation) 📈
 
 > ⚖️ **Legal perspectives:** ["Questions and Answers – New EU copyright rules"](https://ec.europa.eu/commission/presscorner/detail/en/qanda_21_2821) (European Commission 2021) / ["Are ChatGPT, Bard and Dolly 2.0 Trained On Pirated Content?"](https://www.searchenginejournal.com/are-chatgpt-bard-and-dolly-2-0-trained-on-pirated-content/) (Roger Montti 2023) / ["Llama copyright drama: Meta stops disclosing what data it uses to train the company's giant AI models"](https://www.businessinsider.com/meta-llama-2-data-train-ai-models-2023-7) (Alistair Barr 2023) / ["Generative Artificial Intelligence and Copyright Law"](https://crsreports.congress.gov/product/pdf/LSB/LSB10922) (Congressional Research Service 2023) / ["EU legislates disclosure of copyright data used to train AI"](https://www.theregister.com/2023/05/01/eu_ai_act_adds_new/) (Katyanna Quach 2023)
