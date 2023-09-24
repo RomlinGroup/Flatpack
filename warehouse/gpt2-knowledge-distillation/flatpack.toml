@@ -1,0 +1,60 @@
+# flatpack.toml
+# WIP (2023-06-28)
+
+version = "0.0.1"
+base_image = "debian:stable-slim"
+
+[environment]
+model_name = "gpt2-knowledge-distillation"
+
+[[port]]
+external = 1337
+internal = 80
+
+[directories]
+checkpoints = "/home/content/checkpoints"
+data = "/home/content/data"
+models = "/home/content/models"
+scripts = "/home/content/scripts"
+
+[packages]
+
+[packages.unix]
+gcc = "*"
+git = "*"
+python3-pip = "*"
+wget = "*"
+
+[packages.python]
+datasets = "*"
+numpy = "*"
+tiktoken = "*"
+transformers = "*"
+torch = "*"
+tqdm = "*"
+wandb = "*"
+
+[[git]]
+from_source = "https://github.com/romlingroup/GPT2-Knowledge-Distillation"
+to_destination = "/home/content/GPT2-Knowledge-Distillation"
+branch = "master"
+
+[[file]]
+from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/gpt2-knowledge-distillation/device.sh"
+to_destination = "/home/content/device.sh"
+
+[[file]]
+from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/gpt2-knowledge-distillation/train.sh"
+to_destination = "/home/content/train.sh"
+
+[[run]]
+command = "chmod"
+args = "+x /home/content/device.sh"
+
+[[run]]
+command = "chmod"
+args = "+x /home/content/train.sh"
+
+[[cmd]]
+command = "bash"
+args = "/home/content/train.sh"

@@ -11,9 +11,9 @@ flatpack.ai is experimental; please avoid using it for production.
 
 Ahoy, brave explorer!
 
-| Name                                                                                                            | Type     | FPK |
-|:----------------------------------------------------------------------------------------------------------------|:---------|:----|
-| [llama2-scratch](https://github.com/romlingroup/flatpack-ai/tree/main/warehouse/llama2-scratch)                 | Flatpack | Yes |
+| Name                                                                                                                      | Type     | FPK |
+|:--------------------------------------------------------------------------------------------------------------------------|:---------|:----|
+| [gpt2-knowledge-distillation](https://github.com/romlingroup/flatpack-ai/tree/main/warehouse/gpt2-knowledge-distillation) | Flatpack | No  |
 
 *We have relocated the early prototyping flatpacks to [/archive](archive) for the time being to preserve our organisational sanity.*
 
