@@ -3,13 +3,16 @@
 
 > :warning: **DISCLAIMER:** This repository contains our research. Verify the information and do your own research (DYOR). We assume no responsibility for accuracy or completeness.
 
-`llama2-scratch` offers a flatpack.ai adaptation of [llama2.c](https://github.com/karpathy/llama2.c) by Andrej Karpathy, licensed under the [MIT License](https://github.com/karpathy/llama2.c/blob/master/LICENSE).
+`gpt2-knowledge-distillation` offers a flatpack.ai adaptation of [GPT2-Knowledge-Distillation](https://github.com/ThuanNaN/GPT2-Knowledge-Distillation) by Thuan Nguyen Duong, licensed under the [MIT License](https://github.com/ThuanNaN/GPT2-Knowledge-Distillation/blob/main/LICENSE).
 
-We have no official affiliation or association with Andrej Karpathy, nor are we endorsed or authorized by him. For the official Andrej Karpathy website, please visit [https://karpathy.ai](https://karpathy.ai).
+We have no official affiliation or association with Thuan Nguyen Duong, nor are we endorsed or authorized by him. For the official GitHub profile of Thuan Nguyen Duong, please visit [https://github.com/ThuanNaN](https://github.com/ThuanNaN).
 
 flatpack.ai is experimental; please avoid using it for production.
 
-## train.sh (scratch)
+## train.sh
 
-Dataset: [roneneldan/TinyStories](https://huggingface.co/datasets/roneneldan/TinyStories) ([CDLA-Sharing-1.0](https://cdla.dev/sharing-1-0/))
-> Dataset containing synthetically generated (by GPT-3.5 and GPT-4) short stories that only use a small vocabulary. Described in the following paper: https://arxiv.org/abs/2305.07759 ([Ronen Eldan 2023](https://huggingface.co/datasets/roneneldan/TinyStories)).
+Model: [gpt2](https://huggingface.co/gpt2) ([Modified MIT License](https://github.com/openai/gpt-2/blob/master/LICENSE))
+> This is the smallest version of GPT-2, with 124M parameters ([GPT-2 2022](https://huggingface.co/gpt2)).
+
+Dataset: [tinyshakespeare](https://raw.githubusercontent.com/karpathy/char-rnn/master/data/tinyshakespeare/input.txt) ([Public Domain](https://creativecommons.org/publicdomain/zero/1.0/))
+> 40,000 lines of Shakespeare from a variety of Shakespeare's plays. Featured in Andrej Karpathy's blog post 'The Unreasonable Effectiveness of Recurrent Neural Networks': http://karpathy.github.io/2015/05/21/rnn-effectiveness/ ([TensorFlow 2023](https://www.tensorflow.org/datasets/catalog/tiny_shakespeare)).
