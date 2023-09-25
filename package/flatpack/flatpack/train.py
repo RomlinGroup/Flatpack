@@ -21,9 +21,13 @@ def train(train_function, save_dir, model_type='rnn', framework='pytorch', *args
     # Call the user-provided training function and update the progress after each epoch
     for epoch in range(epochs):
         output = train_function(*args, **kwargs)
+
+        # Print loss and accuracy at the end of each epoch
+        print(f"Epoch {epoch + 1}/{epochs}, Loss: {output['loss']:.4f}, Accuracy: {output['accuracy']:.4f}")
+
         # Calculate and print the elapsed time
         elapsed_time = time.time() - start_time
-        print(f"Epoch {epoch + 1}/{epochs}, Elapsed Time: {elapsed_time:.2f} seconds")
+        print(f"Elapsed Time: {elapsed_time:.2f} seconds")
 
     # Calculate and display the total training time
     end_time = time.time()
