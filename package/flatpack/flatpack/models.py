@@ -18,6 +18,10 @@ class RNNLM(nn.Module):
         self.rnn = nn.RNN(embed_size, hidden_size, num_layers, batch_first=True)
         self.fc = None
 
+    @staticmethod
+    def load_torch_model(model_path):
+        return torch.load(model_path)
+
     def load_vocab_size(self, save_dir):
         with open(os.path.join(save_dir, 'char_to_index.json'), 'r') as f:
             char_to_index = json.load(f)
