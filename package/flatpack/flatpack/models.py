@@ -18,7 +18,7 @@ class RNNLM(nn.Module):
         return out
 
     @staticmethod
-    def instance(dataset, vocab_size, embed_size, hidden_size, num_layers, epochs, batch_size):
+    def train_model(dataset, vocab_size, embed_size, hidden_size, num_layers, epochs, batch_size):
         dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
         model = RNNLM(vocab_size, embed_size, hidden_size, num_layers)
         criterion = nn.CrossEntropyLoss()
