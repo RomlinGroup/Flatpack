@@ -5,11 +5,12 @@ with open("README.md", "r") as f:
 
 setup(
     name="flatpack",
-    version="0.1.6",
+    version="0.1.7",
     packages=find_packages(),
     install_requires=[
         "requests",
-        "toml"
+        "toml",
+        "tqdm"
     ],
     author="Romlin Group AB",
     author_email="hello@romlin.com",
