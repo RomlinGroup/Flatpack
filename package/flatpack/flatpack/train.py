@@ -1,6 +1,6 @@
 import os
 import time
-from tqdm.notebook import tqdm
+import sys
 
 
 def train(train_function, save_dir, model_type='rnn', framework='pytorch', *args, **kwargs):
@@ -15,22 +15,20 @@ def train(train_function, save_dir, model_type='rnn', framework='pytorch', *args
 
     print(f"Training {model_type} model with epochs: {epochs} and batch size: {batch_size}")
 
-    # Initialize a progress bar using tqdm.notebook
-    with tqdm(total=epochs, desc='Training', unit='epoch') as pbar:
-        # Initialize a timer
-        start_time = time.time()
+    # Initialize a timer
+    start_time = time.time()
 
-        # Call the user-provided training function and update the progress bar after each epoch
-        for epoch in range(epochs):
-            output = train_function(*args, **kwargs)
-            # Update the progress bar and display the loss
-            pbar.set_postfix(loss=output.get('loss', 'N/A'))
-            pbar.update(1)
+    # Call the user-provided training function and update the progress after each epoch
+    for epoch in range(epochs):
+        output = train_function(*args, **kwargs)
+        # Calculate and print the elapsed time
+        elapsed_time = time.time() - start_time
+        print(f"Epoch {epoch + 1}/{epochs}, Elapsed Time: {elapsed_time:.2f} seconds")
 
-            # Calculate and display the elapsed time at each iteration
-            current_time = time.time()
-            elapsed_time = current_time - start_time
-            pbar.set_postfix(loss=output.get('loss', 'N/A'), elapsed_time=f"{elapsed_time:.2f} seconds")
+    # Calculate and display the total training time
+    end_time = time.time()
+    elapsed_time = end_time - start_time
+    print(f"Training completed in {elapsed_time:.2f} seconds")
 
     # Save the trained model based on the specified framework
     if framework == 'pytorch':
