@@ -1,5 +1,6 @@
 import os
 import time
+import torch
 
 
 def train(user_train_function, save_dir, model_type='rnn', framework='pytorch', *args, **kwargs):
