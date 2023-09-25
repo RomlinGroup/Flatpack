@@ -4,7 +4,7 @@ import requests
 import sys
 import toml
 from .parsers import parse_toml_to_pyenv_script
-from .train import train as train_model
+from .instructions import build
 
 
 def colorize(text, color):
@@ -131,14 +131,6 @@ def main():
         install(directory_name)
     elif command == "list":
         print(list_directories())
-    elif command == "test":
-        print("[TEST]")
-    elif command == "train":
-        train_parser = argparse.ArgumentParser(description='Training arguments')
-        train_parser.add_argument('--epochs', type=int, default=10, help='Number of epochs')
-        train_parser.add_argument('--batch-size', type=int, default=32, help='Batch size')
-        train_args = train_parser.parse_args(sys.argv[2:])
-        train_model(epochs=train_args.epochs, batch_size=train_args.batch_size)
     elif command == "version":
         print("[VERSION]")
     else:
