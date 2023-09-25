@@ -1,3 +1,4 @@
+import requests
 import torch
 from torch.utils.data import Dataset
 
@@ -14,3 +15,7 @@ class TextDataset(Dataset):
         inputs = torch.tensor(self.indexed_text[idx:idx + self.seq_length], dtype=torch.long)
         targets = torch.tensor(self.indexed_text[idx + 1:idx + self.seq_length + 1], dtype=torch.long)
         return inputs, targets
+
+
+def download_text(url):
+    return requests.get(url).text

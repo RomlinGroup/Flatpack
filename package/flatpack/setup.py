@@ -5,7 +5,7 @@ with open("README.md", "r") as f:
 
 setup(
     name="flatpack",
-    version="0.5.1",
+    version="0.5.3",
     packages=find_packages(),
     install_requires=[
         "requests",
