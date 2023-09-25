@@ -77,7 +77,7 @@ class RNNLM(nn.Module):
 
         return {'model': model}
 
-    def generate_text(self, save_dir, start_sequence="In the beginning", generate_length=1024, temperature=1.0):
+    def generate_text(self, save_dir, start_sequence="To be, or not to be", generate_length=1024, temperature=1.0):
         # Load char_to_index and index_to_char mappings from saved JSON files
         with open(os.path.join(save_dir, 'char_to_index.json'), 'r') as f:
             char_to_index = json.load(f)
