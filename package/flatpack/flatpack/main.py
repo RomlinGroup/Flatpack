@@ -1,9 +1,10 @@
+import argparse
 import os
 import requests
 import sys
 import toml
-
 from .parsers import parse_toml_to_pyenv_script
+from .train import train as train_model
 
 
 def colorize(text, color):
@@ -60,35 +61,25 @@ def display_disclaimer(directory_name: str):
 
 
 def fetch_flatpack_toml_from_dir(directory_name: str) -> str:
-    """Fetch the flatpack.toml content from a specified GitHub directory."""
     base_url = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse"
     toml_url = f"{base_url}/{directory_name}/flatpack.toml"
     response = requests.get(toml_url)
-
     if response.status_code != 200:
         return None
-
     return response.text
 
 
 def fetch_github_dirs() -> list:
-    """Retrieve a list of directories from the specified GitHub repo."""
     url = "https://api.github.com/repos/romlingroup/flatpack-ai/contents/warehouse"
     response = requests.get(url)
-
     if response.status_code != 200:
         return ["❌ Error fetching data from GitHub"]
-
-    # Exclude the 'archive' directory from the list of directories
     directories = [item['name'] for item in response.json() if
                    item['type'] == 'dir' and item['name'].lower() != 'archive']
     return sorted(directories)
 
 
 def install(directory_name: str):
-    """Fetch the flatpack.toml file, convert it to a bash script, and save it."""
-
-    # Verify directory existence
     existing_dirs = fetch_github_dirs()
     if directory_name not in existing_dirs:
         print(f"❌ Error: The directory '{directory_name}' does not exist.")
@@ -96,53 +87,38 @@ def install(directory_name: str):
 
     toml_content = fetch_flatpack_toml_from_dir(directory_name)
     if toml_content:
-        # print(f"Contents of flatpack.toml in {directory_name}:\n{toml_content}\n")
-
-        # Save the TOML content to a temporary file
         with open('temp_flatpack.toml', 'w') as f:
             f.write(toml_content)
-
-        # Convert TOML to bash script
         bash_script_content = parse_toml_to_pyenv_script('temp_flatpack.toml')
-
-        # Store the bash script in a file
         with open('flatpack.sh', 'w') as f:
             f.write(bash_script_content)
-
         print("🎉 Bash script generated and saved as 'flatpack.sh'.")
         print(f"🔎 Location: {os.path.join(os.getcwd(), 'flatpack.sh')}")
-
-        # Cleanup temporary TOML file
         os.remove('temp_flatpack.toml')
     else:
         print(f"❌ No flatpack.toml found in {directory_name}.\n")
 
 
 def list_directories() -> str:
-    """Retrieve and format a list of directories from the GitHub repository."""
     dirs = fetch_github_dirs()
     return "\n".join(dirs)
 
 
 def main():
-    """Main function that interprets user commands."""
+    parser = argparse.ArgumentParser(description='flatpack.ai command line interface')
+    parser.add_argument('command', help='Command to run')
 
-    if len(sys.argv) < 2:
-        print("Usage: flatpack.ai <command>")
-        print("Available commands: help, install, list, test, version")
-        return
+    args = parser.parse_args(sys.argv[1:2])
+    command = args.command
 
-    command = sys.argv[1]
     if command == "help":
         print("[HELP]")
     elif command == "install":
         if len(sys.argv) < 3:
             print("❌ Please specify a flatpack for the install command.")
             return
-
         directory_name = sys.argv[2]
         display_disclaimer(directory_name)
-
         while True:
             user_response = input().strip().upper()
             if user_response == "YES":
@@ -152,12 +128,17 @@ def main():
                 exit(0)
             else:
                 print("❌ Invalid input. Please type 'YES' to accept or 'NO' to decline.")
-
         install(directory_name)
     elif command == "list":
         print(list_directories())
     elif command == "test":
         print("[TEST]")
+    elif command == "train":
+        train_parser = argparse.ArgumentParser(description='Training arguments')
+        train_parser.add_argument('--epochs', type=int, default=10, help='Number of epochs')
+        train_parser.add_argument('--batch-size', type=int, default=32, help='Batch size')
+        train_args = train_parser.parse_args(sys.argv[2:])
+        train_model(epochs=train_args.epochs, batch_size=train_args.batch_size)
     elif command == "version":
         print("[VERSION]")
     else:
