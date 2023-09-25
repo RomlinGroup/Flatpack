@@ -17,40 +17,39 @@ class RNNLM(nn.Module):
         out = self.fc(out)
         return out
 
+    @staticmethod
+    def instance(dataset, vocab_size, embed_size, hidden_size, num_layers, epochs, batch_size):
+        dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
+        model = RNNLM(vocab_size, embed_size, hidden_size, num_layers)
+        criterion = nn.CrossEntropyLoss()
+        optimizer = optim.Adam(model.parameters(), lr=0.001)
 
-def train_rnn_function(dataset, vocab_size, embed_size, hidden_size, num_layers, epochs, batch_size):
-    dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
+        for epoch in range(epochs):
+            total_loss = 0.0
+            total_accuracy = 0.0
+            total_batches = 0
 
-    model = RNNLM(vocab_size, embed_size, hidden_size, num_layers)
-    criterion = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(model.parameters(), lr=0.001)
+            for inputs, targets in dataloader:
+                inputs = inputs.long()
+                outputs = model(inputs)
+                loss = criterion(outputs.view(-1, vocab_size), targets.view(-1))
 
-    for epoch in range(epochs):
-        total_loss = 0.0
-        total_accuracy = 0.0
-        total_batches = 0
+                _, predicted = torch.max(outputs.data, 2)
+                correct = (predicted == targets)
+                accuracy = correct.sum().item() / (targets.size(0) * targets.size(1))
 
-        for inputs, targets in dataloader:
-            inputs = inputs.long()
-            outputs = model(inputs)
-            loss = criterion(outputs.view(-1, vocab_size), targets.view(-1))
+                optimizer.zero_grad()
+                loss.backward()
+                torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1)
+                optimizer.step()
 
-            _, predicted = torch.max(outputs.data, 2)
-            correct = (predicted == targets)
-            accuracy = correct.sum().item() / (targets.size(0) * targets.size(1))
+                total_loss += loss.item()
+                total_accuracy += accuracy
+                total_batches += 1
 
-            optimizer.zero_grad()
-            loss.backward()
-            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1)
-            optimizer.step()
+            # Print epoch-wise progress
+            average_loss = total_loss / total_batches
+            average_accuracy = total_accuracy / total_batches
+            print(f"Epoch {epoch + 1}/{epochs}, Loss: {average_loss:.4f}, Accuracy: {average_accuracy:.4f}")
 
-            total_loss += loss.item()
-            total_accuracy += accuracy
-            total_batches += 1
-
-        # Print epoch-wise progress
-        average_loss = total_loss / total_batches
-        average_accuracy = total_accuracy / total_batches
-        print(f"Epoch {epoch + 1}/{epochs}, Loss: {average_loss:.4f}, Accuracy: {average_accuracy:.4f}")
-
-    return {'model': model}
+        return {'model': model}
