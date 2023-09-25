@@ -1,39 +1,86 @@
+import os
+import json
 import torch
 import torch.nn as nn
-import torch.optim as optim
 import torch.nn.functional as F
-import json
 from torch.utils.data import DataLoader
+import torch.optim as optim
 
 
 class RNNLM(nn.Module):
     def __init__(self, embed_size, hidden_size, num_layers):
         super(RNNLM, self).__init__()
-        # Defer initialization of the embedding layer until vocab_size is known
+        self.embed_size = embed_size
+        self.hidden_size = hidden_size
+        self.num_layers = num_layers
+        self.vocab_size = None
         self.embedding = None
         self.rnn = nn.RNN(embed_size, hidden_size, num_layers, batch_first=True)
-        # Defer initialization of the fc layer until vocab_size is known
         self.fc = None
-        self.vocab_size = None
+
+    def load_vocab_size(self, save_dir):
+        with open(os.path.join(save_dir, 'char_to_index.json'), 'r') as f:
+            char_to_index = json.load(f)
+        self.vocab_size = len(char_to_index)
+        self.embedding = nn.Embedding(self.vocab_size, self.embed_size)
+        self.fc = nn.Linear(self.hidden_size, self.vocab_size)
 
     def forward(self, x):
+        if self.embedding is None or self.fc is None:
+            raise ValueError("vocab_size is not loaded")
         x = self.embedding(x)
         out, _ = self.rnn(x)
         out = self.fc(out)
         return out
 
-    def load_vocab(self, save_dir):
-        with open(f'{save_dir}/char_to_index.json', 'r') as f:
-            char_to_index = json.load(f)
-        with open(f'{save_dir}/index_to_char.json', 'r') as f:
-            index_to_char = json.load(f)
-        self.vocab_size = len(char_to_index)
-        self.embedding = nn.Embedding(self.vocab_size, self.rnn.input_size)
-        self.fc = nn.Linear(self.rnn.hidden_size, self.vocab_size)
-        return char_to_index, index_to_char
+    @staticmethod
+    def train_model(dataset, vocab_size, embed_size, hidden_size, num_layers, epochs, batch_size):
+        dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
+        model = RNNLM(embed_size, hidden_size, num_layers)
+        model.vocab_size = vocab_size
+        model.embedding = nn.Embedding(vocab_size, embed_size)
+        model.fc = nn.Linear(hidden_size, vocab_size)
+        criterion = nn.CrossEntropyLoss()
+        optimizer = optim.Adam(model.parameters(), lr=0.001)
+
+        for epoch in range(epochs):
+            total_loss = 0.0
+            total_accuracy = 0.0
+            total_batches = 0
+
+            for inputs, targets in dataloader:
+                inputs = inputs.long()
+                outputs = model(inputs)
+                loss = criterion(outputs.view(-1, vocab_size), targets.view(-1))
+
+                _, predicted = torch.max(outputs.data, 2)
+                correct = (predicted == targets)
+                accuracy = correct.sum().item() / (targets.size(0) * targets.size(1))
+
+                optimizer.zero_grad()
+                loss.backward()
+                torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1)
+                optimizer.step()
+
+                total_loss += loss.item()
+                total_accuracy += accuracy
+                total_batches += 1
+
+            # Print epoch-wise progress
+            average_loss = total_loss / total_batches
+            average_accuracy = total_accuracy / total_batches
+            print(f"Epoch {epoch + 1}/{epochs}, Loss: {average_loss:.4f}, Accuracy: {average_accuracy:.4f}")
+
+        return {'model': model}
 
     def generate_text(self, save_dir, start_sequence="In the beginning", generate_length=1024, temperature=1.0):
-        char_to_index, index_to_char = self.load_vocab(save_dir)
+        # Load char_to_index and index_to_char mappings from saved JSON files
+        with open(os.path.join(save_dir, 'char_to_index.json'), 'r') as f:
+            char_to_index = json.load(f)
+
+        with open(os.path.join(save_dir, 'index_to_char.json'), 'r') as f:
+            index_to_char = json.load(f)
+
         input_sequence = [char_to_index[char] for char in start_sequence]
         input_tensor = torch.tensor(input_sequence).long().unsqueeze(0)
         generated_text = start_sequence
