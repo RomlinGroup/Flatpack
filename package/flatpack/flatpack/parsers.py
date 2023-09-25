@@ -1,5 +1,6 @@
 import toml
 
+
 def parse_toml_to_pyenv_script(file_path: str, python_version="3.11.3", env_name="myenv") -> str:
     """
     Convert a TOML configuration to a bash script that sets up a python environment using pyenv and performs actions based on the TOML.
@@ -81,7 +82,8 @@ fi
 
     # Install python packages
     packages = config.get("packages", {}).get("python", {})
-    package_list = [f"{package}=={version}" if version != "*" and version else package for package, version in packages.items()]
+    package_list = [f"{package}=={version}" if version != "*" and version else package for package, version in
+                    packages.items()]
     if package_list:
         script.append(f"python -m pip install {' '.join(package_list)}")
 
