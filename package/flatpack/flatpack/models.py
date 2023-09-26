@@ -7,9 +7,9 @@ from torch.utils.data import DataLoader
 import torch.optim as optim
 
 
-class RNNLM(nn.Module):
+class RNN(nn.Module):
     def __init__(self, embed_size, hidden_size, num_layers):
-        super(RNNLM, self).__init__()
+        super(RNN, self).__init__()
         self.embed_size = embed_size
         self.hidden_size = hidden_size
         self.num_layers = num_layers
@@ -40,7 +40,7 @@ class RNNLM(nn.Module):
     @staticmethod
     def train_model(dataset, vocab_size, embed_size, hidden_size, num_layers, epochs, batch_size):
         dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
-        model = RNNLM(embed_size, hidden_size, num_layers)
+        model = RNN(embed_size, hidden_size, num_layers)
         model.vocab_size = vocab_size
         model.embedding = nn.Embedding(vocab_size, embed_size)
         model.fc = nn.Linear(hidden_size, vocab_size)
