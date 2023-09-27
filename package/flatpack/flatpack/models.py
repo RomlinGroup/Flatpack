@@ -95,7 +95,7 @@ class RNN(nn.Module):
             average_accuracy = total_accuracy / total_batches
             print(f"Epoch {epoch + 1}/{epochs}, Loss: {average_loss:.4f}, Accuracy: {average_accuracy:.4f}")
 
-        return model
+        return {'model': model}
 
     def generate_text(self, save_dir, start_sequence="To be, or not to be", generate_length=1024, temperature=1.0,
                       device=None):
