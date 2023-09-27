@@ -38,12 +38,14 @@ class RNN(nn.Module):
         return out
 
     @staticmethod
-    def train_model(dataset, vocab_size, embed_size, hidden_size, num_layers, epochs, batch_size):
+    def train_model(dataset, vocab_size, embed_size, hidden_size, num_layers, epochs, batch_size, device):
         dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
-        model = RNN(embed_size, hidden_size, num_layers)
+        model = RNN(embed_size, hidden_size, num_layers).to(device)
         model.vocab_size = vocab_size
-        model.embedding = nn.Embedding(vocab_size, embed_size)
-        model.fc = nn.Linear(hidden_size, vocab_size)
+        model.embedding = nn.Embedding(vocab_size, embed_size).to(
+            device)
+        model.fc = nn.Linear(hidden_size, vocab_size).to(
+            device)
         criterion = nn.CrossEntropyLoss()
         optimizer = optim.Adam(model.parameters(), lr=0.001)
 
@@ -53,7 +55,8 @@ class RNN(nn.Module):
             total_batches = 0
 
             for inputs, targets in dataloader:
-                inputs = inputs.long()
+                inputs = inputs.to(device)
+                targets = targets.to(device)
                 outputs = model(inputs)
                 loss = criterion(outputs.view(-1, vocab_size), targets.view(-1))
 
@@ -70,7 +73,6 @@ class RNN(nn.Module):
                 total_accuracy += accuracy
                 total_batches += 1
 
-            # Print epoch-wise progress
             average_loss = total_loss / total_batches
             average_accuracy = total_accuracy / total_batches
             print(f"Epoch {epoch + 1}/{epochs}, Loss: {average_loss:.4f}, Accuracy: {average_accuracy:.4f}")
@@ -78,7 +80,6 @@ class RNN(nn.Module):
         return {'model': model}
 
     def generate_text(self, save_dir, start_sequence="To be, or not to be", generate_length=1024, temperature=1.0):
-        # Load char_to_index and index_to_char mappings from saved JSON files
         with open(os.path.join(save_dir, 'char_to_index.json'), 'r') as f:
             char_to_index = json.load(f)
 
@@ -86,7 +87,8 @@ class RNN(nn.Module):
             index_to_char = json.load(f)
 
         input_sequence = [char_to_index[char] for char in start_sequence]
-        input_tensor = torch.tensor(input_sequence).long().unsqueeze(0)
+        input_tensor = torch.tensor(input_sequence).long().unsqueeze(0).to(
+            self.device)
         generated_text = start_sequence
 
         self.eval()
@@ -96,10 +98,11 @@ class RNN(nn.Module):
                 output = self(input_tensor)
                 probabilities = F.softmax(output[0, -1] / temperature, dim=0)
                 next_index = torch.multinomial(probabilities, 1).item()
-                next_token = index_to_char[str(next_index)]  # JSON keys are always strings
+                next_token = index_to_char[str(next_index)]
 
                 generated_text += next_token
                 input_sequence = input_sequence[1:] + [next_index]
-                input_tensor = torch.tensor(input_sequence).long().unsqueeze(0)
+                input_tensor = torch.tensor(input_sequence).long().unsqueeze(0).to(
+                    self.device)
 
         return generated_text
