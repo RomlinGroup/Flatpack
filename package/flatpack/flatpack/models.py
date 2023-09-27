@@ -38,6 +38,7 @@ class RNN(nn.Module):
         out = self.fc(out)
         return out
 
+    @classmethod
     def train(cls, indexed_text, seq_length, vocab_size, embed_size, hidden_size, num_layers, epochs, batch_size,
               device):
         """
