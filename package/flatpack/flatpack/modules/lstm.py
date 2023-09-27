@@ -1,4 +1,4 @@
-from base import Base
+from .base import Base
 import torch.nn as nn
 
 

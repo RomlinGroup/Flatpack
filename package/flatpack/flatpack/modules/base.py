@@ -27,7 +27,7 @@ class Base(nn.Module):
         self.fc = nn.Linear(self.embed_size, self.vocab_size)
 
     @classmethod
-    def train_model(cls, indexed_text, seq_length, vocab_size, embed_size, epochs, batch_size, device):
+    def train_model(cls, indexed_text, seq_length, vocab_size, embed_size, epochs, batch_size, device, **kwargs):
         dataset = TextDataset(indexed_text, seq_length=seq_length)
         dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
