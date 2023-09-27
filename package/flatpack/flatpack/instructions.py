@@ -13,18 +13,21 @@ def build(user_train_function, save_dir, char_to_index, index_to_char, model_typ
 
     print(f"🚀 Training {model_type} model with epochs: {epochs} and batch_size: {batch_size}")
 
-    start_time = time.time()
-
-    result = user_train_function(*args, **kwargs)
+    result = user_train_function(*args, **kwargs, dry_run=True)
     model = result.get('model')
 
+    if framework == 'pytorch' and model is not None:
+        device = next(model.parameters()).device
+        print(f"🖥 Model is set to train on {device}")
+
+    start_time = time.time()
+    result = user_train_function(*args, **kwargs)
     elapsed_time = time.time() - start_time
     print(f"✅ Training completed in {elapsed_time:.2f} seconds")
 
     if framework == 'pytorch' and model is not None:
         torch.save(model.state_dict(), os.path.join(save_dir, f'{model_type}_model.pth'))
 
-    # Save char_to_index and index_to_char mappings as JSON files
     with open(os.path.join(save_dir, 'char_to_index.json'), 'w') as f:
         json.dump(char_to_index, f)
 
