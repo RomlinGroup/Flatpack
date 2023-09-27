@@ -31,7 +31,7 @@ class Base(nn.Module):
         dataset = TextDataset(indexed_text, seq_length=seq_length)
         dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
-        model = cls(vocab_size=vocab_size, embed_size=embed_size)
+        model = cls(vocab_size=vocab_size, embed_size=embed_size, **kwargs)
         model.to(device)
 
         criterion = nn.CrossEntropyLoss()
