@@ -3,8 +3,8 @@ import os
 import requests
 import sys
 import toml
-from .parsers import parse_toml_to_pyenv_script
-from .instructions import build
+from flatpack.parsers import parse_toml_to_pyenv_script
+from flatpack.instructions import build
 
 
 def colorize(text, color):
