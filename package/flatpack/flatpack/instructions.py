@@ -1,12 +1,19 @@
+import json
 import os
 import time
 import torch
-import json
+from .datasets import prepare_text_dataset  # Import the prepare_text_dataset function
+from .utils import configure_device  # Import the configure_device function
 
 
-def build(user_train_function, save_dir, char_to_index, index_to_char, device, model_type='rnn', framework='pytorch',
-          *args, **kwargs):
+def build(url, user_train_function, save_dir, model_type='rnn', framework='pytorch', *args, **kwargs):
     os.makedirs(save_dir, exist_ok=True)
+
+    # Use prepare_text_dataset to obtain dataset, char_to_index, and index_to_char
+    dataset, char_to_index, index_to_char = prepare_text_dataset(url)
+
+    # Use configure_device to obtain the device
+    device = configure_device()
 
     epochs = kwargs.get('epochs', 10)
     batch_size = kwargs.get('batch_size', 32)
