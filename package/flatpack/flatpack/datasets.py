@@ -17,5 +17,11 @@ class TextDataset(Dataset):
         return inputs, targets
 
 
-def download_text(url):
-    return requests.get(url).text
+def prepare_text_dataset(url, seq_length=64):
+    text = requests.get(url).text
+    chars = sorted(set(text))
+    indexed_text = [chars.index(char) for char in text]
+    char_to_index = {char: i for i, char in enumerate(chars)}
+    index_to_char = {i: char for i, char in enumerate(chars)}
+    dataset = TextDataset(indexed_text, seq_length=seq_length)
+    return dataset, char_to_index, index_to_char
