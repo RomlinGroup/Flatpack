@@ -17,15 +17,5 @@ class TextDataset(Dataset):
         return inputs, targets
 
 
-def prepare_text_dataset(url, seq_length=64, subset_size=None):
-    text = requests.get(url).text
-
-    if subset_size is not None:
-        text = text[:subset_size]
-
-    chars = sorted(set(text))
-    indexed_text = [chars.index(char) for char in text]
-    char_to_index = {char: i for i, char in enumerate(chars)}
-    index_to_char = {i: char for i, char in enumerate(chars)}
-    dataset = TextDataset(indexed_text, seq_length=seq_length)
-    return dataset, char_to_index, index_to_char
+def download_text(url):
+    return requests.get(url).text
