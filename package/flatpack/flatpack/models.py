@@ -1,1 +1,1 @@
-from .models.rnn import RNN
+from .modules.rnn import RNN
