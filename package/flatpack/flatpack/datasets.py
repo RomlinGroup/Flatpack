@@ -17,5 +17,16 @@ class TextDataset(Dataset):
         return inputs, targets
 
 
+def download_and_preprocess_text(url, limit=None):
+    text = download_text(url)
+    if limit is not None:
+        text = text[:limit]
+    chars = sorted(set(text))
+    char_to_index = {char: i for i, char in enumerate(chars)}
+    index_to_char = {i: char for i, char in enumerate(chars)}
+    indexed_text = [char_to_index[char] for char in text]
+    return indexed_text, char_to_index, index_to_char
+
+
 def download_text(url):
     return requests.get(url).text
