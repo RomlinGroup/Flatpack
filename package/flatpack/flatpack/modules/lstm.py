@@ -5,7 +5,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
 import torch.optim as optim
-from .datasets import TextDataset
+from flatpack.datasets import TextDataset
 
 
 class LSTM(nn.Module):
