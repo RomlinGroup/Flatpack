@@ -39,7 +39,7 @@ class RNN(nn.Module):
         return out
 
     @classmethod
-    def train(cls, indexed_text, seq_length, vocab_size, embed_size, hidden_size, num_layers, epochs, batch_size,
+    def train_model(cls, indexed_text, seq_length, vocab_size, embed_size, hidden_size, num_layers, epochs, batch_size,
               device):
         """
         Train an RNN model with the given parameters and dataset.
