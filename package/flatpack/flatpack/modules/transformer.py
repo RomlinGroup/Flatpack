@@ -17,7 +17,7 @@ class Transformer(Base):
         print("Transformer - Shape of tgt after embedding:", tgt.shape)
         out = self.transformer(src, tgt)
         print("Transformer - Shape after Transformer:", out.shape)
-        out = out.reshape(out.size(0) * out.size(1), self.d_model)
+        out = out.reshape(out.size(0) * out.size(1) * out.size(2), -1)
         print("Transformer - Shape after reshaping:", out.shape)
         out = self.fc(out)
         return out
