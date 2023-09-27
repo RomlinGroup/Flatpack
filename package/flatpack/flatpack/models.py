@@ -79,7 +79,9 @@ class RNN(nn.Module):
 
         return {'model': model}
 
-    def generate_text(self, save_dir, start_sequence="To be, or not to be", generate_length=1024, temperature=1.0):
+    def generate_text(self, save_dir, start_sequence="To be, or not to be", generate_length=1024, temperature=1.0,
+                      device=None):
+        # Load char_to_index and index_to_char mappings from saved JSON files
         with open(os.path.join(save_dir, 'char_to_index.json'), 'r') as f:
             char_to_index = json.load(f)
 
@@ -87,8 +89,11 @@ class RNN(nn.Module):
             index_to_char = json.load(f)
 
         input_sequence = [char_to_index[char] for char in start_sequence]
-        input_tensor = torch.tensor(input_sequence).long().unsqueeze(0).to(
-            self.device)
+        input_tensor = torch.tensor(input_sequence).long().unsqueeze(0)
+
+        if device is not None:
+            input_tensor = input_tensor.to(device)
+
         generated_text = start_sequence
 
         self.eval()
@@ -98,11 +103,13 @@ class RNN(nn.Module):
                 output = self(input_tensor)
                 probabilities = F.softmax(output[0, -1] / temperature, dim=0)
                 next_index = torch.multinomial(probabilities, 1).item()
-                next_token = index_to_char[str(next_index)]
+                next_token = index_to_char[str(next_index)]  # JSON keys are always strings
 
                 generated_text += next_token
                 input_sequence = input_sequence[1:] + [next_index]
-                input_tensor = torch.tensor(input_sequence).long().unsqueeze(0).to(
-                    self.device)
+                input_tensor = torch.tensor(input_sequence).long().unsqueeze(0)
+
+                if device is not None:
+                    input_tensor = input_tensor.to(device)
 
         return generated_text
