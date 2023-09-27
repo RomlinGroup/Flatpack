@@ -14,5 +14,6 @@ class Transformer(Base):
         src = self.embedding(src)
         tgt = self.embedding(tgt)
         out = self.transformer(src, tgt)
+        out = out.reshape(out.size(0), -1)
         out = self.fc(out)
         return out

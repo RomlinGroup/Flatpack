@@ -12,5 +12,6 @@ class LSTM(Base):
     def forward(self, x):
         x = self.embedding(x)
         out, _ = self.lstm(x)
+        out = out.reshape(out.size(0), -1)
         out = self.fc(out)
         return out
