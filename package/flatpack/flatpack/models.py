@@ -6,26 +6,42 @@ import torch.nn.functional as F
 from torch.utils.data import DataLoader
 import torch.optim as optim
 
+# Constants
+LEARNING_RATE = 0.001
+START_SEQUENCE = "To be, or not to be"
+GENERATE_LENGTH = 1024
+TEMPERATURE = 1.0
+MAX_NORM = 1
 
-# The RNN (Recurrent Neural Network) class defines a model that uses loops to allow
-# information persistence. It can be visualized as a series of the same fully connected
-# network where each pass represents a different time step in the sequence.
-# However, RNNs can face challenges in learning long-term dependencies due to
-# the vanishing gradient problem, which is addressed by more advanced models like LSTMs.
-class RNN(nn.Module):
-    def __init__(self, embed_size, hidden_size, num_layers):
-        super(RNN, self).__init__()
+
+class LSTM(nn.Module):
+    def __init__(self, embed_size, hidden_size, num_layers, vocab_size=None):
+        super(LSTM, self).__init__()
         self.embed_size = embed_size
         self.hidden_size = hidden_size
         self.num_layers = num_layers
-        self.vocab_size = None
-        self.embedding = None
-        self.rnn = nn.RNN(embed_size, hidden_size, num_layers, batch_first=True)
-        self.fc = None
+        self.vocab_size = vocab_size
+        if vocab_size is not None:
+            self.embedding = nn.Embedding(vocab_size, embed_size)
+            self.fc = nn.Linear(hidden_size, vocab_size)
+        self.lstm = nn.LSTM(embed_size, hidden_size, num_layers, batch_first=True)
 
-    @staticmethod
-    def load_torch_model(model_path):
-        return torch.load(model_path)
+    @classmethod
+    def load_torch_model(cls, model_path):
+        checkpoint = torch.load(model_path, map_location=lambda storage, loc: storage)
+        model = cls(checkpoint['embed_size'], checkpoint['hidden_size'], checkpoint['num_layers'],
+                    checkpoint['vocab_size'])
+        model.load_state_dict(checkpoint['state_dict'])
+        return model
+
+    def save_torch_model(self, model_path):
+        torch.save({
+            'embed_size': self.embed_size,
+            'hidden_size': self.hidden_size,
+            'num_layers': self.num_layers,
+            'vocab_size': self.vocab_size,
+            'state_dict': self.state_dict(),
+        }, model_path)
 
     def load_vocab_size(self, save_dir):
         with open(os.path.join(save_dir, 'char_to_index.json'), 'r') as f:
@@ -35,65 +51,191 @@ class RNN(nn.Module):
         self.fc = nn.Linear(self.hidden_size, self.vocab_size)
 
     def forward(self, x):
-        if self.embedding is None or self.fc is None:
-            raise ValueError("vocab_size is not loaded")
+        if self.embedding is None:
+            raise ValueError("Embedding is not initialized")
+        if self.fc is None:
+            raise ValueError("Fully connected layer is not initialized")
+        x = self.embedding(x)
+        out, _ = self.lstm(x)  # LSTM returns a tuple (output, (hn, cn))
+        out = self.fc(out)
+        return out
+
+    def train_model(self, dataset, epochs, batch_size):
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.to(device)
+        dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
+        criterion = nn.CrossEntropyLoss()
+        optimizer = optim.Adam(self.parameters(), lr=LEARNING_RATE)
+
+        total_correct = 0
+        total_predictions = 0
+
+        for epoch in range(epochs):
+            total_loss = 0.0
+            total_batches = 0
+
+            for inputs, targets in dataloader:
+                inputs = inputs.long().to(device)
+                targets = targets.long().to(device)
+                outputs = self(inputs)
+                loss = criterion(outputs.view(-1, self.vocab_size), targets.view(-1))
+
+                _, predicted = torch.max(outputs.data, 2)
+                correct = (predicted == targets)
+                total_correct += correct.sum().item()
+                total_predictions += targets.numel()
+
+                optimizer.zero_grad()
+                loss.backward()
+                torch.nn.utils.clip_grad_norm_(self.parameters(), max_norm=MAX_NORM)
+                optimizer.step()
+
+                total_loss += loss.item()
+                total_batches += 1
+
+            average_loss = total_loss / total_batches
+            accuracy = total_correct / total_predictions
+            print(f"Epoch {epoch + 1}/{epochs}, Loss: {average_loss:.4f}, Accuracy: {accuracy:.4f}")
+
+        return {
+            'model': self,
+            'char_to_index': dataset.char_to_index,
+            'index_to_char': dataset.index_to_char
+        }
+
+    def generate_text(self, save_dir, start_sequence=START_SEQUENCE, generate_length=GENERATE_LENGTH,
+                      temperature=TEMPERATURE):
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.to(device)
+
+        with open(os.path.join(save_dir, 'char_to_index.json'), 'r') as f:
+            char_to_index = json.load(f)
+
+        with open(os.path.join(save_dir, 'index_to_char.json'), 'r') as f:
+            index_to_char = {int(k): v for k, v in json.load(f).items()}
+
+        input_sequence = [char_to_index[char] for char in start_sequence]
+        input_tensor = torch.tensor(input_sequence).long().unsqueeze(0).to(device)
+        generated_text = start_sequence
+
+        self.eval()
+
+        with torch.no_grad():
+            for _ in range(generate_length):
+                output = self(input_tensor)
+                probabilities = F.softmax(output[0, -1] / temperature, dim=0)
+                next_index = torch.multinomial(probabilities, 1).item()
+                next_token = index_to_char[next_index]
+
+                generated_text += next_token
+                input_sequence = input_sequence[1:] + [next_index]
+                input_tensor = torch.tensor(input_sequence).long().unsqueeze(0).to(device)
+
+        return generated_text
+
+
+class RNN(nn.Module):
+    def __init__(self, embed_size, hidden_size, num_layers, vocab_size=None):
+        super(RNN, self).__init__()
+        self.embed_size = embed_size
+        self.hidden_size = hidden_size
+        self.num_layers = num_layers
+        self.vocab_size = vocab_size
+        if vocab_size is not None:
+            self.embedding = nn.Embedding(vocab_size, embed_size)
+            self.fc = nn.Linear(hidden_size, vocab_size)
+        self.rnn = nn.RNN(embed_size, hidden_size, num_layers, batch_first=True)
+
+    @classmethod
+    def load_torch_model(cls, model_path):
+        checkpoint = torch.load(model_path, map_location=lambda storage, loc: storage)
+        model = cls(checkpoint['embed_size'], checkpoint['hidden_size'], checkpoint['num_layers'],
+                    checkpoint['vocab_size'])
+        model.load_state_dict(checkpoint['state_dict'])
+        return model
+
+    def save_torch_model(self, model_path):
+        torch.save({
+            'embed_size': self.embed_size,
+            'hidden_size': self.hidden_size,
+            'num_layers': self.num_layers,
+            'vocab_size': self.vocab_size,
+            'state_dict': self.state_dict(),
+        }, model_path)
+
+    def load_vocab_size(self, save_dir):
+        with open(os.path.join(save_dir, 'char_to_index.json'), 'r') as f:
+            char_to_index = json.load(f)
+        self.vocab_size = len(char_to_index)
+        self.embedding = nn.Embedding(self.vocab_size, self.embed_size)
+        self.fc = nn.Linear(self.hidden_size, self.vocab_size)
+
+    def forward(self, x):
+        if self.embedding is None:
+            raise ValueError("Embedding is not initialized")
+        if self.fc is None:
+            raise ValueError("Fully connected layer is not initialized")
         x = self.embedding(x)
         out, _ = self.rnn(x)
         out = self.fc(out)
         return out
 
-    @staticmethod
-    def train_model(dataset, vocab_size, embed_size, hidden_size, num_layers, epochs, batch_size):
+    def train_model(self, dataset, epochs, batch_size):
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.to(device)
         dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
-        model = RNN(embed_size, hidden_size, num_layers)
-        model.vocab_size = vocab_size
-        model.embedding = nn.Embedding(vocab_size, embed_size)
-        model.fc = nn.Linear(hidden_size, vocab_size)
         criterion = nn.CrossEntropyLoss()
-        optimizer = optim.Adam(model.parameters(), lr=0.001)
+        optimizer = optim.Adam(self.parameters(), lr=LEARNING_RATE)
+
+        total_correct = 0
+        total_predictions = 0
 
         for epoch in range(epochs):
             total_loss = 0.0
-            total_accuracy = 0.0
             total_batches = 0
 
             for inputs, targets in dataloader:
-                inputs = inputs.long()
-                outputs = model(inputs)
-                loss = criterion(outputs.view(-1, vocab_size), targets.view(-1))
+                inputs = inputs.long().to(device)
+                targets = targets.long().to(device)
+                outputs = self(inputs)
+                loss = criterion(outputs.view(-1, self.vocab_size), targets.view(-1))
 
                 _, predicted = torch.max(outputs.data, 2)
                 correct = (predicted == targets)
-                accuracy = correct.sum().item() / (targets.size(0) * targets.size(1))
+                total_correct += correct.sum().item()
+                total_predictions += targets.numel()
 
                 optimizer.zero_grad()
                 loss.backward()
-                torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1)
+                torch.nn.utils.clip_grad_norm_(self.parameters(), max_norm=MAX_NORM)
                 optimizer.step()
 
                 total_loss += loss.item()
-                total_accuracy += accuracy
                 total_batches += 1
 
             average_loss = total_loss / total_batches
-            average_accuracy = total_accuracy / total_batches
-            print(f"Epoch {epoch + 1}/{epochs}, Loss: {average_loss:.4f}, Accuracy: {average_accuracy:.4f}")
+            accuracy = total_correct / total_predictions
+            print(f"Epoch {epoch + 1}/{epochs}, Loss: {average_loss:.4f}, Accuracy: {accuracy:.4f}")
 
         return {
-            'model': model,
+            'model': self,
             'char_to_index': dataset.char_to_index,
             'index_to_char': dataset.index_to_char
         }
 
-    def generate_text(self, save_dir, start_sequence="To be, or not to be", generate_length=1024, temperature=1.0):
+    def generate_text(self, save_dir, start_sequence=START_SEQUENCE, generate_length=GENERATE_LENGTH,
+                      temperature=TEMPERATURE):
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.to(device)
+
         with open(os.path.join(save_dir, 'char_to_index.json'), 'r') as f:
             char_to_index = json.load(f)
 
         with open(os.path.join(save_dir, 'index_to_char.json'), 'r') as f:
-            index_to_char = json.load(f)
+            index_to_char = {int(k): v for k, v in json.load(f).items()}
 
         input_sequence = [char_to_index[char] for char in start_sequence]
-        input_tensor = torch.tensor(input_sequence).long().unsqueeze(0)
+        input_tensor = torch.tensor(input_sequence).long().unsqueeze(0).to(device)
         generated_text = start_sequence
 
         self.eval()
@@ -103,116 +245,10 @@ class RNN(nn.Module):
                 output = self(input_tensor)
                 probabilities = F.softmax(output[0, -1] / temperature, dim=0)
                 next_index = torch.multinomial(probabilities, 1).item()
-                next_token = index_to_char[str(next_index)]  # JSON keys are always strings
+                next_token = index_to_char[next_index]
 
                 generated_text += next_token
                 input_sequence = input_sequence[1:] + [next_index]
-                input_tensor = torch.tensor(input_sequence).long().unsqueeze(0)
-
-        return generated_text
-
-
-# The LSTM (Long Short-Term Memory) class defines a model that is a type of recurrent neural network
-# capable of learning long-term dependencies. LSTMs are designed to avoid the long-term dependency
-# problem, which is the challenge faced by RNNs in learning to connect information or context
-# separated by a large gap in the input sequence. LSTMs maintain a cell state across the sequences
-# along with the hidden state, and use gating units to control the flow of information to be
-# remembered or forgotten at each time step.
-class LSTM(nn.Module):
-    def __init__(self, embed_size, hidden_size, num_layers):
-        super(LSTM, self).__init__()
-        self.embed_size = embed_size
-        self.hidden_size = hidden_size
-        self.num_layers = num_layers
-        self.vocab_size = None
-        self.embedding = None
-        self.lstm = nn.LSTM(embed_size, hidden_size, num_layers, batch_first=True)
-        self.fc = None
-
-    @staticmethod
-    def load_torch_model(model_path):
-        return torch.load(model_path)
-
-    def load_vocab_size(self, save_dir):
-        with open(os.path.join(save_dir, 'char_to_index.json'), 'r') as f:
-            char_to_index = json.load(f)
-        self.vocab_size = len(char_to_index)
-        self.embedding = nn.Embedding(self.vocab_size, self.embed_size)
-        self.fc = nn.Linear(self.hidden_size, self.vocab_size)
-
-    def forward(self, x):
-        if self.embedding is None or self.fc is None:
-            raise ValueError("vocab_size is not loaded")
-        x = self.embedding(x)
-        out, _ = self.lstm(x)
-        out = self.fc(out)
-        return out
-
-    @staticmethod
-    def train_model(dataset, vocab_size, embed_size, hidden_size, num_layers, epochs, batch_size):
-        dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
-        model = LSTM(embed_size, hidden_size, num_layers)
-        model.vocab_size = vocab_size
-        model.embedding = nn.Embedding(vocab_size, embed_size)
-        model.fc = nn.Linear(hidden_size, vocab_size)
-        criterion = nn.CrossEntropyLoss()
-        optimizer = optim.Adam(model.parameters(), lr=0.001)
-
-        for epoch in range(epochs):
-            total_loss = 0.0
-            total_accuracy = 0.0
-            total_batches = 0
-
-            for inputs, targets in dataloader:
-                inputs = inputs.long()
-                outputs = model(inputs)
-                loss = criterion(outputs.view(-1, vocab_size), targets.view(-1))
-
-                _, predicted = torch.max(outputs.data, 2)
-                correct = (predicted == targets)
-                accuracy = correct.sum().item() / (targets.size(0) * targets.size(1))
-
-                optimizer.zero_grad()
-                loss.backward()
-                torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1)
-                optimizer.step()
-
-                total_loss += loss.item()
-                total_accuracy += accuracy
-                total_batches += 1
-
-            average_loss = total_loss / total_batches
-            average_accuracy = total_accuracy / total_batches
-            print(f"Epoch {epoch + 1}/{epochs}, Loss: {average_loss:.4f}, Accuracy: {average_accuracy:.4f}")
-
-        return {
-            'model': model,
-            'char_to_index': dataset.char_to_index,
-            'index_to_char': dataset.index_to_char
-        }
-
-    def generate_text(self, save_dir, start_sequence="To be, or not to be", generate_length=1024, temperature=1.0):
-        with open(os.path.join(save_dir, 'char_to_index.json'), 'r') as f:
-            char_to_index = json.load(f)
-
-        with open(os.path.join(save_dir, 'index_to_char.json'), 'r') as f:
-            index_to_char = json.load(f)
-
-        input_sequence = [char_to_index[char] for char in start_sequence]
-        input_tensor = torch.tensor(input_sequence).long().unsqueeze(0)
-        generated_text = start_sequence
-
-        self.eval()
-
-        with torch.no_grad():
-            for _ in range(generate_length):
-                output = self(input_tensor)
-                probabilities = F.softmax(output[0, -1] / temperature, dim=0)
-                next_index = torch.multinomial(probabilities, 1).item()
-                next_token = index_to_char[str(next_index)]
-
-                generated_text += next_token
-                input_sequence = input_sequence[1:] + [next_index]
-                input_tensor = torch.tensor(input_sequence).long().unsqueeze(0)
+                input_tensor = torch.tensor(input_sequence).long().unsqueeze(0).to(device)
 
         return generated_text
