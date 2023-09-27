@@ -12,6 +12,6 @@ class RNN(Base):
     def forward(self, x):
         x = self.embedding(x)
         out, _ = self.rnn(x)
-        out = out.reshape(out.size(0), -1)
+        out = out.reshape(out.size(0) * out.size(1), self.embed_size)
         out = self.fc(out)
         return out
