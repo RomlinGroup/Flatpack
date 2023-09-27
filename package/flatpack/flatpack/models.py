@@ -1,1 +1,1 @@
-from flatpack.modules.rnn import RNN
+from .modules.rnn import RNN
