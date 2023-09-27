@@ -99,8 +99,8 @@ class LSTM(nn.Module):
 
         return {
             'model': self,
-            'char_to_index': dataset.char_to_index,
-            'index_to_char': dataset.index_to_char
+            'char_to_index': char_to_index,
+            'index_to_char': index_to_char
         }
 
     def generate_text(self, save_dir, start_sequence=START_SEQUENCE, generate_length=GENERATE_LENGTH,
@@ -219,8 +219,8 @@ class RNN(nn.Module):
 
         return {
             'model': self,
-            'char_to_index': dataset.char_to_index,
-            'index_to_char': dataset.index_to_char
+            'char_to_index': char_to_index,
+            'index_to_char': index_to_char
         }
 
     def generate_text(self, save_dir, start_sequence=START_SEQUENCE, generate_length=GENERATE_LENGTH,
