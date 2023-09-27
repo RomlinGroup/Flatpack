@@ -60,7 +60,7 @@ class LSTM(nn.Module):
         out = self.fc(out)
         return out
 
-    def train_model(self, dataset, epochs, batch_size):
+    def train_model(self, dataset, epochs, batch_size, char_to_index, index_to_char):
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.to(device)
         dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
@@ -180,7 +180,7 @@ class RNN(nn.Module):
         out = self.fc(out)
         return out
 
-    def train_model(self, dataset, epochs, batch_size):
+    def train_model(self, dataset, epochs, batch_size, char_to_index, index_to_char):
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.to(device)
         dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
