@@ -8,15 +8,15 @@ import torch.optim as optim
 
 
 class RNN(nn.Module):
-    def __init__(self, embed_size, hidden_size, num_layers):
+    def __init__(self, embed_size, hidden_size, num_layers, vocab_size=None):
         super(RNN, self).__init__()
         self.embed_size = embed_size
         self.hidden_size = hidden_size
         self.num_layers = num_layers
-        self.vocab_size = None
-        self.embedding = None
+        self.vocab_size = vocab_size
+        self.embedding = nn.Embedding(self.vocab_size, self.embed_size) if vocab_size is not None else None
         self.rnn = nn.RNN(embed_size, hidden_size, num_layers, batch_first=True)
-        self.fc = None
+        self.fc = nn.Linear(self.hidden_size, self.vocab_size) if vocab_size is not None else None
 
     @staticmethod
     def load_torch_model(model_path):
