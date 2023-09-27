@@ -4,24 +4,20 @@ import torch
 import json
 
 
-def build(user_train_function, save_dir, char_to_index, index_to_char, model_type='rnn', framework='pytorch', *args,
-          **kwargs):
+def build(user_train_function, save_dir, char_to_index, index_to_char, device, model_type='rnn', framework='pytorch',
+          *args, **kwargs):
     os.makedirs(save_dir, exist_ok=True)
 
     epochs = kwargs.get('epochs', 10)
     batch_size = kwargs.get('batch_size', 32)
 
     print(f"🚀 Training {model_type} model with epochs: {epochs} and batch_size: {batch_size}")
-
-    result = user_train_function(*args, **kwargs, dry_run=True)
-    model = result.get('model')
-
-    if framework == 'pytorch' and model is not None:
-        device = next(model.parameters()).device
-        print(f"🖥 Model is set to train on {device}")
+    print(f"🖥 Model is set to train on {device}")  # Print device information here
 
     start_time = time.time()
     result = user_train_function(*args, **kwargs)
+    model = result.get('model')
+
     elapsed_time = time.time() - start_time
     print(f"✅ Training completed in {elapsed_time:.2f} seconds")
 
