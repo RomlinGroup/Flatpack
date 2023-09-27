@@ -11,7 +11,10 @@ class RNN(Base):
 
     def forward(self, x):
         x = self.embedding(x)
+        print("RNN - Shape after embedding:", x.shape)
         out, _ = self.rnn(x)
+        print("RNN - Shape after RNN:", out.shape)
         out = out.reshape(out.size(0) * out.size(1), self.embed_size)
+        print("RNN - Shape after reshaping:", out.shape)
         out = self.fc(out)
         return out
