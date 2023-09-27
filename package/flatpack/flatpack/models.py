@@ -40,24 +40,7 @@ class RNN(nn.Module):
 
     @classmethod
     def train_model(cls, indexed_text, seq_length, vocab_size, embed_size, hidden_size, num_layers, epochs, batch_size,
-              device):
-        """
-        Train an RNN model with the given parameters and dataset.
-
-        Args:
-            indexed_text (list): The indexed text dataset.
-            seq_length (int): The sequence length for training.
-            vocab_size (int): The size of the vocabulary.
-            embed_size (int): The embedding size.
-            hidden_size (int): The hidden layer size.
-            num_layers (int): The number of layers.
-            epochs (int): The number of training epochs.
-            batch_size (int): The batch size for training.
-            device (torch.device): The device to train the model on.
-
-        Returns:
-            RNN: The trained RNN model.
-        """
+                    device):
         dataset = TextDataset(indexed_text, seq_length=seq_length)
         dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
@@ -99,7 +82,6 @@ class RNN(nn.Module):
 
     def generate_text(self, save_dir, start_sequence="To be, or not to be", generate_length=1024, temperature=1.0,
                       device=None):
-        # Load char_to_index and index_to_char mappings from saved JSON files
         with open(os.path.join(save_dir, 'char_to_index.json'), 'r') as f:
             char_to_index = json.load(f)
 
@@ -121,7 +103,7 @@ class RNN(nn.Module):
                 output = self(input_tensor)
                 probabilities = F.softmax(output[0, -1] / temperature, dim=0)
                 next_index = torch.multinomial(probabilities, 1).item()
-                next_token = index_to_char[str(next_index)]  # JSON keys are always strings
+                next_token = index_to_char[str(next_index)]
 
                 generated_text += next_token
                 input_sequence = input_sequence[1:] + [next_index]

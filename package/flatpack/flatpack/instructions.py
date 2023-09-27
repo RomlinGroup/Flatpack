@@ -12,7 +12,7 @@ def build(user_train_function, save_dir, char_to_index, index_to_char, device, m
     batch_size = kwargs.get('batch_size', 32)
 
     print(f"🚀 Training {model_type} model with epochs: {epochs} and batch_size: {batch_size}")
-    print(f"🖥 Model is set to train on {device}")  # Print device information here
+    print(f"🖥 Model is set to train on {device}")
 
     start_time = time.time()
     result = user_train_function(*args, **kwargs)
