@@ -15,8 +15,7 @@ def build(user_train_function, save_dir, char_to_index, index_to_char, model_typ
 
     start_time = time.time()
 
-    # Pass char_to_index and index_to_char mappings to the user_train_function
-    result = user_train_function(*args, char_to_index=char_to_index, index_to_char=index_to_char, **kwargs)
+    result = user_train_function(*args, **kwargs)
     model = result.get('model')
 
     elapsed_time = time.time() - start_time
