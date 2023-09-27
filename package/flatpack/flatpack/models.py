@@ -5,6 +5,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
 import torch.optim as optim
+from .datasets import TextDataset
 
 
 class RNN(nn.Module):
@@ -37,15 +38,31 @@ class RNN(nn.Module):
         out = self.fc(out)
         return out
 
-    @staticmethod
-    def train_model(dataset, vocab_size, embed_size, hidden_size, num_layers, epochs, batch_size, device):
+    def train(cls, indexed_text, seq_length, vocab_size, embed_size, hidden_size, num_layers, epochs, batch_size,
+              device):
+        """
+        Train an RNN model with the given parameters and dataset.
+
+        Args:
+            indexed_text (list): The indexed text dataset.
+            seq_length (int): The sequence length for training.
+            vocab_size (int): The size of the vocabulary.
+            embed_size (int): The embedding size.
+            hidden_size (int): The hidden layer size.
+            num_layers (int): The number of layers.
+            epochs (int): The number of training epochs.
+            batch_size (int): The batch size for training.
+            device (torch.device): The device to train the model on.
+
+        Returns:
+            RNN: The trained RNN model.
+        """
+        dataset = TextDataset(indexed_text, seq_length=seq_length)
         dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
-        model = RNN(embed_size, hidden_size, num_layers).to(device)
-        model.vocab_size = vocab_size
-        model.embedding = nn.Embedding(vocab_size, embed_size).to(
-            device)
-        model.fc = nn.Linear(hidden_size, vocab_size).to(
-            device)
+
+        model = cls(vocab_size=vocab_size, embed_size=embed_size, hidden_size=hidden_size, num_layers=num_layers)
+        model.to(device)
+
         criterion = nn.CrossEntropyLoss()
         optimizer = optim.Adam(model.parameters(), lr=0.001)
 
@@ -77,7 +94,7 @@ class RNN(nn.Module):
             average_accuracy = total_accuracy / total_batches
             print(f"Epoch {epoch + 1}/{epochs}, Loss: {average_loss:.4f}, Accuracy: {average_accuracy:.4f}")
 
-        return {'model': model}
+        return model
 
     def generate_text(self, save_dir, start_sequence="To be, or not to be", generate_length=1024, temperature=1.0,
                       device=None):
