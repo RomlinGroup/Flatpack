@@ -2,22 +2,22 @@ import os
 import json
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-from torch.utils.data import DataLoader
 import torch.optim as optim
+from torch.utils.data import DataLoader
 from flatpack.datasets import TextDataset
 
 
-class LSTM(nn.Module):
-    def __init__(self, embed_size, hidden_size, num_layers, vocab_size=None):
-        super(LSTM, self).__init__()
-        self.embed_size = embed_size
-        self.hidden_size = hidden_size
-        self.num_layers = num_layers
+class Transformer(nn.Module):
+    def __init__(self, d_model, nhead, num_encoder_layers, num_decoder_layers, vocab_size=None):
+        super(Transformer, self).__init__()
+        self.d_model = d_model
+        self.nhead = nhead
+        self.num_encoder_layers = num_encoder_layers
+        self.num_decoder_layers = num_decoder_layers
         self.vocab_size = vocab_size
-        self.embedding = nn.Embedding(self.vocab_size, self.embed_size) if vocab_size is not None else None
-        self.lstm = nn.LSTM(embed_size, hidden_size, num_layers, batch_first=True)
-        self.fc = nn.Linear(self.hidden_size, self.vocab_size) if vocab_size is not None else None
+        self.embedding = nn.Embedding(self.vocab_size, self.d_model) if vocab_size is not None else None
+        self.transformer = nn.Transformer(d_model, nhead, num_encoder_layers, num_decoder_layers)
+        self.fc = nn.Linear(self.d_model, self.vocab_size) if vocab_size is not None else None
 
     @staticmethod
     def load_torch_model(model_path):
@@ -27,43 +27,44 @@ class LSTM(nn.Module):
         with open(os.path.join(save_dir, 'char_to_index.json'), 'r') as f:
             char_to_index = json.load(f)
         self.vocab_size = len(char_to_index)
-        self.embedding = nn.Embedding(self.vocab_size, self.embed_size)
-        self.fc = nn.Linear(self.hidden_size, self.vocab_size)
+        self.embedding = nn.Embedding(self.vocab_size, self.d_model)
+        self.fc = nn.Linear(self.d_model, self.vocab_size)
 
-    def forward(self, x):
+    def forward(self, src, tgt):
         if self.embedding is None or self.fc is None:
             raise ValueError("vocab_size is not loaded")
-        x = self.embedding(x)
-        out, _ = self.lstm(x)
+        src = self.embedding(src)
+        tgt = self.embedding(tgt)
+        out = self.transformer(src, tgt)
         out = self.fc(out)
         return out
 
     @classmethod
-    def train_model(cls, indexed_text, seq_length, vocab_size, embed_size, hidden_size, num_layers, epochs, batch_size,
-                    device):
+    def train_model(cls, indexed_text, seq_length, vocab_size, d_model, nhead, num_encoder_layers, num_decoder_layers,
+                    epochs, batch_size, device):
         dataset = TextDataset(indexed_text, seq_length=seq_length)
         dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
-        model = cls(vocab_size=vocab_size, embed_size=embed_size, hidden_size=hidden_size, num_layers=num_layers)
+        model = cls(d_model=d_model, nhead=nhead, num_encoder_layers=num_encoder_layers,
+                    num_decoder_layers=num_decoder_layers, vocab_size=vocab_size)
         model.to(device)
 
         criterion = nn.CrossEntropyLoss()
         optimizer = optim.Adam(model.parameters(), lr=0.001)
 
         for epoch in range(epochs):
-            total_loss = 0
-            total_accuracy = 0
+            total_loss = 0.0
+            total_accuracy = 0.0
             total_batches = 0
 
-            for batch_data in dataloader:
-                inputs, targets = batch_data
-                inputs, targets = inputs.to(device), targets.to(device)
-
-                outputs = model(inputs)
+            for inputs, targets in dataloader:
+                inputs = inputs.to(device)
+                targets = targets.to(device)
+                outputs = model(inputs, inputs)
                 loss = criterion(outputs.view(-1, vocab_size), targets.view(-1))
 
-                predicted = torch.argmax(outputs.view(-1, vocab_size), 1)
-                correct = (predicted == targets.view(-1))
+                _, predicted = torch.max(outputs.data, 2)
+                correct = (predicted == targets)
                 accuracy = correct.sum().item() / (targets.size(0) * targets.size(1))
 
                 optimizer.zero_grad()
@@ -81,8 +82,7 @@ class LSTM(nn.Module):
 
         return {'model': model}
 
-    def generate_text(self, save_dir, start_sequence="To be, or not to be", generate_length=1024, temperature=1.0,
-                      device=None):
+    def generate_text(self, save_dir, start_sequence="To be, or not to be", generate_length=1024, device=None):
         with open(os.path.join(save_dir, 'char_to_index.json'), 'r') as f:
             char_to_index = json.load(f)
 
@@ -101,8 +101,8 @@ class LSTM(nn.Module):
 
         with torch.no_grad():
             for _ in range(generate_length):
-                output = self(input_tensor)
-                probabilities = F.softmax(output[0, -1] / temperature, dim=0)
+                output = self(input_tensor, input_tensor)
+                probabilities = torch.nn.functional.softmax(output[0, -1], dim=0)
                 next_index = torch.multinomial(probabilities, 1).item()
                 next_token = index_to_char[str(next_index)]
 
