@@ -24,7 +24,7 @@ class Base(nn.Module):
             char_to_index = json.load(f)
         self.vocab_size = len(char_to_index)
         self.embedding = nn.Embedding(self.vocab_size, self.embed_size)
-        self.fc = nn.Linear(self.embed_size, self.vocab_size)
+        self.fc = nn.Linear(embed_size, vocab_size)
 
     @classmethod
     def train_model(cls, indexed_text, seq_length, vocab_size, embed_size=None, epochs=100, batch_size=64, device='cpu',
@@ -51,9 +51,9 @@ class Base(nn.Module):
                 outputs = model(inputs)
                 loss = criterion(outputs.view(-1, vocab_size), targets.view(-1))
 
-                _, predicted = torch.max(outputs.data, 2)
-                correct = (predicted == targets)
-                accuracy = correct.sum().item() / (targets.size(0) * targets.size(1))
+                _, predicted = torch.max(outputs.data, 1)
+                correct = (predicted == targets.view(-1))
+                accuracy = correct.sum().item() / targets.size(0)
 
                 optimizer.zero_grad()
                 loss.backward()
