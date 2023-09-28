@@ -11,10 +11,7 @@ class LSTM(Base):
 
     def forward(self, x):
         x = self.embedding(x)
-        print("LSTM - Shape after embedding:", x.shape)
         out, _ = self.lstm(x)
-        print("LSTM - Shape after LSTM:", out.shape)
         out = out.reshape(out.size(0) * out.size(1) * out.size(2), -1)
-        print("LSTM - Shape after reshaping:", out.shape)
         out = self.fc(out)
         return out

@@ -39,7 +39,6 @@ class Base(nn.Module):
         criterion = nn.CrossEntropyLoss()
         optimizer = optim.Adam(model.parameters(), lr=0.001)
 
-        # Training loop (common across all models)
         for epoch in range(epochs):
             total_loss = 0.0
             total_accuracy = 0.0
@@ -53,7 +52,7 @@ class Base(nn.Module):
 
                 _, predicted = torch.max(outputs.data, 1)
                 correct = (predicted == targets.view(-1))
-                accuracy = correct.sum().item() / targets.size(0)
+                accuracy = correct.sum().item() / (targets.size(0) * targets.size(1))
 
                 optimizer.zero_grad()
                 loss.backward()
