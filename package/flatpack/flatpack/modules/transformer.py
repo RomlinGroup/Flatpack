@@ -3,7 +3,7 @@ import torch.nn as nn
 
 
 class Transformer(Base):
-    def __init__(self, d_model, nhead, num_encoder_layers, num_decoder_layers, vocab_size=None):
+    def __init__(self, d_model, nhead, num_encoder_layers, num_decoder_layers, vocab_size=None, **kwargs):
         super(Transformer, self).__init__(d_model, vocab_size)
         self.nhead = nhead
         self.num_encoder_layers = num_encoder_layers
@@ -14,6 +14,6 @@ class Transformer(Base):
         src = self.embedding(src)
         tgt = self.embedding(tgt)
         out = self.transformer(src, tgt)
-        out = out.reshape(out.size(0) * out.size(1) * out.size(2), -1)
+        out = out.reshape(out.size(0) * out.size(1), -1)
         out = self.fc(out)
         return out

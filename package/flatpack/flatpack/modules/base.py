@@ -24,16 +24,15 @@ class Base(nn.Module):
             char_to_index = json.load(f)
         self.vocab_size = len(char_to_index)
         self.embedding = nn.Embedding(self.vocab_size, self.embed_size)
-        self.fc = nn.Linear(embed_size, vocab_size)
+        self.fc = nn.Linear(self.embed_size, self.vocab_size)
 
     @classmethod
-    def train_model(cls, indexed_text, seq_length, vocab_size, embed_size=None, epochs=100, batch_size=64, device='cpu',
-                    **kwargs):
-        embed_size = embed_size or kwargs.get('d_model', 256)
+    def train_model(cls, indexed_text, seq_length, vocab_size, epochs=100, batch_size=64, device='cpu', **kwargs):
+        from .transformer import Transformer
         dataset = TextDataset(indexed_text, seq_length=seq_length)
         dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
-        model = cls(vocab_size=vocab_size, embed_size=embed_size, **kwargs)
+        model = cls(vocab_size=vocab_size, **kwargs)
         model.to(device)
 
         criterion = nn.CrossEntropyLoss()
@@ -47,7 +46,12 @@ class Base(nn.Module):
             for inputs, targets in dataloader:
                 inputs = inputs.to(device)
                 targets = targets.to(device)
-                outputs = model(inputs)
+
+                if isinstance(model, Transformer):
+                    outputs = model(targets, targets)
+                else:
+                    outputs = model(inputs)
+
                 loss = criterion(outputs.view(-1, vocab_size), targets.view(-1))
 
                 _, predicted = torch.max(outputs.data, 1)

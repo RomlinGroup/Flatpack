@@ -3,7 +3,7 @@ import torch.nn as nn
 
 
 class RNN(Base):
-    def __init__(self, embed_size, hidden_size, num_layers, vocab_size=None):
+    def __init__(self, embed_size, hidden_size, num_layers, vocab_size=None, **kwargs):
         super(RNN, self).__init__(embed_size, vocab_size)
         self.hidden_size = hidden_size
         self.num_layers = num_layers
