@@ -1,11 +1,10 @@
-import os
-import json
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.utils.data import DataLoader
+import os
+import json
+from torch.utils.data import DataLoader, Dataset
 import torch.optim as optim
-from flatpack.datasets import TextDataset
 
 
 class LSTM(nn.Module):
@@ -14,10 +13,10 @@ class LSTM(nn.Module):
         self.embed_size = embed_size
         self.hidden_size = hidden_size
         self.num_layers = num_layers
-        self.vocab_size = vocab_size
-        self.embedding = nn.Embedding(self.vocab_size, self.embed_size) if vocab_size is not None else None
+
+        self.embedding = nn.Embedding(vocab_size, embed_size) if vocab_size is not None else None
         self.lstm = nn.LSTM(embed_size, hidden_size, num_layers, batch_first=True)
-        self.fc = nn.Linear(self.hidden_size, self.vocab_size) if vocab_size is not None else None
+        self.fc = nn.Linear(hidden_size, vocab_size) if vocab_size is not None else None
 
     @staticmethod
     def load_torch_model(model_path):
@@ -39,45 +38,27 @@ class LSTM(nn.Module):
         return out
 
     @classmethod
-    def train_model(cls, indexed_text, seq_length, vocab_size, embed_size, hidden_size, num_layers, epochs, batch_size,
+    def train_model(cls, indexed_text, vocab_size, seq_length, embed_size, hidden_size, num_layers, epochs, batch_size,
                     device):
-        dataset = TextDataset(indexed_text, seq_length=seq_length)
+        dataset = TextDataset(indexed_text, seq_length)
         dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
-        model = cls(vocab_size=vocab_size, embed_size=embed_size, hidden_size=hidden_size, num_layers=num_layers)
+        model = cls(embed_size, hidden_size, num_layers, vocab_size)
         model.to(device)
 
         criterion = nn.CrossEntropyLoss()
-        optimizer = optim.Adam(model.parameters(), lr=0.001)
+        optimizer = optim.Adam(model.parameters())
 
         for epoch in range(epochs):
-            total_loss = 0
-            total_accuracy = 0
-            total_batches = 0
-
-            for batch_data in dataloader:
-                inputs, targets = batch_data
+            for batch, (inputs, targets) in enumerate(dataloader):
                 inputs, targets = inputs.to(device), targets.to(device)
 
                 outputs = model(inputs)
                 loss = criterion(outputs.view(-1, vocab_size), targets.view(-1))
 
-                predicted = torch.argmax(outputs.view(-1, vocab_size), 1)
-                correct = (predicted == targets.view(-1))
-                accuracy = correct.sum().item() / (targets.size(0) * targets.size(1))
-
                 optimizer.zero_grad()
                 loss.backward()
-                torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1)
                 optimizer.step()
-
-                total_loss += loss.item()
-                total_accuracy += accuracy
-                total_batches += 1
-
-            average_loss = total_loss / total_batches
-            average_accuracy = total_accuracy / total_batches
-            print(f"Epoch {epoch + 1}/{epochs}, Loss: {average_loss:.4f}, Accuracy: {average_accuracy:.4f}")
 
         return {'model': model}
 
