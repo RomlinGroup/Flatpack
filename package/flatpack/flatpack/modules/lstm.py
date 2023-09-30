@@ -1,9 +1,10 @@
+from flatpack.datasets import TextDataset
+from torch.utils.data import DataLoader, Dataset
+import json
+import os
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import os
-import json
-from torch.utils.data import DataLoader, Dataset
 import torch.optim as optim
 
 
@@ -40,7 +41,7 @@ class LSTM(nn.Module):
     @classmethod
     def train_model(cls, indexed_text, vocab_size, seq_length, embed_size, hidden_size, num_layers, epochs, batch_size,
                     device):
-        dataset = TextDataset(indexed_text, seq_length)
+        dataset = TextDataset(indexed_text, seq_length=seq_length)
         dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
         model = cls(embed_size, hidden_size, num_layers, vocab_size)
