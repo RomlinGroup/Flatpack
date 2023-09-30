@@ -50,6 +50,9 @@ class LSTM(nn.Module):
         criterion = nn.CrossEntropyLoss()
         optimizer = optim.Adam(model.parameters())
 
+        total_loss = 0.0
+        total_accuracy = 0.0
+        total_batches = 0
         for epoch in range(epochs):
             for batch, (inputs, targets) in enumerate(dataloader):
                 inputs, targets = inputs.to(device), targets.to(device)
@@ -60,7 +63,16 @@ class LSTM(nn.Module):
                 optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()
+                _, predicted = torch.max(outputs, 2)
+                correct = (predicted == targets).float()
+                accuracy = correct.sum().item() / (targets.size(0) * targets.size(1))
+                total_loss += loss.item()
+                total_accuracy += accuracy
+                total_batches += 1
 
+            average_loss = total_loss / total_batches
+            average_accuracy = total_accuracy / total_batches
+            print(f"Epoch {epoch + 1}/{epochs}, Loss: {average_loss:.4f}, Accuracy: {average_accuracy:.4f}")
         return {'model': model}
 
     def generate_text(self, save_dir, start_sequence="To be, or not to be", generate_length=1024, temperature=1.0,
