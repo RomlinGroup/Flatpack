@@ -1,12 +1,7 @@
 #!/bin/bash
 
-# === BEGIN USER CUSTOMIZATION ===
-REPO_NAME="GPT2-Knowledge-Distillation"
-FLATPACK_NAME="gpt2-knowledge-distillation"
-# === END USER CUSTOMIZATION ===
-
 # Get the directory of the script
-SCRIPT_DIR="$(dirname $0)"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 # Ensure logs directory exists
 mkdir -p "$SCRIPT_DIR/logs"
@@ -30,9 +25,8 @@ log "Starting script..."
   # Source device script
   source "$SCRIPT_DIR/device.sh"
 
-  # === BEGIN USER CUSTOMIZATION ===
+  # Running the scripts
   python "$SCRIPT_DIR/data/shakespeare/prepare.py"
   bash "$SCRIPT_DIR/run_adamw/train_student.sh"
-  # === END USER CUSTOMIZATION ===
 
 } >>"$SCRIPT_DIR/logs/output.log" 2>>"$SCRIPT_DIR/logs/error.log" || log "An error occurred!"
