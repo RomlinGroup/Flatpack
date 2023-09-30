@@ -15,6 +15,8 @@
 models from scratch with cutting-edge technology accessible to all. What flatpacks did for the furniture industry, we
 will do for the AI industry.
 
+"A year spent in artificial intelligence is enough to make one believe in God." ([Alan Perlis 1982](http://www.cs.yale.edu/homes/perlis-alan/quotes.html))
+
 https://pypi.org/project/flatpack
 
 ```bash
