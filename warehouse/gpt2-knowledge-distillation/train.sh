@@ -5,12 +5,15 @@ REPO_NAME="GPT2-Knowledge-Distillation"
 FLATPACK_NAME="gpt2-knowledge-distillation"
 # === END USER CUSTOMIZATION ===
 
+# Get the directory of the script
+SCRIPT_DIR="$(dirname $0)"
+
 # Ensure logs directory exists
-mkdir -p logs
+mkdir -p "$SCRIPT_DIR/logs"
 
 # Function to log with timestamps
 log() {
-  echo "[$(date +'%Y-%m-%d %H:%M:%S')] $1" >>./logs/output.log
+  echo "[$(date +'%Y-%m-%d %H:%M:%S')] $1" >>"$SCRIPT_DIR/logs/output.log"
 }
 
 # Check for required commands
@@ -25,11 +28,11 @@ log "Starting script..."
 
 {
   # Source device script
-  source ./device.sh
+  source "$SCRIPT_DIR/device.sh"
 
   # === BEGIN USER CUSTOMIZATION ===
-  python data/shakespeare/prepare.py
-  bash run_adamw/train_student.sh
+  python "$SCRIPT_DIR/data/shakespeare/prepare.py"
+  bash "$SCRIPT_DIR/run_adamw/train_student.sh"
   # === END USER CUSTOMIZATION ===
 
-} >>./logs/output.log 2>>./logs/error.log || log "An error occurred!"
+} >>"$SCRIPT_DIR/logs/output.log" 2>>"$SCRIPT_DIR/logs/error.log" || log "An error occurred!"
