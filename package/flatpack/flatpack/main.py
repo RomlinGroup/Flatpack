@@ -104,6 +104,19 @@ def list_directories() -> str:
     return "\n".join(dirs)
 
 
+def find_models(directory_path: str = None) -> list:
+    if directory_path is None:
+        directory_path = os.getcwd()
+    model_file_formats = ['.h5', '.json', '.onnx', '.pb', '.pt']
+    model_files = []
+
+    for root, _, files in os.walk(directory_path):
+        for file in files:
+            if any(file.endswith(fmt) for fmt in model_file_formats):
+                model_files.append(os.path.join(root, file))
+    return model_files
+
+
 def main():
     parser = argparse.ArgumentParser(description='flatpack.ai command line interface')
     parser.add_argument('command', help='Command to run')
@@ -131,6 +144,8 @@ def main():
         install(directory_name)
     elif command == "list":
         print(list_directories())
+    elif command == "find":
+        print(find_models())
     elif command == "version":
         print("[VERSION]")
     else:
