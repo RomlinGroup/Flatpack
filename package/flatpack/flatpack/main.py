@@ -129,7 +129,7 @@ def main():
     parser.add_argument('command', help='Command to run')
     parser.add_argument('input', nargs='?', default=None, help='Input for the callback')
 
-    args = parser.parse_args(sys.argv[1:2])
+    args = parser.parse_args()
     command = args.command
     if command == "callback":
         fpk_callback(args.input)
