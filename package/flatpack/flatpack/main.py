@@ -7,7 +7,7 @@ from .parsers import parse_toml_to_pyenv_script
 from .instructions import build
 
 
-def colorize(text, color):
+def fpk_colorize(text, color):
     colors = {
         "red": "\033[91m",
         "green": "\033[92m",
@@ -22,7 +22,7 @@ def colorize(text, color):
     return colors[color] + text + colors["default"]
 
 
-def display_disclaimer(directory_name: str):
+def fpk_display_disclaimer(directory_name: str):
     disclaimer_template = """
     -----------------------------------------------------
     STOP AND READ BEFORE YOU PROCEED ✋
@@ -55,12 +55,11 @@ def display_disclaimer(directory_name: str):
     https://fpk.ai/w/{}
     """.format(directory_name)
 
-    please_note_colored = colorize(please_note_content, "yellow")
-
+    please_note_colored = fpk_colorize(please_note_content, "yellow")
     print(disclaimer_template.format(please_note=please_note_colored))
 
 
-def fetch_flatpack_toml_from_dir(directory_name: str) -> str:
+def fpk_fetch_flatpack_toml_from_dir(directory_name: str) -> str:
     base_url = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse"
     toml_url = f"{base_url}/{directory_name}/flatpack.toml"
     response = requests.get(toml_url)
@@ -69,7 +68,7 @@ def fetch_flatpack_toml_from_dir(directory_name: str) -> str:
     return response.text
 
 
-def fetch_github_dirs() -> list:
+def fpk_fetch_github_dirs() -> list:
     url = "https://api.github.com/repos/romlingroup/flatpack-ai/contents/warehouse"
     response = requests.get(url)
     if response.status_code != 200:
@@ -79,13 +78,13 @@ def fetch_github_dirs() -> list:
     return sorted(directories)
 
 
-def install(directory_name: str):
-    existing_dirs = fetch_github_dirs()
+def fpk_install(directory_name: str):
+    existing_dirs = fpk_fetch_github_dirs()
     if directory_name not in existing_dirs:
         print(f"❌ Error: The directory '{directory_name}' does not exist.")
         return
 
-    toml_content = fetch_flatpack_toml_from_dir(directory_name)
+    toml_content = fpk_fetch_flatpack_toml_from_dir(directory_name)
     if toml_content:
         with open('temp_flatpack.toml', 'w') as f:
             f.write(toml_content)
@@ -99,12 +98,12 @@ def install(directory_name: str):
         print(f"❌ No flatpack.toml found in {directory_name}.\n")
 
 
-def list_directories() -> str:
-    dirs = fetch_github_dirs()
+def fpk_list_directories() -> str:
+    dirs = fpk_fetch_github_dirs()
     return "\n".join(dirs)
 
 
-def find_models(directory_path: str = None) -> list:
+def fpk_find_models(directory_path: str = None) -> list:
     if directory_path is None:
         directory_path = os.getcwd()
     model_file_formats = ['.h5', '.json', '.onnx', '.pb', '.pt']
@@ -117,21 +116,28 @@ def find_models(directory_path: str = None) -> list:
     return model_files
 
 
-def main():
+def fpk_callback():
+    print("It works!")
+
+
+def fpk_main():
     parser = argparse.ArgumentParser(description='flatpack.ai command line interface')
     parser.add_argument('command', help='Command to run')
 
     args = parser.parse_args(sys.argv[1:2])
     command = args.command
-
-    if command == "help":
+    if command == "callback":
+        fpk_callback()
+    elif command == "find":
+        print(fpk_find_models())
+    elif command == "help":
         print("[HELP]")
     elif command == "install":
         if len(sys.argv) < 3:
             print("❌ Please specify a flatpack for the install command.")
             return
         directory_name = sys.argv[2]
-        display_disclaimer(directory_name)
+        fpk_display_disclaimer(directory_name)
         while True:
             user_response = input().strip().upper()
             if user_response == "YES":
@@ -141,11 +147,9 @@ def main():
                 exit(0)
             else:
                 print("❌ Invalid input. Please type 'YES' to accept or 'NO' to decline.")
-        install(directory_name)
+        fpk_install(directory_name)
     elif command == "list":
-        print(list_directories())
-    elif command == "find":
-        print(find_models())
+        print(fpk_list_directories())
     elif command == "version":
         print("[VERSION]")
     else:
@@ -153,4 +157,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    fpk_main()
