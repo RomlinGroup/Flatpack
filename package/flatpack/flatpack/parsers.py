@@ -92,18 +92,24 @@ fi
         from_source, to_destination, branch = git.get("from_source"), git.get("to_destination"), git.get("branch")
         if from_source and to_destination and branch:
             repo_path = f"./{model_name}/{to_destination.replace('/home/content/', '')}"
-            git_clone = f"""
-echo 'Cloning repository from: {from_source}'
-git clone -b {branch} {from_source} {repo_path}
-if [ -f {repo_path}/requirements.txt ]; then
-  echo 'Found requirements.txt, installing dependencies...'
-  cd {repo_path} || exit
-  python -m pip install -r requirements.txt
-  cd - || exit
-else
-  echo 'No requirements.txt found.'
-fi
-            """.strip()
+            git_clone = f'''
+            echo 'Cloning repository from: {from_source}'
+            git clone -b {branch} {from_source} {repo_path}
+            if [ $? -eq 0 ]; then
+                echo "Git clone was successful."
+            else
+                echo "Git clone failed."
+                exit 1
+            fi
+            if [ -f {repo_path}/requirements.txt ]; then
+                echo 'Found requirements.txt, installing dependencies...'
+                cd {repo_path} || exit
+                python -m pip install -r requirements.txt
+                cd - || exit
+            else
+                echo 'No requirements.txt found.'
+            fi
+                    '''.strip()
             script.append(git_clone)
 
     # Download datasets or files
