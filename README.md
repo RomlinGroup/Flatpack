@@ -29,7 +29,7 @@ pip install flatpack
   - DATASET.md
   - flatpack.toml
   - README.md
-  - train.sh (*entrypoint*)
+  - train.sh *(entrypoint)*
 
 ### Code signing
 
