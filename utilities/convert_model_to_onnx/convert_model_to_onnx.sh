@@ -30,16 +30,24 @@ if ! command -v python &>/dev/null; then
   exit 1
 fi
 
-# Clone the repository
-echo -e "\n🔍 Cloning the transformers.js repository..."
-if git clone -b frozen-2023-09-23 --single-branch https://github.com/romlingroup/transformers.js.git; then
-  echo -e "✅ Repository cloned successfully!"
-  rm -rf transformers.js/.gitignore
-  rm -rf transformers.js/.github
-  rm -rf transformers.js/.git
+# Clone the repository or pull updates if it already exists
+echo -e "\n🔍 Checking the transformers.js repository..."
+if [ -d "transformers.js" ]; then
+  echo -e "✅ transformers.js directory already exists. Pulling the latest changes..."
+  cd transformers.js
+  git pull origin frozen-2023-09-23
+  cd ..
 else
-  echo -e "❌ Failed to clone the repository."
-  exit 1
+  echo -e "\n🔍 Cloning the transformers.js repository..."
+  if git clone -b frozen-2023-09-23 --single-branch https://github.com/romlingroup/transformers.js.git; then
+    echo -e "✅ Repository cloned successfully!"
+    rm -rf transformers.js/.gitignore
+    rm -rf transformers.js/.github
+    rm -rf transformers.js/.git
+  else
+    echo -e "❌ Failed to clone the repository."
+    exit 1
+  fi
 fi
 
 # Navigate to the repository directory
