@@ -116,18 +116,23 @@ def fpk_find_models(directory_path: str = None) -> list:
     return model_files
 
 
-def fpk_callback():
+def fpk_callback(input_variable=None):
+    if input_variable:
+        print(f"You provided the input: {input_variable}")
+    else:
+        print("No input provided!")
     print("It works!")
 
 
 def main():
     parser = argparse.ArgumentParser(description='flatpack.ai command line interface')
     parser.add_argument('command', help='Command to run')
+    parser.add_argument('input', nargs='?', default=None, help='Input for the callback')
 
     args = parser.parse_args(sys.argv[1:2])
     command = args.command
     if command == "callback":
-        fpk_callback()
+        fpk_callback(args.input)
     elif command == "find":
         print(fpk_find_models())
     elif command == "help":
