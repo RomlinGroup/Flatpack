@@ -120,7 +120,7 @@ def fpk_callback():
     print("It works!")
 
 
-def fpk_main():
+def main():
     parser = argparse.ArgumentParser(description='flatpack.ai command line interface')
     parser.add_argument('command', help='Command to run')
 
@@ -157,4 +157,4 @@ def fpk_main():
 
 
 if __name__ == "__main__":
-    fpk_main()
+    main()
