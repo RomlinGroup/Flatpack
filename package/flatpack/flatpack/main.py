@@ -3,6 +3,7 @@ import os
 import requests
 import subprocess
 import sys
+import tempfile
 import toml
 from .parsers import parse_toml_to_pyenv_script
 from .instructions import build
