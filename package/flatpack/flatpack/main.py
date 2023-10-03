@@ -1,6 +1,7 @@
 import argparse
 import os
 import requests
+import subprocess
 import sys
 import toml
 from .parsers import parse_toml_to_pyenv_script
@@ -94,6 +95,17 @@ def fpk_install(directory_name: str):
         print("🎉 Bash script generated and saved as 'flatpack.sh'.")
         print(f"🔎 Location: {os.path.join(os.getcwd(), 'flatpack.sh')}")
         os.remove('temp_flatpack.toml')
+
+        try:
+            print("🚀 Running the bash script...")
+            subprocess.check_call(["bash", "flatpack.sh"])
+        except subprocess.CalledProcessError:
+            print("❌ Error: Failed to execute the bash script.")
+        finally:
+            if os.path.exists("flatpack.sh"):
+                os.remove("flatpack.sh")
+                print("🗑️ 'flatpack.sh' has been removed.")
+
     else:
         print(f"❌ No flatpack.toml found in {directory_name}.\n")
 
