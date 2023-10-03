@@ -1,4 +1,5 @@
 import argparse
+import datetime
 import os
 import requests
 import subprocess
@@ -7,6 +8,17 @@ import tempfile
 import toml
 from .parsers import parse_toml_to_pyenv_script
 from .instructions import build
+
+
+def fpk_log_session(directory_name: str):
+    # Initialize the session file in the current working directory
+    session_file_path = os.path.join(os.getcwd(), 'fpk_session.log')
+
+    # Check if the given directory_name exists as a path, else just use the name
+    path_to_log = os.path.abspath(directory_name) if os.path.exists(directory_name) else directory_name
+
+    with open(session_file_path, 'a') as f:
+        f.write(f"Installed: {path_to_log} on {datetime.datetime.now()}\n")
 
 
 def fpk_colorize(text, color):
@@ -100,6 +112,7 @@ def fpk_install(directory_name: str):
         try:
             print("🚀 Running the bash script...")
             subprocess.check_call(["bash", "flatpack.sh"])
+            fpk_log_session(directory_name)
         except subprocess.CalledProcessError:
             print("❌ Error: Failed to execute the bash script.")
         finally:
