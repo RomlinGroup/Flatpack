@@ -10,15 +10,12 @@ from .parsers import parse_toml_to_pyenv_script
 from .instructions import build
 
 
-def fpk_log_session(directory_name: str):
-    # Initialize the session file in the current working directory
-    session_file_path = os.path.join(os.getcwd(), 'fpk_session.log')
-
-    # Check if the given directory_name exists as a path, else just use the name
-    path_to_log = os.path.abspath(directory_name) if os.path.exists(directory_name) else directory_name
-
-    with open(session_file_path, 'a') as f:
-        f.write(f"Installed: {path_to_log} on {datetime.datetime.now()}\n")
+def fpk_callback(input_variable=None):
+    if input_variable:
+        print(f"You provided the input: {input_variable}")
+    else:
+        print("No input provided!")
+    print("It works!")
 
 
 def fpk_colorize(text, color):
@@ -92,6 +89,19 @@ def fpk_fetch_github_dirs() -> list:
     return sorted(directories)
 
 
+def fpk_find_models(directory_path: str = None) -> list:
+    if directory_path is None:
+        directory_path = os.getcwd()
+    model_file_formats = ['.h5', '.json', '.onnx', '.pb', '.pt']
+    model_files = []
+
+    for root, _, files in os.walk(directory_path):
+        for file in files:
+            if any(file.endswith(fmt) for fmt in model_file_formats):
+                model_files.append(os.path.join(root, file))
+    return model_files
+
+
 def fpk_install(directory_name: str):
     existing_dirs = fpk_fetch_github_dirs()
     if directory_name not in existing_dirs:
@@ -129,25 +139,19 @@ def fpk_list_directories() -> str:
     return "\n".join(dirs)
 
 
-def fpk_find_models(directory_path: str = None) -> list:
-    if directory_path is None:
-        directory_path = os.getcwd()
-    model_file_formats = ['.h5', '.json', '.onnx', '.pb', '.pt']
-    model_files = []
-
-    for root, _, files in os.walk(directory_path):
-        for file in files:
-            if any(file.endswith(fmt) for fmt in model_file_formats):
-                model_files.append(os.path.join(root, file))
-    return model_files
+def fpk_list_processes() -> str:
+    print("Placeholder for fpk_list_processes")
 
 
-def fpk_callback(input_variable=None):
-    if input_variable:
-        print(f"You provided the input: {input_variable}")
-    else:
-        print("No input provided!")
-    print("It works!")
+def fpk_log_session(directory_name: str):
+    # Initialize the session file in the current working directory
+    session_file_path = os.path.join(os.getcwd(), 'fpk_session.log')
+
+    # Check if the given directory_name exists as a path, else just use the name
+    path_to_log = os.path.abspath(directory_name) if os.path.exists(directory_name) else directory_name
+
+    with open(session_file_path, 'a') as f:
+        f.write(f"Installed: {path_to_log} on {datetime.datetime.now()}\n")
 
 
 def main():
@@ -181,6 +185,8 @@ def main():
         fpk_install(directory_name)
     elif command == "list":
         print(fpk_list_directories())
+    elif command == "ps":
+        print(fpk_list_processes())
     elif command == "version":
         print("[VERSION]")
     else:
