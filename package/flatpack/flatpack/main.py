@@ -7,6 +7,7 @@ import select
 import subprocess
 import sys
 import tempfile
+import termios
 import threading
 import time
 import toml
