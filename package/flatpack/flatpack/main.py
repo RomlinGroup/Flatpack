@@ -140,7 +140,7 @@ def fpk_install(directory_name: str):
             fpk_log_session(f"Installed {directory_name}")
             fpk_cache_last_flatpack(directory_name)
 
-            print(f"All done! 🎉")
+            print(f"🎉 All done!")
 
         except subprocess.CalledProcessError:
             print("❌ Error: Failed to execute the bash script.")
