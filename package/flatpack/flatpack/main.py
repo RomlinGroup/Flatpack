@@ -172,10 +172,11 @@ def fpk_log_session(message: str):
         f.write(f"{formatted_date}: {message.strip()}\n")
 
 
-def fpk_record_data(input_str: str, file_name="recorded_data.txt"):
-    """Append the provided input string to a file."""
-    with open(file_name, 'a') as f:
-        f.write(input_str + '\n')
+def fpk_record_data(message: str):
+    record_data_path = os.path.join(os.getcwd(), 'fpk_record_data.log')
+    with open(record_data_path, 'a') as f:
+        formatted_date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        f.write(f"{formatted_date}: {message.strip()}\n")
 
 
 def fpk_train(directory_name: str = None):
