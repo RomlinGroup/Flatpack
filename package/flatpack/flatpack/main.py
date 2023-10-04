@@ -176,13 +176,7 @@ def fpk_monitor_output(process):
         if not line:
             continue
 
-        print(f"🤖 {line}")
-
-        input_indicators = ["input", "enter", "provide", "choice", "option"]
-        if any(indicator in line.lower() for indicator in input_indicators) or line.endswith(':') or line.endswith('?'):
-            user_input = input("🤖 Please provide input for the training script: ")
-            process.stdin.write(user_input + '\n')
-            process.stdin.flush()
+        print(f"{line}")
 
 
 def fpk_train(directory_name: str = None):
@@ -206,7 +200,7 @@ def fpk_train(directory_name: str = None):
 
     try:
         process = subprocess.Popen(["bash", training_script_path], stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                                   stdin=subprocess.PIPE, bufsize=1, universal_newlines=True)
+                                   bufsize=1, universal_newlines=True)
 
         t = threading.Thread(target=fpk_monitor_output, args=(process,))
         t.start()
