@@ -5,6 +5,7 @@ import requests
 import subprocess
 import sys
 import tempfile
+import threading
 import time
 import toml
 from .parsers import parse_toml_to_pyenv_script
@@ -168,12 +169,28 @@ def fpk_log_session(message: str):
         f.write(f"{formatted_date}: {message.strip()}\n")
 
 
+def fpk_monitor_output(process):
+    for line in iter(process.stdout.readline, b''):
+        line = line.decode('utf-8').strip()
+
+        if not line:
+            continue
+
+        print(f"🤖 {line}")
+
+        input_indicators = ["input", "enter", "provide", "choice", "option"]
+        if any(indicator in line.lower() for indicator in input_indicators) or line.endswith(':') or line.endswith('?'):
+            user_input = input("🤖 Please provide input for the training script: ")
+            process.stdin.write(user_input + '\n')
+            process.stdin.flush()
+
+
 def fpk_train(directory_name: str = None):
     cache_file_path = os.path.join(os.getcwd(), 'last_flatpack.cache')
 
     if directory_name:
         last_installed_flatpack = directory_name
-        fpk_cache_last_flatpack(directory_name)  # Overwrite the cache if a directory_name is provided
+        fpk_cache_last_flatpack(directory_name)
     else:
         if not os.path.exists(cache_file_path):
             print("❌ No cached flatpack found.")
@@ -188,8 +205,18 @@ def fpk_train(directory_name: str = None):
         return
 
     try:
-        subprocess.check_call(["bash", training_script_path])
-        print("🎉 Training completed.")
+        process = subprocess.Popen(["bash", training_script_path], stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                                   bufsize=1, universal_newlines=True)
+
+        t = threading.Thread(target=fpk_monitor_output, args=(process,))
+        t.start()
+        process.wait()
+        t.join()
+
+        if process.returncode != 0:
+            raise subprocess.CalledProcessError(process.returncode, process.args)
+
+        print("🎉 All done!")
     except subprocess.CalledProcessError:
         print("❌ Failed to execute the training script.")
 
