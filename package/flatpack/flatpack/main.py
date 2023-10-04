@@ -206,6 +206,7 @@ def fpk_train(directory_name: str = None):
         last_user_input = None
         try:
             while True:
+                record_data = None
                 rlist, _, _ = select.select([master, 0], [], [])
                 if master in rlist:
                     output = os.read(master, 1024).decode()
@@ -216,21 +217,27 @@ def fpk_train(directory_name: str = None):
                             continue
 
                         if line.strip() and line != last_printed:
-                            # BEGIN Record line
-                            print(f"(*) {line}")
-                            # END Record line
+                            # BEGIN Line
+                            print(f"{line}")
+                            record_data = line
+                            # END Line
 
                             last_printed = line
 
                 if 0 in rlist:
                     user_input = sys.stdin.readline().strip()
-                    last_user_input = user_input
+                    last_user_input: str = user_input
 
-                    # BEGIN Record user input
-                    print(fpk_colorize(f"(*) (USER INPUT) {last_user_input}", "yellow"))
-                    # END Record user input
+                    # BEGIN User input
+                    record_data = last_user_input
+                    # END User input
 
                     os.write(master, (user_input + '\n').encode())
+
+                # BEGIN Record data
+                if record_data is not None:
+                    print(fpk_colorize(f"(*) {record_data}", "red"))
+                # END Record data
 
 
         except OSError:
