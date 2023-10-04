@@ -161,7 +161,7 @@ def fpk_list_directories() -> str:
     return "\n".join(dirs)
 
 
-def fpk_list_processes() -> str:
+def fpk_list_processes():
     print("Placeholder for fpk_list_processes")
 
 
@@ -170,6 +170,12 @@ def fpk_log_session(message: str):
     with open(session_file_path, 'a') as f:
         formatted_date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         f.write(f"{formatted_date}: {message.strip()}\n")
+
+
+def fpk_record_data(input_str: str, file_name="recorded_data.txt"):
+    """Append the provided input string to a file."""
+    with open(file_name, 'a') as f:
+        f.write(input_str + '\n')
 
 
 def fpk_train(directory_name: str = None):
@@ -219,6 +225,7 @@ def fpk_train(directory_name: str = None):
                             # BEGIN Record line
                             print(f"(*) {line}")
                             record_line = line
+                            fpk_record_data(record_line)
                             # END Record line
 
                             last_printed = line
@@ -230,10 +237,10 @@ def fpk_train(directory_name: str = None):
                     # BEGIN Record user input
                     print(fpk_colorize(f"(*) {last_user_input}", "yellow"))
                     record_user_input = last_user_input
+                    record_line(record_user_input)
                     # END Record user input
 
                     os.write(master, (user_input + '\n').encode())
-
 
         except OSError:
             pass
