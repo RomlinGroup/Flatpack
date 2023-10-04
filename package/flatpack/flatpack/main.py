@@ -127,8 +127,6 @@ def fpk_install(directory_name: str):
         with open('flatpack.sh', 'w') as f:
             f.write(bash_script_content)
 
-        print("🎉 Bash script generated and saved as 'flatpack.sh'.")
-        print(f"🔎 Location: {os.path.join(os.getcwd(), 'flatpack.sh')}")
         os.remove('temp_flatpack.toml')
 
         try:
