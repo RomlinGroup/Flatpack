@@ -216,16 +216,23 @@ def fpk_train(directory_name: str = None):
                             continue
 
                         if line.strip() and line != last_printed:
-                            # BEGIN Capture line
+                            # BEGIN Record line
                             print(f"(*) {line}")
-                            # END Capture line
+                            # END Record line
 
                             last_printed = line
 
                 if 0 in rlist:
                     user_input = sys.stdin.readline().strip()
                     last_user_input = user_input
+
+                    # BEGIN Record user input
+                    print(f"(*) Recorded user input: {last_user_input}")
+                    # END Record user input
+
                     os.write(master, (user_input + '\n').encode())
+
+
         except OSError:
             pass
 
