@@ -10,6 +10,12 @@ from .parsers import parse_toml_to_pyenv_script
 from .instructions import build
 
 
+def fpk_cache_last_flatpack(directory_name: str):
+    cache_file_path = os.path.join(os.getcwd(), 'last_flatpack.cache')
+    with open(cache_file_path, 'w') as f:
+        f.write(directory_name)
+
+
 def fpk_callback(input_variable=None):
     if input_variable:
         print(f"You provided the input: {input_variable}")
@@ -125,7 +131,9 @@ def fpk_install(directory_name: str):
         try:
             print("🚀 Running the bash script...")
             subprocess.check_call(["bash", "flatpack.sh"])
-            fpk_log_session(directory_name)
+
+            fpk_log_session(f"Installed {directory_name}")
+            fpk_cache_last_flatpack(directory_name)
 
         except subprocess.CalledProcessError:
             print("❌ Error: Failed to execute the bash script.")
