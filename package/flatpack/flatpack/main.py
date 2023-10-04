@@ -5,9 +5,11 @@ import requests
 import subprocess
 import sys
 import tempfile
+import time
 import toml
 from .parsers import parse_toml_to_pyenv_script
 from .instructions import build
+from tqdm import tqdm
 
 
 def fpk_cache_last_flatpack(directory_name: str):
@@ -120,17 +122,22 @@ def fpk_install(directory_name: str):
 
         with open('temp_flatpack.toml', 'w') as f:
             f.write(toml_content)
+
         bash_script_content = parse_toml_to_pyenv_script('temp_flatpack.toml')
 
         with open('flatpack.sh', 'w') as f:
             f.write(bash_script_content)
+
         print("🎉 Bash script generated and saved as 'flatpack.sh'.")
         print(f"🔎 Location: {os.path.join(os.getcwd(), 'flatpack.sh')}")
         os.remove('temp_flatpack.toml')
 
         try:
             print("🚀 Running the bash script...")
-            subprocess.check_call(["bash", "flatpack.sh"])
+            with open(os.devnull, 'w') as FNULL:
+                for _ in tqdm(range(100), desc="Installing", dynamic_ncols=True):
+                    time.sleep(0.05)
+                subprocess.check_call(["bash", "flatpack.sh"], stdout=FNULL, stderr=subprocess.STDOUT)
 
             fpk_log_session(f"Installed {directory_name}")
             fpk_cache_last_flatpack(directory_name)
