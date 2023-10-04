@@ -216,7 +216,10 @@ def fpk_train(directory_name: str = None):
                             continue
 
                         if line.strip() and line != last_printed:
-                            print(line)
+                            # BEGIN Capture line
+                            print(f"(*) {line}")
+                            # END Capture line
+
                             last_printed = line
 
                 if 0 in rlist:
