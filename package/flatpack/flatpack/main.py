@@ -151,7 +151,7 @@ def fpk_log_session(message: str):
     session_file_path = os.path.join(os.getcwd(), 'fpk_session.log')
     with open(session_file_path, 'a') as f:
         formatted_date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        f.write(f"{formatted_date}: {message}\n")
+        f.write(f"{formatted_date}: {message.strip()}\n")
 
 
 def main():
