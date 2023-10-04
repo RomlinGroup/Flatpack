@@ -205,10 +205,11 @@ def fpk_train(directory_name: str = None):
             while True:
                 rlist, _, _ = select.select([master, 0], [], [])
                 if master in rlist:
-                    output = os.read(master, 512).decode()
+                    output = os.read(master, 1024).decode()
                     lines = output.splitlines()
                     for line in lines:
-                        print("[FPK] " + line)
+                        if line.strip():
+                            print("[FPK] " + line)
 
                 if 0 in rlist:
                     user_input = input()
