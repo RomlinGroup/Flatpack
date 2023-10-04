@@ -162,15 +162,18 @@ def fpk_log_session(message: str):
         f.write(f"{formatted_date}: {message.strip()}\n")
 
 
-def fpk_train():
+def fpk_train(directory_name: str = None):
     cache_file_path = os.path.join(os.getcwd(), 'last_flatpack.cache')
 
-    if not os.path.exists(cache_file_path):
-        print("❌ No cached flatpack found.")
-        return
-
-    with open(cache_file_path, 'r') as f:
-        last_installed_flatpack = f.read().strip()
+    if directory_name:
+        last_installed_flatpack = directory_name
+        fpk_cache_last_flatpack(directory_name)  # Overwrite the cache if a directory_name is provided
+    else:
+        if not os.path.exists(cache_file_path):
+            print("❌ No cached flatpack found.")
+            return
+        with open(cache_file_path, 'r') as f:
+            last_installed_flatpack = f.read().strip()
 
     training_script_path = os.path.join(last_installed_flatpack, 'train.sh')
 
@@ -219,7 +222,8 @@ def main():
     elif command == "ps":
         print(fpk_list_processes())
     elif command == "train":
-        fpk_train()
+        directory_name = args.input
+        fpk_train(directory_name)
     elif command == "version":
         print("[VERSION]")
     else:
