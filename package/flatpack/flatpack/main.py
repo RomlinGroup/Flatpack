@@ -175,8 +175,7 @@ def fpk_log_session(message: str):
 def fpk_record_data(message: str):
     record_data_path = os.path.join(os.getcwd(), 'fpk_record_data.log')
     with open(record_data_path, 'a') as f:
-        formatted_date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        f.write(f"{formatted_date}: {message.strip()}\n")
+        f.write(f"{message.strip()}\n")
 
 
 def fpk_train(directory_name: str = None):
