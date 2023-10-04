@@ -193,10 +193,6 @@ def fpk_train(directory_name: str = None):
 
     master, slave = pty.openpty()
 
-    attrs = termios.tcgetattr(slave)
-    attrs[3] = attrs[3] & ~termios.ECHO
-    termios.tcsetattr(slave, termios.TCSANOW, attrs)
-
     pid = os.fork()
     if pid == 0:
         os.close(master)
@@ -206,6 +202,8 @@ def fpk_train(directory_name: str = None):
         os.execvp("bash", ["bash", training_script_path])
     else:
         os.close(slave)
+        last_printed = None
+        last_user_input = None
         try:
             while True:
                 rlist, _, _ = select.select([master, 0], [], [])
@@ -213,12 +211,17 @@ def fpk_train(directory_name: str = None):
                     output = os.read(master, 1024).decode()
                     lines = output.splitlines()
                     for line in lines:
-                        if line.strip():
-                            print("[FPK] " + line)
+
+                        if line == last_user_input:
+                            continue
+
+                        if line.strip() and line != last_printed:
+                            print(line)
+                            last_printed = line
 
                 if 0 in rlist:
                     user_input = sys.stdin.readline().strip()
-                    print("[FPK] " + user_input)
+                    last_user_input = user_input
                     os.write(master, (user_input + '\n').encode())
         except OSError:
             pass
