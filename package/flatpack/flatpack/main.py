@@ -228,7 +228,7 @@ def fpk_train(directory_name: str = None):
                     last_user_input = user_input
 
                     # BEGIN Record user input
-                    print(fpk_colorize(f"(*) (USER INPUT) {last_user_input}", "red"))
+                    print(fpk_colorize(f"(*) {last_user_input}", "yellow"))
                     record_user_input = last_user_input
                     # END Record user input
 
