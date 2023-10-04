@@ -170,8 +170,8 @@ def fpk_log_session(message: str):
 
 
 def fpk_monitor_output(process):
-    for line in iter(process.stdout.readline, b''):
-        line = line.decode('utf-8').strip()
+    for line in iter(process.stdout.readline, ''):
+        line = line.strip()
 
         if not line:
             continue
