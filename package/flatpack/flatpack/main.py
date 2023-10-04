@@ -109,10 +109,13 @@ def fpk_install(directory_name: str):
         return
 
     toml_content = fpk_fetch_flatpack_toml_from_dir(directory_name)
+
     if toml_content:
+
         with open('temp_flatpack.toml', 'w') as f:
             f.write(toml_content)
         bash_script_content = parse_toml_to_pyenv_script('temp_flatpack.toml')
+
         with open('flatpack.sh', 'w') as f:
             f.write(bash_script_content)
         print("🎉 Bash script generated and saved as 'flatpack.sh'.")
@@ -123,6 +126,7 @@ def fpk_install(directory_name: str):
             print("🚀 Running the bash script...")
             subprocess.check_call(["bash", "flatpack.sh"])
             fpk_log_session(directory_name)
+
         except subprocess.CalledProcessError:
             print("❌ Error: Failed to execute the bash script.")
         finally:
@@ -143,12 +147,11 @@ def fpk_list_processes() -> str:
     print("Placeholder for fpk_list_processes")
 
 
-def fpk_log_session(directory_name: str):
+def fpk_log_session(message: str):
     session_file_path = os.path.join(os.getcwd(), 'fpk_session.log')
-    path_to_log = os.path.abspath(directory_name) if os.path.exists(directory_name) else directory_name
-
     with open(session_file_path, 'a') as f:
-        f.write(f"Installed: {path_to_log} on {datetime.datetime.now()}\n")
+        formatted_date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        f.write(f"{formatted_date}: {message}\n")
 
 
 def main():
