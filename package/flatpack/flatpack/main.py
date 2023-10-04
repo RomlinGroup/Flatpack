@@ -162,6 +162,29 @@ def fpk_log_session(message: str):
         f.write(f"{formatted_date}: {message.strip()}\n")
 
 
+def fpk_train():
+    cache_file_path = os.path.join(os.getcwd(), 'last_flatpack.cache')
+
+    if not os.path.exists(cache_file_path):
+        print("❌ No cached flatpack found.")
+        return
+
+    with open(cache_file_path, 'r') as f:
+        last_installed_flatpack = f.read().strip()
+
+    training_script_path = os.path.join(last_installed_flatpack, 'train.sh')
+
+    if not os.path.exists(training_script_path):
+        print(f"❌ Training script not found in {last_installed_flatpack}.")
+        return
+
+    try:
+        subprocess.check_call(["bash", training_script_path])
+        print("🎉 Training completed.")
+    except subprocess.CalledProcessError:
+        print("❌ Failed to execute the training script.")
+
+
 def main():
     parser = argparse.ArgumentParser(description='flatpack.ai command line interface')
     parser.add_argument('command', help='Command to run')
@@ -195,6 +218,8 @@ def main():
         print(fpk_list_directories())
     elif command == "ps":
         print(fpk_list_processes())
+    elif command == "train":
+        fpk_train()
     elif command == "version":
         print("[VERSION]")
     else:
