@@ -144,10 +144,7 @@ def fpk_list_processes() -> str:
 
 
 def fpk_log_session(directory_name: str):
-    # Initialize the session file in the current working directory
     session_file_path = os.path.join(os.getcwd(), 'fpk_session.log')
-
-    # Check if the given directory_name exists as a path, else just use the name
     path_to_log = os.path.abspath(directory_name) if os.path.exists(directory_name) else directory_name
 
     with open(session_file_path, 'a') as f:
