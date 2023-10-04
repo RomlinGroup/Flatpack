@@ -1,7 +1,9 @@
 import argparse
 import datetime
 import os
+import pty
 import requests
+import select
 import subprocess
 import sys
 import tempfile
@@ -169,16 +171,6 @@ def fpk_log_session(message: str):
         f.write(f"{formatted_date}: {message.strip()}\n")
 
 
-def fpk_monitor_output(process):
-    for line in iter(process.stdout.readline, ''):
-        line = line.strip()
-
-        if not line:
-            continue
-
-        print(f"{line}")
-
-
 def fpk_train(directory_name: str = None):
     cache_file_path = os.path.join(os.getcwd(), 'last_flatpack.cache')
 
@@ -198,21 +190,37 @@ def fpk_train(directory_name: str = None):
         print(f"❌ Training script not found in {last_installed_flatpack}.")
         return
 
-    try:
-        process = subprocess.Popen(["bash", training_script_path], stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                                   bufsize=1, universal_newlines=True)
+    master, slave = pty.openpty()
 
-        t = threading.Thread(target=fpk_monitor_output, args=(process,))
-        t.start()
-        process.wait()
-        t.join()
+    pid = os.fork()
+    if pid == 0:
+        os.close(master)
+        os.dup2(slave, 0)
+        os.dup2(slave, 1)
+        os.dup2(slave, 2)
+        os.execvp("bash", ["bash", training_script_path])
+    else:
+        os.close(slave)
+        try:
+            while True:
+                rlist, _, _ = select.select([master, 0], [], [])
+                if master in rlist:
+                    output = os.read(master, 512).decode()
+                    lines = output.splitlines()
+                    for line in lines:
+                        print("[FPK] " + line)
 
-        if process.returncode != 0:
-            raise subprocess.CalledProcessError(process.returncode, process.args)
+                if 0 in rlist:
+                    user_input = input()
+                    os.write(master, (user_input + '\n').encode())
+        except OSError:
+            pass
 
-        print("🎉 All done!")
-    except subprocess.CalledProcessError:
-        print("❌ Failed to execute the training script.")
+        _, exit_status = os.waitpid(pid, 0)
+        if exit_status != 0:
+            print("❌ Failed to execute the training script.")
+        else:
+            print("🎉 All done!")
 
 
 def main():
