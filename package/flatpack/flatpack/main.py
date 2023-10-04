@@ -206,7 +206,7 @@ def fpk_train(directory_name: str = None):
 
     try:
         process = subprocess.Popen(["bash", training_script_path], stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                                   bufsize=1, universal_newlines=True)
+                                   stdin=subprocess.PIPE, bufsize=1, universal_newlines=True)
 
         t = threading.Thread(target=fpk_monitor_output, args=(process,))
         t.start()
