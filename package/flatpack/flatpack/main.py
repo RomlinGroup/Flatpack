@@ -165,17 +165,60 @@ def fpk_list_processes():
     print("Placeholder for fpk_list_processes")
 
 
+CONFIG_FILE_PATH = os.path.join(os.path.expanduser("~"), ".fpk_config.toml")
+
+
+def fpk_set_api_key(api_key: str):
+    config = {"api_key": api_key}
+    with open(CONFIG_FILE_PATH, "w") as config_file:
+        toml.dump(config, config_file)
+
+
+def fpk_get_api_key() -> str:
+    if not os.path.exists(CONFIG_FILE_PATH):
+        return None
+    with open(CONFIG_FILE_PATH, "r") as config_file:
+        config = toml.load(config_file)
+        return config.get("api_key")
+
+
+def fpk_log_to_api(message: str, model_name: str = "YOUR_MODEL_NAME"):
+    api_key = fpk_get_api_key()
+    if not api_key:
+        # print("❌ API key not set.")
+        return
+
+    url = "https://fpk.ai/api/index.php"
+    headers = {
+        "Content-Type": "application/json"
+    }
+    params = {
+        "endpoint": "log-message",
+        "api_key": api_key
+    }
+    data = {
+        "model_name": model_name,
+        "log_message": message
+    }
+
+    try:
+        response = requests.post(url, params=params, json=data, headers=headers, timeout=10)
+
+        # if response.status_code == 200:
+        #    print("Message logged successfully!")
+        # else:
+        #    print(f"Error logging message. Status code: {response.status_code}")
+        #    print(f"Response content: {response.text}")
+
+    except requests.RequestException as e:
+        print(f"Failed to send request: {e}")
+
+
 def fpk_log_session(message: str):
     session_file_path = os.path.join(os.getcwd(), 'fpk_session.log')
     with open(session_file_path, 'a') as f:
         formatted_date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         f.write(f"{formatted_date}: {message.strip()}\n")
-
-
-def fpk_record_data(message: str):
-    record_data_path = os.path.join(os.getcwd(), 'fpk_record_data.log')
-    with open(record_data_path, 'a') as f:
-        f.write(f"{message.strip()}\n")
 
 
 def fpk_train(directory_name: str = None):
@@ -225,7 +268,8 @@ def fpk_train(directory_name: str = None):
                             # BEGIN Record line
                             print(f"(*) {line}")
                             record_line = line
-                            fpk_record_data(record_line)
+                            # print(f"last_installed_flatpack: {last_installed_flatpack}")
+                            fpk_log_to_api(record_line, last_installed_flatpack)
                             # END Record line
 
                             last_printed = line
@@ -237,7 +281,8 @@ def fpk_train(directory_name: str = None):
                     # BEGIN Record user input
                     print(fpk_colorize(f"(*) {last_user_input}", "yellow"))
                     record_user_input = last_user_input
-                    fpk_record_data(record_user_input)
+                    # print(f"last_installed_flatpack: {last_installed_flatpack}")
+                    fpk_log_to_api(record_user_input, last_installed_flatpack)
                     # END Record user input
 
                     os.write(master, (user_input + '\n').encode())
@@ -256,6 +301,7 @@ def main():
     parser = argparse.ArgumentParser(description='flatpack.ai command line interface')
     parser.add_argument('command', help='Command to run')
     parser.add_argument('input', nargs='?', default=None, help='Input for the callback')
+    parser.add_argument('--model-name', default="YOUR_MODEL_NAME", help='Name of the model to associate with the log')
 
     args = parser.parse_args()
     command = args.command
@@ -290,6 +336,19 @@ def main():
         fpk_train(directory_name)
     elif command == "version":
         print("[VERSION]")
+    elif command == "set-api-key":
+        if not args.input:
+            print("❌ Please provide an API key to set.")
+            return
+        fpk_set_api_key(args.input)
+        print("API key set successfully!")
+    elif command == "get-api-key":
+        print(fpk_get_api_key())
+    elif command == "log":
+        if not args.input:
+            print("❌ Please provide a message to log.")
+            return
+        fpk_log_to_api(args.input, args.model_name)
     else:
         print(f"Unknown command: {command}")
 
