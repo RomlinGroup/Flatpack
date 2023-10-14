@@ -39,7 +39,7 @@ def fpk_colorize(text, color):
         "cyan": "\033[96m",
         "white": "\033[97m",
         "grey": "\033[90m",
-        "default": "\033[0m"  # Resets the color
+        "default": "\033[0m"
     }
     return colors[color] + text + colors["default"]
 
@@ -253,37 +253,42 @@ def fpk_train(directory_name: str = None):
         os.close(slave)
         last_printed = None
         last_user_input = None
+
         try:
+            accumulated_output = ""
+
             while True:
                 rlist, _, _ = select.select([master, 0], [], [])
+
                 if master in rlist:
-                    output = os.read(master, 1024).decode()
-                    lines = output.splitlines()
+                    output = os.read(master, 512).decode()
+                    lines = output.splitlines(True)  # Keep line endings
+
                     for line in lines:
+                        accumulated_output += line
 
-                        if line == last_user_input:
-                            continue
+                        if line.endswith('\n'):
+                            # Check if it matches the last user input, if so, continue
+                            if accumulated_output.strip() == last_user_input + '\n':
+                                accumulated_output = ""
+                                continue
 
-                        if line.strip() and line != last_printed:
-                            # BEGIN Record line
-                            print(f"(*) {line}")
-                            record_line = line
-                            # print(f"last_installed_flatpack: {last_installed_flatpack}")
-                            fpk_log_to_api(record_line, last_installed_flatpack)
-                            # END Record line
+                            if accumulated_output.strip() and accumulated_output != last_printed:
+                                print(f"(*) {accumulated_output}",
+                                      end='')  # Using end='' to prevent adding another newline
+                                record_line = accumulated_output.strip()
+                                fpk_log_to_api(record_line, last_installed_flatpack)
 
-                            last_printed = line
+                                last_printed = accumulated_output
+                                accumulated_output = ""
 
                 if 0 in rlist:
                     user_input = sys.stdin.readline().strip()
                     last_user_input = user_input
 
-                    # BEGIN Record user input
                     print(fpk_colorize(f"(*) {last_user_input}", "yellow"))
                     record_user_input = last_user_input
-                    # print(f"last_installed_flatpack: {last_installed_flatpack}")
                     fpk_log_to_api(record_user_input, last_installed_flatpack)
-                    # END Record user input
 
                     os.write(master, (user_input + '\n').encode())
 
