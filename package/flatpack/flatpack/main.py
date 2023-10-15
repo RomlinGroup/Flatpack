@@ -253,34 +253,30 @@ def fpk_train(directory_name: str = None):
         os.close(slave)
         last_printed = None
         last_user_input = None
+        buffered_output = ""
 
         try:
-            accumulated_output = ""
-
             while True:
                 rlist, _, _ = select.select([master, 0], [], [])
-
                 if master in rlist:
-                    output = os.read(master, 512).decode()
-                    lines = output.splitlines(True)  # Keep line endings
+                    output = os.read(master, 4096).decode()
+                    buffered_output += output
+                    lines = buffered_output.splitlines()
+
+                    if buffered_output.endswith(('\n', '\r')):
+                        buffered_output = ""
+                    else:
+                        buffered_output = lines.pop()
 
                     for line in lines:
-                        accumulated_output += line
+                        line = line.strip()
 
-                        if line.endswith('\n'):
-                            # Check if it matches the last user input, if so, continue
-                            if last_user_input and accumulated_output.strip() == last_user_input + '\n':
-                                accumulated_output = ""
-                                continue
+                        if not line or line == last_user_input:
+                            continue
 
-                            if accumulated_output.strip() and accumulated_output != last_printed:
-                                print(f"(*) {accumulated_output}",
-                                      end='')  # Using end='' to prevent adding another newline
-                                record_line = accumulated_output.strip()
-                                fpk_log_to_api(record_line, last_installed_flatpack)
-
-                                last_printed = accumulated_output
-                                accumulated_output = ""
+                        print(f"(*) {line}")
+                        fpk_log_to_api(line, last_installed_flatpack)
+                        last_printed = line
 
                 if 0 in rlist:
                     user_input = sys.stdin.readline().strip()
