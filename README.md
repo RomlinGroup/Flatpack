@@ -103,8 +103,8 @@ energy-efficient, and specialized, even to smaller teams or individual developer
 Overall, micro-LLMs represent a logical step in the evolution of language models, effectively merging the capabilities
 of LLMs with the practical needs of real-world applications.
 
-\* _We recognize that "micro-LLMs" are oxymoronic, combining 'micro' and 'large.' However, the term aptly captures the
-essence of these scaled-down but still powerful versions of large language models._
+\* _We recognize that "micro-LLMs" are oxymoronic, combining "micro" and "large". However, the term aptly captures the
+essence of these scaled-down but still powerful versions of large language models.
 
 ## Inspiration (no affiliation) ⭐
 
