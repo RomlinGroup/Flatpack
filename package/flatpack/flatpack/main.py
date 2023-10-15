@@ -269,7 +269,7 @@ def fpk_train(directory_name: str = None):
 
                         if line.endswith('\n'):
                             # Check if it matches the last user input, if so, continue
-                            if accumulated_output.strip() == last_user_input + '\n':
+                            if last_user_input and accumulated_output.strip() == last_user_input + '\n':
                                 accumulated_output = ""
                                 continue
 
