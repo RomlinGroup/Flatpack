@@ -21,6 +21,9 @@ else
   IS_COLAB=0
 fi
 
+# Echo current working directory
+echo "Current working directory before changing: $(pwd)"
+
 # Determine the working directory and device based on the environment
 if [[ $IS_COLAB -eq 0 ]]; then
   OS=$(uname)
@@ -36,8 +39,15 @@ else
   DEVICE="cuda"
 fi
 
+# Echo the determined working directory and device
+echo "Determined WORK_DIR: $WORK_DIR"
+echo "Determined DEVICE: $DEVICE"
+
 # Change to the working directory
 cd "$WORK_DIR" || {
   echo "Error: Failed to change to directory $WORK_DIR" >&2
   exit 1
 }
+
+# Echo current working directory after changing
+echo "Current working directory after changing: $(pwd)"
