@@ -141,7 +141,6 @@ def fpk_install(directory_name: str):
             if process.returncode != 0:
                 raise subprocess.CalledProcessError(process.returncode, process.args)
 
-            fpk_log_session(f"Installed {directory_name}")
             fpk_cache_last_flatpack(directory_name)
 
             print(f"🎉 All done!")
@@ -212,13 +211,6 @@ def fpk_log_to_api(message: str, model_name: str = "YOUR_MODEL_NAME"):
 
     except requests.RequestException as e:
         print(f"Failed to send request: {e}")
-
-
-def fpk_log_session(message: str):
-    session_file_path = os.path.join(os.getcwd(), 'fpk_session.log')
-    with open(session_file_path, 'a') as f:
-        formatted_date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        f.write(f"{formatted_date}: {message.strip()}\n")
 
 
 def fpk_train(directory_name: str = None):
