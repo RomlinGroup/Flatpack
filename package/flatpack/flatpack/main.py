@@ -253,6 +253,7 @@ def fpk_train(directory_name: str = None):
         os.close(slave)
         last_printed = None
         last_user_input = None
+
         buffered_output = ""
 
         try:
@@ -290,6 +291,11 @@ def fpk_train(directory_name: str = None):
 
         except OSError:
             pass
+
+        # After the loop, process any remaining data in buffered_output
+        if buffered_output:
+            print(f"(*) {buffered_output}")
+            fpk_log_to_api(buffered_output, last_installed_flatpack)
 
         _, exit_status = os.waitpid(pid, 0)
         if exit_status != 0:
