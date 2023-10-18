@@ -164,8 +164,11 @@ regulations if needed._
 | [open_llama_7b](https://huggingface.co/openlm-research/open_llama_7b)                   | Model   | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)                                         |
 | [open_llama_13b](https://huggingface.co/openlm-research/open_llama_13b)                 | Model   | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)                                         |
 | [pythia-12b](https://huggingface.co/EleutherAI/pythia-12b)                              | Model   | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)                                         |
+| [replit-code-v1-3b](https://huggingface.co/replit/replit-code-v1-3b)                    | Model   | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)                                         |
+| [replit-code-v1_5-3b](https://huggingface.co/replit/replit-code-v1_5-3b)                | Model   | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)                                         |
 | [stablelm-base-alpha-3b](https://huggingface.co/stabilityai/stablelm-base-alpha-3b)     | Model   | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)                                           |
 | [stablelm-base-alpha-7b](https://huggingface.co/stabilityai/stablelm-base-alpha-7b)     | Model   | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)                                           |
+| [zephyr-7b-alpha](https://huggingface.co/HuggingFaceH4/zephyr-7b-alpha)                 | Model   | [MIT License](https://opensource.org/license/mit/)                                                        |
 
 ## License
 
