@@ -155,6 +155,8 @@ regulations if needed._
 | [Llama-2-13b-chat-hf](https://huggingface.co/meta-llama/Llama-2-13b-chat-hf)            | Model   | [LLAMA 2 LICENSE](https://ai.meta.com/resources/models-and-libraries/llama-downloads/)                    |
 | [Llama-2-70b-hf](https://huggingface.co/meta-llama/Llama-2-70b-hf)                      | Model   | [LLAMA 2 LICENSE](https://ai.meta.com/resources/models-and-libraries/llama-downloads/)                    |
 | [Llama-2-70b-chat-hf](https://huggingface.co/meta-llama/Llama-2-70b-chat-hf)            | Model   | [LLAMA 2 LICENSE](https://ai.meta.com/resources/models-and-libraries/llama-downloads/)                    |
+| [Mistral-7B-v0.1](https://huggingface.co/mistralai/Mistral-7B-v0.1)                     | Model   | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)                                         |
+| [Mistral-7B-Instruct-v0.1](https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.1)   | Model   | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)                                         |
 | [mpt-7b](https://huggingface.co/mosaicml/mpt-7b)                                        | Model   | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)                                         |
 | [mpt-7b-instruct](https://huggingface.co/mosaicml/mpt-7b-instruct)                      | Model   | [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/)                                           |
 | [mpt-7b-storywriter](https://huggingface.co/mosaicml/mpt-7b-storywriter)                | Model   | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)                                         |
