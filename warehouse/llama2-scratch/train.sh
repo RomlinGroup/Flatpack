@@ -16,6 +16,7 @@ source "$SCRIPT_DIR/device.sh" || {
 }
 
 # === BEGIN USER CUSTOMIZATION ===
+sed -i 's/dtype = "bfloat16"  # float32|bfloat16|float16/dtype = "float16"  # float32|bfloat16|float16/' train.py
 python tinystories.py download
 python tinystories.py pretokenize
 python train.py
