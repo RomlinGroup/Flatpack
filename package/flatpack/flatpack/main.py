@@ -271,7 +271,7 @@ def fpk_train(directory_name: str = None):
                             continue
 
                         print(f"(*) {line}")
-                        fpk_log_to_api(line, last_installed_flatpack)
+                        fpk_log_to_api(line, API_KEY, session, last_installed_flatpack)
                         last_printed = line
 
                 if 0 in rlist:
@@ -335,7 +335,7 @@ def main():
         print(fpk_list_processes())
     elif command == "train":
         directory_name = args.input
-        fpk_train(directory_name)
+        fpk_train(directory_name, session)
     elif command == "version":
         print("[VERSION]")
     elif command == "set-api-key":
