@@ -42,7 +42,7 @@ API_KEY = fpk_get_api_key()
 
 async def fpk_log_to_api(message: str, model_name: str = "YOUR_MODEL_NAME"):
     if not API_KEY:
-        print("❌ API key not set.")
+        # print("❌ API key not set.")
         return
 
     url = "https://fpk.ai/api/index.php"
