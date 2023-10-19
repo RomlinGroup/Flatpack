@@ -2,6 +2,7 @@ import argparse
 import asyncio
 import datetime
 import httpx
+import logging
 import os
 import pty
 import requests
@@ -39,10 +40,12 @@ session = httpx.AsyncClient()
 # Fetch and store the API key once if it doesn't change frequently
 API_KEY = fpk_get_api_key()
 
+logger = logging.getLogger(__name__)
 
-async def fpk_log_to_api(message: str, model_name: str = "YOUR_MODEL_NAME"):
-    if not API_KEY:
-        # print("❌ API key not set.")
+
+async def fpk_log_to_api(message: str, api_key: str, session: httpx.AsyncClient, model_name: str = "YOUR_MODEL_NAME"):
+    if not api_key:
+        logger.warning("API key not set.")
         return
 
     url = "https://fpk.ai/api/index.php"
@@ -51,7 +54,7 @@ async def fpk_log_to_api(message: str, model_name: str = "YOUR_MODEL_NAME"):
     }
     params = {
         "endpoint": "log-message",
-        "api_key": API_KEY
+        "api_key": api_key
     }
     data = {
         "model_name": model_name,
@@ -59,9 +62,9 @@ async def fpk_log_to_api(message: str, model_name: str = "YOUR_MODEL_NAME"):
     }
 
     try:
-        response = await session.post(url, params=params, json=data, headers=headers, timeout=10)
+        await session.post(url, params=params, json=data, headers=headers, timeout=10)
     except httpx.RequestError as e:
-        print(f"Failed to send request: {e}")
+        logger.error(f"Failed to send request: {e}")
 
 
 def fpk_cache_last_flatpack(directory_name: str):
