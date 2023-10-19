@@ -216,7 +216,7 @@ def fpk_list_processes():
     print("Placeholder for fpk_list_processes")
 
 
-def fpk_train(directory_name: str = None):
+def fpk_train(directory_name: str = None, session: httpx.AsyncClient = None):
     cache_file_path = os.path.join(os.getcwd(), 'last_flatpack.cache')
 
     if directory_name:
