@@ -5,7 +5,7 @@ with open("README.md", "r") as f:
 
 setup(
     name="flatpack",
-    version="2.3.6",
+    version="2.3.7",
     packages=find_packages(),
     install_requires=[
         "asyncio",
