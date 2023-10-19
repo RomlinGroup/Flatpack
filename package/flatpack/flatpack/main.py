@@ -1,5 +1,7 @@
 import argparse
+import asyncio
 import datetime
+import httpx
 import os
 import pty
 import requests
@@ -11,8 +13,55 @@ import termios
 import threading
 import time
 import toml
-from .parsers import parse_toml_to_pyenv_script
 from .instructions import build
+from .parsers import parse_toml_to_pyenv_script
+
+CONFIG_FILE_PATH = os.path.join(os.path.expanduser("~"), ".fpk_config.toml")
+
+
+def fpk_set_api_key(api_key: str):
+    config = {"api_key": api_key}
+    with open(CONFIG_FILE_PATH, "w") as config_file:
+        toml.dump(config, config_file)
+
+
+def fpk_get_api_key() -> str:
+    if not os.path.exists(CONFIG_FILE_PATH):
+        return None
+    with open(CONFIG_FILE_PATH, "r") as config_file:
+        config = toml.load(config_file)
+        return config.get("api_key")
+
+
+# Global session for connection pooling
+session = httpx.AsyncClient()
+
+# Fetch and store the API key once if it doesn't change frequently
+API_KEY = fpk_get_api_key()
+
+
+async def fpk_log_to_api(message: str, model_name: str = "YOUR_MODEL_NAME"):
+    if not API_KEY:
+        print("❌ API key not set.")
+        return
+
+    url = "https://fpk.ai/api/index.php"
+    headers = {
+        "Content-Type": "application/json"
+    }
+    params = {
+        "endpoint": "log-message",
+        "api_key": API_KEY
+    }
+    data = {
+        "model_name": model_name,
+        "log_message": message
+    }
+
+    try:
+        response = await session.post(url, params=params, json=data, headers=headers, timeout=10)
+    except httpx.RequestError as e:
+        print(f"Failed to send request: {e}")
 
 
 def fpk_cache_last_flatpack(directory_name: str):
@@ -162,55 +211,6 @@ def fpk_list_directories() -> str:
 
 def fpk_list_processes():
     print("Placeholder for fpk_list_processes")
-
-
-CONFIG_FILE_PATH = os.path.join(os.path.expanduser("~"), ".fpk_config.toml")
-
-
-def fpk_set_api_key(api_key: str):
-    config = {"api_key": api_key}
-    with open(CONFIG_FILE_PATH, "w") as config_file:
-        toml.dump(config, config_file)
-
-
-def fpk_get_api_key() -> str:
-    if not os.path.exists(CONFIG_FILE_PATH):
-        return None
-    with open(CONFIG_FILE_PATH, "r") as config_file:
-        config = toml.load(config_file)
-        return config.get("api_key")
-
-
-def fpk_log_to_api(message: str, model_name: str = "YOUR_MODEL_NAME"):
-    api_key = fpk_get_api_key()
-    if not api_key:
-        # print("❌ API key not set.")
-        return
-
-    url = "https://fpk.ai/api/index.php"
-    headers = {
-        "Content-Type": "application/json"
-    }
-    params = {
-        "endpoint": "log-message",
-        "api_key": api_key
-    }
-    data = {
-        "model_name": model_name,
-        "log_message": message
-    }
-
-    try:
-        response = requests.post(url, params=params, json=data, headers=headers, timeout=10)
-
-        # if response.status_code == 200:
-        #    print("Message logged successfully!")
-        # else:
-        #    print(f"Error logging message. Status code: {response.status_code}")
-        #    print(f"Response content: {response.text}")
-
-    except requests.RequestException as e:
-        print(f"Failed to send request: {e}")
 
 
 def fpk_train(directory_name: str = None):
