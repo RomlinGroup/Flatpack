@@ -5,7 +5,7 @@ with open("README.md", "r") as f:
 
 setup(
     name="flatpack",
-    version="2.8.0",
+    version="3.0.0",
     packages=find_packages(),
     install_requires=[
         "httpx",
