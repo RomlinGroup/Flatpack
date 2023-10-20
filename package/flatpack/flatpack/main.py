@@ -171,19 +171,20 @@ def fpk_find_models(directory_path: str = None) -> List[str]:
     return model_files
 
 
-def fpk_get_api_key() -> str:
+def fpk_get_api_key() -> Optional[str]:
+    """Fetch the API key from the configuration file.
+
+    Returns:
+        Optional[str]: The API key if found, otherwise None.
+    """
     global API_KEY
     if API_KEY is None:
-        """Fetch the API key from the configuration file.
-
-        Returns:
-            str: The API key if found, otherwise None.
-        """
-    if not os.path.exists(CONFIG_FILE_PATH):
-        return None
-    with open(CONFIG_FILE_PATH, "r") as config_file:
-        config = toml.load(config_file)
-        return config.get("api_key")
+        if not os.path.exists(CONFIG_FILE_PATH):
+            return None
+        with open(CONFIG_FILE_PATH, "r") as config_file:
+            config = toml.load(config_file)
+            API_KEY = config.get("api_key")
+    return API_KEY
 
 
 def fpk_install(directory_name: str, session: httpx.Client):
@@ -253,18 +254,21 @@ def fpk_list_processes():
     print("Placeholder for fpk_list_processes")
 
 
-def fpk_log_to_api(message: str, api_key: Optional[str] = None, model_name: str = "YOUR_MODEL_NAME"):
+def fpk_log_to_api(message: str, session: httpx.Client, api_key: Optional[str] = None,
+                   model_name: str = "YOUR_MODEL_NAME"):
     """Log a message to the API.
 
     Args:
         message (str): The log message.
+        session (httpx.Client): HTTP client session for making requests.
         api_key (Optional[str]): The API key for authentication. Defaults to the global API_KEY.
         model_name (str): Name of the model associated with the log. Defaults to "YOUR_MODEL_NAME".
     """
     if not api_key:
         api_key = API_KEY
         if not api_key:
-            logger.warning("API key not set.")
+            # logger.warning("API key not set.")
+            print("❌ API key not set.")
             return
 
     url = "https://fpk.ai/api/index.php"
@@ -360,8 +364,7 @@ def fpk_train(directory_name: str = None, session: httpx.Client = None):
                         print(f"(*) {line}")
 
                         # TODO: Optimize this for Colab
-                        fpk_log_to_api(line, last_installed_flatpack)
-
+                        fpk_log_to_api(line, session, api_key=API_KEY, model_name=last_installed_flatpack)
                         log_queue.append((line, last_installed_flatpack))
 
                 if 0 in rlist:
@@ -399,6 +402,9 @@ def main():
 
     # Create an HTTP client session
     initialize_session()
+
+    # Fetch and set API key
+    fpk_get_api_key()
 
     if command == "callback":
         fpk_callback(args.input)
