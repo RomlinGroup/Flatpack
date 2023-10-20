@@ -1,21 +1,21 @@
 # flatpack.toml
 # WIP ({{current_date}})
 
-version = "{{version}}"
-base_image = "{{base_image}}"
+version = "0.0.1"
+base_image = "debian:stable-slim"
 
 [environment]
-model_name = "{{model_name}}"
+model_name = "edge-model"
 
 [[port]]
 external = 1337
 internal = 80
 
 [directories]
-checkpoints = "{{checkpoints_dir}}"
-data = "{{data_dir}}"
-models = "{{models_dir}}"
-scripts = "{{scripts_dir}}"
+checkpoints = "/home/content/checkpoints"
+data = "/home/content/data"
+models = "/home/content/models"
+scripts = "/home/content/scripts"
 
 [packages]
 
