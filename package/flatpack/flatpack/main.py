@@ -368,8 +368,9 @@ def fpk_train(directory_name: str = None, session: httpx.Client = None):
                     line_buffer.extend(output.splitlines())
 
                     # Process complete lines in the buffer
-                    while line_buffer:
-                        line = line_buffer.pop(0).strip()
+                    lines = '\n'.join(line_buffer).split('\n')
+                    for line in lines:
+                        line = line.strip()
                         if not line or line == last_user_input:
                             continue
 
@@ -378,6 +379,9 @@ def fpk_train(directory_name: str = None, session: httpx.Client = None):
                         # TODO: Optimize this for Colab
                         fpk_log_to_api(line, session, api_key=fpk_get_api_key(), model_name=last_installed_flatpack)
                         log_queue.append((line, last_installed_flatpack))
+
+                    # Clear the line_buffer
+                    line_buffer = []
 
                 if 0 in rlist:
                     user_input = sys.stdin.readline().strip()
