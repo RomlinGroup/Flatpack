@@ -354,7 +354,8 @@ def fpk_train(directory_name: str = None, session: httpx.Client = None):
         last_printed = None
         last_user_input = None
 
-        buffered_output = ""
+        # Initialize a list to store lines
+        line_buffer = []
 
         try:
             while True:
@@ -362,13 +363,13 @@ def fpk_train(directory_name: str = None, session: httpx.Client = None):
                 if master in rlist:
                     output = os.read(master, 4096).decode()
                     output = fpk_strip_ansi_escape_codes(output)  # Strip out ANSI escape codes
-                    buffered_output += output
-                    if '\n' in buffered_output:
-                        lines = buffered_output.splitlines()
-                        buffered_output = "" if buffered_output.endswith(('\n', '\r')) else lines.pop()
-                        for line in lines:
-                            line = line.strip()
 
+                    # Add the output to the buffer
+                    line_buffer.extend(output.splitlines())
+
+                    # Process complete lines in the buffer
+                    while line_buffer:
+                        line = line_buffer.pop(0).strip()
                         if not line or line == last_user_input:
                             continue
 
@@ -389,17 +390,23 @@ def fpk_train(directory_name: str = None, session: httpx.Client = None):
         except OSError:
             pass
 
-        # After the loop, process any remaining data in buffered_output
-        if buffered_output:
-            print(f"(*) {buffered_output}")
-            log_queue.append((buffered_output, last_installed_flatpack))
+        # After the loop, process any remaining data in line_buffer
+        for line in line_buffer:
+            line = line.strip()
+            if not line or line == last_user_input:
+                continue
+
+            print(f"(*) {line}")
+
+            # TODO: Optimize this for Colab
+            fpk_log_to_api(line, session, api_key=fpk_get_api_key(), model_name=last_installed_flatpack)
+            log_queue.append((line, last_installed_flatpack))
 
         _, exit_status = os.waitpid(pid, 0)
         if exit_status != 0:
             print("❌ Failed to execute the training script.")
         else:
             print("🎉 All done!")
-        buffered_output = ""  # Clear the buffered_output to release memory
 
 
 def main():
