@@ -1,0 +1,52 @@
+# flatpack.toml
+# WIP ({{current_date}})
+
+version = "{{version}}"
+base_image = "{{base_image}}"
+
+[environment]
+model_name = "{{model_name}}"
+
+[[port]]
+external = {{external_port}}
+internal = {{internal_port}}
+
+[directories]
+checkpoints = "{{checkpoints_dir}}"
+data = "{{data_dir}}"
+models = "{{models_dir}}"
+scripts = "{{scripts_dir}}"
+
+[packages]
+
+[packages.unix]
+gcc = "{{gcc_version}}"
+git = "{{git_version}}"
+python3-pip = "{{pip_version}}"
+wget = "{{wget_version}}"
+
+[packages.python]
+datasets = "{{datasets_version}}"
+numpy = "{{numpy_version}}"
+tiktoken = "{{tiktoken_version}}"
+transformers = "{{transformers_version}}"
+torch = "{{torch_version}}"
+tqdm = "{{tqdm_version}}"
+wandb = "{{wandb_version}}"
+
+[[git]]
+from_source = "{{git_source_url}}"
+to_destination = "{{git_destination_dir}}"
+branch = "{{branch_name}}"
+
+[[file]]
+from_source = "{{file_source_url}}"
+to_destination = "{{file_destination_path}}"
+
+[[run]]
+command = "{{run_command}}"
+args = "{{run_args}}"
+
+[[cmd]]
+command = "{{cmd_command}}"
+args = "{{cmd_args}}"
