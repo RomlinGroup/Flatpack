@@ -313,14 +313,17 @@ def fpk_set_api_key(api_key: str):
 def fpk_process_line_buffer(line_buffer, session, last_installed_flatpack):
     """Process lines in the buffer and log them."""
     api_key = fpk_get_api_key()
-    while line_buffer:
-        if not line_buffer:
-            break
-        line = line_buffer.pop(0).strip()
+
+    # Process each line without popping
+    for line in line_buffer:
+        line = line.strip()
         if line:
             print(f"(*) {line}")
             # fpk_log_to_api(line, session, api_key=api_key, model_name=last_installed_flatpack)
             log_queue.append((line, last_installed_flatpack))
+
+    # Clear the buffer once we're done processing
+    del line_buffer[:]
 
 
 def fpk_train(directory_name: str = None, session: httpx.Client = None):
