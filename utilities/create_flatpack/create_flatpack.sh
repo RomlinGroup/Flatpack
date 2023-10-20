@@ -8,11 +8,11 @@ if [ "$#" -ne 1 ]; then
   exit 1
 fi
 
-# Name of the new folder
-FLATPACK_NAME=$1
+# Name of the new folder (converted to lowercase and spaces replaced with hyphens)
+FLATPACK_NAME=$(echo $1 | tr '[:upper:]' '[:lower:]' | sed 's/ /-/g')
 
 # Navigate to the root directory of your project
-cd ../../..
+cd ../..
 
 # Check if the warehouse/template directory exists
 if [ ! -d "warehouse/template" ]; then
@@ -21,9 +21,9 @@ if [ ! -d "warehouse/template" ]; then
 fi
 
 # Create the new directory if it doesn't exist
-mkdir -p "$FLATPACK_NAME"
+mkdir -p "warehouse/$FLATPACK_NAME"
 
 # Copy the contents of the warehouse/template directory to the new directory
-cp -r warehouse/template/* "$FLATPACK_NAME/"
+cp -r warehouse/template/* "warehouse/$FLATPACK_NAME/"
 
-echo "Contents of warehouse/template copied to $FLATPACK_NAME."
+echo "Contents of warehouse/template copied to warehouse/$FLATPACK_NAME."
