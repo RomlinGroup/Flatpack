@@ -20,19 +20,19 @@ scripts = "{{scripts_dir}}"
 [packages]
 
 [packages.unix]
-gcc = "{{gcc_version}}"
-git = "{{git_version}}"
-python3-pip = "{{pip_version}}"
-wget = "{{wget_version}}"
+gcc = "*"
+git = "*"
+python3-pip = "*"
+wget = "*"
 
 [packages.python]
-datasets = "{{datasets_version}}"
-numpy = "{{numpy_version}}"
-tiktoken = "{{tiktoken_version}}"
-transformers = "{{transformers_version}}"
-torch = "{{torch_version}}"
-tqdm = "{{tqdm_version}}"
-wandb = "{{wandb_version}}"
+datasets = "*"
+numpy = "*"
+tiktoken = "*"
+transformers = "*"
+torch = "*"
+tqdm = "*"
+wandb = "*"
 
 [[git]]
 from_source = "{{git_source_url}}"
