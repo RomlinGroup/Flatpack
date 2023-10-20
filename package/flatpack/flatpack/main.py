@@ -88,23 +88,37 @@ https://fpk.ai/w/{}
     print(disclaimer_template.format(please_note=please_note_colored))
 
 
-async def fpk_fetch_flatpack_toml_from_dir(directory_name: str, session: httpx.AsyncClient) -> str:
+async def fetch_flatpack_toml_from_dir_async(directory_name):
     base_url = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse"
     toml_url = f"{base_url}/{directory_name}/flatpack.toml"
-    response = await session.get(toml_url)
+    async with httpx.AsyncClient() as client:
+        response = await client.get(toml_url)
     if response.status_code != 200:
         return None
     return response.text
 
 
-async def fpk_fetch_github_dirs(session: httpx.AsyncClient) -> List[str]:
+def fpk_fetch_flatpack_toml_from_dir(directory_name: str) -> str:
+    loop = asyncio.get_event_loop()
+    toml_content = loop.run_until_complete(fetch_flatpack_toml_from_dir_async(directory_name))
+    return toml_content
+
+
+async def fetch_github_dirs_async():
     url = "https://api.github.com/repos/romlingroup/flatpack-ai/contents/warehouse"
-    response = await session.get(url)
+    async with httpx.AsyncClient() as client:
+        response = await client.get(url)
     if response.status_code != 200:
         return ["❌ Error fetching data from GitHub"]
-    directories = [item['name'] for item in response.json if
+    directories = [item['name'] for item in response.json() if
                    item['type'] == 'dir' and item['name'].lower() != 'archive']
     return sorted(directories)
+
+
+def fpk_fetch_github_dirs() -> list:
+    loop = asyncio.get_event_loop()
+    directories = loop.run_until_complete(fetch_github_dirs_async())
+    return directories
 
 
 def fpk_find_models(directory_path: str = None) -> List[str]:
