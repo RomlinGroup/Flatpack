@@ -6,8 +6,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 echo -e "🚀 train.sh is running in: $SCRIPT_DIR\n"
 
 # === BEGIN USER CUSTOMIZATION ===
-export REPO_NAME=GPT2-Knowledge-Distillation
-export FLATPACK_NAME=gpt2-knowledge-distillation
+export REPO_NAME=edge-model
+export FLATPACK_NAME=edge-model
 # === END USER CUSTOMIZATION ===
 
 source "$SCRIPT_DIR/device.sh" || {
@@ -16,6 +16,5 @@ source "$SCRIPT_DIR/device.sh" || {
 }
 
 # === BEGIN USER CUSTOMIZATION ===
-python data/shakespeare/prepare.py
-bash run_adamw/train_student.sh
+echo "Hello, World!"
 # === END USER CUSTOMIZATION ===
