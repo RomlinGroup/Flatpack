@@ -10,6 +10,7 @@ import sys
 import toml
 from .instructions import build
 from .parsers import parse_toml_to_pyenv_script
+from pathlib import Path
 from typing import List, Optional
 
 # Constants
@@ -309,28 +310,35 @@ def fpk_set_api_key(api_key: str):
     logger.info("API key set successfully!")  # Using logger instead of print
 
 
-def fpk_train(directory_name: str = None, session: httpx.Client = None):
-    """Train a model using a training script from a specific or last installed flatpack.
+def fpk_process_line_buffer(line_buffer, session, last_installed_flatpack):
+    """Process lines in the buffer and log them."""
+    api_key = fpk_get_api_key()
+    while line_buffer:
+        line = line_buffer.pop(0).strip()
+        if line:
+            print(f"(*) {line}")
+            fpk_log_to_api(line, session, api_key=api_key, model_name=last_installed_flatpack)
+            log_queue.append((line, last_installed_flatpack))
 
-    Args:
-        directory_name (Optional[str]): Name of the flatpack directory. Defaults to the last installed flatpack.
-        session (httpx.Client): HTTP client session for making requests. Currently unused.
-    """
-    cache_file_path = os.path.join(os.getcwd(), 'last_flatpack.cache')
+
+def fpk_train(directory_name: str = None, session: httpx.Client = None):
+    """Train a model using a training script from a specific or last installed flatpack."""
+
+    cache_file_path = Path.cwd() / 'last_flatpack.cache'
 
     if directory_name:
         last_installed_flatpack = directory_name
         fpk_cache_last_flatpack(directory_name)
     else:
-        if not os.path.exists(cache_file_path):
+        if not cache_file_path.exists():
             print("❌ No cached flatpack found.")
             return
-        with open(cache_file_path, 'r') as f:
+        with cache_file_path.open('r') as f:
             last_installed_flatpack = f.read().strip()
 
-    training_script_path = os.path.join(last_installed_flatpack, 'train.sh')
+    training_script_path = Path(last_installed_flatpack) / 'train.sh'
 
-    if not os.path.exists(training_script_path):
+    if not training_script_path.exists():
         print(f"❌ Training script not found in {last_installed_flatpack}.")
         return
 
@@ -342,16 +350,11 @@ def fpk_train(directory_name: str = None, session: httpx.Client = None):
         os.dup2(slave, 0)
         os.dup2(slave, 1)
         os.dup2(slave, 2)
-        os.execvp("bash", ["bash", training_script_path])
+        os.execvp("bash", ["bash", str(training_script_path)])
     else:
         os.close(slave)
-        last_printed = None
-        last_user_input = None
-
-        # Initialize a list to store lines
         line_buffer = []
-
-        # Regular expression to match ANSI escape codes
+        output_buffer = ""  # This buffer accumulates output from the master
         ansi_escape = re.compile(r'\x1B\[[0-?]*[ -/]*[@-~]')
 
         try:
@@ -359,51 +362,26 @@ def fpk_train(directory_name: str = None, session: httpx.Client = None):
                 rlist, _, _ = select.select([master, 0], [], [])
                 if master in rlist:
                     output = os.read(master, 4096).decode()
-                    output = ansi_escape.sub('', output)  # Strip out ANSI escape codes
-
-                    # Add the output to the buffer
-                    line_buffer.extend(output.splitlines(True))  # Preserve line endings
-
-                    # Process complete lines in the buffer
-                    while len(line_buffer) > 1:
-                        line = line_buffer.pop(0).strip()
-                        if line:
-                            print(f"(*) {line}")
-
-                            # TODO: Optimize this for Colab
-                            fpk_log_to_api(line, session, api_key=fpk_get_api_key(), model_name=last_installed_flatpack)
-                            log_queue.append((line, last_installed_flatpack))
-
-                    # Check if the last line is complete (ends with a newline)
-                    if line_buffer and line_buffer[0].endswith('\n'):
-                        line = line_buffer.pop(0).strip()
-                        if line:
-                            print(f"(*) {line}")
-
-                            # TODO: Optimize this for Colab
-                            fpk_log_to_api(line, session, api_key=fpk_get_api_key(), model_name=last_installed_flatpack)
-                            log_queue.append((line, last_installed_flatpack))
+                    output = ansi_escape.sub('', output)
+                    output_buffer += output
+                    lines = output_buffer.splitlines(True)
+                    if not output_buffer.endswith('\n'):
+                        output_buffer = lines.pop()
+                    else:
+                        output_buffer = ""
+                    line_buffer.extend(lines)
+                    fpk_process_line_buffer(line_buffer, session, last_installed_flatpack)
 
                 if 0 in rlist:
                     user_input = sys.stdin.readline().strip()
-                    last_user_input = user_input
-
-                    print(fpk_colorize(f"(*) {last_user_input}", "yellow"))
+                    print(fpk_colorize(f"(*) {user_input}", "yellow"))
                     log_queue.append((user_input, last_installed_flatpack))
                     os.write(master, (user_input + '\n').encode())
 
-        except OSError:
-            pass
+        except Exception as e:
+            print(f"❌ Error occurred: {e}")
 
-        # After the loop, process any remaining data in line_buffer
-        for line in line_buffer:
-            line = line.strip()
-            if line:
-                print(f"(*) {line}")
-
-                # TODO: Optimize this for Colab
-                fpk_log_to_api(line, session, api_key=fpk_get_api_key(), model_name=last_installed_flatpack)
-                log_queue.append((line, last_installed_flatpack))
+        fpk_process_line_buffer(line_buffer, session, last_installed_flatpack)
 
         _, exit_status = os.waitpid(pid, 0)
         if exit_status != 0:
