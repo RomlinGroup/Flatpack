@@ -15,7 +15,7 @@ Ahoy, brave explorer!
 |:------------------------------------------------------------------------------------------------|:---------|:----|
 | [llama2-scratch](https://github.com/romlingroup/flatpack-ai/tree/main/warehouse/llama2-scratch) | Flatpack | No  |
 
-*We have relocated the early prototyping flatpacks to [/archive](legacy) for the time being to preserve our organisational sanity.*
+*We have relocated the early prototyping flatpacks to [/legacy](legacy) for the time being to preserve our organisational sanity.*
 
 ## Friendly notice ❤️
 
