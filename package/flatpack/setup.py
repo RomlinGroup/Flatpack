@@ -5,10 +5,11 @@ with open("README.md", "r") as f:
 
 setup(
     name="flatpack",
-    version="3.0.3.dev2",
+    version="3.0.3.dev3",
     packages=find_packages(),
     install_requires=[
         "httpx",
+        "numpy",
         "requests",
         "toml",
         "torch"
