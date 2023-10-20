@@ -314,6 +314,8 @@ def fpk_process_line_buffer(line_buffer, session, last_installed_flatpack):
     """Process lines in the buffer and log them."""
     api_key = fpk_get_api_key()
     while line_buffer:
+        if not line_buffer:
+            break
         line = line_buffer.pop(0).strip()
         if line:
             print(f"(*) {line}")
