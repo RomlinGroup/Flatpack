@@ -300,12 +300,6 @@ def fpk_log_to_api(message: str, session: httpx.Client, api_key: Optional[str] =
         logger.error(f"Failed to send request: {e}")
 
 
-def fpk_strip_ansi_escape_codes(s):
-    """Remove all the ANSI escape sequences from a string"""
-    ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
-    return ansi_escape.sub('', s)
-
-
 def fpk_set_api_key(api_key: str):
     """Set and save the API key to the configuration file."""
     global config  # Ensure we're updating the global variable
@@ -357,31 +351,38 @@ def fpk_train(directory_name: str = None, session: httpx.Client = None):
         # Initialize a list to store lines
         line_buffer = []
 
+        # Regular expression to match ANSI escape codes
+        ansi_escape = re.compile(r'\x1B\[[0-?]*[ -/]*[@-~]')
+
         try:
             while True:
                 rlist, _, _ = select.select([master, 0], [], [])
                 if master in rlist:
                     output = os.read(master, 4096).decode()
-                    output = fpk_strip_ansi_escape_codes(output)  # Strip out ANSI escape codes
+                    output = ansi_escape.sub('', output)  # Strip out ANSI escape codes
 
                     # Add the output to the buffer
-                    line_buffer.extend(output.splitlines())
+                    line_buffer.extend(output.splitlines(True))  # Preserve line endings
 
                     # Process complete lines in the buffer
-                    lines = '\n'.join(line_buffer).split('\n')
-                    for line in lines:
-                        line = line.strip()
-                        if not line or line == last_user_input:
-                            continue
+                    while len(line_buffer) > 1:
+                        line = line_buffer.pop(0).strip()
+                        if line:
+                            print(f"(*) {line}")
 
-                        print(f"(*) {line}")
+                            # TODO: Optimize this for Colab
+                            fpk_log_to_api(line, session, api_key=fpk_get_api_key(), model_name=last_installed_flatpack)
+                            log_queue.append((line, last_installed_flatpack))
 
-                        # TODO: Optimize this for Colab
-                        fpk_log_to_api(line, session, api_key=fpk_get_api_key(), model_name=last_installed_flatpack)
-                        log_queue.append((line, last_installed_flatpack))
+                    # Check if the last line is complete (ends with a newline)
+                    if line_buffer and line_buffer[0].endswith('\n'):
+                        line = line_buffer.pop(0).strip()
+                        if line:
+                            print(f"(*) {line}")
 
-                    # Clear the line_buffer
-                    line_buffer = []
+                            # TODO: Optimize this for Colab
+                            fpk_log_to_api(line, session, api_key=fpk_get_api_key(), model_name=last_installed_flatpack)
+                            log_queue.append((line, last_installed_flatpack))
 
                 if 0 in rlist:
                     user_input = sys.stdin.readline().strip()
@@ -397,14 +398,12 @@ def fpk_train(directory_name: str = None, session: httpx.Client = None):
         # After the loop, process any remaining data in line_buffer
         for line in line_buffer:
             line = line.strip()
-            if not line or line == last_user_input:
-                continue
+            if line:
+                print(f"(*) {line}")
 
-            print(f"(*) {line}")
-
-            # TODO: Optimize this for Colab
-            fpk_log_to_api(line, session, api_key=fpk_get_api_key(), model_name=last_installed_flatpack)
-            log_queue.append((line, last_installed_flatpack))
+                # TODO: Optimize this for Colab
+                fpk_log_to_api(line, session, api_key=fpk_get_api_key(), model_name=last_installed_flatpack)
+                log_queue.append((line, last_installed_flatpack))
 
         _, exit_status = os.waitpid(pid, 0)
         if exit_status != 0:
