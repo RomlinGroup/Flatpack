@@ -34,12 +34,8 @@ def fpk_get_api_key() -> str:
         return config.get("api_key")
 
 
-# Global session for connection pooling
-session = httpx.AsyncClient()
-
 # Fetch and store the API key once if it doesn't change frequently
 API_KEY = fpk_get_api_key()
-
 logger = logging.getLogger(__name__)
 
 
@@ -271,8 +267,11 @@ def fpk_train(directory_name: str = None, session: httpx.AsyncClient = None):
                             continue
 
                         print(f"(*) {line}")
-                        fpk_log_to_api(line, API_KEY, session, last_installed_flatpack)
-                        last_printed = line
+
+                        loop = asyncio.get_event_loop()
+                        loop.run_until_complete(fpk_log_to_api(line, API_KEY, session, last_installed_flatpack))
+
+                    last_printed = line
 
                 if 0 in rlist:
                     user_input = sys.stdin.readline().strip()
@@ -300,6 +299,8 @@ def fpk_train(directory_name: str = None, session: httpx.AsyncClient = None):
 
 
 def main():
+    session = httpx.AsyncClient()
+
     parser = argparse.ArgumentParser(description='flatpack.ai command line interface')
     parser.add_argument('command', help='Command to run')
     parser.add_argument('input', nargs='?', default=None, help='Input for the callback')
@@ -313,6 +314,8 @@ def main():
         print(fpk_find_models())
     elif command == "help":
         print("[HELP]")
+    elif command == "get-api-key":
+        print(fpk_get_api_key())
     elif command == "install":
         if len(sys.argv) < 3:
             print("❌ Please specify a flatpack for the install command.")
@@ -333,26 +336,21 @@ def main():
         print(fpk_list_directories())
     elif command == "ps":
         print(fpk_list_processes())
-    elif command == "train":
-        directory_name = args.input
-        fpk_train(directory_name, session)
-    elif command == "version":
-        print("[VERSION]")
     elif command == "set-api-key":
         if not args.input:
             print("❌ Please provide an API key to set.")
             return
         fpk_set_api_key(args.input)
         print("API key set successfully!")
-    elif command == "get-api-key":
-        print(fpk_get_api_key())
-    elif command == "log":
-        if not args.input:
-            print("❌ Please provide a message to log.")
-            return
-        fpk_log_to_api(args.input, args.model_name)
+    elif command == "train":
+        directory_name = args.input
+        fpk_train(directory_name, session)
+    elif command == "version":
+        print("[VERSION]")
     else:
         print(f"Unknown command: {command}")
+
+    session.close()
 
 
 if __name__ == "__main__":
