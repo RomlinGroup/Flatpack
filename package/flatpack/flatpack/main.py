@@ -7,19 +7,22 @@ import pty
 import select
 import subprocess
 import sys
-from typing import List
-import toml
 from .instructions import build
 from .parsers import parse_toml_to_pyenv_script
 
 CONFIG_FILE_PATH = os.path.join(os.path.expanduser("~"), ".fpk_config.toml")
-API_KEY = None
+API_KEY: Optional[str] = None
 logger = logging.getLogger(__name__)
 LOGGING_BATCH_SIZE = 10
 log_queue = asyncio.Queue()
 
 # Fetch and store the API key once if it doesn't change frequently
 API_KEY = fpk_get_api_key()
+
+
+async def initialize_session():
+    global session
+    session = httpx.AsyncClient()
 
 
 def fpk_cache_last_flatpack(directory_name: str):
@@ -88,37 +91,27 @@ https://fpk.ai/w/{}
     print(disclaimer_template.format(please_note=please_note_colored))
 
 
-async def fetch_flatpack_toml_from_dir_async(directory_name):
+async def fpk_fetch_flatpack_toml_from_dir(directory_name: str) -> Optional[str]:
     base_url = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse"
     toml_url = f"{base_url}/{directory_name}/flatpack.toml"
+
     async with httpx.AsyncClient() as client:
         response = await client.get(toml_url)
-    if response.status_code != 200:
-        return None
-    return response.text
+        if response.status_code != 200:
+            return None
+        return response.text
 
 
-def fpk_fetch_flatpack_toml_from_dir(directory_name: str) -> str:
-    loop = asyncio.get_event_loop()
-    toml_content = loop.run_until_complete(fetch_flatpack_toml_from_dir_async(directory_name))
-    return toml_content
-
-
-async def fetch_github_dirs_async():
+async def fpk_fetch_github_dirs() -> List[str]:
     url = "https://api.github.com/repos/romlingroup/flatpack-ai/contents/warehouse"
+
     async with httpx.AsyncClient() as client:
         response = await client.get(url)
-    if response.status_code != 200:
-        return ["❌ Error fetching data from GitHub"]
-    directories = [item['name'] for item in response.json() if
-                   item['type'] == 'dir' and item['name'].lower() != 'archive']
-    return sorted(directories)
-
-
-def fpk_fetch_github_dirs() -> list:
-    loop = asyncio.get_event_loop()
-    directories = loop.run_until_complete(fetch_github_dirs_async())
-    return directories
+        if response.status_code != 200:
+            return ["❌ Error fetching data from GitHub"]
+        directories = [item['name'] for item in response.json() if
+                       item['type'] == 'dir' and item['name'].lower() != 'archive']
+        return sorted(directories)
 
 
 def fpk_find_models(directory_path: str = None) -> List[str]:
@@ -357,7 +350,7 @@ def main():
     else:
         print(f"Unknown command: {command}")
 
-    session.close()
+    session.aclose()
 
 
 async def logging_task(session, api_key):
@@ -374,4 +367,6 @@ async def logging_task(session, api_key):
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(initialize_session())
+    main()
