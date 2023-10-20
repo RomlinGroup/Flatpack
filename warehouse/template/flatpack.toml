@@ -8,8 +8,8 @@ base_image = "{{base_image}}"
 model_name = "{{model_name}}"
 
 [[port]]
-external = {{external_port}}
-internal = {{internal_port}}
+external = 1337
+internal = 80
 
 [directories]
 checkpoints = "{{checkpoints_dir}}"
