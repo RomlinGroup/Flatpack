@@ -13,18 +13,15 @@ from .parsers import parse_toml_to_pyenv_script
 from pathlib import Path
 from typing import List, Optional
 
-# Constants
 CONFIG_FILE_PATH = os.path.join(os.path.expanduser("~"), ".fpk_config.toml")
 LOGGING_BATCH_SIZE = 10
 GITHUB_REPO_URL = "https://api.github.com/repos/romlingroup/flatpack-ai"
 BASE_URL = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse"
 LOGGING_ENDPOINT = "https://fpk.ai/api/index.php"
 
-# Globals
 logger = logging.getLogger(__name__)
 log_queue = []
 
-# Consider moving this to a separate configuration module
 config = {
     "api_key": None
 }
@@ -303,11 +300,11 @@ def fpk_log_to_api(message: str, session: httpx.Client, api_key: Optional[str] =
 
 def fpk_set_api_key(api_key: str):
     """Set and save the API key to the configuration file."""
-    global config  # Ensure we're updating the global variable
+    global config
     config["api_key"] = api_key
     with open(CONFIG_FILE_PATH, "w") as config_file:
         toml.dump(config, config_file)
-    logger.info("API key set successfully!")  # Using logger instead of print
+    logger.info("API key set successfully!")
 
 
 from collections import deque
@@ -319,15 +316,16 @@ def fpk_process_line_buffer(line_buffer, session, last_installed_flatpack):
     """Process lines in the buffer and log them."""
     api_key = fpk_get_api_key()
 
-    # Process each line without popping
     while line_buffer:
         line = line_buffer.popleft().strip()
         if line:
             print(f"(*) {line}")
-            # fpk_log_to_api(line, session, api_key=api_key, model_name=last_installed_flatpack)
+
+            if api_key:
+                fpk_log_to_api(line, session, api_key=api_key, model_name=last_installed_flatpack)
+
             log_queue.append((line, last_installed_flatpack))
 
-    # Clear the buffer once we're done processing
     line_buffer.clear()
 
 
@@ -363,7 +361,7 @@ def fpk_train(directory_name: str = None, session: httpx.Client = None):
         os.execvp("bash", ["bash", str(training_script_path)])
     else:
         os.close(slave)
-        output_buffer = ""  # This buffer accumulates output from the master
+        output_buffer = ""
         ansi_escape = re.compile(r'\x1B\[[0-?]*[ -/]*[@-~]')
 
         try:
@@ -409,8 +407,6 @@ def main():
 
         args = parser.parse_args()
         command = args.command
-
-        # Fetch and set API key
         fpk_get_api_key()
 
         if command == "callback":
