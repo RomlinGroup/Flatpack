@@ -5,12 +5,11 @@ with open("README.md", "r") as f:
 
 setup(
     name="flatpack",
-    version="2.4.0",
+    version="2.4.1",
     packages=find_packages(),
     install_requires=[
         "asyncio",
         "httpx",
-        "requests",
         "toml",
         "torch"
     ],

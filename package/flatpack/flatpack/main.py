@@ -1,66 +1,25 @@
 import argparse
 import asyncio
-import datetime
 import httpx
 import logging
 import os
 import pty
-import requests
 import select
 import subprocess
 import sys
-import tempfile
-import termios
-import threading
-import time
+from typing import List
 import toml
 from .instructions import build
 from .parsers import parse_toml_to_pyenv_script
 
 CONFIG_FILE_PATH = os.path.join(os.path.expanduser("~"), ".fpk_config.toml")
-
-
-def fpk_set_api_key(api_key: str):
-    config = {"api_key": api_key}
-    with open(CONFIG_FILE_PATH, "w") as config_file:
-        toml.dump(config, config_file)
-
-
-def fpk_get_api_key() -> str:
-    if not os.path.exists(CONFIG_FILE_PATH):
-        return None
-    with open(CONFIG_FILE_PATH, "r") as config_file:
-        config = toml.load(config_file)
-        return config.get("api_key")
-
+API_KEY = None
+logger = logging.getLogger(__name__)
+LOGGING_BATCH_SIZE = 10
+log_queue = asyncio.Queue()
 
 # Fetch and store the API key once if it doesn't change frequently
 API_KEY = fpk_get_api_key()
-logger = logging.getLogger(__name__)
-
-
-async def fpk_log_to_api(message: str, api_key: str, session: httpx.AsyncClient, model_name: str = "YOUR_MODEL_NAME"):
-    if not api_key:
-        logger.warning("API key not set.")
-        return
-
-    url = "https://fpk.ai/api/index.php"
-    headers = {
-        "Content-Type": "application/json"
-    }
-    params = {
-        "endpoint": "log-message",
-        "api_key": api_key
-    }
-    data = {
-        "model_name": model_name,
-        "log_message": message
-    }
-
-    try:
-        await session.post(url, params=params, json=data, headers=headers, timeout=10)
-    except httpx.RequestError as e:
-        logger.error(f"Failed to send request: {e}")
 
 
 def fpk_cache_last_flatpack(directory_name: str):
@@ -129,26 +88,26 @@ https://fpk.ai/w/{}
     print(disclaimer_template.format(please_note=please_note_colored))
 
 
-def fpk_fetch_flatpack_toml_from_dir(directory_name: str) -> str:
+async def fpk_fetch_flatpack_toml_from_dir(directory_name: str, session: httpx.AsyncClient) -> str:
     base_url = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse"
     toml_url = f"{base_url}/{directory_name}/flatpack.toml"
-    response = requests.get(toml_url)
+    response = await session.get(toml_url)
     if response.status_code != 200:
         return None
     return response.text
 
 
-def fpk_fetch_github_dirs() -> list:
+async def fpk_fetch_github_dirs(session: httpx.AsyncClient) -> List[str]:
     url = "https://api.github.com/repos/romlingroup/flatpack-ai/contents/warehouse"
-    response = requests.get(url)
+    response = await session.get(url)
     if response.status_code != 200:
         return ["❌ Error fetching data from GitHub"]
-    directories = [item['name'] for item in response.json() if
+    directories = [item['name'] for item in response.json if
                    item['type'] == 'dir' and item['name'].lower() != 'archive']
     return sorted(directories)
 
 
-def fpk_find_models(directory_path: str = None) -> list:
+def fpk_find_models(directory_path: str = None) -> List[str]:
     if directory_path is None:
         directory_path = os.getcwd()
     model_file_formats = ['.h5', '.json', '.onnx', '.pb', '.pt']
@@ -161,16 +120,23 @@ def fpk_find_models(directory_path: str = None) -> list:
     return model_files
 
 
-def fpk_install(directory_name: str):
-    existing_dirs = fpk_fetch_github_dirs()
+def fpk_get_api_key() -> str:
+    if not os.path.exists(CONFIG_FILE_PATH):
+        return None
+    with open(CONFIG_FILE_PATH, "r") as config_file:
+        config = toml.load(config_file)
+        return config.get("api_key")
+
+
+def fpk_install(directory_name: str, session: httpx.AsyncClient):
+    existing_dirs = asyncio.run(fpk_fetch_github_dirs(session))
     if directory_name not in existing_dirs:
         print(f"❌ Error: The directory '{directory_name}' does not exist.")
         return
 
-    toml_content = fpk_fetch_flatpack_toml_from_dir(directory_name)
+    toml_content = asyncio.run(fpk_fetch_flatpack_toml_from_dir(directory_name, session))
 
     if toml_content:
-
         with open('temp_flatpack.toml', 'w') as f:
             f.write(toml_content)
 
@@ -203,13 +169,44 @@ def fpk_install(directory_name: str):
         print(f"❌ No flatpack.toml found in {directory_name}.\n")
 
 
-def fpk_list_directories() -> str:
-    dirs = fpk_fetch_github_dirs()
+def fpk_list_directories(session: httpx.AsyncClient) -> str:
+    dirs = asyncio.run(fpk_fetch_github_dirs(session))
     return "\n".join(dirs)
 
 
 def fpk_list_processes():
     print("Placeholder for fpk_list_processes")
+
+
+def fpk_log_to_api(message: str, model_name: str = "YOUR_MODEL_NAME"):
+    if not API_KEY:
+        logger.warning("API key not set.")
+        return
+
+    url = "https://fpk.ai/api/index.php"
+    headers = {
+        "Content-Type": "application/json"
+    }
+    params = {
+        "endpoint": "log-message",
+        "api_key": API_KEY
+    }
+    data = {
+        "model_name": model_name,
+        "log_message": message
+    }
+
+    async with httpx.AsyncClient() as client:
+        try:
+            await client.post(url, params=params, json=data, headers=headers, timeout=10)
+        except httpx.RequestError as e:
+            logger.error(f"Failed to send request: {e}")
+
+
+def fpk_set_api_key(api_key: str):
+    config = {"api_key": api_key}
+    with open(CONFIG_FILE_PATH, "w") as config_file:
+        toml.dump(config, config_file)
 
 
 def fpk_train(directory_name: str = None, session: httpx.AsyncClient = None):
@@ -267,20 +264,14 @@ def fpk_train(directory_name: str = None, session: httpx.AsyncClient = None):
                             continue
 
                         print(f"(*) {line}")
-
-                        loop = asyncio.get_event_loop()
-                        loop.run_until_complete(fpk_log_to_api(line, API_KEY, session, last_installed_flatpack))
-
-                    last_printed = line
+                        log_queue.put_nowait((line, last_installed_flatpack))
 
                 if 0 in rlist:
                     user_input = sys.stdin.readline().strip()
                     last_user_input = user_input
 
                     print(fpk_colorize(f"(*) {last_user_input}", "yellow"))
-                    record_user_input = last_user_input
-                    fpk_log_to_api(record_user_input, last_installed_flatpack)
-
+                    log_queue.put_nowait((user_input, last_installed_flatpack))
                     os.write(master, (user_input + '\n').encode())
 
         except OSError:
@@ -289,17 +280,18 @@ def fpk_train(directory_name: str = None, session: httpx.AsyncClient = None):
         # After the loop, process any remaining data in buffered_output
         if buffered_output:
             print(f"(*) {buffered_output}")
-            fpk_log_to_api(buffered_output, last_installed_flatpack)
+            log_queue.put_nowait((buffered_output, last_installed_flatpack))
 
         _, exit_status = os.waitpid(pid, 0)
         if exit_status != 0:
             print("❌ Failed to execute the training script.")
         else:
             print("🎉 All done!")
+        buffered_output = ""  # Clear the buffered_output to release memory
 
 
-def main():
-    session = httpx.AsyncClient()
+async def main():
+    session = httpx.Client()
 
     parser = argparse.ArgumentParser(description='flatpack.ai command line interface')
     parser.add_argument('command', help='Command to run')
@@ -353,5 +345,18 @@ def main():
     session.close()
 
 
+async def logging_task(session, api_key):
+    batch = []
+    while True:
+        message, model_name = await log_queue.get()
+        batch.append((message, model_name))
+
+        if len(batch) >= LOGGING_BATCH_SIZE or log_queue.empty():
+            # Send this batch to the server
+            for msg, model in batch:
+                await fpk_log_to_api(msg, api_key, session, model)
+            batch.clear()
+
+
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
