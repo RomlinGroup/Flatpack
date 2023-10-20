@@ -290,9 +290,7 @@ def fpk_train(directory_name: str = None, session: httpx.AsyncClient = None):
         buffered_output = ""  # Clear the buffered_output to release memory
 
 
-async def main():
-    session = httpx.Client()
-
+def main():
     parser = argparse.ArgumentParser(description='flatpack.ai command line interface')
     parser.add_argument('command', help='Command to run')
     parser.add_argument('input', nargs='?', default=None, help='Input for the callback')
@@ -300,6 +298,9 @@ async def main():
 
     args = parser.parse_args()
     command = args.command
+
+    session = httpx.AsyncClient()
+
     if command == "callback":
         fpk_callback(args.input)
     elif command == "find":
