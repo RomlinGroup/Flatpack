@@ -358,6 +358,10 @@ def fpk_train(directory_name: str = None, session: httpx.Client = None):
                             continue
 
                         print(f"(*) {line}")
+
+                        # TODO: Optimize this for Colab
+                        fpk_log_to_api(line, last_installed_flatpack)
+
                         log_queue.append((line, last_installed_flatpack))
 
                 if 0 in rlist:
