@@ -310,20 +310,25 @@ def fpk_set_api_key(api_key: str):
     logger.info("API key set successfully!")  # Using logger instead of print
 
 
+from collections import deque
+
+line_buffer = deque()
+
+
 def fpk_process_line_buffer(line_buffer, session, last_installed_flatpack):
     """Process lines in the buffer and log them."""
     api_key = fpk_get_api_key()
 
     # Process each line without popping
-    for line in line_buffer:
-        line = line.strip()
+    while line_buffer:
+        line = line_buffer.popleft().strip()
         if line:
             print(f"(*) {line}")
             # fpk_log_to_api(line, session, api_key=api_key, model_name=last_installed_flatpack)
             log_queue.append((line, last_installed_flatpack))
 
     # Clear the buffer once we're done processing
-    del line_buffer[:]
+    line_buffer.clear()
 
 
 def fpk_train(directory_name: str = None, session: httpx.Client = None):
@@ -358,7 +363,6 @@ def fpk_train(directory_name: str = None, session: httpx.Client = None):
         os.execvp("bash", ["bash", str(training_script_path)])
     else:
         os.close(slave)
-        line_buffer = []
         output_buffer = ""  # This buffer accumulates output from the master
         ansi_escape = re.compile(r'\x1B\[[0-?]*[ -/]*[@-~]')
 
@@ -369,7 +373,7 @@ def fpk_train(directory_name: str = None, session: httpx.Client = None):
                     output = os.read(master, 4096).decode()
                     output = ansi_escape.sub('', output)
                     output_buffer += output
-                    lines = output_buffer.splitlines(True)
+                    lines = deque(output_buffer.splitlines(True))
                     if not output_buffer.endswith('\n'):
                         output_buffer = lines.pop()
                     else:
