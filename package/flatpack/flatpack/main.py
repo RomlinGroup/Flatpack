@@ -317,7 +317,7 @@ def fpk_process_line_buffer(line_buffer, session, last_installed_flatpack):
         line = line_buffer.pop(0).strip()
         if line:
             print(f"(*) {line}")
-            fpk_log_to_api(line, session, api_key=api_key, model_name=last_installed_flatpack)
+            # fpk_log_to_api(line, session, api_key=api_key, model_name=last_installed_flatpack)
             log_queue.append((line, last_installed_flatpack))
 
 
