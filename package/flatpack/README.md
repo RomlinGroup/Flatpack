@@ -1,7 +1,6 @@
 # flatpack.ai
 
-> :warning: **NOTE:** flatpack.ai is currently experimental. Please refrain from using it in production environments at
-> this time.
+**NOTE:** flatpack.ai is currently experimental. Please refrain from using it in production environments.
 
 (OPEN SOURCE) flatpack.ai will democratize AI by providing a modular and open platform for anyone to train their AI models from scratch with cutting-edge technology accessible to all. What flatpacks did for the furniture industry, we will do for the AI industry.
 
