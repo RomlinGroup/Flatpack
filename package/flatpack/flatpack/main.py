@@ -156,7 +156,7 @@ def fpk_fetch_github_dirs(session: httpx.Client) -> List[str]:
     if response.status_code != 200:
         return ["❌ Error fetching data from GitHub"]
     directories = [item['name'] for item in response.json() if
-                   item['type'] == 'dir' and item['name'].lower() != 'legacy']
+                   item['type'] == 'dir' and item['name'].lower() != 'legacy' and item['name'].lower() != 'template']
     return sorted(directories)
 
 
