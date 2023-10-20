@@ -374,7 +374,7 @@ def fpk_train(directory_name: str = None, session: httpx.Client = None):
                     output = ansi_escape.sub('', output)
                     output_buffer += output
                     lines = deque(output_buffer.splitlines(True))
-                    if not output_buffer.endswith('\n'):
+                    if not output_buffer.endswith('\n') and lines:
                         output_buffer = lines.pop()
                     else:
                         output_buffer = ""
