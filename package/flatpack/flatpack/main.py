@@ -3,6 +3,7 @@ import httpx
 import logging
 import os
 import pty
+import re
 import select
 import subprocess
 import sys
@@ -11,16 +12,30 @@ from .instructions import build
 from .parsers import parse_toml_to_pyenv_script
 from typing import List, Optional
 
-API_KEY: Optional[str] = None
+# Constants
 CONFIG_FILE_PATH = os.path.join(os.path.expanduser("~"), ".fpk_config.toml")
 LOGGING_BATCH_SIZE = 10
+GITHUB_REPO_URL = "https://api.github.com/repos/romlingroup/flatpack-ai"
+BASE_URL = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse"
+LOGGING_ENDPOINT = "https://fpk.ai/api/index.php"
+
+# Globals
 logger = logging.getLogger(__name__)
 log_queue = []
 
+# Consider moving this to a separate configuration module
+config = {
+    "api_key": None
+}
 
-def initialize_session():
-    global session
-    session = httpx.Client()
+
+class SessionManager:
+    def __enter__(self):
+        self.session = httpx.Client()
+        return self.session
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.session.close()
 
 
 def fpk_cache_last_flatpack(directory_name: str):
@@ -113,18 +128,17 @@ https://fpk.ai/w/{}
     print(disclaimer_template.format(please_note=please_note_colored))
 
 
-def fpk_fetch_flatpack_toml_from_dir(directory_name: str) -> Optional[str]:
+def fpk_fetch_flatpack_toml_from_dir(directory_name: str, session: httpx.Client) -> Optional[str]:
     """Fetch the flatpack TOML configuration from a specific directory.
 
     Args:
         directory_name (str): Name of the flatpack directory.
+        session (httpx.Client): HTTP client session for making requests.
 
     Returns:
         Optional[str]: The TOML content if found, otherwise None.
     """
-    base_url = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse"
-    toml_url = f"{base_url}/{directory_name}/flatpack.toml"
-
+    toml_url = f"{BASE_URL}/{directory_name}/flatpack.toml"
     response = session.get(toml_url)
     if response.status_code != 200:
         return None
@@ -140,9 +154,7 @@ def fpk_fetch_github_dirs(session: httpx.Client) -> List[str]:
     Returns:
         List[str]: List of directory names.
     """
-    url = "https://api.github.com/repos/romlingroup/flatpack-ai/contents/warehouse"
-
-    response = session.get(url)
+    response = session.get(GITHUB_REPO_URL + "/contents/warehouse")
     if response.status_code != 200:
         return ["❌ Error fetching data from GitHub"]
     directories = [item['name'] for item in response.json() if
@@ -177,14 +189,13 @@ def fpk_get_api_key() -> Optional[str]:
     Returns:
         Optional[str]: The API key if found, otherwise None.
     """
-    global API_KEY
-    if API_KEY is None:
+    if not config["api_key"]:
         if not os.path.exists(CONFIG_FILE_PATH):
             return None
         with open(CONFIG_FILE_PATH, "r") as config_file:
-            config = toml.load(config_file)
-            API_KEY = config.get("api_key")
-    return API_KEY
+            loaded_config = toml.load(config_file)
+            config["api_key"] = loaded_config.get("api_key")
+    return config["api_key"]
 
 
 def fpk_install(directory_name: str, session: httpx.Client):
@@ -201,7 +212,7 @@ def fpk_install(directory_name: str, session: httpx.Client):
     if directory_name not in existing_dirs:
         raise ValueError(f"The directory '{directory_name}' does not exist.")
 
-    toml_content = fpk_fetch_flatpack_toml_from_dir(directory_name)
+    toml_content = fpk_fetch_flatpack_toml_from_dir(directory_name, session)
 
     if toml_content:
         with open('temp_flatpack.toml', 'w') as f:
@@ -265,13 +276,12 @@ def fpk_log_to_api(message: str, session: httpx.Client, api_key: Optional[str] =
         model_name (str): Name of the model associated with the log. Defaults to "YOUR_MODEL_NAME".
     """
     if not api_key:
-        api_key = API_KEY
+        api_key = config["api_key"]
         if not api_key:
             # logger.warning("API key not set.")
             print("❌ API key not set.")
             return
 
-    url = "https://fpk.ai/api/index.php"
     headers = {
         "Content-Type": "application/json"
     }
@@ -285,20 +295,24 @@ def fpk_log_to_api(message: str, session: httpx.Client, api_key: Optional[str] =
     }
 
     try:
-        response = session.post(url, params=params, json=data, headers=headers, timeout=10)
+        response = session.post(LOGGING_ENDPOINT, params=params, json=data, headers=headers, timeout=10)
     except httpx.RequestError as e:
         logger.error(f"Failed to send request: {e}")
 
 
-def fpk_set_api_key(api_key: str):
-    """Set and save the API key to the configuration file.
+def fpk_strip_ansi_escape_codes(s):
+    """Remove all the ANSI escape sequences from a string"""
+    ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
+    return ansi_escape.sub('', s)
 
-    Args:
-        api_key (str): The API key to set.
-    """
-    config = {"api_key": api_key}
+
+def fpk_set_api_key(api_key: str):
+    """Set and save the API key to the configuration file."""
+    global config  # Ensure we're updating the global variable
+    config["api_key"] = api_key
     with open(CONFIG_FILE_PATH, "w") as config_file:
         toml.dump(config, config_file)
+    logger.info("API key set successfully!")  # Using logger instead of print
 
 
 def fpk_train(directory_name: str = None, session: httpx.Client = None):
@@ -347,16 +361,13 @@ def fpk_train(directory_name: str = None, session: httpx.Client = None):
                 rlist, _, _ = select.select([master, 0], [], [])
                 if master in rlist:
                     output = os.read(master, 4096).decode()
+                    output = fpk_strip_ansi_escape_codes(output)  # Strip out ANSI escape codes
                     buffered_output += output
-                    lines = buffered_output.splitlines()
-
-                    if buffered_output.endswith(('\n', '\r')):
-                        buffered_output = ""
-                    else:
-                        buffered_output = lines.pop()
-
-                    for line in lines:
-                        line = line.strip()
+                    if '\n' in buffered_output:
+                        lines = buffered_output.splitlines()
+                        buffered_output = "" if buffered_output.endswith(('\n', '\r')) else lines.pop()
+                        for line in lines:
+                            line = line.strip()
 
                         if not line or line == last_user_input:
                             continue
@@ -364,7 +375,7 @@ def fpk_train(directory_name: str = None, session: httpx.Client = None):
                         print(f"(*) {line}")
 
                         # TODO: Optimize this for Colab
-                        fpk_log_to_api(line, session, api_key=API_KEY, model_name=last_installed_flatpack)
+                        fpk_log_to_api(line, session, api_key=fpk_get_api_key(), model_name=last_installed_flatpack)
                         log_queue.append((line, last_installed_flatpack))
 
                 if 0 in rlist:
@@ -392,64 +403,72 @@ def fpk_train(directory_name: str = None, session: httpx.Client = None):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='flatpack.ai command line interface')
-    parser.add_argument('command', help='Command to run')
-    parser.add_argument('input', nargs='?', default=None, help='Input for the callback')
-    parser.add_argument('--model-name', default="YOUR_MODEL_NAME", help='Name of the model to associate with the log')
+    with SessionManager() as session:
+        parser = argparse.ArgumentParser(description='flatpack.ai command line interface')
+        parser.add_argument('command', help='Command to run')
+        parser.add_argument('input', nargs='?', default=None, help='Input for the callback')
+        parser.add_argument('--model-name', default="YOUR_MODEL_NAME",
+                            help='Name of the model to associate with the log')
 
-    args = parser.parse_args()
-    command = args.command
+        args = parser.parse_args()
+        command = args.command
 
-    # Create an HTTP client session
-    initialize_session()
+        # Fetch and set API key
+        fpk_get_api_key()
 
-    # Fetch and set API key
-    fpk_get_api_key()
+        if command == "callback":
+            fpk_callback(args.input)
 
-    if command == "callback":
-        fpk_callback(args.input)
-    elif command == "find":
-        print(fpk_find_models())
-    elif command == "help":
-        print("[HELP]")
-    elif command == "get-api-key":
-        print(fpk_get_api_key())
-    elif command == "install":
-        if len(sys.argv) < 3:
-            print("❌ Please specify a flatpack for the install command.")
-            return
-        directory_name = sys.argv[2]
-        fpk_display_disclaimer(directory_name)
-        while True:
-            user_response = input().strip().upper()
-            if user_response == "YES":
-                break
-            elif user_response == "NO":
-                print("❌ Installation aborted by user.")
-                exit(0)
-            else:
-                print("❌ Invalid input. Please type 'YES' to accept or 'NO' to decline.")
-        fpk_install(directory_name, session)
-    elif command == "list":
-        print(fpk_list_directories(session))
-    elif command == "ps":
-        print(fpk_list_processes())
-    elif command == "set-api-key":
-        if not args.input:
-            print("❌ Please provide an API key to set.")
-            return
-        fpk_set_api_key(args.input)
-        print("API key set successfully!")
-    elif command == "train":
-        directory_name = args.input
-        fpk_train(directory_name, session)
-    elif command == "version":
-        print("[VERSION]")
-    else:
-        print(f"Unknown command: {command}")
+        elif command == "find":
+            print(fpk_find_models())
 
-    # Close the HTTP client session
-    session.close()
+        elif command == "help":
+            print("[HELP]")
+
+        elif command == "get-api-key":
+            print(fpk_get_api_key())
+
+        elif command == "install":
+            if not args.input:
+                print("❌ Please specify a flatpack for the install command.")
+                return
+
+            directory_name = args.input
+            fpk_display_disclaimer(directory_name)
+
+            while True:
+                user_response = input().strip().upper()
+                if user_response == "YES":
+                    break
+                elif user_response == "NO":
+                    print("❌ Installation aborted by user.")
+                    exit(0)
+                else:
+                    print("❌ Invalid input. Please type 'YES' to accept or 'NO' to decline.")
+            fpk_install(directory_name, session)
+
+        elif command == "list":
+            print(fpk_list_directories(session))
+
+        elif command == "ps":
+            print(fpk_list_processes())
+
+        elif command == "set-api-key":
+            if not args.input:
+                print("❌ Please provide an API key to set.")
+                return
+            fpk_set_api_key(args.input)
+            print("API key set successfully!")
+
+        elif command == "train":
+            directory_name = args.input
+            fpk_train(directory_name, session)
+
+        elif command == "version":
+            print("[VERSION]")
+
+        else:
+            print(f"Unknown command: {command}")
 
 
 if __name__ == "__main__":
