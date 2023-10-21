@@ -17,4 +17,6 @@ source "$SCRIPT_DIR/device.sh" || {
 
 # === BEGIN USER CUSTOMIZATION ===
 python -c "import time; [print(f'Count: {i}') or time.sleep(1) for i in range(1, 11)]"
+read -p "What is your name? " name
+echo "Hello, $name!"
 # === END USER CUSTOMIZATION ===
