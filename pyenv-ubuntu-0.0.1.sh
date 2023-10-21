@@ -3,11 +3,11 @@ set -e
 set -u
 
 # Header comment
-echo -e "🚀 Let's get pyenv set up on Ubuntu 23.04! 🚀"
+echo -e "🚀 Let's get pyenv set up on Ubuntu 23.10 (mantic)!"
 
 # Check if user has sudo permissions
 if ! sudo -v; then
-  echo -e "😟 Oops! This script requires sudo permissions. Please run as a user with sudo access. 🛑"
+  echo -e "😟 Oops! This script requires sudo permissions. Please run as a user with sudo access."
   exit 1
 fi
 
@@ -63,4 +63,4 @@ fi
 EOL
 
 echo -e "🎉 Configured pyenv in .bashrc and .profile. To start using pyenv, restart your shell or run 'source ~/.bashrc'."
-echo -e "🎊 Script completed successfully! Happy coding! 🎊"
+echo -e "🎊 Script completed successfully! Happy coding!"
