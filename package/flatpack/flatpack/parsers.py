@@ -55,20 +55,35 @@ fi
     pyenv_setup = f"""
 export PYENV_ROOT="$HOME/.pyenv"
 export PATH="$PYENV_ROOT/bin:$PATH"
+
+handle_error() {{
+    echo -e "😟 Oops! Something went wrong with pyenv."
+    exit 1
+}}
+
 if [[ $IS_COLAB -eq 0 ]]; then
-  if ! pyenv versions | grep -q {python_version}; then
-    pyenv install {python_version}
-  fi
-  if ! pyenv virtualenvs | grep -q {env_name}; then
-    pyenv virtualenv {python_version} {env_name}
-  fi
-  pyenv activate {env_name}
+    if ! pyenv versions | grep -q {python_version}; then
+        pyenv install {python_version} || handle_error
+    fi
+
+    if ! pyenv virtualenvs | grep -q {env_name}; then
+        pyenv virtualenv {python_version} {env_name} || handle_error
+    fi
+
+    pyenv activate {env_name} || handle_error
 fi
     """.strip()
+
     script.append(pyenv_setup)
 
-    # Create model directory
-    script.append(f"mkdir -p ./{model_name}")
+    # Bash check for directory existence
+    script.append(f"""
+if [ ! -d "{model_name}" ]; then
+    mkdir -p {model_name}
+else
+    echo 'Directory {model_name} already exists. Moving on.'
+fi
+    """)
 
     # Create other directories as per the TOML configuration
     directories_map = config.get("directories")
