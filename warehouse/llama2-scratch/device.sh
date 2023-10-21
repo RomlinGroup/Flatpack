@@ -14,7 +14,13 @@ if [[ -z "${FLATPACK_NAME}" ]]; then
 fi
 
 # Set the VENV_PYTHON variable
-export VENV_PYTHON="${SCRIPT_DIR}/bin/python"
+if [[ "${COLAB_GPU}" == "1" ]]; then
+  # Running in Colab environment, use just "python"
+  export VENV_PYTHON="python"
+else
+  # Not running in Colab environment, use the full path to python
+  export VENV_PYTHON="${SCRIPT_DIR}/bin/python"
+fi
 
 # Check if running in Colab environment
 if [[ "${COLAB_GPU}" == "1" ]]; then
