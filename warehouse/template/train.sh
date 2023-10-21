@@ -16,5 +16,5 @@ source "$SCRIPT_DIR/device.sh" || {
 }
 
 # === BEGIN USER CUSTOMIZATION ===
-echo "Hello, World!"
+"${VENV_PYTHON}" -c "print('Hello, World!')"
 # === END USER CUSTOMIZATION ===

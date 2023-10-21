@@ -19,7 +19,7 @@ source "$SCRIPT_DIR/device.sh" || {
 cp train.py train.py.backup
 sed -i 's/batch_size = 128/batch_size = 64/' train.py
 sed -i 's/dtype = "bfloat16"/dtype = "float16"/' train.py
-python tinystories.py download
-python tinystories.py pretokenize
-python train.py
+"${VENV_PYTHON}" tinystories.py download
+"${VENV_PYTHON}" tinystories.py pretokenize
+"${VENV_PYTHON}" train.py
 # === END USER CUSTOMIZATION ===

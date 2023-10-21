@@ -12,6 +12,9 @@ if [[ -z "${FLATPACK_NAME}" ]]; then
   exit 1
 fi
 
+# Set the VENV_PYTHON variable
+export VENV_PYTHON="${SCRIPT_DIR}/bin/python"
+
 # Check if running in Colab environment
 if [[ "${COLAB_GPU}" == "1" ]]; then
   echo "Running in Colab environment"
