@@ -44,8 +44,8 @@ echo -e "📝 Configuring pyenv in .bashrc and .profile..."
 # Configuration for .bashrc
 cat <<EOL >>~/.bashrc
 if shopt -q login_shell; then
-    export PYENV_ROOT="$HOME/.pyenv"
-    export PATH="$PYENV_ROOT/bin:$PATH"
+    export PYENV_ROOT="\$HOME/.pyenv"
+    export PATH="\$PYENV_ROOT/bin:\$PATH"
     eval "$(pyenv init --path)"
 fi
 if command -v pyenv >/dev/null; then
@@ -56,8 +56,8 @@ EOL
 # Configuration for .profile
 cat <<EOL >>~/.profile
 if [ -z "$BASH_VERSION" ]; then
-    export PYENV_ROOT="$HOME/.pyenv"
-    export PATH="$PYENV_ROOT/bin:$PATH"
+    export PYENV_ROOT="\$HOME/.pyenv"
+    export PATH="\$PYENV_ROOT/bin:\$PATH"
     eval "$(pyenv init --path)"
 fi
 EOL
