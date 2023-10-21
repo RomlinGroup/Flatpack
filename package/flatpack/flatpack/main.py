@@ -237,9 +237,9 @@ def fpk_install(directory_name: str, session: httpx.Client):
 
         except subprocess.CalledProcessError:
             print("❌ Error: Failed to execute the bash script.")
-        finally:
-            if os.path.exists("flatpack.sh"):
-                os.remove("flatpack.sh")
+        # finally:
+        # if os.path.exists("flatpack.sh"):
+        #    os.remove("flatpack.sh")
 
     else:
         print(f"❌ No flatpack.toml found in {directory_name}.\n")
