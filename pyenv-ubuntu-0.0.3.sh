@@ -66,13 +66,17 @@ EOL
 echo -e "🔄 Activating pyenv changes..."
 source ~/.bashrc
 
-# Install pyenv-virtualenv plugin for pyenv
-echo -e "📥 Installing pyenv-virtualenv plugin..."
-git clone https://github.com/pyenv/pyenv-virtualenv.git $(pyenv root)/plugins/pyenv-virtualenv
+# Check if pyenv-virtualenv is already installed
+if [ -d "$(pyenv root)/plugins/pyenv-virtualenv" ]; then
+  echo -e "🎉 pyenv-virtualenv is already installed. Skipping the installation!"
+else
+  echo -e "📥 Installing pyenv-virtualenv plugin..."
+  git clone https://github.com/pyenv/pyenv-virtualenv.git $(pyenv root)/plugins/pyenv-virtualenv
+fi
 
 # Add pyenv-virtualenv initialization to .bashrc
 echo -e "📝 Configuring pyenv-virtualenv in .bashrc..."
-echo "eval \"$(pyenv virtualenv-init -)\"" >> ~/.bashrc
+echo "eval \"$(pyenv virtualenv-init -)\"" >>~/.bashrc
 
 # Source .bashrc again to activate pyenv-virtualenv changes
 echo -e "🔄 Activating pyenv-virtualenv changes..."

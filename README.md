@@ -32,9 +32,9 @@ flatpack train FLATPACK_NAME
 ```bash
 # Ubuntu 23.10 (mantic)
 # Set up pyenv
-wget https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/pyenv-ubuntu-0.0.2.sh
-chmod +x pyenv-ubuntu-0.0.2.sh
-./pyenv-ubuntu-0.0.2.sh
+wget https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/pyenv-ubuntu-0.0.3.sh
+chmod +x pyenv-ubuntu-0.0.3.sh
+./pyenv-ubuntu-0.0.3.sh
 
 # Install pipx and flatpack
 sudo apt install pipx
