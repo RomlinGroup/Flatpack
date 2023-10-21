@@ -226,20 +226,18 @@ def fpk_install(directory_name: str, session: httpx.Client):
         try:
             print(f"Installing {directory_name}...")
             process = subprocess.Popen(["bash", "flatpack.sh"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            process.communicate()
+            stdout, stderr = process.communicate()
 
             if process.returncode != 0:
-                raise subprocess.CalledProcessError(process.returncode, process.args)
+                raise subprocess.CalledProcessError(process.returncode, process.args, output=stdout, stderr=stderr)
 
             fpk_cache_last_flatpack(directory_name)
-
             print(f"🎉 All done!")
 
-        except subprocess.CalledProcessError:
+        except subprocess.CalledProcessError as e:
             print("❌ Error: Failed to execute the bash script.")
-        # finally:
-        # if os.path.exists("flatpack.sh"):
-        #    os.remove("flatpack.sh")
+            print("Standard Output:", e.output.decode())
+            print("Standard Error:", e.stderr.decode())
 
     else:
         print(f"❌ No flatpack.toml found in {directory_name}.\n")
@@ -353,22 +351,33 @@ def fpk_train(directory_name: str = None, session: httpx.Client = None):
     master, slave = pty.openpty()
 
     pid = os.fork()
-    if pid == 0:
+    if pid == 0:  # Child process
         os.close(master)
         os.dup2(slave, 0)
         os.dup2(slave, 1)
         os.dup2(slave, 2)
         os.execvp("bash", ["bash", str(training_script_path)])
-    else:
+    else:  # Parent process
         os.close(slave)
         output_buffer = ""
         ansi_escape = re.compile(r'\x1B\[[0-?]*[ -/]*[@-~]')
 
+        child_terminated = False  # Flag to check if child process has terminated
+
         try:
             while True:
-                rlist, _, _ = select.select([master, 0], [], [])
-                if master in rlist:
+                # Check if child process is still running
+                child_pid, status = os.waitpid(pid, os.WNOHANG)
+                if child_pid != 0:  # Child has terminated
+                    child_terminated = True
+                    break
+
+                rlist, _, _ = select.select([master, 0], [], [], 0.1)
+
+                if not child_terminated and master in rlist:
                     output = os.read(master, 4096).decode()
+                    if not output:  # Child has closed the terminal
+                        break
                     output = ansi_escape.sub('', output)
                     output_buffer += output
                     lines = deque(output_buffer.splitlines(True))
@@ -379,22 +388,37 @@ def fpk_train(directory_name: str = None, session: httpx.Client = None):
                     line_buffer.extend(lines)
                     fpk_process_line_buffer(line_buffer, session, last_installed_flatpack)
 
-                if 0 in rlist:
+                if not child_terminated and 0 in rlist:  # Handle user input
                     user_input = sys.stdin.readline().strip()
                     print(fpk_colorize(f"(*) {user_input}", "yellow"))
                     log_queue.append((user_input, last_installed_flatpack))
                     os.write(master, (user_input + '\n').encode())
 
+        except OSError as e:
+            if e.errno == 5:  # Input/output error
+                print(f"❌ I/O Error occurred: {e}")
+            else:
+                raise
+        except ValueError as e:
+            print(f"❌ Value Error occurred: {e}")
+        except RuntimeError as e:
+            print(f"❌ Runtime Error occurred: {e}")
         except Exception as e:
-            print(f"❌ Error occurred: {e}")
+            print(f"❌ General Error occurred: {e}")
 
         fpk_process_line_buffer(line_buffer, session, last_installed_flatpack)
 
-        _, exit_status = os.waitpid(pid, 0)
-        if exit_status != 0:
-            print("❌ Failed to execute the training script.")
-        else:
-            print("🎉 All done!")
+        # Only wait for the child process if it hasn't terminated yet
+        if not child_terminated:
+            try:
+                _, exit_status = os.waitpid(pid, 0)
+            except ChildProcessError:
+                exit_status = 0  # Assume success if child process is already gone
+
+            if exit_status != 0:
+                print("❌ Failed to execute the training script.")
+            else:
+                print("🎉 All done!")
 
 
 def main():

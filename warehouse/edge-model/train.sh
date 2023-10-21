@@ -16,5 +16,5 @@ source "$SCRIPT_DIR/device.sh" || {
 }
 
 # === BEGIN USER CUSTOMIZATION ===
-echo "Hello, World!"
+python -c "import time; [print(f'Count: {i}') or time.sleep(1) for i in range(1, 11)]"
 # === END USER CUSTOMIZATION ===
