@@ -22,7 +22,7 @@ https://pypi.org/project/flatpack
 ```bash
 # Google Colab
 pip install --upgrade flatpack
-# flatpack set-api-key "YOUR_API_KEY"
+# flatpack set-api-key "YOUR_API_KEY" (invite only)
 flatpack list
 flatpack install FLATPACK_NAME
 flatpack train FLATPACK_NAME
