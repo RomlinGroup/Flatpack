@@ -17,6 +17,7 @@ source "$SCRIPT_DIR/device.sh" || {
 
 # === BEGIN USER CUSTOMIZATION ===
 "${VENV_PYTHON}" -c "import time; [print(f'Count: {i}') or time.sleep(1) for i in range(1, 11)]"
-read -r -p "What is your name? " name
+echo -n "What is your name? " >&2
+read -r name
 echo "Hello, $name!"
 # === END USER CUSTOMIZATION ===

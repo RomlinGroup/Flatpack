@@ -326,7 +326,7 @@ def fpk_process_output(output, session, last_installed_flatpack):
         # If the line isn't empty, process it
         if line:
             # Display the line with a prefix
-            print(f"(*) {line}")
+            print(f"(*) {line}", flush=True)
 
             # If we have an API key, log the line to the API
             if api_key:
@@ -350,55 +350,47 @@ def fpk_train(directory_name: str = None, session: httpx.Client = None):
         with cache_file_path.open('r') as f:
             last_installed_flatpack = f.read().strip()
 
-    # Determine the path for the training script
-    training_script_path = Path(last_installed_flatpack) / 'train.sh'
+        # Determine the path for the training script
+        training_script_path = Path(last_installed_flatpack) / 'train.sh'
 
-    # Check if the training script is present
-    if not training_script_path.exists():
-        print(f"❌ Training script not found in {last_installed_flatpack}.")
-        return
+        # Check if the training script is present
+        if not training_script_path.exists():
+            print(f"❌ Training script not found in {last_installed_flatpack}.")
+            return
 
-    # Create pseudo-terminals for managing input/output with the subprocess
-    master_fd, slave_fd = pty.openpty()
-    stdout_master, stdout_slave = pty.openpty()
-    stderr_master, stderr_slave = pty.openpty()
+        # Start the subprocess for the training script
+        print("Starting the training script...")
+        env = dict(os.environ, PYTHONUNBUFFERED="1")
+        proc = subprocess.Popen(["bash", "-u", str(training_script_path)], stdin=subprocess.PIPE,
+                                stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=1, universal_newlines=True,
+                                env=env)
+        print("Training script started.")
 
-    # Start the subprocess for the training script
-    print("Starting the training script...")
-    proc = subprocess.Popen(["bash", "-u", str(training_script_path)], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    stdout, stderr = proc.communicate()
-    print("STDOUT:", stdout.decode())
-    print("STDERR:", stderr.decode())
+        outputs = [proc.stdout, proc.stderr]
 
-    print("Training script started.")
+        try:
+            # Continuously read from the subprocess's output
+            while True:
+                # Check if process is still running
+                retcode = proc.poll()
+                if retcode is not None:
+                    break  # Process finished
 
-    # Close slave ends in the parent process
-    os.close(slave_fd)
-    os.close(stdout_slave)
-    os.close(stderr_slave)
+                # Read lines from stdout and stderr
+                rlist, _, _ = select.select(outputs, [], [], 0.1)
+                for r in rlist:
+                    line = r.readline()
+                    if line:
+                        fpk_process_output(line, session, last_installed_flatpack)
 
-    # Buffer to store incomplete lines from the subprocess's output
-    buffer = ""
-    try:
-        # Continuously read from the subprocess's output
-        print("Reading from subprocess...")
-        while True:
-            output = os.read(stdout_master, 4096).decode()
-            if output:
-                print("Output from subprocess:", output)
-            else:
-                break
+                        # If the line does not end with a newline, it's likely a prompt waiting for input
+                        if not line.endswith('\n'):
+                            user_input = input()  # Get input from user
+                            print(user_input, file=proc.stdin)  # Send input to subprocess
 
-    finally:
-        # Close all file descriptors and ensure subprocess finishes
-        os.close(master_fd)
-        os.close(stdout_master)
-        os.close(stderr_master)
-        proc.wait()
-
-    # After subprocess completes, process any remaining lines in the buffer
-    if buffer.strip():
-        fpk_process_output(buffer, session, last_installed_flatpack)
+        finally:
+            # Ensure subprocess finishes
+            proc.wait()
 
 
 def main():
