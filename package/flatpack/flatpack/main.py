@@ -338,6 +338,8 @@ def fpk_train(directory_name: str = None, session: httpx.Client = None):
     # Define the path for the cache file
     cache_file_path = Path.cwd() / 'last_flatpack.cache'
 
+    print(f"Started training for {directory_name}")
+
     # If a directory name is provided, set it as the last installed flatpack
     if directory_name:
         last_installed_flatpack = directory_name
