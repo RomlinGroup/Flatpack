@@ -348,77 +348,26 @@ def fpk_train(directory_name: str = None, session: httpx.Client = None):
         print(f"❌ Training script not found in {last_installed_flatpack}.")
         return
 
-    master, slave = pty.openpty()
+    with subprocess.Popen(["bash", str(training_script_path)], stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                          text=True) as proc:
 
-    pid = os.fork()
-    if pid == 0:  # Child process
-        os.close(master)
-        os.dup2(slave, 0)
-        os.dup2(slave, 1)
-        os.dup2(slave, 2)
-        os.execvp("bash", ["bash", str(training_script_path)])
-    else:  # Parent process
-        os.close(slave)
-        output_buffer = ""
-        ansi_escape = re.compile(r'\x1B\[[0-?]*[ -/]*[@-~]')
+        while proc.poll() is None:
+            line = proc.stdout.readline().strip()
+            if line:
+                line_buffer.append(line)
+                fpk_process_line_buffer(line_buffer, session, last_installed_flatpack)
 
-        child_terminated = False  # Flag to check if child process has terminated
+        for line in proc.stdout:
+            line = line.strip()
+            if line:
+                line_buffer.append(line)
+                fpk_process_line_buffer(line_buffer, session, last_installed_flatpack)
 
-        try:
-            while True:
-                # Check if child process is still running
-                child_pid, status = os.waitpid(pid, os.WNOHANG)
-                if child_pid != 0:  # Child has terminated
-                    child_terminated = True
-                    break
-
-                rlist, _, _ = select.select([master, 0], [], [], 0.1)
-
-                if not child_terminated and master in rlist:
-                    output = os.read(master, 4096).decode()
-                    if not output:  # Child has closed the terminal
-                        break
-                    output = ansi_escape.sub('', output)
-                    output_buffer += output
-                    lines = deque(output_buffer.splitlines(True))
-                    if not output_buffer.endswith('\n') and lines:
-                        output_buffer = lines.pop()
-                    else:
-                        output_buffer = ""
-                    line_buffer.extend(lines)
-                    fpk_process_line_buffer(line_buffer, session, last_installed_flatpack)
-
-                if not child_terminated and 0 in rlist:  # Handle user input
-                    user_input = sys.stdin.readline().strip()
-                    print(fpk_colorize(f"(*) {user_input}", "yellow"))
-                    log_queue.append((user_input, last_installed_flatpack))
-                    os.write(master, (user_input + '\n').encode())
-
-        except OSError as e:
-            if e.errno == 5:  # Input/output error
-                print(f"❌ I/O Error occurred: {e}")
-            else:
-                raise
-        except ValueError as e:
-            print(f"❌ Value Error occurred: {e}")
-        except RuntimeError as e:
-            print(f"❌ Runtime Error occurred: {e}")
-        except Exception as e:
-            print(f"❌ General Error occurred: {e}")
-
-        fpk_process_line_buffer(line_buffer, session, last_installed_flatpack)
-
-        # Only wait for the child process if it hasn't terminated yet
-        if not child_terminated:
-            try:
-                _, exit_status = os.waitpid(pid, 0)
-            except ChildProcessError:
-                exit_status = 0  # Assume success if child process is already gone
-
-            if exit_status != 0:
-                print("❌ Failed to execute the training script.")
-            else:
-                print("🎉 All done!")
+        # Check the return code of the process
+        if proc.returncode != 0:
+            print("❌ Failed to execute the training script.")
+        else:
+            print("🎉 All done!")
 
 
 def main():
