@@ -20,7 +20,11 @@ will do for the AI industry.
 https://pypi.org/project/flatpack
 
 ```bash
+# Google Colab
 pip install flatpack
+flatpack list
+flatpack install FLATPACK_NAME
+flatpack train FLATPACK_NAME
 ```
 
 ## Flatpack (FPK) 📦
