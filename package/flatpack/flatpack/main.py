@@ -359,12 +359,10 @@ def fpk_train(directory_name: str = None, session: httpx.Client = None):
             return
 
         # Start the subprocess for the training script
-        print("Starting the training script...")
         env = dict(os.environ, PYTHONUNBUFFERED="1")
         proc = subprocess.Popen(["bash", "-u", str(training_script_path)], stdin=subprocess.PIPE,
                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=1, universal_newlines=True,
                                 env=env)
-        print("Training script started.")
 
         outputs = [proc.stdout, proc.stderr]
 

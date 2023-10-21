@@ -29,7 +29,8 @@ flatpack train FLATPACK_NAME
 
 ```bash
 # Ubuntu 23.10 (mantic)
-sudo apt install pipx
+sudo apt update && sudo apt install pipx
+pipx ensurepath
 pipx install flatpack
 flatpack list
 flatpack install FLATPACK_NAME
