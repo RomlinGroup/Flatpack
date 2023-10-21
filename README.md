@@ -22,8 +22,6 @@ https://pypi.org/project/flatpack
 ```bash
 # Google Colab (working as of 2023-10-21)
 pip install --upgrade flatpack
-# Get "YOUR_API_KEY" at fpk.ai (invite only)
-# flatpack set-api-key "YOUR_API_KEY"
 flatpack list
 flatpack install FLATPACK_NAME
 flatpack train FLATPACK_NAME
@@ -31,14 +29,11 @@ flatpack train FLATPACK_NAME
 
 ```bash
 # Ubuntu 23.10 (mantic)
-# Set up pyenv
-wget https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/pyenv-ubuntu-0.0.3.sh
-chmod +x pyenv-ubuntu-0.0.3.sh
-./pyenv-ubuntu-0.0.3.sh
-
-# Install pipx and flatpack
 sudo apt install pipx
 pipx install flatpack
+flatpack list
+flatpack install FLATPACK_NAME
+flatpack train FLATPACK_NAME
 ```
 
 ## Flatpack (FPK) 📦
