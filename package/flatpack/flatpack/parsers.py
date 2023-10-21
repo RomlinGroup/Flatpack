@@ -1,7 +1,7 @@
 import toml
 
 
-def parse_toml_to_pyenv_script(file_path: str, python_version="3.11.3", env_name="myenv") -> str:
+def parse_toml_to_pyenv_script(file_path: str, python_version="3.10.12", env_name="myenv") -> str:
     """
     Convert a TOML configuration to a bash script that sets up a python environment using pyenv and performs actions based on the TOML.
 
