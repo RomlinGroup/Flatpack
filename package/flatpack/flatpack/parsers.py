@@ -51,17 +51,25 @@ fi
 
     # Setup venv environment
     venv_setup = f"""
-handle_error() {{
-    echo "😟 Oops! Something went wrong."
-    exit 1
-}}
+    handle_error() {{
+        echo "😟 Oops! Something went wrong."
+        exit 1
+    }}
 
-if [[ $IS_COLAB -eq 0 ]]; then
-    if [ ! -d "{env_name}" ]; then
-        python -m venv {env_name} || handle_error
+    if [[ $IS_COLAB -eq 0 ]]; then
+        if [ ! -d "{env_name}" ]; then
+            python -m venv {env_name} || handle_error
+        fi
+
+        VENV_PYTHON={env_name}/bin/python
+
+        # Now, when you want to run Python within this venv, use $VENV_PYTHON
+        # Example: 
+        # $VENV_PYTHON -m pip install some_package
+
+        # If you need to run a Python script within this venv:
+        # $VENV_PYTHON my_script.py
     fi
-    source {env_name}/bin/activate || handle_error
-fi
     """.strip()
     script.append(venv_setup)
 
@@ -89,7 +97,7 @@ fi
     package_list = [f"{package}=={version}" if version != "*" and version else package for package, version in
                     packages.items()]
     if package_list:
-        script.append(f"python -m pip install {' '.join(package_list)}")
+        script.append(f"$VENV_PYTHON -m pip install {' '.join(package_list)}")
 
     # Clone required git repositories
     for git in config.get("git", []):
@@ -109,7 +117,7 @@ fi
 if [ -f {repo_path}/requirements.txt ]; then
     echo 'Found requirements.txt, installing dependencies...'
     cd {repo_path} || exit
-    python -m pip install -r requirements.txt
+    $VENV_PYTHON -m pip install -r requirements.txt
     cd - || exit
 else
     echo 'No requirements.txt found.'

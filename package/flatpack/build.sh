@@ -33,3 +33,17 @@ if [ $? -eq 0 ]; then
 else
   echo "❌ Failed to build the PyPI package. Please check for errors above."
 fi
+
+# Uninstalling existing flatpack package without confirmation
+echo "🗑️  Uninstalling any existing version of flatpack..."
+pip uninstall -y flatpack
+
+# Installing the locally built version
+echo "⚙️  Installing the locally built version of flatpack..."
+pip install dist/*whl
+
+if [ $? -eq 0 ]; then
+  echo "🎉 Successfully installed the local version of flatpack!"
+else
+  echo "❌ Failed to install the local version of flatpack. Please check for errors above."
+fi

@@ -7,7 +7,9 @@ import re
 import select
 import subprocess
 import sys
+import time
 import toml
+from collections import deque
 from .instructions import build
 from .parsers import parse_toml_to_venv_script
 from pathlib import Path
@@ -216,7 +218,7 @@ def fpk_install(directory_name: str, session: httpx.Client):
         with open('temp_flatpack.toml', 'w') as f:
             f.write(toml_content)
 
-        bash_script_content = parse_toml_to_venv_script('temp_flatpack.toml')
+        bash_script_content = parse_toml_to_venv_script('temp_flatpack.toml', '3.10.12', directory_name)
 
         with open('flatpack.sh', 'w') as f:
             f.write(bash_script_content)
@@ -305,69 +307,111 @@ def fpk_set_api_key(api_key: str):
     logger.info("API key set successfully!")
 
 
-from collections import deque
-
-line_buffer = deque()
-
-
-def fpk_process_line_buffer(line_buffer, session, last_installed_flatpack):
-    """Process lines in the buffer and log them."""
+def fpk_process_output(output, session, last_installed_flatpack):
+    """Process output and log it."""
+    # Get the API key for logging
     api_key = fpk_get_api_key()
 
-    while line_buffer:
-        line = line_buffer.popleft().strip()
+    # Regular expression pattern to match ANSI escape codes
+    ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
+
+    # Iterate over each line in the output
+    for line in output.splitlines():
+        # Remove any leading or trailing whitespace
+        line = line.strip()
+
+        # Remove ANSI escape codes from the line
+        line = ansi_escape.sub('', line)
+
+        # If the line isn't empty, process it
         if line:
+            # Display the line with a prefix
             print(f"(*) {line}")
 
+            # If we have an API key, log the line to the API
             if api_key:
                 fpk_log_to_api(line, session, api_key=api_key, model_name=last_installed_flatpack)
-
-            log_queue.append((line, last_installed_flatpack))
-
-    line_buffer.clear()
 
 
 def fpk_train(directory_name: str = None, session: httpx.Client = None):
     """Train a model using a training script from a specific or last installed flatpack."""
-
+    # Define the path for the cache file
     cache_file_path = Path.cwd() / 'last_flatpack.cache'
 
+    # If a directory name is provided, set it as the last installed flatpack
     if directory_name:
         last_installed_flatpack = directory_name
         fpk_cache_last_flatpack(directory_name)
     else:
+        # Otherwise, use the directory name from the cache file
         if not cache_file_path.exists():
             print("❌ No cached flatpack found.")
             return
         with cache_file_path.open('r') as f:
             last_installed_flatpack = f.read().strip()
 
+    # Determine the path for the training script
     training_script_path = Path(last_installed_flatpack) / 'train.sh'
 
+    # Check if the training script is present
     if not training_script_path.exists():
         print(f"❌ Training script not found in {last_installed_flatpack}.")
         return
 
-    with subprocess.Popen(["bash", str(training_script_path)], stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                          text=True) as proc:
+    # Create pseudo-terminals for managing input/output with the subprocess
+    master_fd, slave_fd = pty.openpty()
+    stdout_master, stdout_slave = pty.openpty()
+    stderr_master, stderr_slave = pty.openpty()
 
-        while proc.poll() is None:
-            line = proc.stdout.readline().strip()
-            if line:
-                line_buffer.append(line)
-                fpk_process_line_buffer(line_buffer, session, last_installed_flatpack)
+    # Start the subprocess for the training script
+    proc = subprocess.Popen(["bash", "-u", str(training_script_path)], stdin=slave_fd, stdout=stdout_slave,
+                            stderr=stderr_slave)
 
-        for line in proc.stdout:
-            line = line.strip()
-            if line:
-                line_buffer.append(line)
-                fpk_process_line_buffer(line_buffer, session, last_installed_flatpack)
+    # Close slave ends in the parent process
+    os.close(slave_fd)
+    os.close(stdout_slave)
+    os.close(stderr_slave)
 
-        # Check the return code of the process
-        if proc.returncode != 0:
-            print("❌ Failed to execute the training script.")
-        else:
-            print("🎉 All done!")
+    # Buffer to store incomplete lines from the subprocess's output
+    buffer = ""
+    try:
+        # Continuously read from the subprocess's output
+        while True:
+            rlist, _, _ = select.select([master_fd, stdout_master, stderr_master, sys.stdin], [], [], 0.1)
+
+            # stdout (Standard Output) and stderr (Standard Error)
+
+            # Read from stdout and process the lines
+            if stdout_master in rlist:
+                chunk = os.read(stdout_master, 4096).decode()
+                buffer += chunk
+                while '\\n' in buffer:
+                    line, buffer = buffer.split('\\n', 1)
+                    fpk_process_output(line, session, last_installed_flatpack)
+
+            # Read from stderr and process the lines
+            if stderr_master in rlist:
+                chunk = os.read(stderr_master, 4096).decode()
+                buffer += chunk
+                while '\\n' in buffer:
+                    line, buffer = buffer.split('\\n', 1)
+                    fpk_process_output(line, session, last_installed_flatpack)
+
+            # Handle user input
+            if sys.stdin in rlist:
+                user_input = sys.stdin.readline()
+                os.write(master_fd, user_input.encode())
+
+    finally:
+        # Close all file descriptors and ensure subprocess finishes
+        os.close(master_fd)
+        os.close(stdout_master)
+        os.close(stderr_master)
+        proc.wait()
+
+    # After subprocess completes, process any remaining lines in the buffer
+    if buffer.strip():
+        fpk_process_output(buffer, session, last_installed_flatpack)
 
 
 def main():
