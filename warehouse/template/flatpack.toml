@@ -2,7 +2,6 @@
 # WIP ({{current_date}})
 
 version = "0.0.1"
-base_image = "debian:stable-slim"
 
 [environment]
 model_name = "{{model_name}}"

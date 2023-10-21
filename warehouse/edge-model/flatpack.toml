@@ -2,7 +2,6 @@
 # WIP ({{current_date}})
 
 version = "0.0.1"
-base_image = "debian:stable-slim"
 
 [environment]
 model_name = "edge-model"
@@ -33,20 +32,3 @@ transformers = "*"
 torch = "*"
 tqdm = "*"
 wandb = "*"
-
-[[git]]
-from_source = "{{git_source_url}}"
-to_destination = "{{git_destination_dir}}"
-branch = "{{branch_name}}"
-
-[[file]]
-from_source = "{{file_source_url}}"
-to_destination = "{{file_destination_path}}"
-
-[[run]]
-command = "{{run_command}}"
-args = "{{run_args}}"
-
-[[cmd]]
-command = "{{cmd_command}}"
-args = "{{cmd_args}}"
