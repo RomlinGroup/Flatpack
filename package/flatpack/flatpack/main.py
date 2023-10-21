@@ -9,7 +9,7 @@ import subprocess
 import sys
 import toml
 from .instructions import build
-from .parsers import parse_toml_to_pyenv_script
+from .parsers import parse_toml_to_venv_script
 from pathlib import Path
 from typing import List, Optional
 
@@ -216,7 +216,7 @@ def fpk_install(directory_name: str, session: httpx.Client):
         with open('temp_flatpack.toml', 'w') as f:
             f.write(toml_content)
 
-        bash_script_content = parse_toml_to_pyenv_script('temp_flatpack.toml')
+        bash_script_content = parse_toml_to_venv_script('temp_flatpack.toml')
 
         with open('flatpack.sh', 'w') as f:
             f.write(bash_script_content)

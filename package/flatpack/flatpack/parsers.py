@@ -1,14 +1,14 @@
 import toml
 
 
-def parse_toml_to_pyenv_script(file_path: str, python_version="3.10.12", env_name="myenv") -> str:
+def parse_toml_to_venv_script(file_path: str, python_version="3.10.12", env_name="myenv") -> str:
     """
-    Convert a TOML configuration to a bash script that sets up a python environment using pyenv and performs actions based on the TOML.
+    Convert a TOML configuration to a bash script that sets up a python environment using venv and performs actions based on the TOML.
 
     Parameters:
     - file_path: The path to the TOML file.
-    - python_version: The desired Python version for pyenv.
-    - env_name: Name of the virtual environment using pyenv.
+    - python_version: The desired Python version (unused, but kept for function signature compatibility).
+    - env_name: Name of the virtual environment using venv.
 
     Returns:
     - Bash script as a string.
@@ -16,14 +16,12 @@ def parse_toml_to_pyenv_script(file_path: str, python_version="3.10.12", env_nam
 
     def check_command_availability(commands: list) -> list:
         """Generate bash snippets to check if each command in the provided list is available."""
-        checks = [
-            f"""
+        checks = [f"""
 if [[ $IS_COLAB -eq 0 ]] && ! command -v {cmd} >/dev/null; then
   echo "{cmd} not found. Please install {cmd}."
   exit 1
 fi
-            """.strip() for cmd in commands
-        ]
+        """.strip() for cmd in commands]
         return checks
 
     # Load TOML configuration
@@ -49,32 +47,23 @@ fi
     script.append(colab_check)
 
     # Ensure required commands are available
-    script.extend(check_command_availability(["pyenv", "wget", "git"]))
+    script.extend(check_command_availability(["curl", "wget", "git"]))
 
-    # Setup pyenv environment
-    pyenv_setup = f"""
-export PYENV_ROOT="$HOME/.pyenv"
-export PATH="$PYENV_ROOT/bin:$PATH"
-
+    # Setup venv environment
+    venv_setup = f"""
 handle_error() {{
-    echo -e "😟 Oops! Something went wrong with pyenv."
+    echo "😟 Oops! Something went wrong."
     exit 1
 }}
 
 if [[ $IS_COLAB -eq 0 ]]; then
-    if ! pyenv versions | grep -q {python_version}; then
-        pyenv install {python_version} || handle_error
+    if [ ! -d "{env_name}" ]; then
+        python -m venv {env_name} || handle_error
     fi
-
-    if ! pyenv virtualenvs | grep -q {env_name}; then
-        pyenv virtualenv {python_version} {env_name} || handle_error
-    fi
-
-    pyenv activate {env_name} || handle_error
+    source {env_name}/bin/activate || handle_error
 fi
     """.strip()
-
-    script.append(pyenv_setup)
+    script.append(venv_setup)
 
     # Bash check for directory existence
     script.append(f"""
@@ -107,25 +96,25 @@ fi
         from_source, to_destination, branch = git.get("from_source"), git.get("to_destination"), git.get("branch")
         if from_source and to_destination and branch:
             repo_path = f"./{model_name}/{to_destination.replace('/home/content/', '')}"
-            git_clone = f'''
-            echo 'Cloning repository from: {from_source}'
-            git clone -b {branch} {from_source} {repo_path}
-            if [ $? -eq 0 ]; then
-                echo "Git clone was successful."
-                flatpack callback git-success
-            else
-                echo "Git clone failed."
-                exit 1
-            fi
-            if [ -f {repo_path}/requirements.txt ]; then
-                echo 'Found requirements.txt, installing dependencies...'
-                cd {repo_path} || exit
-                python -m pip install -r requirements.txt
-                cd - || exit
-            else
-                echo 'No requirements.txt found.'
-            fi
-                    '''.strip()
+            git_clone = f"""
+echo 'Cloning repository from: {from_source}'
+git clone -b {branch} {from_source} {repo_path}
+if [ $? -eq 0 ]; then
+    echo "Git clone was successful."
+    flatpack callback git-success
+else
+    echo "Git clone failed."
+    exit 1
+fi
+if [ -f {repo_path}/requirements.txt ]; then
+    echo 'Found requirements.txt, installing dependencies...'
+    cd {repo_path} || exit
+    python -m pip install -r requirements.txt
+    cd - || exit
+else
+    echo 'No requirements.txt found.'
+fi
+            """.strip()
             script.append(git_clone)
 
     # Download datasets or files
@@ -133,7 +122,7 @@ fi
         for item in config.get(item_type, []):
             from_source, to_destination = item.get("from_source"), item.get("to_destination")
             if from_source and to_destination:
-                script.append(f"wget {from_source} -O ./{model_name}/{to_destination.replace('/home/content/', '')}")
+                script.append(f"curl -L {from_source} -o ./{model_name}/{to_destination.replace('/home/content/', '')}")
 
     # Execute specified run commands
     run_vec = config.get("run", [])

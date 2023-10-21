@@ -33,19 +33,27 @@ torch = "*"
 tqdm = "*"
 wandb = "*"
 
-[[git]]
-from_source = "{{git_source_url}}"
-to_destination = "{{git_destination_dir}}"
-branch = "{{branch_name}}"
+# [[git]]
+# from_source = "{{git_source_url}}"
+# to_destination = "{{git_destination_dir}}"
+# branch = "{{branch_name}}"
 
 [[file]]
-from_source = "{{file_source_url}}"
-to_destination = "{{file_destination_path}}"
+from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/{{model_name}}/device.sh"
+to_destination = "/home/content/device.sh"
+
+[[file]]
+from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/{{model_name}}/train.sh"
+to_destination = "/home/content/train.sh"
 
 [[run]]
-command = "{{run_command}}"
-args = "{{run_args}}"
+command = "chmod"
+args = "+x /home/content/device.sh"
+
+[[run]]
+command = "chmod"
+args = "+x /home/content/train.sh"
 
 [[cmd]]
-command = "{{cmd_command}}"
-args = "{{cmd_args}}"
+command = "bash"
+args = "/home/content/train.sh"

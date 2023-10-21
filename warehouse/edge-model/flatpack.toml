@@ -32,3 +32,28 @@ transformers = "*"
 torch = "*"
 tqdm = "*"
 wandb = "*"
+
+# [[git]]
+# from_source = "{{git_source_url}}"
+# to_destination = "{{git_destination_dir}}"
+# branch = "{{branch_name}}"
+
+[[file]]
+from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/edge-model/device.sh"
+to_destination = "/home/content/device.sh"
+
+[[file]]
+from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/edge-model/train.sh"
+to_destination = "/home/content/train.sh"
+
+[[run]]
+command = "chmod"
+args = "+x /home/content/device.sh"
+
+[[run]]
+command = "chmod"
+args = "+x /home/content/train.sh"
+
+[[cmd]]
+command = "bash"
+args = "/home/content/train.sh"
