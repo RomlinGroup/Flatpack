@@ -1,4 +1,5 @@
 #!/bin/bash
+COLAB_GPU="${COLAB_GPU:-0}"
 
 # Check if REPO_NAME is set
 if [[ -z "${REPO_NAME}" ]]; then

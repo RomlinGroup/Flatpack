@@ -338,8 +338,6 @@ def fpk_train(directory_name: str = None, session: httpx.Client = None):
     # Define the path for the cache file
     cache_file_path = Path.cwd() / 'last_flatpack.cache'
 
-    print(f"Started training for {directory_name}")
-
     # If a directory name is provided, set it as the last installed flatpack
     if directory_name:
         last_installed_flatpack = directory_name
@@ -366,8 +364,13 @@ def fpk_train(directory_name: str = None, session: httpx.Client = None):
     stderr_master, stderr_slave = pty.openpty()
 
     # Start the subprocess for the training script
-    proc = subprocess.Popen(["bash", "-u", str(training_script_path)], stdin=slave_fd, stdout=stdout_slave,
-                            stderr=stderr_slave)
+    print("Starting the training script...")
+    proc = subprocess.Popen(["bash", "-u", str(training_script_path)], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    stdout, stderr = proc.communicate()
+    print("STDOUT:", stdout.decode())
+    print("STDERR:", stderr.decode())
+
+    print("Training script started.")
 
     # Close slave ends in the parent process
     os.close(slave_fd)
@@ -378,31 +381,13 @@ def fpk_train(directory_name: str = None, session: httpx.Client = None):
     buffer = ""
     try:
         # Continuously read from the subprocess's output
+        print("Reading from subprocess...")
         while True:
-            rlist, _, _ = select.select([master_fd, stdout_master, stderr_master, sys.stdin], [], [], 0.1)
-
-            # stdout (Standard Output) and stderr (Standard Error)
-
-            # Read from stdout and process the lines
-            if stdout_master in rlist:
-                chunk = os.read(stdout_master, 4096).decode()
-                buffer += chunk
-                while '\\n' in buffer:
-                    line, buffer = buffer.split('\\n', 1)
-                    fpk_process_output(line, session, last_installed_flatpack)
-
-            # Read from stderr and process the lines
-            if stderr_master in rlist:
-                chunk = os.read(stderr_master, 4096).decode()
-                buffer += chunk
-                while '\\n' in buffer:
-                    line, buffer = buffer.split('\\n', 1)
-                    fpk_process_output(line, session, last_installed_flatpack)
-
-            # Handle user input
-            if sys.stdin in rlist:
-                user_input = sys.stdin.readline()
-                os.write(master_fd, user_input.encode())
+            output = os.read(stdout_master, 4096).decode()
+            if output:
+                print("Output from subprocess:", output)
+            else:
+                break
 
     finally:
         # Close all file descriptors and ensure subprocess finishes
