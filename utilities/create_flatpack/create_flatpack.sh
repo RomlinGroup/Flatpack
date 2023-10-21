@@ -29,5 +29,6 @@ cp -r warehouse/template/* "warehouse/$FLATPACK_NAME/"
 sed -i '' "s/model_name = \"{{model_name}}\"/model_name = \"$FLATPACK_NAME\"/g" "warehouse/$FLATPACK_NAME/flatpack.toml"
 sed -i '' "s/export REPO_NAME=template/export REPO_NAME=$FLATPACK_NAME/g" "warehouse/$FLATPACK_NAME/train.sh"
 sed -i '' "s/export FLATPACK_NAME=template/export FLATPACK_NAME=$FLATPACK_NAME/g" "warehouse/$FLATPACK_NAME/train.sh"
+sed -i '' "s/# template/# $FLATPACK_NAME/g" "warehouse/$FLATPACK_NAME/README.md"
 
 echo "Contents of warehouse/template copied to warehouse/$FLATPACK_NAME."
