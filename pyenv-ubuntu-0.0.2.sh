@@ -62,5 +62,21 @@ if [ -z "$BASH_VERSION" ]; then
 fi
 EOL
 
+# Source .bashrc to make pyenv commands available
+echo -e "🔄 Activating pyenv changes..."
+source ~/.bashrc
+
+# Install pyenv-virtualenv plugin for pyenv
+echo -e "📥 Installing pyenv-virtualenv plugin..."
+git clone https://github.com/pyenv/pyenv-virtualenv.git $(pyenv root)/plugins/pyenv-virtualenv
+
+# Add pyenv-virtualenv initialization to .bashrc
+echo -e "📝 Configuring pyenv-virtualenv in .bashrc..."
+echo "eval \"$(pyenv virtualenv-init -)\"" >> ~/.bashrc
+
+# Source .bashrc again to activate pyenv-virtualenv changes
+echo -e "🔄 Activating pyenv-virtualenv changes..."
+source ~/.bashrc
+
 echo -e "🎉 Configured pyenv in .bashrc and .profile. To start using pyenv, restart your shell or run 'source ~/.bashrc'."
 echo -e "🎊 Script completed successfully! Happy coding!"
