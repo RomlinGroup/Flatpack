@@ -40,6 +40,12 @@ if [[ $IS_COLAB -eq 0 ]]; then
   if [ "$OS" = "Darwin" ]; then
     WORK_DIR="$REPO_NAME"
     DEVICE="mps"
+  elif [ "$OS" = "Linux" ]; then
+    WORK_DIR="/home/content/$REPO_NAME"
+    DEVICE="cpu"
+    if [ -f /etc/os-release ] && grep -q "Ubuntu" /etc/os-release; then
+      echo "This is Ubuntu"
+    fi
   else
     WORK_DIR="/home/content/$REPO_NAME"
     DEVICE="cpu"
