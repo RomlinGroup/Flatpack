@@ -20,7 +20,7 @@ will do for the AI industry.
 https://pypi.org/project/flatpack
 
 ```bash
-# Google Colab / macOS (Ventura on Apple M2 Pro with flatpack 3.0.5)
+# Google Colab / macOS Ventura (Apple M2 Pro with flatpack 3.0.5)
 pip install --upgrade flatpack
 flatpack list
 flatpack install FLATPACK_NAME
@@ -28,7 +28,7 @@ flatpack train FLATPACK_NAME
 ```
 
 ```bash
-# Ubuntu Server 23.10 (Mantic Minotaur on Raspberry Pi 4 Model B 4GB) (not working yet)
+# Ubuntu Server 23.10 (Raspberry Pi 4 Model B 4GB)
 sudo apt update && sudo apt install pipx
 pipx ensurepath
 pipx install flatpack
