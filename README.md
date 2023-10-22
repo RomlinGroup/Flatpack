@@ -45,6 +45,7 @@ flatpack train FPK_NAME
 
 - template.fpk
   - DATASET.md
+  - device.sh
   - flatpack.toml
   - README.md
   - train.sh *(entrypoint)*
