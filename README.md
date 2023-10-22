@@ -25,6 +25,7 @@ https://pypi.org/project/flatpack
 
 ```bash
 # Google Colab / macOS Ventura (Apple M2 Pro with flatpack 3.0.5)
+# Python 3.10.12 (for reference)
 pip install --upgrade flatpack
 flatpack list
 flatpack install FLATPACK_NAME
@@ -33,6 +34,7 @@ flatpack train FLATPACK_NAME
 
 ```bash
 # Ubuntu Server 23.10 (Raspberry Pi 4 Model B 4GB with flatpack 3.0.5)
+# Python 3.11.6 (for reference)
 sudo apt update && sudo apt install pipx
 pipx ensurepath
 pipx install flatpack
