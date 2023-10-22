@@ -20,7 +20,7 @@ will do for the AI industry.
 https://pypi.org/project/flatpack
 
 ```bash
-# Google Colab / macOS (Ventura on Apple M2 Pro) (working with flatpack 3.0.5)
+# Google Colab / macOS (Ventura on Apple M2 Pro with flatpack 3.0.5)
 pip install --upgrade flatpack
 flatpack list
 flatpack install FLATPACK_NAME
