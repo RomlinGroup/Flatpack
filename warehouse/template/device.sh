@@ -31,7 +31,7 @@ elif [ "$OS" = "Linux" ]; then
   else
     echo "🐧 Detected Linux environment (non-Ubuntu)"
   fi
-  WORK_DIR="$DEFAULT_PATH/$REPO_NAME"
+  WORK_DIR="$DEFAULT_PATH/$FLATPACK_NAME"
   DEVICE="cpu"
 else
   echo "❓ Detected other OS environment"
