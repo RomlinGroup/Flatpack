@@ -19,6 +19,7 @@ scripts = "/home/content/scripts"
 [packages]
 
 [packages.unix]
+build-essential = "*"
 gcc = "*"
 git = "*"
 python3-dev = "*"
