@@ -19,6 +19,7 @@ source "$SCRIPT_DIR/device.sh" || {
 #"${VENV_PYTHON}" -c "import time; [print(f'Count: {i}') or time.sleep(1) for i in range(10, 0, -1)]"
 #echo "🎉 Happy New Year!"
 
+chmod +x "$SCRIPT_DIR/$REPO_NAME/llama_cpp_test.sh"
 source "$SCRIPT_DIR/$REPO_NAME/llama_cpp_test.sh" || {
   echo "⚠️ Error: Failed to source $SCRIPT_DIR/$REPO_NAME/llama_cpp_test.sh" >&2
   exit 1
