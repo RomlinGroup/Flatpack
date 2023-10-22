@@ -45,9 +45,9 @@ flatpack train FPK_NAME
 
 - [template](warehouse/template)
   - DATASET.md
+  - README.md
   - device.sh
   - flatpack.toml
-  - README.md
   - train.sh *(entrypoint)*
 
 ### Code signing
