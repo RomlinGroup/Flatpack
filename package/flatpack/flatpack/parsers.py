@@ -57,8 +57,15 @@ fi
     }}
 
     if [[ $IS_COLAB -eq 0 ]]; then
+        # Check if python3 is available
+        if command -v python3 &>/dev/null; then
+            PYTHON_CMD=python3
+        else
+            PYTHON_CMD=python
+        fi
+
         if [ ! -d "{env_name}" ]; then
-            python -m venv {env_name} || handle_error
+            $PYTHON_CMD -m venv {env_name} || handle_error
         fi
 
         VENV_PYTHON={env_name}/bin/python
