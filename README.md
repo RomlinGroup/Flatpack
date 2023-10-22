@@ -20,7 +20,7 @@ will do for the AI industry.
 https://pypi.org/project/flatpack
 
 ```bash
-# Google Colab (working as of 2023-10-21)
+# Google Colab / macOS (Ventura) (working as of 2023-10-21)
 pip install --upgrade flatpack
 flatpack list
 flatpack install FLATPACK_NAME
@@ -28,7 +28,7 @@ flatpack train FLATPACK_NAME
 ```
 
 ```bash
-# Ubuntu 23.10 (mantic)
+# Ubuntu 23.10 (Mantic Minotaur)
 sudo apt update && sudo apt install pipx
 pipx ensurepath
 pipx install flatpack
