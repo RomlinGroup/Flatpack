@@ -17,6 +17,10 @@ will do for the AI industry.
 
 "A year spent in artificial intelligence is enough to make one believe in God." ([Alan Perlis 1982](http://www.cs.yale.edu/homes/perlis-alan/quotes.html))
 
+## flatpack 3.X.X (Aglaonice)
+
+*Aglaonice, an ancient Greek astronomer from the 2nd or 1st century BC, was celebrated for her precise lunar eclipse predictions. Her mastery inspired the Greek proverb: "As the moon obeys Aglaonice," signifying unwavering certainty.*
+
 https://pypi.org/project/flatpack
 
 ```bash
