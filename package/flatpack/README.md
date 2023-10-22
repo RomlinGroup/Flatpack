@@ -6,6 +6,10 @@
 models from scratch with cutting-edge technology accessible to all. What flatpacks did for the furniture industry, we
 will do for the AI industry.
 
+## flatpack 3.X.X (Aglaonice)
+
+*Aglaonice, an ancient Greek astronomer from the 2nd or 1st century BC, was celebrated for her precise lunar eclipse predictions. Her mastery inspired the Greek proverb: "As the moon obeys Aglaonice," signifying unwavering certainty.*
+
 ## Moving to versioning structure: 3.0.0
 
 Our previous releases were a mix of minor tweaks and significant shifts, making it challenging to anticipate the nature
