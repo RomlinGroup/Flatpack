@@ -28,7 +28,7 @@ flatpack train FLATPACK_NAME
 ```
 
 ```bash
-# Ubuntu Server 23.10 (Raspberry Pi 4 Model B 4GB)
+# Ubuntu Server 23.10 (Raspberry Pi 4 Model B 4GB with flatpack 3.0.5)
 sudo apt update && sudo apt install pipx
 pipx ensurepath
 pipx install flatpack
