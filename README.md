@@ -43,7 +43,7 @@ flatpack train FPK_NAME
 
 ## Flatpack (FPK) 📦
 
-- template
+- [template](warehouse/template)
   - DATASET.md
   - device.sh
   - flatpack.toml
