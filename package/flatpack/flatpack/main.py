@@ -198,16 +198,9 @@ def fpk_get_api_key() -> Optional[str]:
     return config["api_key"]
 
 
-def fpk_install(directory_name: str, session: httpx.Client):
-    """Install a specified flatpack.
+def fpk_install(directory_name: str, session, verbose: bool = False):
+    """Install a specified flatpack."""
 
-    Parameters:
-        - directory_name (str): Name of the flatpack to install.
-        - session (httpx.Client): HTTP client session for making requests.
-
-    Raises:
-        - ValueError: If the specified flatpack does not exist.
-    """
     existing_dirs = fpk_fetch_github_dirs(session)
     if directory_name not in existing_dirs:
         raise ValueError(f"The directory '{directory_name}' does not exist.")
@@ -225,24 +218,25 @@ def fpk_install(directory_name: str, session: httpx.Client):
 
         os.remove('temp_flatpack.toml')
 
-        try:
-            print(f"Installing {directory_name}...")
+        print(f"Installing {directory_name}...")
+
+        if verbose:
+            process = subprocess.Popen(["bash", "flatpack.sh"])
+            process.wait()
+
+        else:
             process = subprocess.Popen(["bash", "flatpack.sh"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             stdout, stderr = process.communicate()
 
             if process.returncode != 0:
-                raise subprocess.CalledProcessError(process.returncode, process.args, output=stdout, stderr=stderr)
+                print("❌ Error: Failed to execute the bash script.")
+                # print("Standard Output:", stdout.decode())
+                # print("Standard Error:", stderr.decode())
 
+        if process.returncode == 0:
             fpk_cache_last_flatpack(directory_name)
+            os.remove('flatpack.sh')
             print(f"🎉 All done!")
-
-        except subprocess.CalledProcessError as e:
-            print("❌ Error: Failed to execute the bash script.")
-            print("Standard Output:", e.output.decode())
-            print("Standard Error:", e.stderr.decode())
-
-    else:
-        print(f"❌ No flatpack.toml found in {directory_name}.\n")
 
 
 def fpk_list_directories(session: httpx.Client) -> str:
@@ -398,6 +392,7 @@ def main():
         parser.add_argument('input', nargs='?', default=None, help='Input for the callback')
         parser.add_argument('--model-name', default="YOUR_MODEL_NAME",
                             help='Name of the model to associate with the log')
+        parser.add_argument('--verbose', action='store_true', help='Display detailed outputs for debugging.')
 
         args = parser.parse_args()
         command = args.command
@@ -405,24 +400,18 @@ def main():
 
         if command == "callback":
             fpk_callback(args.input)
-
         elif command == "find":
             print(fpk_find_models())
-
         elif command == "help":
             print("[HELP]")
-
         elif command == "get-api-key":
             print(fpk_get_api_key())
-
         elif command == "install":
             if not args.input:
                 print("❌ Please specify a flatpack for the install command.")
                 return
-
             directory_name = args.input
             fpk_display_disclaimer(directory_name)
-
             while True:
                 user_response = input().strip().upper()
                 if user_response == "YES":
@@ -432,28 +421,23 @@ def main():
                     exit(0)
                 else:
                     print("❌ Invalid input. Please type 'YES' to accept or 'NO' to decline.")
-            fpk_install(directory_name, session)
-
+            print("Verbose mode:", args.verbose)
+            fpk_install(directory_name, session, verbose=args.verbose)
         elif command == "list":
             print(fpk_list_directories(session))
-
         elif command == "ps":
             print(fpk_list_processes())
-
         elif command == "set-api-key":
             if not args.input:
                 print("❌ Please provide an API key to set.")
                 return
             fpk_set_api_key(args.input)
             print("API key set successfully!")
-
         elif command == "train":
             directory_name = args.input
             fpk_train(directory_name, session)
-
         elif command == "version":
             print("[VERSION]")
-
         else:
             print(f"Unknown command: {command}")
 

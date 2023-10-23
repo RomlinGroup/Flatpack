@@ -46,48 +46,57 @@ fi
     """.strip()
     script.append(colab_check)
 
+    # Bash check for directory existence
+    script.append(f"""
+if [[ $IS_COLAB -eq 1 ]]; then
+    if [ ! -d "{model_name}" ]; then
+        mkdir -p {model_name}
+    else
+        echo 'Directory {model_name} already exists in Google Colab. Moving on.'
+    fi
+fi
+    """)
+
     # Ensure required commands are available
     script.extend(check_command_availability(["curl", "wget", "git"]))
 
+    # Install required Unix packages using apt, but only if not in Google Colab and on a Debian-based system
+    unix_packages = config.get("packages", {}).get("unix", {})
+    package_list_unix = [package for package in unix_packages.keys()]
+    if package_list_unix:
+        apt_install = f"""
+OS=$(uname)
+if [[ $IS_COLAB -eq 0 && "$OS" = "Linux" && -f /etc/debian_version ]]; then
+    echo "Installing required Unix packages..."
+    sudo apt update
+    sudo apt install -y {' '.join(package_list_unix)}
+fi
+        """.strip()
+        script.append(apt_install)
+
     # Setup venv environment
     venv_setup = f"""
-    handle_error() {{
-        echo "😟 Oops! Something went wrong."
-        exit 1
-    }}
+handle_error() {{
+    echo "😟 Oops! Something went wrong."
+    exit 1
+}}
 
-    if [[ $IS_COLAB -eq 0 ]]; then
-        # Check if python3 is available
-        if command -v python3 &>/dev/null; then
-            PYTHON_CMD=python3
-        else
-            PYTHON_CMD=python
-        fi
-
-        if [ ! -d "{env_name}" ]; then
-            $PYTHON_CMD -m venv {env_name} || handle_error
-        fi
-
-        VENV_PYTHON={env_name}/bin/python
-
-        # Now, when you want to run Python within this venv, use $VENV_PYTHON
-        # Example: 
-        # $VENV_PYTHON -m pip install some_package
-
-        # If you need to run a Python script within this venv:
-        # $VENV_PYTHON my_script.py
+if [[ $IS_COLAB -eq 0 ]]; then
+    # Check if python3 is available
+    if command -v python3 &>/dev/null; then
+        PYTHON_CMD=python3
+    else
+        PYTHON_CMD=python
     fi
+
+    if [ ! -d "{env_name}" ]; then
+        $PYTHON_CMD -m venv {env_name} || handle_error
+    fi
+
+    export VENV_PYTHON={env_name}/bin/python
+fi
     """.strip()
     script.append(venv_setup)
-
-    # Bash check for directory existence
-    script.append(f"""
-if [ ! -d "{model_name}" ]; then
-    mkdir -p {model_name}
-else
-    echo 'Directory {model_name} already exists. Moving on.'
-fi
-    """)
 
     # Create other directories as per the TOML configuration
     directories_map = config.get("directories")
@@ -112,7 +121,7 @@ fi
         if from_source and to_destination and branch:
             repo_path = f"./{model_name}/{to_destination.replace('/home/content/', '')}"
             git_clone = f"""
-echo 'Cloning repository from: {from_source}'
+echo "Cloning repository from: {from_source}"
 git clone -b {branch} {from_source} {repo_path}
 if [ $? -eq 0 ]; then
     echo "Git clone was successful."
@@ -122,12 +131,12 @@ else
     exit 1
 fi
 if [ -f {repo_path}/requirements.txt ]; then
-    echo 'Found requirements.txt, installing dependencies...'
-    cd {repo_path} || exit
-    $VENV_PYTHON -m pip install -r requirements.txt
-    cd - || exit
+    echo "pwd: $(pwd)"
+    echo "repo_path: {repo_path}"
+    echo "Found requirements.txt, installing dependencies..."
+    ${{VENV_PYTHON}} -m pip install -r {repo_path}/requirements.txt
 else
-    echo 'No requirements.txt found.'
+    echo "No requirements.txt found."
 fi
             """.strip()
             script.append(git_clone)
