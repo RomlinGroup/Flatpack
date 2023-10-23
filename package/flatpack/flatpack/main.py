@@ -201,42 +201,41 @@ def fpk_get_api_key() -> Optional[str]:
 def fpk_install(directory_name: str, session, verbose: bool = False):
     """Install a specified flatpack."""
 
-    existing_dirs = fpk_fetch_github_dirs(session)
-    if directory_name not in existing_dirs:
-        raise ValueError(f"The directory '{directory_name}' does not exist.")
-
     toml_content = fpk_fetch_flatpack_toml_from_dir(directory_name, session)
 
-    if toml_content:
-        with open('temp_flatpack.toml', 'w') as f:
-            f.write(toml_content)
+    if not toml_content:
+        print(f"❌ Error: Failed to fetch TOML content for '{directory_name}'.")
+        return
 
-        bash_script_content = parse_toml_to_venv_script('temp_flatpack.toml', '3.10.12', directory_name)
+    with open('temp_flatpack.toml', 'w') as f:
+        f.write(toml_content)
 
-        with open('flatpack.sh', 'w') as f:
-            f.write(bash_script_content)
+    bash_script_content = parse_toml_to_venv_script('temp_flatpack.toml', '3.10.12', directory_name)
 
-        os.remove('temp_flatpack.toml')
+    with open('flatpack.sh', 'w') as f:
+        f.write(bash_script_content)
 
-        print(f"Installing {directory_name}...")
+    os.remove('temp_flatpack.toml')
 
-        if verbose:
-            process = subprocess.Popen(["bash", "flatpack.sh"])
-            process.wait()
+    print(f"Installing {directory_name}...")
 
-        else:
-            process = subprocess.Popen(["bash", "flatpack.sh"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            stdout, stderr = process.communicate()
+    if verbose:
+        process = subprocess.Popen(["bash", "flatpack.sh"])
+        process.wait()
+    else:
+        process = subprocess.Popen(["bash", "flatpack.sh"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        stdout, stderr = process.communicate()
 
-            if process.returncode != 0:
-                print("❌ Error: Failed to execute the bash script.")
-                # print("Standard Output:", stdout.decode())
-                # print("Standard Error:", stderr.decode())
+        if process.returncode != 0:
+            print("❌ Error: Failed to execute the bash script.")
+            # Optional: Uncomment the following lines to display the stdout and stderr for debugging
+            # print("Standard Output:", stdout.decode())
+            # print("Standard Error:", stderr.decode())
 
-        if process.returncode == 0:
-            fpk_cache_last_flatpack(directory_name)
-            os.remove('flatpack.sh')
-            print(f"🎉 All done!")
+    if process.returncode == 0:
+        fpk_cache_last_flatpack(directory_name)
+        os.remove('flatpack.sh')
+        print(f"🎉 All done!")
 
 
 def fpk_list_directories(session: httpx.Client) -> str:
@@ -410,7 +409,14 @@ def main():
             if not args.input:
                 print("❌ Please specify a flatpack for the install command.")
                 return
+
             directory_name = args.input
+
+            existing_dirs = fpk_fetch_github_dirs(session)
+            if directory_name not in existing_dirs:
+                print(f"❌ The flatpack '{directory_name}' does not exist.")
+                return
+
             fpk_display_disclaimer(directory_name)
             while True:
                 user_response = input().strip().upper()
@@ -418,9 +424,10 @@ def main():
                     break
                 elif user_response == "NO":
                     print("❌ Installation aborted by user.")
-                    exit(0)
+                    return
                 else:
                     print("❌ Invalid input. Please type 'YES' to accept or 'NO' to decline.")
+
             print("Verbose mode:", args.verbose)
             fpk_install(directory_name, session, verbose=args.verbose)
         elif command == "list":
