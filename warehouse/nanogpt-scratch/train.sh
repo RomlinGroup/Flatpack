@@ -6,7 +6,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 echo -e "🚀 train.sh is running in: $SCRIPT_DIR\n"
 
 # === BEGIN USER CUSTOMIZATION ===
-export REPO_NAME=nanoGPT
+export REPO_NAME=nanoGPT-colab
 export FLATPACK_NAME=nanogpt-scratch
 # === END USER CUSTOMIZATION ===
 
@@ -16,6 +16,4 @@ source "$SCRIPT_DIR/device.sh" || {
 }
 
 # === BEGIN USER CUSTOMIZATION ===
-"${VENV_PYTHON}" data/shakespeare_char/prepare.py
-"${VENV_PYTHON}" train.py config/train_shakespeare_char.py
 # === END USER CUSTOMIZATION ===
