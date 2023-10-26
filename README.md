@@ -36,6 +36,7 @@ flatpack train FPK_NAME
 # Ubuntu Server 23.10
 sudo apt update && sudo apt install pipx
 pipx ensurepath
+
 pipx install flatpack
 
 flatpack list
