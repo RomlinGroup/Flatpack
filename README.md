@@ -26,10 +26,6 @@ https://pypi.org/project/flatpack
 ```bash
 # Google Colab / macOS
 pip install --upgrade flatpack
-
-flatpack list
-flatpack install FPK_NAME
-flatpack train FPK_NAME
 ```
 
 ```bash
@@ -38,9 +34,17 @@ sudo apt update && sudo apt install pipx
 pipx ensurepath
 
 pipx install flatpack
+```
 
+```bash
 flatpack list
+```
+
+```bash
 flatpack install FPK_NAME
+```
+
+```bash
 flatpack train FPK_NAME
 ```
 
