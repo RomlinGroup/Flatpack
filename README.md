@@ -163,40 +163,42 @@ or datasets is intended solely for research purposes; exercise due diligence by 
 and authenticity before any commercial application. Consult legal counsel to ensure compliance with relevant laws and
 regulations if needed._
 
-| Name                                                                                    | Type    | License                                                                                                   |
-|:----------------------------------------------------------------------------------------|:--------|:----------------------------------------------------------------------------------------------------------|
-| [databricks-dolly-15k](https://huggingface.co/datasets/databricks/databricks-dolly-15k) | Dataset | [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/)                                           |
-| [falcon-refinedweb](https://huggingface.co/datasets/tiiuae/falcon-refinedweb)           | Dataset | [ODC-By 1.0](https://opendatacommons.org/licenses/by/1-0/)                                                |
-| [Cerebras-GPT-13B](https://huggingface.co/cerebras/Cerebras-GPT-13B)                    | Model   | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)                                         |
-| [dolphin-2.1-mistral-7b](https://huggingface.co/ehartford/dolphin-2.1-mistral-7b)       | Model   | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)                                         |
-| [falcon-7b](https://huggingface.co/tiiuae/falcon-7b)                                    | Model   | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)                                         |
-| [falcon-7b-instruct](https://huggingface.co/tiiuae/falcon-7b-instruct)                  | Model   | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)                                         |
-| [falcon-40b](https://huggingface.co/tiiuae/falcon-40b)                                  | Model   | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)                                         |
-| [falcon-40b-instruct](https://huggingface.co/tiiuae/falcon-40b-instruct)                | Model   | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)                                         |
-| [falcon-180B](https://huggingface.co/tiiuae/falcon-180B)                                | Model   | [Falcon-180B TII License](https://huggingface.co/spaces/tiiuae/falcon-180b-license/blob/main/LICENSE.txt) |
-| [falcon-180B-chat](https://huggingface.co/tiiuae/falcon-180B-chat)                      | Model   | [Falcon-180B TII License](https://huggingface.co/spaces/tiiuae/falcon-180b-license/blob/main/LICENSE.txt) |
-| [FalconLite](https://huggingface.co/amazon/FalconLite)                                  | Model   | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)                                         |
-| [h2ogpt-oasst1-falcon-40b](https://huggingface.co/h2oai/h2ogpt-oasst1-falcon-40b)       | Model   | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)                                         |
-| [Llama-2-7b-hf](https://huggingface.co/meta-llama/Llama-2-7b-hf)                        | Model   | [LLAMA 2 LICENSE](https://ai.meta.com/resources/models-and-libraries/llama-downloads/)                    |
-| [Llama-2-7b-chat-hf](https://huggingface.co/meta-llama/Llama-2-7b-chat-hf)              | Model   | [LLAMA 2 LICENSE](https://ai.meta.com/resources/models-and-libraries/llama-downloads/)                    |
-| [Llama-2-13b-hf](https://huggingface.co/meta-llama/Llama-2-13b-hf)                      | Model   | [LLAMA 2 LICENSE](https://ai.meta.com/resources/models-and-libraries/llama-downloads/)                    |
-| [Llama-2-13b-chat-hf](https://huggingface.co/meta-llama/Llama-2-13b-chat-hf)            | Model   | [LLAMA 2 LICENSE](https://ai.meta.com/resources/models-and-libraries/llama-downloads/)                    |
-| [Llama-2-70b-hf](https://huggingface.co/meta-llama/Llama-2-70b-hf)                      | Model   | [LLAMA 2 LICENSE](https://ai.meta.com/resources/models-and-libraries/llama-downloads/)                    |
-| [Llama-2-70b-chat-hf](https://huggingface.co/meta-llama/Llama-2-70b-chat-hf)            | Model   | [LLAMA 2 LICENSE](https://ai.meta.com/resources/models-and-libraries/llama-downloads/)                    |
-| [Mistral-7B-v0.1](https://huggingface.co/mistralai/Mistral-7B-v0.1)                     | Model   | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)                                         |
-| [Mistral-7B-Instruct-v0.1](https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.1)   | Model   | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)                                         |
-| [mpt-7b](https://huggingface.co/mosaicml/mpt-7b)                                        | Model   | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)                                         |
-| [mpt-7b-instruct](https://huggingface.co/mosaicml/mpt-7b-instruct)                      | Model   | [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/)                                           |
-| [mpt-7b-storywriter](https://huggingface.co/mosaicml/mpt-7b-storywriter)                | Model   | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)                                         |
-| [open_llama_3b](https://huggingface.co/openlm-research/open_llama_3b)                   | Model   | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)                                         |
-| [open_llama_7b](https://huggingface.co/openlm-research/open_llama_7b)                   | Model   | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)                                         |
-| [open_llama_13b](https://huggingface.co/openlm-research/open_llama_13b)                 | Model   | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)                                         |
-| [pythia-12b](https://huggingface.co/EleutherAI/pythia-12b)                              | Model   | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)                                         |
-| [replit-code-v1-3b](https://huggingface.co/replit/replit-code-v1-3b)                    | Model   | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)                                         |
-| [replit-code-v1_5-3b](https://huggingface.co/replit/replit-code-v1_5-3b)                | Model   | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)                                         |
-| [stablelm-base-alpha-3b](https://huggingface.co/stabilityai/stablelm-base-alpha-3b)     | Model   | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)                                           |
-| [stablelm-base-alpha-7b](https://huggingface.co/stabilityai/stablelm-base-alpha-7b)     | Model   | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)                                           |
-| [zephyr-7b-alpha](https://huggingface.co/HuggingFaceH4/zephyr-7b-alpha)                 | Model   | [MIT License](https://opensource.org/license/mit/)                                                        |
+| Name                                                                                             | Type    | License                                                                                                   |
+|:-------------------------------------------------------------------------------------------------|:--------|:----------------------------------------------------------------------------------------------------------|
+| [databricks-dolly-15k](https://huggingface.co/datasets/databricks/databricks-dolly-15k)          | Dataset | [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/)                                           |
+| [falcon-refinedweb](https://huggingface.co/datasets/tiiuae/falcon-refinedweb)                    | Dataset | [ODC-By 1.0](https://opendatacommons.org/licenses/by/1-0/)                                                |
+| [Cerebras-GPT-13B](https://huggingface.co/cerebras/Cerebras-GPT-13B)                             | Model   | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)                                         |
+| [dolphin-2.1-mistral-7b](https://huggingface.co/ehartford/dolphin-2.1-mistral-7b)                | Model   | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)                                         |
+| [falcon-7b](https://huggingface.co/tiiuae/falcon-7b)                                             | Model   | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)                                         |
+| [falcon-7b-instruct](https://huggingface.co/tiiuae/falcon-7b-instruct)                           | Model   | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)                                         |
+| [falcon-40b](https://huggingface.co/tiiuae/falcon-40b)                                           | Model   | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)                                         |
+| [falcon-40b-instruct](https://huggingface.co/tiiuae/falcon-40b-instruct)                         | Model   | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)                                         |
+| [falcon-180B](https://huggingface.co/tiiuae/falcon-180B)                                         | Model   | [Falcon-180B TII License](https://huggingface.co/spaces/tiiuae/falcon-180b-license/blob/main/LICENSE.txt) |
+| [falcon-180B-chat](https://huggingface.co/tiiuae/falcon-180B-chat)                               | Model   | [Falcon-180B TII License](https://huggingface.co/spaces/tiiuae/falcon-180b-license/blob/main/LICENSE.txt) |
+| [FalconLite](https://huggingface.co/amazon/FalconLite)                                           | Model   | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)                                         |
+| [h2ogpt-oasst1-falcon-40b](https://huggingface.co/h2oai/h2ogpt-oasst1-falcon-40b)                | Model   | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)                                         |
+| [Llama-2-7b-hf](https://huggingface.co/meta-llama/Llama-2-7b-hf)                                 | Model   | [LLAMA 2 LICENSE](https://ai.meta.com/resources/models-and-libraries/llama-downloads/)                    |
+| [Llama-2-7b-chat-hf](https://huggingface.co/meta-llama/Llama-2-7b-chat-hf)                       | Model   | [LLAMA 2 LICENSE](https://ai.meta.com/resources/models-and-libraries/llama-downloads/)                    |
+| [Llama-2-13b-hf](https://huggingface.co/meta-llama/Llama-2-13b-hf)                               | Model   | [LLAMA 2 LICENSE](https://ai.meta.com/resources/models-and-libraries/llama-downloads/)                    |
+| [Llama-2-13b-chat-hf](https://huggingface.co/meta-llama/Llama-2-13b-chat-hf)                     | Model   | [LLAMA 2 LICENSE](https://ai.meta.com/resources/models-and-libraries/llama-downloads/)                    |
+| [Llama-2-70b-hf](https://huggingface.co/meta-llama/Llama-2-70b-hf)                               | Model   | [LLAMA 2 LICENSE](https://ai.meta.com/resources/models-and-libraries/llama-downloads/)                    |
+| [Llama-2-70b-chat-hf](https://huggingface.co/meta-llama/Llama-2-70b-chat-hf)                     | Model   | [LLAMA 2 LICENSE](https://ai.meta.com/resources/models-and-libraries/llama-downloads/)                    |
+| [Mistral-7B-v0.1](https://huggingface.co/mistralai/Mistral-7B-v0.1)                              | Model   | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)                                         |
+| [Mistral-7B-Instruct-v0.1](https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.1)            | Model   | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)                                         |
+| [mpt-7b](https://huggingface.co/mosaicml/mpt-7b)                                                 | Model   | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)                                         |
+| [mpt-7b-instruct](https://huggingface.co/mosaicml/mpt-7b-instruct)                               | Model   | [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/)                                           |
+| [mpt-7b-storywriter](https://huggingface.co/mosaicml/mpt-7b-storywriter)                         | Model   | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)                                         |
+| [open_llama_3b](https://huggingface.co/openlm-research/open_llama_3b)                            | Model   | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)                                         |
+| [open_llama_7b](https://huggingface.co/openlm-research/open_llama_7b)                            | Model   | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)                                         |
+| [open_llama_13b](https://huggingface.co/openlm-research/open_llama_13b)                          | Model   | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)                                         |
+| [persimmon-8b-base](https://huggingface.co/adept/persimmon-8b-base)                              | Model   | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)                                         |
+| [persimmon-8b-chat](https://huggingface.co/adept/persimmon-8b-chat)                              | Model   | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)                                         |
+| [pythia-12b](https://huggingface.co/EleutherAI/pythia-12b)                                       | Model   | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)                                         |
+| [replit-code-v1-3b](https://huggingface.co/replit/replit-code-v1-3b)                             | Model   | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)                                         |
+| [replit-code-v1_5-3b](https://huggingface.co/replit/replit-code-v1_5-3b)                         | Model   | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)                                         |
+| [stablelm-base-alpha-3b](https://huggingface.co/stabilityai/stablelm-base-alpha-3b)              | Model   | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)                                           |
+| [stablelm-base-alpha-7b](https://huggingface.co/stabilityai/stablelm-base-alpha-7b)              | Model   | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)                                           |
+| [zephyr-7b-alpha](https://huggingface.co/HuggingFaceH4/zephyr-7b-alpha)                          | Model   | [MIT License](https://opensource.org/license/mit/)                                                        |
 
 ## License
 
