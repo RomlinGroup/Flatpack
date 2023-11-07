@@ -38,7 +38,7 @@ wandb = "*"
 [[git]]
 from_source = "https://github.com/romlingroup/llama2.c"
 to_destination = "/home/content/llama2.c"
-branch = "main"
+branch = "master"
 
 [[file]]
 from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/llama2-scratch/device.sh"

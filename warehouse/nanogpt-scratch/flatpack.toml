@@ -38,7 +38,7 @@ wandb = "*"
 [[git]]
 from_source = "https://github.com/romlingroup/nanoGPT-colab"
 to_destination = "/home/content/nanoGPT-colab"
-branch = "master"
+branch = "main"
 
 [[file]]
 from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/nanogpt-scratch/device.sh"
