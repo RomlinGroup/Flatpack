@@ -16,4 +16,6 @@ source "$SCRIPT_DIR/device.sh" || {
 }
 
 # === BEGIN USER CUSTOMIZATION ===
+"${VENV_PYTHON}" data/shakespeare_char/prepare.py
+"${VENV_PYTHON}" train.py config/train_shakespeare_char.py
 # === END USER CUSTOMIZATION ===
