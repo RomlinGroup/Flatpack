@@ -1,3 +1,9 @@
+from collections import deque
+from .instructions import build
+from .parsers import parse_toml_to_venv_script
+from pathlib import Path
+from typing import List, Optional
+
 import argparse
 import httpx
 import logging
@@ -9,11 +15,6 @@ import subprocess
 import sys
 import time
 import toml
-from collections import deque
-from .instructions import build
-from .parsers import parse_toml_to_venv_script
-from pathlib import Path
-from typing import List, Optional
 
 CONFIG_FILE_PATH = os.path.join(os.path.expanduser("~"), ".fpk_config.toml")
 LOGGING_BATCH_SIZE = 10
