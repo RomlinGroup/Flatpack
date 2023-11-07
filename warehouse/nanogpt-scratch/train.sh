@@ -6,7 +6,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 echo -e "🚀 train.sh is running in: $SCRIPT_DIR\n"
 
 # === BEGIN USER CUSTOMIZATION ===
-export REPO_NAME=nanoGPT-colab
+export REPO_NAME=nanoGPT
 export FLATPACK_NAME=nanogpt-scratch
 # === END USER CUSTOMIZATION ===
 
