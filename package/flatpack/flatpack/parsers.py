@@ -134,7 +134,7 @@ if [ -f {repo_path}/requirements.txt ]; then
     echo "pwd: $(pwd)"
     echo "repo_path: {repo_path}"
     echo "Found requirements.txt, installing dependencies..."
-    ${{VENV_PYTHON}} -m pip install -r {repo_path}/requirements.txt
+    ${{VENV_PYTHON}} pip install -r {repo_path}/requirements.txt
 else
     echo "No requirements.txt found."
 fi

@@ -236,7 +236,7 @@ def fpk_install(directory_name: str, session, verbose: bool = False):
 
     if process.returncode == 0:
         fpk_cache_last_flatpack(directory_name)
-        os.remove('flatpack.sh')
+        # os.remove('flatpack.sh')
         print(f"🎉 All done!")
 
 
