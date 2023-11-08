@@ -174,7 +174,8 @@ def fpk_find_models(directory_path: str = None) -> List[str]:
     """
     if directory_path is None:
         directory_path = os.getcwd()
-    model_file_formats = ['.h5', '.json', '.onnx', '.pb', '.pt']
+    model_file_formats = ['.caffemodel', '.ckpt', '.gguf', '.h5', '.json', '.mar', '.mlmodel',
+                          '.model', '.onnx', '.params', '.pb', '.pkl', '.pickle', '.pt', '.sav', '.tflite', '.weights']
     model_files = []
 
     for root, _, files in os.walk(directory_path):
