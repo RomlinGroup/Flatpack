@@ -1,5 +1,3 @@
-from collections import deque
-from .instructions import build
 from .parsers import parse_toml_to_venv_script
 from pathlib import Path
 from typing import List, Optional
@@ -8,12 +6,9 @@ import argparse
 import httpx
 import logging
 import os
-import pty
 import re
 import select
 import subprocess
-import sys
-import time
 import toml
 
 CONFIG_FILE_PATH = os.path.join(os.path.expanduser("~"), ".fpk_config.toml")
@@ -200,6 +195,13 @@ def fpk_get_api_key() -> Optional[str]:
     return config["api_key"]
 
 
+def fpk_gpio():
+    """Get the status of all GPIO pins on a Raspberry Pi."""
+    if not fpk_is_raspberry_pi():
+        return "Error: This function can only be run on a Raspberry Pi."
+    return "Coming soon"
+
+
 def fpk_install(directory_name: str, session, verbose: bool = False):
     """Install a specified flatpack."""
 
@@ -238,6 +240,18 @@ def fpk_install(directory_name: str, session, verbose: bool = False):
         fpk_cache_last_flatpack(directory_name)
         # os.remove('flatpack.sh')
         print(f"🎉 All done!")
+
+
+def fpk_is_raspberry_pi():
+    """Check if we're running on a Raspberry Pi."""
+    try:
+        with open('/proc/cpuinfo', 'r') as f:
+            for line in f:
+                if line.startswith('Hardware') and 'BCM' in line:
+                    return True
+    except IOError:
+        return False
+    return False
 
 
 def fpk_list_directories(session: httpx.Client) -> str:
@@ -403,6 +417,8 @@ def main():
             fpk_callback(args.input)
         elif command == "find":
             print(fpk_find_models())
+        elif command == "gpio":
+            print(fpk_gpio())
         elif command == "help":
             print("[HELP]")
         elif command == "get-api-key":
