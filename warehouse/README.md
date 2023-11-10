@@ -12,10 +12,11 @@ flatpack.ai is experimental; please avoid using it for production.
 
 Ahoy, brave explorer!
 
-| Name                                                                                              | Type     | FPK |
-|:--------------------------------------------------------------------------------------------------|:---------|:----|
-| [llama2-scratch](https://github.com/romlingroup/flatpack-ai/tree/main/warehouse/llama2-scratch)   | Flatpack | No  |
-| [nanogpt-scratch](https://github.com/romlingroup/flatpack-ai/tree/main/warehouse/nanogpt-scratch) | Flatpack | No  |
+| Name                                                                                                | Type     | FPK |
+|:----------------------------------------------------------------------------------------------------|:---------|:----|
+| [llama2-scratch](https://github.com/romlingroup/flatpack-ai/tree/main/warehouse/llama2-scratch)     | Flatpack | No  |
+| [llama-cpp-python](https://github.com/romlingroup/flatpack-ai/tree/main/warehouse/llama-cpp-pythoh) | Flatpack | No  |
+| [nanogpt-scratch](https://github.com/romlingroup/flatpack-ai/tree/main/warehouse/nanogpt-scratch)   | Flatpack | No  |
 
 ## Friendly notice ❤️
 
