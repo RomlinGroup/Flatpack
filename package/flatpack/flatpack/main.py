@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import List, Optional
 
 import argparse
+import gpiozero
 import httpx
 import logging
 import os
@@ -199,7 +200,11 @@ def fpk_gpio():
     """Get the status of all GPIO pins on a Raspberry Pi."""
     if not fpk_is_raspberry_pi():
         return "Error: This function can only be run on a Raspberry Pi."
-    return "Coming soon"
+    try:
+        result = subprocess.run(["pinout"], capture_output=True, text=True, check=True)
+        return result.stdout
+    except subprocess.CalledProcessError as e:
+        return f"An error occurred: {e}"
 
 
 def fpk_install(directory_name: str, session, verbose: bool = False):
