@@ -5,7 +5,7 @@
 ```
 
 ```bash
-./upload_to_hf.sh gpt2_onnx gpt2
+./upload_to_hf.sh gpt2-onnx gpt2
 ```
 
 ```bash
