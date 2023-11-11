@@ -16,5 +16,5 @@ source "$SCRIPT_DIR/device.sh" || {
 }
 
 # === BEGIN USER CUSTOMIZATION ===
-pip install -e .
+pip install llama-cpp-python
 # === END USER CUSTOMIZATION ===
