@@ -16,5 +16,5 @@ source "$SCRIPT_DIR/device.sh" || {
 }
 
 # === BEGIN USER CUSTOMIZATION ===
-"${VENV_PYTHON}" train.py
+"${VENV_PYTHON}" pip install -e .
 # === END USER CUSTOMIZATION ===
