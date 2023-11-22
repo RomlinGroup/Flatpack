@@ -10,7 +10,7 @@
 
 > 😱 **Regarding AI fearmongering:** ["At what specific date in the future, if the apocalypse hasn't happened, will you finally admit to being wrong?"](https://bigthink.com/pessimists-archive/ai-fear-overpopulation/) (Archie McKenzie 2023) / ["Fearmongering is a technique that has benefited many people over the ages."](https://www.youtube.com/watch?v=2ZbRKxZ2cjM) (Fred L. Smith, Jr. 2019)
 
-(OPEN SOURCE) AI everywhere, fit nowhere? Not anymore. Makers, join us at [flatpack.ai](https://flatpack.ai) to build the future of AI and robotics!
+AI everywhere, fit nowhere? Not anymore. Makers, join us at [flatpack.ai](https://flatpack.ai) to build the future of AI and robotics!
 
 "A year spent in artificial intelligence is enough to make one believe in God." ([Alan Perlis 1982](http://www.cs.yale.edu/homes/perlis-alan/quotes.html))
 
