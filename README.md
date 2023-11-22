@@ -10,9 +10,11 @@
 
 > 😱 **Regarding AI fearmongering:** ["At what specific date in the future, if the apocalypse hasn't happened, will you finally admit to being wrong?"](https://bigthink.com/pessimists-archive/ai-fear-overpopulation/) (Archie McKenzie 2023) / ["Fearmongering is a technique that has benefited many people over the ages."](https://www.youtube.com/watch?v=2ZbRKxZ2cjM) (Fred L. Smith, Jr. 2019)
 
-Ready-to-assemble AI
+## Ready-to-assemble AI
 
 Build with [flatpack.ai](https://flatpack.ai) and [gpio.ai](https://gpio.ai)
+
+Just as Arduino or Raspberry Pi have found their place in professional environments for developing and testing new ideas, flatpack.ai aims to be the go-to platform for AI experimentation and innovation, from educational settings to the highest echelons of industry and research.
 
 "A year spent in artificial intelligence is enough to make one believe in God." ([Alan Perlis 1982](http://www.cs.yale.edu/homes/perlis-alan/quotes.html))
 
