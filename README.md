@@ -12,7 +12,7 @@
 
 Ready-to-assemble AI
 
-Building [flatpack.ai](https://flatpack.ai) and [gpio.ai](https://gpio.ai)
+Build with [flatpack.ai](https://flatpack.ai) and [gpio.ai](https://gpio.ai)
 
 "A year spent in artificial intelligence is enough to make one believe in God." ([Alan Perlis 1982](http://www.cs.yale.edu/homes/perlis-alan/quotes.html))
 
