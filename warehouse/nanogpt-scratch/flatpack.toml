@@ -28,6 +28,10 @@ wget = "*"
 
 [packages.python]
 datasets = "*"
+numpy = "*"
+tiktoken = "*"
+transformers = "*"
+torch = "*"
 tqdm = "*"
 wandb = "*"
 
