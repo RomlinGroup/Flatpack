@@ -1,0 +1,61 @@
+# flatpack.toml
+# WIP (2023-11-23)
+
+version = "0.0.1"
+
+[environment]
+model_name = "rwkv-infctx-trainer"
+
+[[port]]
+external = 1337
+internal = 80
+
+[directories]
+checkpoints = "/home/content/checkpoints"
+data = "/home/content/data"
+models = "/home/content/models"
+scripts = "/home/content/scripts"
+
+[packages]
+
+[packages.unix]
+build-essential = "*"
+gcc = "*"
+git = "*"
+python3-dev = "*"
+python3-pip = "*"
+wget = "*"
+
+[packages.python]
+datasets = "*"
+numpy = "*"
+tiktoken = "*"
+transformers = "*"
+torch = "*"
+tqdm = "*"
+wandb = "*"
+
+[[git]]
+from_source = "https://github.com/RWKV/RWKV-infctx-trainer"
+to_destination = "/home/content/RWKV-infctx-trainer"
+branch = "main"
+
+[[file]]
+from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/rwkv-infctx-trainer/device.sh"
+to_destination = "/home/content/device.sh"
+
+[[file]]
+from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/rwkv-infctx-trainer/train.sh"
+to_destination = "/home/content/train.sh"
+
+[[run]]
+command = "chmod"
+args = "+x /home/content/device.sh"
+
+[[run]]
+command = "chmod"
+args = "+x /home/content/train.sh"
+
+[[cmd]]
+command = "bash"
+args = "/home/content/train.sh"
