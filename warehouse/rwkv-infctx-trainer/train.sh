@@ -23,6 +23,16 @@ mkdir -p dataset/dataset-config/zip/
 mkdir -p model/
 
 cd RWKV-v4neo || exit
+
 "${VENV_PYTHON}" ./init_model.py --n_layer 6 --n_embd 512 --vocab_size neox --skip-if-exists ../model/L6-D512-neox-init.pth
 "${VENV_PYTHON}" ./init_model.py --n_layer 6 --n_embd 512 --vocab_size world --skip-if-exists ../model/L6-D512-world-init.pth
+
+cd ../dataset/dataset-config/zip/ && wget -nc https://data.deepai.org/enwik8.zip
+cd ../dataset/dataset-config/text/ && rm -rf ./*
+cd ../dataset/dataset-config/text/ && unzip ../zip/enwik8.zip
+cd ../dataset/dataset-config/text/ && mv enwik8 enwik8.txt
+cd ../dataset/dataset-config/text/ && ls -lh
+
+"${VENV_PYTHON}" preload_datapath.py ../notebook/dataset-config/example-local-text.yaml
+"${VENV_PYTHON}" lightning_trainer.py fit -c ../notebook/dataset-config/example-local-text.yaml
 # === END USER CUSTOMIZATION ===
