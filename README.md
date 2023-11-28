@@ -16,8 +16,6 @@ Build with [flatpack.ai](https://flatpack.ai) and [gpio.ai](https://gpio.ai)
 
 Just as Arduino or Raspberry Pi have found their place in professional environments for developing and testing new ideas, flatpack.ai aims to be the go-to platform for AI experimentation and innovation, from educational settings to the highest echelons of industry and research.
 
-"A year spent in artificial intelligence is enough to make one believe in God." ([Alan Perlis 1982](http://www.cs.yale.edu/homes/perlis-alan/quotes.html))
-
 ## flatpack 3.X.X (Aglaonice)
 
 *Aglaonice, an ancient Greek astronomer from the 2nd or 1st century BC, was celebrated for her precise lunar eclipse predictions. Her mastery inspired the Greek proverb: "As the moon obeys Aglaonice," signifying unwavering certainty.*
