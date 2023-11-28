@@ -36,7 +36,7 @@ unzip ../zip/enwik8.zip
 mv enwik8 enwik8.txt
 ls -lh
 
-cd RWKV-v4neo || exit
+cd ../../RWKV-v4neo || exit
 "${VENV_PYTHON}" preload_datapath.py notebook/dataset-config/example-local-text.yaml
 "${VENV_PYTHON}" lightning_trainer.py fit -c notebook/dataset-config/example-local-text.yaml
 # === END USER CUSTOMIZATION ===
