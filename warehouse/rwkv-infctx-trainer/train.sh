@@ -34,6 +34,6 @@ cd ../dataset/dataset-config/text/ && mv enwik8 enwik8.txt
 cd ../dataset/dataset-config/text/ && ls -lh
 
 cd RWKV-v4neo || exit
-"${VENV_PYTHON}" preload_datapath.py ../notebook/dataset-config/example-local-text.yaml
-"${VENV_PYTHON}" lightning_trainer.py fit -c ../notebook/dataset-config/example-local-text.yaml
+"${VENV_PYTHON}" preload_datapath.py notebook/dataset-config/example-local-text.yaml
+"${VENV_PYTHON}" lightning_trainer.py fit -c notebook/dataset-config/example-local-text.yaml
 # === END USER CUSTOMIZATION ===
