@@ -5,10 +5,9 @@ with open("README.md", "r") as f:
 
 setup(
     name="flatpack",
-    version="3.0.27",
+    version="3.0.29",
     packages=find_packages(),
     install_requires=[
-        "gpiozero",
         "httpx",
         "numpy",
         "requests",

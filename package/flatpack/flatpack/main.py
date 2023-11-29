@@ -3,7 +3,6 @@ from pathlib import Path
 from typing import List, Optional
 
 import argparse
-import gpiozero
 import httpx
 import logging
 import os
@@ -194,17 +193,6 @@ def fpk_get_api_key() -> Optional[str]:
             loaded_config = toml.load(config_file)
             config["api_key"] = loaded_config.get("api_key")
     return config["api_key"]
-
-
-def fpk_gpio():
-    """Get the status of all GPIO pins on a Raspberry Pi."""
-    if not fpk_is_raspberry_pi():
-        return "Error: This function can only be run on a Raspberry Pi."
-    try:
-        result = subprocess.run(["pinout"], capture_output=True, text=True, check=True)
-        return result.stdout
-    except subprocess.CalledProcessError as e:
-        return f"An error occurred: {e}"
 
 
 def fpk_install(directory_name: str, session, verbose: bool = False):
@@ -422,8 +410,6 @@ def main():
             fpk_callback(args.input)
         elif command == "find":
             print(fpk_find_models())
-        elif command == "gpio":
-            print(fpk_gpio())
         elif command == "help":
             print("[HELP]")
         elif command == "get-api-key":
