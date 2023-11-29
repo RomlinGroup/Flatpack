@@ -16,7 +16,7 @@ source "$SCRIPT_DIR/device.sh" || {
 }
 
 # === BEGIN USER CUSTOMIZATION ===
-sed -i 's/max_steps: 10/max_steps: 100/' notebook/dataset-config/example-local-text.yaml
+sed -i 's/max_steps: 10/#max_steps: 10/' notebook/dataset-config/example-local-text.yaml
 
 mkdir -p checkpoint/
 mkdir -p datapath/
