@@ -104,10 +104,21 @@ def fpk_callback(input_variable=None):
     Args:
         input_variable (Optional[str]): User-provided input. Defaults to None.
     """
+
+    # Define a regular expression pattern for valid input
+    valid_pattern = re.compile(r'^[a-zA-Z0-9_\- ]+$')  # Adjust pattern as needed
+
     if input_variable:
+        # Validate input against the pattern
+        if not valid_pattern.match(input_variable):
+            print("Invalid input. Please provide alphanumeric characters only.")
+            return
+
+        # Proceed if input is valid
         print(f"You provided the input: {input_variable}")
     else:
         print("No input provided!")
+
     print("It works!")
 
 
