@@ -22,8 +22,6 @@ trainer:
   callbacks:
     class_path: lightning.pytorch.callbacks.ModelCheckpoint
     init_args:
-      dirpath: ../checkpoint
-      save_top_k: 3
       save_last: true
 
 model:
