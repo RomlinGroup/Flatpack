@@ -1,3 +1,4 @@
+from cryptography.fernet import Fernet
 from .parsers import parse_toml_to_venv_script
 from pathlib import Path
 from typing import List, Optional
@@ -9,7 +10,9 @@ import os
 import re
 import select
 import shlex
+import stat
 import subprocess
+import sys
 import toml
 
 CONFIG_FILE_PATH = os.path.join(os.path.expanduser("~"), ".fpk_config.toml")
@@ -33,6 +36,55 @@ class SessionManager:
 
     def __exit__(self, exc_type, exc_value, traceback):
         self.session.close()
+
+
+def fpk_get_encryption_key():
+    # Fetch the encryption key from an environment variable
+    return os.environ.get("FPK_ENCRYPTION_KEY")
+
+
+def fpk_encrypt_data(data, key):
+    fernet = Fernet(key)
+    return fernet.encrypt(data.encode())
+
+
+def fpk_decrypt_data(data, key):
+    fernet = Fernet(key)
+    return fernet.decrypt(data).decode()
+
+
+def fpk_set_secure_file_permissions(file_path):
+    os.chmod(file_path, stat.S_IRUSR | stat.S_IWUSR)  # Read/write for file owner only
+
+
+class FPKEncryptionKeyError(Exception):
+    """Custom exception for missing encryption key."""
+    pass
+
+
+def fpk_set_api_key(api_key: str):
+    encryption_key = fpk_get_encryption_key()
+    if not encryption_key:
+        raise FPKEncryptionKeyError("❌ Encryption key not set.")
+
+    encrypted_api_key = fpk_encrypt_data(api_key, encryption_key)
+    # Save the encrypted API key to the config file
+    config["api_key"] = encrypted_api_key
+    with open(CONFIG_FILE_PATH, "w") as config_file:
+        toml.dump(config, config_file)
+    fpk_set_secure_file_permissions(CONFIG_FILE_PATH)
+    logger.info("API key set successfully!")
+
+
+def fpk_get_api_key() -> Optional[str]:
+    encryption_key = fpk_get_encryption_key()
+    if not encryption_key or not os.path.exists(CONFIG_FILE_PATH):
+        return None
+
+    with open(CONFIG_FILE_PATH, "r") as config_file:
+        loaded_config = toml.load(config_file)
+        encrypted_api_key = loaded_config.get("api_key")
+        return fpk_decrypt_data(encrypted_api_key, encryption_key) if encrypted_api_key else None
 
 
 def fpk_cache_last_flatpack(directory_name: str):
@@ -181,21 +233,6 @@ def fpk_find_models(directory_path: str = None) -> List[str]:
     return model_files
 
 
-def fpk_get_api_key() -> Optional[str]:
-    """Fetch the API key from the configuration file.
-
-    Returns:
-        Optional[str]: The API key if found, otherwise None.
-    """
-    if not config["api_key"]:
-        if not os.path.exists(CONFIG_FILE_PATH):
-            return None
-        with open(CONFIG_FILE_PATH, "r") as config_file:
-            loaded_config = toml.load(config_file)
-            config["api_key"] = loaded_config.get("api_key")
-    return config["api_key"]
-
-
 def fpk_install(directory_name: str, session, verbose: bool = False):
     """Install a specified flatpack."""
     if not fpk_valid_directory_name(directory_name):
@@ -303,15 +340,6 @@ def fpk_log_to_api(message: str, session: httpx.Client, api_key: Optional[str] =
         logger.error(f"Failed to send request: {e}")
 
 
-def fpk_set_api_key(api_key: str):
-    """Set and save the API key to the configuration file."""
-    global config
-    config["api_key"] = api_key
-    with open(CONFIG_FILE_PATH, "w") as config_file:
-        toml.dump(config, config_file)
-    logger.info("API key set successfully!")
-
-
 def fpk_process_output(output, session, last_installed_flatpack):
     """Process output and log it."""
     # Get the API key for logging
@@ -415,68 +443,73 @@ def fpk_valid_directory_name(name: str) -> bool:
 
 
 def main():
-    with SessionManager() as session:
-        parser = argparse.ArgumentParser(description='flatpack.ai command line interface')
-        parser.add_argument('command', help='Command to run')
-        parser.add_argument('input', nargs='?', default=None, help='Input for the callback')
-        parser.add_argument('--model-name', default="YOUR_MODEL_NAME",
-                            help='Name of the model to associate with the log')
-        parser.add_argument('--verbose', action='store_true', help='Display detailed outputs for debugging.')
+    try:
+        with SessionManager() as session:
+            parser = argparse.ArgumentParser(description='flatpack.ai command line interface')
+            parser.add_argument('command', help='Command to run')
+            parser.add_argument('input', nargs='?', default=None, help='Input for the callback')
+            parser.add_argument('--model-name', default="YOUR_MODEL_NAME",
+                                help='Name of the model to associate with the log')
+            parser.add_argument('--verbose', action='store_true', help='Display detailed outputs for debugging.')
 
-        args = parser.parse_args()
-        command = args.command
-        fpk_get_api_key()
+            args = parser.parse_args()
+            command = args.command
+            fpk_get_api_key()
 
-        if command == "callback":
-            fpk_callback(args.input)
-        elif command == "find":
-            print(fpk_find_models())
-        elif command == "help":
-            print("[HELP]")
-        elif command == "get-api-key":
-            print(fpk_get_api_key())
-        elif command == "install":
-            if not args.input:
-                print("❌ Please specify a flatpack for the install command.")
-                return
-
-            directory_name = args.input
-
-            existing_dirs = fpk_fetch_github_dirs(session)
-            if directory_name not in existing_dirs:
-                print(f"❌ The flatpack '{directory_name}' does not exist.")
-                return
-
-            fpk_display_disclaimer(directory_name)
-            while True:
-                user_response = input().strip().upper()
-                if user_response == "YES":
-                    break
-                elif user_response == "NO":
-                    print("❌ Installation aborted by user.")
+            if command == "callback":
+                fpk_callback(args.input)
+            elif command == "find":
+                print(fpk_find_models())
+            elif command == "help":
+                print("[HELP]")
+            elif command == "get-api-key":
+                print(fpk_get_api_key())
+            elif command == "install":
+                if not args.input:
+                    print("❌ Please specify a flatpack for the install command.")
                     return
-                else:
-                    print("❌ Invalid input. Please type 'YES' to accept or 'NO' to decline.")
 
-            print("Verbose mode:", args.verbose)
-            fpk_install(directory_name, session, verbose=args.verbose)
-        elif command == "list":
-            print(fpk_list_directories(session))
-        elif command == "ps":
-            print(fpk_list_processes())
-        elif command == "set-api-key":
-            if not args.input:
-                print("❌ Please provide an API key to set.")
-                return
-            fpk_set_api_key(args.input)
-            print("API key set successfully!")
-        elif command == "train":
-            directory_name = args.input
-            fpk_train(directory_name, session)
-        elif command == "version":
-            print("[VERSION]")
-        else:
-            print(f"Unknown command: {command}")
+                directory_name = args.input
+
+                existing_dirs = fpk_fetch_github_dirs(session)
+                if directory_name not in existing_dirs:
+                    print(f"❌ The flatpack '{directory_name}' does not exist.")
+                    return
+
+                fpk_display_disclaimer(directory_name)
+                while True:
+                    user_response = input().strip().upper()
+                    if user_response == "YES":
+                        break
+                    elif user_response == "NO":
+                        print("❌ Installation aborted by user.")
+                        return
+                    else:
+                        print("❌ Invalid input. Please type 'YES' to accept or 'NO' to decline.")
+
+                print("Verbose mode:", args.verbose)
+                fpk_install(directory_name, session, verbose=args.verbose)
+            elif command == "list":
+                print(fpk_list_directories(session))
+            elif command == "ps":
+                print(fpk_list_processes())
+            elif command == "set-api-key":
+                if not args.input:
+                    print("❌ Please provide an API key to set.")
+                    return
+                fpk_set_api_key(args.input)
+                print("API key set successfully!")
+            elif command == "train":
+                directory_name = args.input
+                fpk_train(directory_name, session)
+            elif command == "version":
+                print("[VERSION]")
+            else:
+                print(f"Unknown command: {command}")
+
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+    sys.exit(1)
 
 
 if __name__ == "__main__":

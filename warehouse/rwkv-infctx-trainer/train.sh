@@ -21,7 +21,6 @@ sed -i 's/max_steps: 10/max_steps: 100/' notebook/dataset-config/example-local-t
 mkdir -p checkpoint/
 mkdir -p datapath/
 mkdir -p dataset/dataset-config/text/
-mkdir -p dataset/dataset-config/zip/
 mkdir -p model/
 
 cd RWKV-v4neo || exit
@@ -29,14 +28,8 @@ cd RWKV-v4neo || exit
 "${VENV_PYTHON}" ./init_model.py --n_layer 6 --n_embd 512 --vocab_size neox --skip-if-exists ../model/L6-D512-neox-init.pth
 "${VENV_PYTHON}" ./init_model.py --n_layer 6 --n_embd 512 --vocab_size world --skip-if-exists ../model/L6-D512-world-init.pth
 
-cd ../dataset/dataset-config/zip/ || exit
-wget -nc https://data.deepai.org/enwik8.zip
-
 cd ../text/ || exit
-rm -rf ./*
-unzip ../zip/enwik8.zip
-mv enwik8 enwik8.txt
-ls -lh
+wget https://raw.githubusercontent.com/karpathy/char-rnn/master/data/tinyshakespeare/input.txt
 
 cd ../../../RWKV-v4neo || exit
 
