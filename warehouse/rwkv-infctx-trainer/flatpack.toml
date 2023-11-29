@@ -41,6 +41,10 @@ to_destination = "/home/content/RWKV-infctx-trainer"
 branch = "main"
 
 [[file]]
+from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/rwkv-infctx-trainer/example-local-text.yaml"
+to_destination = "/home/content/RWKV-infctx-trainer/example-local-text.yaml"
+
+[[file]]
 from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/rwkv-infctx-trainer/device.sh"
 to_destination = "/home/content/device.sh"
 
