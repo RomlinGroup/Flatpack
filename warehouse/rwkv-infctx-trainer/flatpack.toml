@@ -36,7 +36,7 @@ tqdm = "*"
 wandb = "*"
 
 [[git]]
-from_source = "https://github.com/RWKV/RWKV-infctx-trainer"
+from_source = "https://github.com/romlingroup/RWKV-infctx-trainer"
 to_destination = "/home/content/RWKV-infctx-trainer"
 branch = "main"
 
