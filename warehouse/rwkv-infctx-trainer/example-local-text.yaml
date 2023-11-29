@@ -19,6 +19,13 @@ trainer:
   accelerator: gpu
   devices: auto
 
+  callbacks:
+    class_path: lightning.pytorch.callbacks.ModelCheckpoint
+    init_args:
+      dirpath: ../checkpoint
+      every_n_train_steps: 100
+      save_on_train_epoch_end: true
+
 model:
   load_model: ../model/L6-D512-neox-init.pth
   ctx_len: 1024
