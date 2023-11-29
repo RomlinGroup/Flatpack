@@ -8,6 +8,7 @@ import logging
 import os
 import re
 import select
+import shlex
 import subprocess
 import toml
 
@@ -197,9 +198,11 @@ def fpk_get_api_key() -> Optional[str]:
 
 def fpk_install(directory_name: str, session, verbose: bool = False):
     """Install a specified flatpack."""
+    if not fpk_valid_directory_name(directory_name):
+        print(f"❌ Invalid directory name: '{directory_name}'.")
+        return
 
     toml_content = fpk_fetch_flatpack_toml_from_dir(directory_name, session)
-
     if not toml_content:
         print(f"❌ Error: Failed to fetch TOML content for '{directory_name}'.")
         return
@@ -208,31 +211,31 @@ def fpk_install(directory_name: str, session, verbose: bool = False):
         f.write(toml_content)
 
     bash_script_content = parse_toml_to_venv_script('temp_flatpack.toml', '3.10.12', directory_name)
-
     with open('flatpack.sh', 'w') as f:
         f.write(bash_script_content)
 
     os.remove('temp_flatpack.toml')
-
     print(f"Installing {directory_name}...")
 
-    if verbose:
-        process = subprocess.Popen(["bash", "flatpack.sh"])
-        process.wait()
-    else:
-        process = subprocess.Popen(["bash", "flatpack.sh"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        stdout, stderr = process.communicate()
+    command = ["bash", shlex.quote("flatpack.sh")]
+    try:
+        if verbose:
+            process = subprocess.Popen(command)
+            process.wait()
+        else:
+            process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            stdout, stderr = process.communicate()
+            if process.returncode != 0:
+                print("❌ Error: Failed to execute the bash script.")
+                # Uncomment for debugging
+                # print("Standard Output:", stdout.decode())
+                # print("Standard Error:", stderr.decode())
 
-        if process.returncode != 0:
-            print("❌ Error: Failed to execute the bash script.")
-            # Optional: Uncomment the following lines to display the stdout and stderr for debugging
-            # print("Standard Output:", stdout.decode())
-            # print("Standard Error:", stderr.decode())
-
-    if process.returncode == 0:
-        fpk_cache_last_flatpack(directory_name)
-        # os.remove('flatpack.sh')
-        print(f"🎉 All done!")
+        if process.returncode == 0:
+            fpk_cache_last_flatpack(directory_name)
+            print(f"🎉 All done!")
+    except subprocess.SubprocessError as e:
+        print(f"❌ An error occurred: {e}")
 
 
 def fpk_is_raspberry_pi():
@@ -337,32 +340,35 @@ def fpk_process_output(output, session, last_installed_flatpack):
 
 def fpk_train(directory_name: str = None, session: httpx.Client = None):
     """Train a model using a training script from a specific or last installed flatpack."""
-    # Define the path for the cache file
     cache_file_path = Path.cwd() / 'last_flatpack.cache'
 
-    # If a directory name is provided, set it as the last installed flatpack
     if directory_name:
+        if not fpk_valid_directory_name(directory_name):
+            print(f"❌ Invalid directory name: '{directory_name}'.")
+            return
         last_installed_flatpack = directory_name
         fpk_cache_last_flatpack(directory_name)
     else:
-        # Otherwise, use the directory name from the cache file
         if not cache_file_path.exists():
             print("❌ No cached flatpack found.")
             return
         with cache_file_path.open('r') as f:
             last_installed_flatpack = f.read().strip()
+            if not fpk_valid_directory_name(last_installed_flatpack):
+                print(f"❌ Invalid directory name from cache: '{last_installed_flatpack}'.")
+                return
 
-        # Determine the path for the training script
-        training_script_path = Path(last_installed_flatpack) / 'train.sh'
+    training_script_path = Path(last_installed_flatpack) / 'train.sh'
+    if not training_script_path.exists():
+        print(f"❌ Training script not found in {last_installed_flatpack}.")
+        return
 
-        # Check if the training script is present
-        if not training_script_path.exists():
-            print(f"❌ Training script not found in {last_installed_flatpack}.")
-            return
+    # Start the subprocess for the training script
+    env = dict(os.environ, PYTHONUNBUFFERED="1")
+    safe_script_path = shlex.quote(str(training_script_path))
 
-        # Start the subprocess for the training script
-        env = dict(os.environ, PYTHONUNBUFFERED="1")
-        proc = subprocess.Popen(["bash", "-u", str(training_script_path)], stdin=subprocess.PIPE,
+    try:
+        proc = subprocess.Popen(["bash", "-u", safe_script_path], stdin=subprocess.PIPE,
                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=1, universal_newlines=True,
                                 env=env)
 
@@ -391,6 +397,21 @@ def fpk_train(directory_name: str = None, session: httpx.Client = None):
         finally:
             # Ensure subprocess finishes
             proc.wait()
+    except subprocess.SubprocessError as e:
+        print(f"❌ An error occurred while executing the subprocess: {e}")
+
+
+def fpk_valid_directory_name(name: str) -> bool:
+    """
+    Validate that the directory name contains only alphanumeric characters, dashes, and underscores.
+
+    Args:
+        name (str): The directory name to validate.
+
+    Returns:
+        bool: True if the name is valid, False otherwise.
+    """
+    return re.match(r'^[\w-]+$', name) is not None
 
 
 def main():
