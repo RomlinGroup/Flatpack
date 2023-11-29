@@ -31,6 +31,6 @@ wget https://raw.githubusercontent.com/karpathy/char-rnn/master/data/tinyshakesp
 
 cd ../../../RWKV-v4neo || exit
 
-"${VENV_PYTHON}" preload_datapath.py ../notebook/dataset-config/example-local-text.yaml
-"${VENV_PYTHON}" lightning_trainer.py fit -c ../notebook/dataset-config/example-local-text.yaml
+"${VENV_PYTHON}" preload_datapath.py ../example-local-text.yaml
+"${VENV_PYTHON}" lightning_trainer.py fit -c ../example-local-text.yaml
 # === END USER CUSTOMIZATION ===
