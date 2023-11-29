@@ -12,8 +12,6 @@
 
 ## Ready-to-assemble AI
 
-Build with [flatpack.ai](https://flatpack.ai) and [gpio.ai](https://gpio.ai)
-
 Just as Arduino or Raspberry Pi have found their place in professional environments for developing and testing new ideas, flatpack.ai aims to be the go-to platform for AI experimentation and innovation, from educational settings to the highest echelons of industry and research.
 
 ## flatpack 3.X.X (Aglaonice)
