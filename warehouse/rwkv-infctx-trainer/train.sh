@@ -42,6 +42,4 @@ cd ../../../RWKV-v4neo || exit
 
 "${VENV_PYTHON}" preload_datapath.py ../notebook/dataset-config/example-local-text.yaml
 "${VENV_PYTHON}" lightning_trainer.py fit -c ../notebook/dataset-config/example-local-text.yaml
-"${VENV_PYTHON}" export_checkpoint.py ../checkpoint/last.ckpt/ ../model/model.pth
-"${VENV_PYTHON}" dragon_test.py ../model/model.pth
 # === END USER CUSTOMIZATION ===
