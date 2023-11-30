@@ -21,7 +21,7 @@ mkdir -p datapath/
 mkdir -p dataset/dataset-config/text
 mkdir -p model/
 
-cd RWKV-v4neo || exit
+cd RWKV-v5 || exit
 
 "${VENV_PYTHON}" ./init_model.py --n_layer 6 --n_embd 512 --vocab_size neox --skip-if-exists ../model/L6-D512-neox-init.pth
 "${VENV_PYTHON}" ./init_model.py --n_layer 6 --n_embd 512 --vocab_size world --skip-if-exists ../model/L6-D512-world-init.pth
@@ -29,7 +29,7 @@ cd RWKV-v4neo || exit
 cd ../dataset/dataset-config/text || exit
 wget https://raw.githubusercontent.com/karpathy/char-rnn/master/data/tinyshakespeare/input.txt
 
-cd ../../../RWKV-v4neo || exit
+cd ../../../RWKV-v5 || exit
 
 "${VENV_PYTHON}" preload_datapath.py ../example-local-text.yaml
 "${VENV_PYTHON}" lightning_trainer.py fit -c ../example-local-text.yaml
