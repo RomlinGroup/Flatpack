@@ -5,7 +5,7 @@ with open("README.md", "r") as f:
 
 setup(
     name="flatpack",
-    version="3.0.36",
+    version="3.0.37",
     packages=find_packages(),
     install_requires=[
         "cryptography",
