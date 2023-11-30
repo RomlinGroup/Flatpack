@@ -35,7 +35,7 @@ trainer:
 
 model:
   load_model: ../model/L6-D512-neox-init.pth
-  ctx_len: 1024
+  ctx_len: 2048
   lr_init: 3e-4
 
   # BPTT learning, this allows you to run the trainer against dataset
@@ -84,7 +84,7 @@ data:
   # This is ignored, if source is not set as text
   # This is ignored, if set to zero
   # ---
-  text_rechunk_size: 1024
+  text_rechunk_size: 2048
 
   # After loading the dataset, split out test data used for validation, 
   # This process is skipped if the dataset includes a test split
