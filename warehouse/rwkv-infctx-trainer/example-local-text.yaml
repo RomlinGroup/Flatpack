@@ -22,9 +22,16 @@ trainer:
   callbacks:
     class_path: lightning.pytorch.callbacks.ModelCheckpoint
     init_args:
-      dirpath: ../checkpoint
+      dirpath: ../checkpoint/
+      filename: null
+      save_top_k: 3
+      monitor: 'step'
+      mode: max
       every_n_train_steps: 100
+      every_n_epochs: null
       save_on_train_epoch_end: true
+      train_time_interval: null
+      verbose: true
 
 model:
   load_model: ../model/L6-D512-neox-init.pth
