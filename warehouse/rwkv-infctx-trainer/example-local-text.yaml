@@ -18,6 +18,8 @@ trainer:
   target_batch_size: 32
   accelerator: gpu
   devices: auto
+  enable_progress_bar: true
+  enable_model_summary: true
 
   callbacks:
     class_path: lightning.pytorch.callbacks.ModelCheckpoint
