@@ -20,7 +20,7 @@ Consider an edge computing device (which processes data on-site rather than remo
 
 flatpack.ai is set to disrupt this approach by being an autonomous system that employs artificial intelligence (AI) - significantly reducing the complexity and cost of programming.
 
-The future will be built by flatpack robots living on the edge (foreshadowing) powered by flatpacks (FPKs) containing micro-LLMs (streamlined language models that range from 100 million to 10 billion parameters).
+The future will be built by [flatpack robots](https://flatpackrobots.com) living on the edge (foreshadowing) powered by flatpacks (FPKs) containing micro-LLMs (streamlined language models that range from 100 million to 10 billion parameters).
 
 Join us to flatten the complexity of AI and robotics.
 
