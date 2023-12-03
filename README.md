@@ -22,6 +22,8 @@ flatpack.ai is set to disrupt this approach by being an autonomous system that e
 
 The future will be built by [flatpack robots](https://flatpackrobots.com) living on the edge (foreshadowing) powered by flatpacks (FPKs) containing micro-LLMs (streamlined language models that range from 100 million to 10 billion parameters).
 
+Our [code signing](https://github.com/romlingroup/flatpack-ai#code-signingxq) is a digital safeguard that ensures the safety and reliability of flatpack robots, preventing any potential Skynet scenarios.
+
 Join us to flatten the complexity of AI and robotics.
 
 ## flatpack 3.X.X (Aglaonice)
