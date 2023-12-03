@@ -16,11 +16,11 @@ Just as Arduino or Raspberry Pi have found their place in professional environme
 
 ## Elevator pitch
 
-Imagine an edge computing device (processing data on-site rather than remotely) as the brain of a small robot, with its general-purpose input/output (GPIO) pins acting as limbs and senses. These pins, programmable to respond to environmental factors like light or temperature, traditionally require extensive coding.
+Consider an edge computing device (which processes data on-site rather than remotely) as the brain of a small robot. Its general-purpose input/output (GPIO) pins, acting as limbs and senses, are programmable to respond to environmental factors like light or temperature but traditionally require extensive coding.
 
-flatpack.ai will revolutionize this by being an autonomous system using artificial intelligence (AI) to simplify what once needed elaborate coding.
+flatpack.ai is set to revolutionise this approach by being an autonomous system that employs artificial intelligence (AI) - significantly reducing the complexity and cost of programming. The future will be built by intelligent flatpack robots (foreshadowing) powered by our versatile flatpacks (FPKs) containing micro-LLMs that range from 100 million to 10 billion parameters.
 
-Think of it as an intelligent, self-evolving robot that is powered by micro-LLMs (language models with a 100 million to 10 billion parameter range) capable of adapting and managing complex global tasks efficiently and effectively, significantly reducing the complexity and cost of programming.
+Join us to flatten the complexity of AI and robotics.
 
 ## flatpack 3.X.X (Aglaonice)
 
