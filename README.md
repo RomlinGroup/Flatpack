@@ -22,7 +22,7 @@ flatpack.ai is set to disrupt this approach by being an autonomous system that e
 
 The future will be built by [flatpack robots](https://flatpackrobots.com) living on the edge (foreshadowing) powered by flatpacks (FPKs) containing micro-LLMs (streamlined language models that range from 100 million to 10 billion parameters).
 
-[Code signing](https://github.com/romlingroup/flatpack-ai#code-signing) is a digital safeguard to authenticate and safeguard the integrity of FPKs, preventing any potential Skynet scenarios.
+[Code signing](https://github.com/romlingroup/flatpack-ai#code-signing) is vital to authenticate FPKs and ensure accurate code loading. Any errors could lead to a catastrophic outcome, akin to inserting the wrong game cartridge in a robot. Hello, Skynet.
 
 Join us to flatten the complexity of AI and robotics.
 
