@@ -14,6 +14,12 @@
 
 Just as Arduino or Raspberry Pi have found their place in professional environments for developing and testing new ideas, flatpack.ai aims to be the go-to platform for AI experimentation and innovation, from educational settings to the highest echelons of industry and research.
 
+## Elevator pitch
+
+Imagine an edge computing device (processing data on-site rather than remotely) as the brain of a small robot, with its general-purpose input/output (GPIO) pins acting as limbs and senses. These pins, programmable to respond to environmental factors like light or temperature, traditionally require extensive coding.
+
+flatpack.ai will revolutionize this by being an autonomous system using AI to simplify what once needed elaborate coding. Think of it as an intelligent, self-evolving robot powered by micro-LLMs (streamlined language models with a 100 million to 10 billion parameter range) capable of adapting and managing complex global tasks efficiently and effectively, significantly reducing the complexity and cost of programming.
+
 ## flatpack 3.X.X (Aglaonice)
 
 *Aglaonice, an ancient Greek astronomer from the 2nd or 1st century BC, was celebrated for her precise lunar eclipse predictions. Her mastery inspired the Greek proverb: "As the moon obeys Aglaonice," signifying unwavering certainty.*
