@@ -22,7 +22,7 @@ flatpack.ai is set to disrupt this approach by being an autonomous system that e
 
 The future will be built by [flatpack robots](https://flatpackrobots.com) living on the edge (foreshadowing) powered by flatpacks (FPKs) containing micro-LLMs (streamlined language models that range from 100 million to 10 billion parameters).
 
-Our [code signing](https://github.com/romlingroup/flatpack-ai#code-signingxq) is a digital safeguard that ensures the safety and reliability of flatpack robots, preventing any potential Skynet scenarios.
+Our [code signing](https://github.com/romlingroup/flatpack-ai#code-signingxq) is a digital safeguard to authenticate and safeguard the integrity of FPKs, preventing any potential Skynet scenarios.
 
 Join us to flatten the complexity of AI and robotics.
 
@@ -68,9 +68,7 @@ flatpack train FPK_NAME
 
 ### Code signing
 
-Our platform uses [RSA keys](<https://en.wikipedia.org/wiki/RSA_(cryptosystem)>) to authenticate and safeguard the integrity of flatpacks (FPK) - packages that may encompass both code and data vital for training artificial intelligence models.
-
-The unimpeachable integrity of these flatpacks is paramount, as any compromise could have far-reaching implications on the reliability and security of the AI models generated and deployed.
+Our platform uses [RSA keys](<https://en.wikipedia.org/wiki/RSA_(cryptosystem)>) to authenticate and safeguard the integrity of flatpacks (FPK). This process is known as [code signing](https://en.wikipedia.org/wiki/Code_signing).
 
 > **Security note:** This project utilizes 4096-bit RSA keys for code signing. Breaking such encryption with current classical computing resources is computationally prohibitive\*. The analogy often used is that it would be akin to cataloguing every star in the known universe - multiple times.
 
