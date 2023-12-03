@@ -16,7 +16,7 @@ Just as Arduino or Raspberry Pi have found their place in professional environme
 
 ## Elevator pitch
 
-Consider an edge computing device (e.g. microprocessors and microcontrollers) as the brain of a small robot. The general-purpose input/output (GPIO) pins, acting as its limbs and senses, are programmable to respond to environmental factors like light or temperature but traditionally require extensive coding (think Mars rover).
+Consider an edge computing device (such as microprocessors and microcontrollers) as the brain of a small robot. The general-purpose input/output (GPIO) pins, acting as its limbs and senses, are programmable to respond to environmental factors like light or temperature but traditionally require extensive coding (think Mars rover).
 
 flatpack.ai is set to disrupt this approach with an autonomous system that employs artificial intelligence (AI) - significantly reducing the complexity and cost of edge computing, hyperautomation and model compression.
 
