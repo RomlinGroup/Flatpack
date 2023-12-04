@@ -16,7 +16,7 @@ Just as Arduino or Raspberry Pi have found their place in professional environme
 
 ## Elevator pitch
 
-In this scenario, a robot is powered by an edge computing device, such as a microcontroller or microprocessor, which functions as its brain. The general-purpose input/output (GPIO) pins represent the limbs and sensory apparatus, which can respond to various inputs from switches and sensors. These inputs can include the press of a button, changes in temperature, visual inputs from cameras, proximity detection through ultrasonic sensors, motion detection, and even complex data from accelerometers or gyroscopes. However, integrating and programming these diverse inputs can be a complex and expensive process that requires extensive coding.
+A robot is powered by an edge computing device, such as a microcontroller, which functions as its brain. The GPIO pins represent the limbs and sensory apparatus, reacting to various inputs from switches and sensors, such as temperature changes, visual inputs, motion detection, and more. However, integrating and programming these inputs requires extensive coding and can be complex and expensive.
 
 flatpack.ai is set to disrupt the status quo with an autonomous system that employs artificial intelligence (AI) - significantly reducing the complexity and cost of edge computing, hyperautomation and model compression.
 
