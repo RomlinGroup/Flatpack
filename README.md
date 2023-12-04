@@ -22,8 +22,6 @@ flatpack.ai is set to disrupt the status quo with an autonomous system that empl
 
 The future will be built by flatpack robots living on the edge (Earth and Mars) powered by flatpacks (FPKs) containing micro-LLMs (streamlined language models that range from 100 million to 10 billion parameters).
 
-Code signing is vital for FPKs. With compromised or corrupt deployments, you will have a bad day.
-
 Join us to flatten the complexity of AI and robotics.
 
 ## flatpack 3.X.X (Aglaonice)
