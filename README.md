@@ -16,7 +16,7 @@ Just as Arduino or Raspberry Pi have found their place in professional environme
 
 ## Elevator pitch
 
-flatpack.ai is currently developing a state-of-the-art, decentralized, and open-source platform that utilizes AI and micro-LLMs (language models ranging from 100 million to 10 billion parameters) to simplify the complexity and cost of edge computing, hyperautomation, and model compression. In the near future, it will be possible to create edge computing devices and robots using code-signed and standardized flatpacks (FPKs). These FPKs can be thought of as game cartridges or floppy disks for edge computing devices and robots, and their innovative technology will lead to a more automated and advanced world.
+flatpack.ai is currently developing a cutting-edge, decentralized, and open-source platform that utilizes AI and micro-LLMs (language models ranging from 100 million to 10 billion parameters) to simplify the complexity and cost of edge computing, hyperautomation, and model compression. In the near future, it will be possible to create edge computing devices and robots using code-signed and standardized flatpacks (FPKs). These FPKs can be thought of as game cartridges or floppy disks for edge computing devices and robots, and their innovative technology will lead to a more automated and advanced world.
 
 Join us and help flatten the complexity of AI and robotics.
 
