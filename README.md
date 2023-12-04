@@ -20,9 +20,9 @@ Consider an edge computing device (microcontrollers or microprocessors) as the b
 
 flatpack.ai is set to disrupt this approach with an autonomous system that employs artificial intelligence (AI) - significantly reducing the complexity and cost of edge computing, hyperautomation and model compression.
 
-The future will be built by [flatpack robots](https://flatpackrobots.com) living on the edge (Earth and Mars) powered by [flatpacks](https://github.com/romlingroup/flatpack-ai#flatpack-fpk-) (FPKs) containing micro-LLMs (streamlined language models that range from 100 million to 10 billion parameters).
+The future will be built by flatpack robots living on the edge (Earth and Mars) powered by flatpacks (FPKs) containing micro-LLMs (streamlined language models that range from 100 million to 10 billion parameters).
 
-Code signing is vital for FPKs. With compromised or corrupt deployments, you will have a bad day ([Skynet](https://en.wikipedia.org/wiki/Skynet_(Terminator))).
+Code signing is vital for FPKs. With compromised or corrupt deployments, you will have a bad day.
 
 Join us to flatten the complexity of AI and robotics.
 
