@@ -16,7 +16,7 @@ Just as Arduino or Raspberry Pi have found their place in professional environme
 
 ## Elevator pitch
 
-In this scenario, we consider an edge device (microcontroller or microprocessor) as the brain of a small robot. The general-purpose input/output (GPIO) pins, acting as their limbs and senses, are programmable to react to inputs from switches and sensors, such as the press of a button or changes in temperature. However, this typically requires extensive coding (tink Mars rover).
+In this scenario, we consider an edge device (microcontroller or microprocessor) as the brain of a small robot. The general-purpose input/output (GPIO) pins, acting as their limbs and senses, are programmable to react to inputs from switches and sensors, such as the press of a button or changes in temperature. However, this typically requires expensive and extensive coding (akin to programming a Mars rover).
 
 flatpack.ai is set to disrupt the status quo with an autonomous system that employs artificial intelligence (AI) - significantly reducing the complexity and cost of edge computing, hyperautomation and model compression.
 
