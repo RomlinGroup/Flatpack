@@ -16,9 +16,7 @@ Just as Arduino or Raspberry Pi have found their place in professional environme
 
 ## Elevator pitch
 
-A microcontroller can act as the brain of a robot, with its general-purpose input/output (GPIO) pins serving as limbs and sensory systems. However, programming these pins can be complex and expensive, requiring special skills and resources.
-
-flatpack.ai aims to disrupt the status quo by using a decentralised and open-source system that employs artificial intelligence (AI) and micro-LLMs (streamlined language models that range from 100 million to 10 billion parameters), significantly reducing the cost and complexity of edge computing, hyperautomation, and model compression.
+A microcontroller can act as the brain of a robot, with its general-purpose input/output (GPIO) pins serving as limbs and sensory systems. However, programming these pins can be complex and expensive, requiring special skills and resources. flatpack.ai aims to disrupt the status quo by using a decentralised and open-source system that employs artificial intelligence (AI) and micro-LLMs (streamlined language models that range from 100 million to 10 billion parameters), significantly reducing the cost and complexity of edge computing, hyperautomation, and model compression.
 
 In the near future, building decentralised and open-source edge computing devices and robots will be possible using code-signed and standardised flatpacks. These flatpacks can be considered floppy disks or game cartridges for robots. This innovative technology promises to revolutionise how we construct and interact with machines, ultimately paving the way for a more advanced and automated world.
 
