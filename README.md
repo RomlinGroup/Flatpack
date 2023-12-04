@@ -24,7 +24,7 @@ flatpack.ai is currently working on a cutting-edge, decentralised, and open-sour
 
 In the not-so-distant future, it will be possible to construct decentralised and open-source edge computing devices and robots using standardised flatpacks (FPKs) that have been code-signed (to prevent Skynet).
 
-These FPKs can be viewed as game cartridges or floppy disks for edge computing devices and robots, and their innovative technology will result in a more sophisticated and automated world (even on Mars).
+These FPKs can be viewed as game cartridges or floppy disks for edge computing devices and robots, and their innovative technology will result in a more automated and sophisticated world (even on Mars).
 
 Join us and help flatten the complexity of AI and robotics.
 
