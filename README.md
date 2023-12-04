@@ -18,7 +18,7 @@ Just as Arduino or Raspberry Pi have found their place in professional environme
 
 In this scenario, we consider an edge device (microcontroller or microprocessor) as the brain of a small robot. The general-purpose input/output (GPIO) pins, acting as its limbs and senses, are programmable to respond to environmental factors like light or temperature but traditionally require extensive coding (think Mars rover).
 
-flatpack.ai is set to disrupt tradition with an autonomous system that employs artificial intelligence (AI) - significantly reducing the complexity and cost of edge computing, hyperautomation and model compression.
+flatpack.ai is set to disrupt the status quo with an autonomous system that employs artificial intelligence (AI) - significantly reducing the complexity and cost of edge computing, hyperautomation and model compression.
 
 The future will be built by flatpack robots living on the edge (Earth and Mars) powered by flatpacks (FPKs) containing micro-LLMs (streamlined language models that range from 100 million to 10 billion parameters).
 
