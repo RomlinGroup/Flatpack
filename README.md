@@ -20,7 +20,7 @@ A microcontroller (Arduino) or microprocessor (Raspberry Pi) can serve as the br
 
 However, programming these pins can often be complex and expensive, requiring specialised skills and resources (think Mars rover, which indeed [uses AI](https://online.wlv.ac.uk/how-mars-rovers-use-artificial-intelligence/), but most of us are not NASA engineers).
 
-flatpack.ai is currently working on a cutting-edge, decentralised, and open-source platform that uses AI and micro-LLMs (language models ranging from 100 million to 10 billion parameters) to reduce the cost and complexity of edge computing, hyperautomation, and model compression
+flatpack.ai is currently working on a cutting-edge, decentralised, and open-source platform that uses AI and micro-LLMs (language models ranging from 100 million to 10 billion parameters) to reduce the cost and complexity of edge computing, hyperautomation, and model compression.
 
 In a not-so-distant future, building decentralised and open-source edge computing devices and robots will be possible using code-signed (to avoid a Skynet scenario) and standardised flatpacks (FPKs). These flatpacks can be considered floppy disks or game cartridges for edge computing devices and robots. This groundbreaking technology promises to revolutionise how we build and interact with machines, ultimately paving the way for a more advanced and automated world (including Mars).
 
