@@ -16,11 +16,7 @@ Just as Arduino or Raspberry Pi have found their place in professional environme
 
 ## Elevator pitch
 
-A robot is powered by an edge computing device, such as a microcontroller, which functions as its brain. The GPIO pins represent the limbs and sensory apparatus, reacting to various inputs from switches and sensors, such as temperature changes, visual inputs, motion detection, and more. However, integrating and programming these inputs requires extensive coding and can be complex and expensive.
-
-flatpack.ai is set to disrupt the status quo with an autonomous system that employs artificial intelligence (AI) - significantly reducing the complexity and cost of edge computing, hyperautomation and model compression.
-
-The future will be built by flatpack robots living on the edge (foreshadowing) powered by flatpacks (FPKs) containing micro-LLMs (streamlined language models that range from 100 million to 10 billion parameters).
+A microcontroller can act as the brain of a robot, with its GPIO pins serving as limbs and sensory systems. However, programming these pins can be complex and expensive, requiring special skills and resources. flatpack.ai aims to simplify this by using an autonomous system that employs AI and micro-LLMs, significantly reducing the cost and complexity of edge computing, hyperautomation, and model compression. In the near future, it will be possible to build edge computing devices and robots using flatpacks (FPKs), which contain micro-LLMs for more efficient language processing. This innovative technology promises to revolutionize how we construct and interact with machines, ultimately paving the way for a more advanced and automated world.
 
 Join us to flatten the complexity of AI and robotics.
 
