@@ -16,11 +16,13 @@ Just as Arduino or Raspberry Pi have found their place in professional environme
 
 ## Elevator pitch
 
+
+
 A microcontroller (Arduino) or microprocessor (Raspberry Pi) can serve as the brain of an edge computing device or a robot by utilising its general-purpose input/output (GPIO) pins as limbs and sensory systems.
 
 However, programming these pins can often be complex and expensive, requiring specialised skills and resources (think Mars rover, which indeed [uses AI](https://online.wlv.ac.uk/how-mars-rovers-use-artificial-intelligence/), but most of us are not NASA engineers).
 
-flatpack.ai is currently working on a cutting-edge, decentralised, and open-source platform that uses AI and micro-LLMs (language models ranging from 100 million to 10 billion parameters) to reduce the cost and complexity of edge computing, hyperautomation, and model compression.
+flatpack.ai is currently working on a cutting-edge, decentralised, and open-source platform that uses AI and micro-LLMs (language models ranging from 100 million to 10 billion parameters) to reduce the complexity and cost of edge computing, hyperautomation, and model compression.
 
 In the not-so-distant future, it will be possible to construct decentralised and open-source edge computing devices and robots using standardised flatpacks (FPKs) that have been code-signed (to prevent Skynet).
 
