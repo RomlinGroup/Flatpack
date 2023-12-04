@@ -16,7 +16,7 @@ Just as Arduino or Raspberry Pi have found their place in professional environme
 
 ## Elevator pitch
 
-We are developing a bleeding-edge, decentralised, and open-source platform that utilises AI and micro-LLMs (language models ranging from 100 million to 10 billion parameters) to simplify the complexity and cost of edge computing, hyperautomation, and model compression. Soon, it will be possible to create edge computing devices and robots using code-signed and standardised flatpacks ([FPKs](https://github.com/romlingroup/flatpack-ai#flatpack-fpk-)).
+We are developing a bleeding-edge, decentralised, and open-source platform that utilises AI and [micro-LLMs](https://github.com/romlingroup/flatpack-ai#micro-llms-) (language models ranging from 100 million to 10 billion parameters) to simplify the complexity and cost of edge computing, hyperautomation, and model compression. Soon, it will be possible to create edge computing devices and robots using code-signed and standardised flatpacks ([FPKs](https://github.com/romlingroup/flatpack-ai#flatpack-fpk-)).
 
 FPKs are the game cartridges and floppy disks of the future for edge computing and robots. Their innovative technology will undoubtedly lead to a more automated and sophisticated world.
 
