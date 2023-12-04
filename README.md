@@ -16,11 +16,13 @@ Just as Arduino or Raspberry Pi have found their place in professional environme
 
 ## Elevator pitch
 
-A microcontroller can act as the brain of a robot, with its general-purpose input/output (GPIO) pins serving as limbs and sensory systems. However, programming these pins can be complex and expensive, requiring special skills and resources. flatpack.ai aims to democratise and disrupt the status quo by using a decentralised and open-source platform that employs artificial intelligence (AI) and micro-LLMs (streamlined language models that range from 100 million to 10 billion parameters), significantly reducing the cost and complexity of edge computing, hyperautomation, and model compression.
+A microcontroller can serve as the brain of an edge computing device or a robot by utilising its general-purpose input/output (GPIO) pins as limbs and sensory systems. However, programming these pins can often be complex and expensive, requiring specialised skills and resources.
 
-In the near future, building decentralised and open-source edge computing devices and robots will be possible using code-signed and standardised flatpacks (FPKs). These flatpacks can be considered floppy disks or game cartridges for robots. This innovative technology promises to revolutionise how we construct and interact with machines, ultimately paving the way for a more advanced and automated world.
+flatpack.ai is currently working on a cutting-edge, decentralised, and open-source platform that utilises artificial intelligence (AI) and micro-LLMs (language models that range from 100 million to 10 billion parameters) to reduce the cost and complexity of edge computing, hyperautomation, and model compression. This innovative platform is designed to make these processes more accessible and efficient.
 
-Join us to flatten the complexity of AI and robotics.
+Soon, it will be possible to build decentralised and open-source edge computing devices and robots using code-signed and standardised flatpacks (FPKs). These flatpacks can be considered floppy disks or game cartridges for edge computing devices and robots. This groundbreaking technology promises to revolutionise how we build and interact with machines, ultimately paving the way for a more advanced and automated world.
+
+Join us and help flatten the complexity of AI and robotics.
 
 ## flatpack 3.X.X (Aglaonice)
 
