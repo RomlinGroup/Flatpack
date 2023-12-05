@@ -16,9 +16,18 @@ Just as Arduino or Raspberry Pi have found their place in professional environme
 
 ## Elevator pitch
 
-We are developing a first-of-its-kind decentralised and open-source platform that utilises AI and [micro-LLMs](https://github.com/romlingroup/flatpack-ai#micro-llms-) (language models ranging from 100 million to 10 billion parameters) to simplify the complexity and cost of edge computing, hyperautomation and model compression. In the not-so-distant future, it will be possible to create edge computing devices, electronic components and robots using standardised [flatpacks](https://github.com/romlingroup/flatpack-ai#flatpack-fpk-) (FPKs).
+We are developing a first-of-its-kind decentralised and open-source platform that utilises AI and [micro-LLMs](https://github.com/romlingroup/flatpack-ai#micro-llms-) (language models ranging from 100 million to 10 billion parameters) to simplify the complexity and cost of edge computing, hyperautomation and model compression. In the not-so-distant future, it will be possible to create edge computing devices, electronic components and robots using standardised [flatpacks](https://github.com/romlingroup/flatpack-ai#flatpack-fpk-) (FPKs)- the game cartridges or floppy disks in the age of AI. 
 
-FPKs are the game cartridges or floppy disks of the future. This groundbreaking technology is set to disrupt the status quo with its capacity to accelerate global economic growth, bring bleeding-edge innovations within reach, create a wealth of job opportunities through intelligent automation, democratise access to advanced technology, and foster new industries. Join us in our mission to flatten the complexity of AI, electronics and robotics.
+
+When we were children, we imagined our toys could come to life. This dream is becoming a reality with the advancement of AI and micro-LLMs. These technological wonders have the potential to transform the ordinary into something extraordinary, making our real-world environment as captivating as any metaverse or virtual reality.
+
+This fusion of AI with the physical world accelerates scientific progress, enhances life quality, and opens vast business opportunities. By imbuing our surroundings with intelligence, we unlock limitless potential for creativity, growth and connection, heralding a new frontier of human accomplishment.
+
+We recognise that our biggest challenges and opportunities exist in the physical world. Using AI and micro-LLMs, we can approach real-world issues with newfound curiosity and efficiency.
+
+Our commitment to the future is clear - it is a pledge to use technology not as an escape from reality but as a tool for tangible progress, enriching the natural world in which we dream, live and work.
+
+Join us in our mission to flatten the complexity of AI, electronics and robotics.
 
 ## flatpack 3.X.X (Aglaonice)
 
