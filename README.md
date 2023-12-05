@@ -23,7 +23,7 @@ When we were children, we imagined our toys could come to life. This dream is be
 
 This fusion of AI with the physical world accelerates scientific progress, enhances life quality, and opens vast business opportunities. By imbuing our surroundings with intelligence, we unlock limitless potential for creativity, growth and connection, heralding a new frontier of human accomplishment.
 
-We recognise that the most significant challenges and opportunities of our time exist in the physical world. By using AI and micro-LLMs, we can approach real-world issues with newfound curiosity and efficiency.
+We cannot deny that the most pressing challenges and opportunities of our time are rooted in the physical world. However, we have the power to tackle these issues with newfound curiosity and efficiency by utilising AI and micro-LLMs. These tools can unlock unprecedented potential and pave the way for a brighter future.
 
 Our commitment to the future is clear - it is a pledge to use technology not as an escape from reality but as a tool for tangible progress, enriching the natural world in which we dream, live and work.
 
