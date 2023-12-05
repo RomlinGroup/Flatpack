@@ -20,7 +20,7 @@ We are developing a bleeding-edge, decentralised, and open-source platform that 
 
 FPKs are the game cartridges and floppy disks of the future for edge computing and robots. Their innovative technology will undoubtedly lead to a more automated and sophisticated world.
 
-Join us and help flatten the complexity of AI and robotics.
+Join us in our mission to flatten the complexity of AI, electronics and robotics.
 
 ## flatpack 3.X.X (Aglaonice)
 
