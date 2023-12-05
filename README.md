@@ -122,6 +122,8 @@ Overall, micro-LLMs represent a logical step in the evolution of language models
 
 > **Arduino:** "There was once a barrier between the electronics, design, and programming world and the rest of the world. Arduino has broken down that barrier." ([Arduino 2021](https://www.arduino.cc/en/about))
 
+> **Atari and Nintendo:** "Nintendo of America Inc. and Atari Corp. have unveiled small units that are as powerful as full-size home video games but are portable and play much like portable audiocassette machines such as the Sony Walkman." ([Los Angeles Times 1989](https://www.latimes.com/archives/la-xpm-1989-11-20-fi-193-story.html))
+
 > **Colab:** "Anyone with an internet connection can access Colab, and use it free of charge. Millions of students use Colab every month to learn Python programming and machine learning." ([Google 2023](https://blog.google/technology/developers/google-colab-ai-coding-features/))
 
 > **Micro-LLMs:** "Basically I think there will be a lot of interest in training or finetuning custom micro-LLMs (think ~100M - ~1B params, but let's say up to ~10B params) across a large diversity of applications, and deploying them in edge-adjacent environments (think MCUs, phones, web browsers, laptops, etc.)." ([Andrej Karpathy 2023](https://github.com/karpathy/llama2.c#contributing))
