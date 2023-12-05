@@ -18,7 +18,7 @@ Just as Arduino or Raspberry Pi have found their place in professional environme
 
 We are developing a bleeding-edge, decentralised, and open-source platform that utilises AI and [micro-LLMs](https://github.com/romlingroup/flatpack-ai#micro-llms-) (language models ranging from 100 million to 10 billion parameters) to simplify the complexity and cost of edge computing, hyperautomation, and model compression. In a not-so-distant future, it will be possible to create edge computing devices, electronic components and robots using code-signed and standardised [flatpacks](https://github.com/romlingroup/flatpack-ai#flatpack-fpk-) (FPKs).
 
-FPKs are the game cartridges and floppy disks of the future for edge computing devices, electronic components and robots. This groundbreaking technology is set to disrupt the status quo with its capacity to accelerate global economic growth, bring bleeding-edge innovations within reach, create a wealth of job opportunities through intelligent automation, democratize access to advanced technology, and foster new industries.
+FPKs are the game cartridges and floppy disks of the future. This groundbreaking technology is set to disrupt the status quo with its capacity to accelerate global economic growth, bring bleeding-edge innovations within reach, create a wealth of job opportunities through intelligent automation, democratize access to advanced technology, and foster new industries.
 
 Join us in our mission to flatten the complexity of AI, electronics and robotics.
 
