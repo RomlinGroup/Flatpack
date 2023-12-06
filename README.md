@@ -14,6 +14,8 @@
 
 Just as Arduino or Raspberry Pi have found their place in professional environments for developing and testing new ideas, flatpack.ai aims to be the go-to platform for AI experimentation and innovation, from educational settings to the highest echelons of industry and research.
 
+> What we are creating here is distinct from the well-known AI models. Picture merging the cleverness of flatpack (hence the name) and build-it-yourself furniture with the imaginative appeal of famous snap-together toy bricks. Our method of developing micro-LLMs is unique, designed to be interactive and intelligently integrated into the tangible world.
+
 ## Elevator pitch
 
 We are developing a first-of-its-kind decentralised and open-source platform that utilises AI and [micro-LLMs](https://github.com/romlingroup/flatpack-ai#micro-llms-) (language models ranging from 100 million to 10 billion parameters) to simplify the complexity and cost of edge computing, hyperautomation and model compression. In the not-so-distant future, it will be possible to create edge computing devices, electronic components and robots using standardised [flatpacks](https://github.com/romlingroup/flatpack-ai#flatpack-fpk-) (FPKs) - the game cartridges and floppy disks in the age of AI.
