@@ -36,18 +36,30 @@
             top: 10px;
             left: 10px;
         }
+
+        #countdownTimer {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            font-size: 24px;
+            background: rgba(0, 0, 0, 1);
+            padding: 5px;
+        }
     </style>
 </head>
 <body>
 <canvas id="renderCanvas"></canvas>
 <div id="coordinateDisplay" class="infoDisplay"></div>
 <div id="fpsCounter" class="infoDisplay"></div>
+<div id="countdownTimer" class="infoDisplay"></div>
 <script src="https://cdn.babylonjs.com/babylon.js"></script>
 <script src="https://cdn.babylonjs.com/cannon.js"></script>
 <script>
     var sphere, scene, engine, canvas;
     var enableRandomMovement = true, lastMoveTime = 0;
-    var moveInterval = 100, movementSpeed = 5;
+    var moveInterval = 100, movementSpeed = 10;
     var targetCircle, simulationTimeoutId;
 
     function createScene() {
@@ -111,11 +123,22 @@
     }
 
     function startSimulationTimeout() {
+        countdown = 30;
+        updateCountdownDisplay();
         clearTimeout(simulationTimeoutId);
-        simulationTimeoutId = setTimeout(function () {
-            console.log("Simulation timed out! Resetting...");
-            resetSimulation();
-        }, 10000);
+        simulationTimeoutId = setInterval(function () {
+            countdown -= 1;
+            updateCountdownDisplay();
+            if (countdown <= 0) {
+                console.log("Simulation timed out! Resetting...");
+                clearInterval(simulationTimeoutId);
+                resetSimulation();
+            }
+        }, 1000);
+    }
+
+    function updateCountdownDisplay() {
+        document.getElementById('countdownTimer').innerText = countdown.toString();
     }
 
     function checkIfInsideTarget() {
@@ -149,7 +172,7 @@
             var keys = Object.keys(movements);
             var randomKey = keys[Math.floor(Math.random() * keys.length)];
             moveCube(movements[randomKey]);
-            console.log(randomKey);
+            //console.log(randomKey);
             lastMoveTime = new Date().getTime();
         }
     }
@@ -172,13 +195,24 @@
 
     function resetSimulation() {
         console.log("Resetting simulation");
+
         sphere.position = new BABYLON.Vector3(0, 1, 0);
         if (sphere.physicsImpostor) {
             sphere.physicsImpostor.setLinearVelocity(BABYLON.Vector3.Zero());
             sphere.physicsImpostor.setAngularVelocity(BABYLON.Vector3.Zero());
         }
+
+        scene.meshes.forEach(mesh => {
+            if (mesh.name.startsWith("wall")) {
+                mesh.physicsImpostor.dispose();
+                mesh.physicsImpostor = new BABYLON.PhysicsImpostor(mesh, BABYLON.PhysicsImpostor.BoxImpostor, {
+                    mass: 0,
+                    restitution: 0.9
+                }, scene);
+            }
+        });
+
         enableRandomMovement = true;
-        reapplyWallPhysics();
         startSimulationTimeout();
     }
 
@@ -215,7 +249,10 @@
         document.addEventListener('visibilitychange', () => lastRenderTime = Date.now());
     }
 
-    window.addEventListener('DOMContentLoaded', initialize);
+    window.addEventListener('DOMContentLoaded', function () {
+        initialize();
+        resetSimulation();
+    });
 
     startSimulationTimeout();
 </script>
