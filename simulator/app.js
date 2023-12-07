@@ -1,4 +1,5 @@
 var box;
+var enableRandomMovement = true;
 
 window.addEventListener('DOMContentLoaded', function () {
     var canvas = document.getElementById('renderCanvas');
@@ -74,3 +75,17 @@ window.addEventListener('keydown', function (event) {
             break;
     }
 });
+
+function randomMovement() {
+    if (!enableRandomMovement) return;
+
+    var randomX = (Math.random() - 0.5) * 2;
+    var randomZ = (Math.random() - 0.5) * 2;
+    box.position.x += randomX;
+    box.position.z += randomZ;
+
+    var randomRotY = Math.random() * Math.PI / 4;
+    box.rotation.y += randomRotY;
+}
+
+setInterval(randomMovement, 500);
