@@ -10,6 +10,7 @@
             margin: 0;
             padding: 0;
             overflow: hidden;
+            font-family: 'Courier New', monospace;
         }
 
         #renderCanvas {
@@ -20,11 +21,8 @@
         .infoDisplay {
             position: absolute;
             color: white;
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 1);
             padding: 5px;
-            border-radius: 5px;
-            font-family: Arial, sans-serif;
-            font-size: 14px;
         }
 
         #fpsCounter {
@@ -42,9 +40,31 @@
 <canvas id="renderCanvas"></canvas>
 <div id="coordinateDisplay" class="infoDisplay"></div>
 <div id="fpsCounter" class="infoDisplay"></div>
+<script type="module">
+    import {pipeline, env} from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.10.1';
+
+    env.allowLocalModels = false;
+</script>
 <script src="https://cdn.babylonjs.com/babylon.js"></script>
 <script src="https://cdn.babylonjs.com/cannon.js"></script>
 <script>
+    // BEGIN INFERENCE
+    async function runTextGeneration() {
+        const classifier = await pipeline('text-generation', '', {});
+        const result = await classifier(text, {
+            max_new_tokens: 32,
+            do_sample: true,
+            top_k: 50,
+            top_p: 0.95,
+            num_return_sequences: 1
+        });
+
+        console.log(result[0].generated_text);
+        classifier.dispose();
+    }
+
+    // END INFERENCE
+
     var box, scene, engine, canvas;
     var enableRandomMovement = true;
     var lastMoveTime = 0;
@@ -70,11 +90,14 @@
             restitution: 0.1
         }, scene);
 
+        var wallAndFloorMaterial = new BABYLON.StandardMaterial("wallFloorMat", scene);
+        wallAndFloorMaterial.diffuseColor = new BABYLON.Color3.FromHexString("#f0f2ff");
+
         createWalls();
     }
 
     function createWalls() {
-        var wallHeight = 2, wallDepth = 1;
+        var wallHeight = 1, wallDepth = 2;
         createWall(new BABYLON.Vector3(0, wallHeight / 2, -10), {height: wallHeight, width: 20, depth: wallDepth});
         createWall(new BABYLON.Vector3(0, wallHeight / 2, 10), {height: wallHeight, width: 20, depth: wallDepth});
         createWall(new BABYLON.Vector3(-10, wallHeight / 2, 0), {height: wallHeight, width: wallDepth, depth: 20});
@@ -153,10 +176,18 @@
 
         createScene();
 
+        let fpsDisplayUpdateInterval = 1000;
+        let lastFpsUpdateTime = 0;
+
         engine.runRenderLoop(function () {
             scene.render();
             updateCoordinates();
-            document.getElementById('fpsCounter').innerHTML = engine.getFps().toFixed(2) + ' fps';
+
+            let currentTime = Date.now();
+            if (currentTime - lastFpsUpdateTime > fpsDisplayUpdateInterval) {
+                document.getElementById('fpsCounter').innerHTML = engine.getFps().toFixed(2) + ' fps';
+                lastFpsUpdateTime = currentTime;
+            }
         });
 
         initializeEventListeners();
@@ -164,6 +195,7 @@
     }
 
     window.addEventListener('DOMContentLoaded', initialize);
+
 </script>
 </body>
 </html>
