@@ -11,7 +11,7 @@
             padding: 0;
             overflow: hidden;
             font-family: 'Courier New', monospace;
-            font-size: 20px;
+            font-size: 16px;
         }
 
         #renderCanvas {
@@ -47,6 +47,23 @@
             background: rgba(0, 0, 0, 1);
             padding: 5px;
         }
+
+        #successCount, #failCount {
+            position: absolute;
+            bottom: 10px;
+            color: white;
+            background: rgba(0, 0, 0, 1);
+            padding: 5px;
+            font-size: 24px;
+        }
+
+        #successCount {
+            left: 10px;
+        }
+
+        #failCount {
+            right: 10px;
+        }
     </style>
 </head>
 <body>
@@ -54,6 +71,8 @@
 <div id="coordinateDisplay" class="infoDisplay"></div>
 <div id="fpsCounter" class="infoDisplay"></div>
 <div id="countdownTimer" class="infoDisplay"></div>
+<div id="successCount" class="infoDisplay">Success: 0</div>
+<div id="failCount" class="infoDisplay">Fail: 0</div>
 <script src="https://cdn.babylonjs.com/babylon.js"></script>
 <script src="https://cdn.babylonjs.com/cannon.js"></script>
 <script>
@@ -61,6 +80,9 @@
     var enableRandomMovement = true, lastMoveTime = 0;
     var moveInterval = 100, movementSpeed = 10;
     var targetCircle, simulationTimeoutId;
+    var successCount = 0;
+    var failCount = 0;
+    var targetReached = false;
 
     function createScene() {
         scene = new BABYLON.Scene(engine);
@@ -129,12 +151,21 @@
         simulationTimeoutId = setInterval(function () {
             countdown -= 1;
             updateCountdownDisplay();
+
             if (countdown <= 0) {
                 console.log("Simulation timed out! Resetting...");
                 clearInterval(simulationTimeoutId);
+                failCount++;
+                updateScoreDisplay();
                 resetSimulation();
             }
         }, 1000);
+
+    }
+
+    function updateScoreDisplay() {
+        document.getElementById('successCount').innerText = 'Success: ' + successCount;
+        document.getElementById('failCount').innerText = 'Fail: ' + failCount;
     }
 
     function updateCountdownDisplay() {
@@ -143,10 +174,13 @@
 
     function checkIfInsideTarget() {
         var distance = BABYLON.Vector3.Distance(sphere.position, targetCircle.position);
-        if (distance < 1) {
+        if (distance < 1 && !targetReached) {
             console.log("Target reached!");
+            targetReached = true;
             enableRandomMovement = false;
             clearTimeout(simulationTimeoutId);
+            successCount++;
+            updateScoreDisplay();
             if (sphere.physicsImpostor) {
                 sphere.physicsImpostor.setLinearVelocity(BABYLON.Vector3.Zero());
                 sphere.physicsImpostor.setAngularVelocity(BABYLON.Vector3.Zero());
@@ -195,6 +229,7 @@
 
     function resetSimulation() {
         console.log("Resetting simulation");
+        targetReached = false;
 
         sphere.position = new BABYLON.Vector3(0, 1, 0);
         if (sphere.physicsImpostor) {
@@ -252,6 +287,7 @@
     window.addEventListener('DOMContentLoaded', function () {
         initialize();
         resetSimulation();
+        updateScoreDisplay();
     });
 
     startSimulationTimeout();
