@@ -26,7 +26,7 @@ We must recognise that the most significant challenges and opportunities of our 
 
 Our commitment to that future is clear - we pledge to use technology not as an escape from reality but as a tool for tangible progress, enriching the natural world in which we live and work. Join us in our mission to flatten the complexity of AI, electronics and robotics.
 
-> **flatpack.ai:** "What we are creating here is distinct from the well-known AI models. Picture merging the cleverness of the Swedish flatpack (hence the name) and ready-to-assemble furniture with the imaginative appeal of certain Danish snap-together toy bricks (the best of two worlds, just like my native region of Skåne). Our method of developing micro-LLMs is designed to be interactive and intelligently integrated into the physical world." (Henric Romlin 2023)
+> **flatpack.ai:** "What we are creating here is distinct from the well-known AI models. Picture merging the cleverness of the Swedish flatpack (hence the name) and ready-to-assemble furniture with the imaginative appeal of certain Danish snap-together toy bricks (the best of two worlds, akin to my native region of Skåne). Our method of developing micro-LLMs is designed to be interactive and intelligently integrated into the physical world." (Henric Romlin 2023)
 ## flatpack 3.X.X (Aglaonice)
 
 *Aglaonice, an ancient Greek astronomer from the 2nd or 1st century BC, was celebrated for her precise lunar eclipse predictions. Her mastery inspired the Greek proverb: "As the moon obeys Aglaonice," signifying unwavering certainty.*
