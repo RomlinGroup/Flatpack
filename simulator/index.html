@@ -57,7 +57,7 @@
 
             var light = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(1, 1, 0), scene);
 
-            box = BABYLON.MeshBuilder.CreateBox("box", {size: 2}, scene);
+            box = BABYLON.MeshBuilder.CreateBox("box", {size: 1}, scene);
             box.position.y = 1;
             var boxMaterial = new BABYLON.StandardMaterial("boxMat", scene);
             boxMaterial.diffuseColor = new BABYLON.Color3(0.345, 0.396, 0.949);
