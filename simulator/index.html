@@ -178,20 +178,31 @@
 
         let fpsDisplayUpdateInterval = 1000;
         let lastFpsUpdateTime = 0;
+        let tabIsActive = true;
 
         engine.runRenderLoop(function () {
-            scene.render();
-            updateCoordinates();
+            if (tabIsActive) {
+                scene.render();
+                updateCoordinates();
 
-            let currentTime = Date.now();
-            if (currentTime - lastFpsUpdateTime > fpsDisplayUpdateInterval) {
-                document.getElementById('fpsCounter').innerHTML = engine.getFps().toFixed(2) + ' fps';
-                lastFpsUpdateTime = currentTime;
+                let currentTime = Date.now();
+                if (currentTime - lastFpsUpdateTime > fpsDisplayUpdateInterval) {
+                    document.getElementById('fpsCounter').innerHTML = engine.getFps().toFixed(0) + ' fps';
+                    lastFpsUpdateTime = currentTime;
+                }
             }
         });
 
         initializeEventListeners();
         setInterval(randomMovement, 200);
+
+        document.addEventListener('visibilitychange', function () {
+            if (document.visibilityState === 'visible') {
+                tabIsActive = true;
+            } else {
+                tabIsActive = false;
+            }
+        });
     }
 
     window.addEventListener('DOMContentLoaded', initialize);
