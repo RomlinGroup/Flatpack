@@ -26,7 +26,7 @@ We must recognise that the most significant challenges and opportunities of our 
 
 Our commitment to that future is clear - we pledge to use technology not as an escape from reality but as a tool for tangible progress, enriching the natural world in which we live and work. Join us in our mission to flatten the complexity of AI, electronics and robotics.
 
-> **flatpack.ai:** "What we are creating here is distinct from the well-known AI models. Picture merging the cleverness of flatpack (hence the name) and ready-to-assemble furniture with the imaginative appeal of certain world famous snap-together toy bricks. Our method of developing micro-LLMs is unique, designed to be interactive and intelligently integrated into the physical world." (Henric Romlin 2023)
+> **flatpack.ai:** "What we are creating here is distinct from the well-known AI models. Picture merging the cleverness of Swedish flatpack (hence the name) and ready-to-assemble furniture with the imaginative appeal of certain world famous snap-together toy bricks. Our method of developing micro-LLMs is unique, designed to be interactive and intelligently integrated into the physical world." (Henric Romlin 2023)
 
 ## flatpack 3.X.X (Aglaonice)
 
