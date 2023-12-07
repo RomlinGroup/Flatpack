@@ -76,16 +76,35 @@ window.addEventListener('keydown', function (event) {
     }
 });
 
+var lastMoveTime = 0;
+var moveInterval = 500;
+var currentDirection = null;
+var movementSpeed = 0.1;
+
 function randomMovement() {
     if (!enableRandomMovement) return;
 
-    var randomXForce = (Math.random() - 0.5) * 2;
-    var randomZForce = (Math.random() - 0.5) * 2;
+    var currentTime = new Date().getTime();
+    if (currentTime - lastMoveTime > moveInterval) {
+        var directions = ['w', 'a', 's', 'd'];
+        currentDirection = directions[Math.floor(Math.random() * directions.length)];
+        lastMoveTime = currentTime;
+    }
 
-    box.physicsImpostor.applyImpulse(new BABYLON.Vector3(randomXForce, 0, randomZForce), box.getAbsolutePosition());
-
-    var randomRotY = Math.random() * Math.PI / 4;
-    box.rotation.y += randomRotY;
+    switch (currentDirection) {
+        case 'w':
+            box.position.z -= movementSpeed;
+            break;
+        case 's':
+            box.position.z += movementSpeed;
+            break;
+        case 'a':
+            box.position.x += movementSpeed;
+            break;
+        case 'd':
+            box.position.x -= movementSpeed;
+            break;
+    }
 }
 
-setInterval(randomMovement, 500);
+setInterval(randomMovement, 100);
