@@ -105,7 +105,7 @@
         targetCircle = BABYLON.MeshBuilder.CreateDisc("target", {radius: 0.5, tessellation: 0}, scene);
         targetCircle.position.y = 0.1;
         targetCircle.position.x = 0;
-        targetCircle.position.z = -8;
+        targetCircle.position.z = 0;
         targetCircle.rotation.x = Math.PI / 2;
         var targetMaterial = new BABYLON.StandardMaterial("targetMat", scene);
         targetMaterial.diffuseColor = new BABYLON.Color3(0.75, 0.75, 0.75);
@@ -151,7 +151,7 @@
             updateCountdownDisplay();
 
             if (countdown <= 0) {
-                console.log("Simulation timed out! Resetting...");
+                //console.log("Simulation timed out! Resetting...");
                 clearInterval(simulationTimeoutId);
                 failCount++;
                 updateScoreDisplay();
@@ -173,7 +173,7 @@
     function checkIfInsideTarget() {
         var distance = BABYLON.Vector3.Distance(sphere.position, targetCircle.position);
         if (distance < 0.5 && !targetReached) {
-            console.log("Target reached!");
+            //console.log("Target reached!");
             targetReached = true;
             enableRandomMovement = false;
             clearTimeout(simulationTimeoutId);
@@ -226,7 +226,7 @@
     }
 
     function resetSimulation() {
-        console.log("Resetting simulation");
+        //console.log("Resetting simulation");
         targetReached = false;
 
         sphere.position = new BABYLON.Vector3(0, 1, 8);
