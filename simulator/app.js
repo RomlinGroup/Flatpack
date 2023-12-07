@@ -79,10 +79,10 @@ window.addEventListener('keydown', function (event) {
 function randomMovement() {
     if (!enableRandomMovement) return;
 
-    var randomX = (Math.random() - 0.5) * 2;
-    var randomZ = (Math.random() - 0.5) * 2;
-    box.position.x += randomX;
-    box.position.z += randomZ;
+    var randomXForce = (Math.random() - 0.5) * 2;
+    var randomZForce = (Math.random() - 0.5) * 2;
+
+    box.physicsImpostor.applyImpulse(new BABYLON.Vector3(randomXForce, 0, randomZForce), box.getAbsolutePosition());
 
     var randomRotY = Math.random() * Math.PI / 4;
     box.rotation.y += randomRotY;
