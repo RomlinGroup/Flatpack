@@ -37,6 +37,7 @@
 <script src="https://cdn.babylonjs.com/cannon.js"></script>
 <script>
     var box;
+    var currentAngle = 0;
     var currentDirection = null;
     var enableRandomMovement = true;
     var lastMoveTime = 0;
@@ -75,7 +76,7 @@
                 }, scene);
             }
 
-            var wallHeight = 10, wallDepth = 1;
+            var wallHeight = 2, wallDepth = 1;
             createWall(new BABYLON.Vector3(0, wallHeight / 2, -10), {height: wallHeight, width: 20, depth: wallDepth});
             createWall(new BABYLON.Vector3(0, wallHeight / 2, 10), {height: wallHeight, width: 20, depth: wallDepth});
             createWall(new BABYLON.Vector3(-10, wallHeight / 2, 0), {height: wallHeight, width: wallDepth, depth: 20});
@@ -102,47 +103,45 @@
         switch (event.key) {
             case 'w':
             case 'W':
-                box.position.z -= movementSpeed;
+                moveCube(-Math.PI / 2); // Forward
                 break;
             case 's':
             case 'S':
-                box.position.z += movementSpeed;
+                moveCube(Math.PI / 2); // Backward
                 break;
             case 'a':
             case 'A':
-                box.position.x += movementSpeed;
+                moveCube(Math.PI); // Left
                 break;
             case 'd':
             case 'D':
-                box.position.x -= movementSpeed;
+                moveCube(0); // Right
                 break;
         }
     });
 
+    function rotateCube(angle) {
+        currentAngle = angle;
+        box.rotation.y = angle;
+    }
+
+    function moveCube(angle) {
+        rotateCube(angle);
+        box.position.x += movementSpeed * Math.sin(angle);
+        box.position.z += movementSpeed * Math.cos(angle);
+    }
+
+
     function randomMovement() {
         if (!enableRandomMovement) return;
-
         var currentTime = new Date().getTime();
         if (currentTime - lastMoveTime > moveInterval) {
-            var directions = ['w', 'a', 's', 'd'];
-            currentDirection = directions[Math.floor(Math.random() * directions.length)];
+            var angles = [0, Math.PI / 2, Math.PI, -Math.PI / 2];
+            currentDirection = angles[Math.floor(Math.random() * angles.length)];
             lastMoveTime = currentTime;
         }
 
-        switch (currentDirection) {
-            case 'w':
-                box.position.z -= movementSpeed;
-                break;
-            case 's':
-                box.position.z += movementSpeed;
-                break;
-            case 'a':
-                box.position.x += movementSpeed;
-                break;
-            case 'd':
-                box.position.x -= movementSpeed;
-                break;
-        }
+        moveCube(currentDirection);
     }
 
     setInterval(randomMovement, 200);
