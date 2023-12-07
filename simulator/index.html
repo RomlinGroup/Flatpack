@@ -17,10 +17,8 @@
             height: 100%;
         }
 
-        #fpsCounter {
+        .infoDisplay {
             position: absolute;
-            top: 10px;
-            right: 10px;
             color: white;
             background: rgba(0, 0, 0, 0.5);
             padding: 5px;
@@ -28,123 +26,144 @@
             font-family: Arial, sans-serif;
             font-size: 14px;
         }
+
+        #fpsCounter {
+            top: 10px;
+            right: 10px;
+        }
+
+        #coordinateDisplay {
+            top: 10px;
+            left: 10px;
+        }
     </style>
 </head>
 <body>
 <canvas id="renderCanvas"></canvas>
-<div id="fpsCounter"></div>
+<div id="coordinateDisplay" class="infoDisplay"></div>
+<div id="fpsCounter" class="infoDisplay"></div>
 <script src="https://cdn.babylonjs.com/babylon.js"></script>
 <script src="https://cdn.babylonjs.com/cannon.js"></script>
 <script>
-    var box;
-    var currentAngle = 0;
-    var currentDirection = null;
+    var box, scene, engine, canvas;
     var enableRandomMovement = true;
     var lastMoveTime = 0;
-    var moveInterval = 4000;
-    var movementSpeed = 0.2;
+    var moveInterval = 1000;
+    var movementSpeed = 5;
 
-    window.addEventListener('DOMContentLoaded', function () {
-        var canvas = document.getElementById('renderCanvas');
-        var engine = new BABYLON.Engine(canvas, true);
+    function createScene() {
+        scene = new BABYLON.Scene(engine);
+        scene.enablePhysics(new BABYLON.Vector3(0, -9.81, 0), new BABYLON.CannonJSPlugin());
 
-        var createScene = function () {
-            var scene = new BABYLON.Scene(engine);
-            scene.enablePhysics(new BABYLON.Vector3(0, -9.81, 0), new BABYLON.CannonJSPlugin());
+        var camera = new BABYLON.ArcRotateCamera("Camera", Math.PI / 2, Math.PI / 2, 2, new BABYLON.Vector3(0, 0, 5), scene);
+        camera.attachControl(canvas, true);
 
-            var camera = new BABYLON.ArcRotateCamera("Camera", Math.PI / 2, Math.PI / 2, 2, new BABYLON.Vector3(0, 0, 5), scene);
-            camera.attachControl(canvas, true);
+        var light = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(1, 1, 0), scene);
 
-            var light = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(1, 1, 0), scene);
+        box = BABYLON.MeshBuilder.CreateBox("box", {size: 1}, scene);
+        box.position.y = 1;
+        var boxMaterial = new BABYLON.StandardMaterial("boxMat", scene);
+        boxMaterial.diffuseColor = new BABYLON.Color3(0.345, 0.396, 0.949);
+        box.material = boxMaterial;
+        box.physicsImpostor = new BABYLON.PhysicsImpostor(box, BABYLON.PhysicsImpostor.BoxImpostor, {
+            mass: 1,
+            restitution: 0.1
+        }, scene);
 
-            box = BABYLON.MeshBuilder.CreateBox("box", {size: 1}, scene);
-            box.position.y = 1;
-            var boxMaterial = new BABYLON.StandardMaterial("boxMat", scene);
-            boxMaterial.diffuseColor = new BABYLON.Color3(0.345, 0.396, 0.949);
-            box.material = boxMaterial;
-            box.physicsImpostor = new BABYLON.PhysicsImpostor(box, BABYLON.PhysicsImpostor.BoxImpostor, {
-                mass: 1,
-                restitution: 0
-            }, scene);
+        createWalls();
+    }
 
-            function createWall(position, size) {
-                var wall = BABYLON.MeshBuilder.CreateBox("wall", size, scene);
-                wall.position = position;
-                wall.physicsImpostor = new BABYLON.PhysicsImpostor(wall, BABYLON.PhysicsImpostor.BoxImpostor, {
-                    mass: 0,
-                    restitution: 0.1
-                }, scene);
-            }
+    function createWalls() {
+        var wallHeight = 2, wallDepth = 1;
+        createWall(new BABYLON.Vector3(0, wallHeight / 2, -10), {height: wallHeight, width: 20, depth: wallDepth});
+        createWall(new BABYLON.Vector3(0, wallHeight / 2, 10), {height: wallHeight, width: 20, depth: wallDepth});
+        createWall(new BABYLON.Vector3(-10, wallHeight / 2, 0), {height: wallHeight, width: wallDepth, depth: 20});
+        createWall(new BABYLON.Vector3(10, wallHeight / 2, 0), {height: wallHeight, width: wallDepth, depth: 20});
+        createWall(new BABYLON.Vector3(0, -wallDepth / 2, 0), {height: wallDepth, width: 20, depth: 20});
+    }
 
-            var wallHeight = 2, wallDepth = 1;
-            createWall(new BABYLON.Vector3(0, wallHeight / 2, -10), {height: wallHeight, width: 20, depth: wallDepth});
-            createWall(new BABYLON.Vector3(0, wallHeight / 2, 10), {height: wallHeight, width: 20, depth: wallDepth});
-            createWall(new BABYLON.Vector3(-10, wallHeight / 2, 0), {height: wallHeight, width: wallDepth, depth: 20});
-            createWall(new BABYLON.Vector3(10, wallHeight / 2, 0), {height: wallHeight, width: wallDepth, depth: 20});
-            createWall(new BABYLON.Vector3(0, -wallDepth / 2, 0), {height: wallDepth, width: 20, depth: 20});
+    function createWall(position, size) {
+        var wall = BABYLON.MeshBuilder.CreateBox("wall", size, scene);
+        wall.position = position;
+        wall.physicsImpostor = new BABYLON.PhysicsImpostor(wall, BABYLON.PhysicsImpostor.BoxImpostor, {
+            mass: 0,
+            restitution: 0.9
+        }, scene);
+    }
 
-            return scene;
-        };
-
-        var scene = createScene();
-        var fpsCounter = document.getElementById('fpsCounter');
-
-        engine.runRenderLoop(function () {
-            scene.render();
-            fpsCounter.innerHTML = engine.getFps().toFixed(2) + ' fps';
-        });
-
-        window.addEventListener('resize', function () {
-            engine.resize();
-        });
-    });
-
-    window.addEventListener('keydown', function (event) {
-        switch (event.key) {
-            case 'w':
-            case 'W':
-                moveCube(-Math.PI / 2); // Forward
-                break;
-            case 's':
-            case 'S':
-                moveCube(Math.PI / 2); // Backward
-                break;
-            case 'a':
-            case 'A':
-                moveCube(Math.PI); // Left
-                break;
-            case 'd':
-            case 'D':
-                moveCube(0); // Right
-                break;
-        }
-    });
-
-    function rotateCube(angle) {
-        currentAngle = angle;
-        box.rotation.y = angle;
+    function updateCoordinates() {
+        var coords = "X: " + box.position.x.toFixed(2) + ", Y: " + box.position.y.toFixed(2) + ", Z: " + box.position.z.toFixed(2);
+        document.getElementById('coordinateDisplay').innerText = coords;
     }
 
     function moveCube(angle) {
-        rotateCube(angle);
-        box.position.x += movementSpeed * Math.sin(angle);
-        box.position.z += movementSpeed * Math.cos(angle);
-    }
+        var forceMagnitude = movementSpeed;
+        var forceDirection = new BABYLON.Vector3(Math.sin(angle), 0, Math.cos(angle));
+        forceDirection.normalize();
+        forceDirection.scaleInPlace(forceMagnitude);
 
+        box.physicsImpostor.applyImpulse(forceDirection, box.getAbsolutePosition());
+    }
 
     function randomMovement() {
         if (!enableRandomMovement) return;
         var currentTime = new Date().getTime();
         if (currentTime - lastMoveTime > moveInterval) {
             var angles = [0, Math.PI / 2, Math.PI, -Math.PI / 2];
-            currentDirection = angles[Math.floor(Math.random() * angles.length)];
+            var randomAngle = angles[Math.floor(Math.random() * angles.length)];
+            moveCube(randomAngle);
             lastMoveTime = currentTime;
         }
-
-        moveCube(currentDirection);
     }
 
-    setInterval(randomMovement, 200);
+    function initializeEventListeners() {
+        window.addEventListener('keydown', function (event) {
+            var moveAngle = 0;
+            switch (event.key) {
+                case 'w':
+                case 'W':
+                    moveAngle = -Math.PI / 2;
+                    break;
+                case 's':
+                case 'S':
+                    moveAngle = Math.PI / 2;
+                    break;
+                case 'a':
+                case 'A':
+                    moveAngle = Math.PI;
+                    break;
+                case 'd':
+                case 'D':
+                    moveAngle = 0;
+                    break;
+                default:
+                    return;
+            }
+            moveCube(moveAngle);
+        });
+
+        window.addEventListener('resize', function () {
+            engine.resize();
+        });
+    }
+
+    function initialize() {
+        canvas = document.getElementById('renderCanvas');
+        engine = new BABYLON.Engine(canvas, true);
+
+        createScene();
+
+        engine.runRenderLoop(function () {
+            scene.render();
+            updateCoordinates();
+            document.getElementById('fpsCounter').innerHTML = engine.getFps().toFixed(2) + ' fps';
+        });
+
+        initializeEventListeners();
+        setInterval(randomMovement, 200);
+    }
+
+    window.addEventListener('DOMContentLoaded', initialize);
 </script>
 </body>
 </html>
