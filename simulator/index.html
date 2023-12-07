@@ -75,7 +75,7 @@
 <script src="https://cdn.babylonjs.com/cannon.js"></script>
 <script>
     var sphere, scene, engine, canvas;
-    var enableRandomMovement = true, lastMoveTime = 0;
+    var enableRandomMovement = false, lastMoveTime = 0;
     var moveInterval = 100, movementSpeed = 10;
     var targetCircle, simulationTimeoutId;
     var successCount = 0;
@@ -93,7 +93,7 @@
         var light = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(1, 1, 0), scene);
 
         sphere = BABYLON.MeshBuilder.CreateSphere("sphere", {diameter: 1}, scene);
-        sphere.position.y = 1;
+        sphere.position = new BABYLON.Vector3(0, 1, 8);
         var sphereMaterial = new BABYLON.StandardMaterial("sphereMat", scene);
         sphereMaterial.diffuseColor = new BABYLON.Color3(0.345, 0.396, 0.949);
         sphere.material = sphereMaterial;
@@ -249,6 +249,26 @@
         startSimulationTimeout();
     }
 
+    function moveToTarget() {
+        var targetDirection = targetCircle.position.subtract(sphere.position);
+        targetDirection = targetDirection.normalize().scale(movementSpeed);
+        sphere.physicsImpostor.applyImpulse(targetDirection, sphere.getAbsolutePosition());
+    }
+
+    function randomOrTargetedMovement() {
+        var currentTime = new Date().getTime();
+        if (currentTime - lastMoveTime > moveInterval) {
+            if (enableRandomMovement) {
+                var keys = Object.keys(movements);
+                var randomKey = keys[Math.floor(Math.random() * keys.length)];
+                moveCube(movements[randomKey]);
+            } else {
+                moveToTarget();
+            }
+            lastMoveTime = currentTime;
+        }
+    }
+
     function initialize() {
         canvas = document.getElementById('renderCanvas');
         engine = new BABYLON.Engine(canvas, true);
@@ -278,7 +298,10 @@
         });
 
         window.addEventListener('resize', () => engine.resize());
-        setInterval(randomMovement, 200);
+
+        //setInterval(randomMovement, 200);
+        setInterval(randomOrTargetedMovement, 200);
+
         document.addEventListener('visibilitychange', () => lastRenderTime = Date.now());
     }
 
