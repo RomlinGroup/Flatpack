@@ -172,7 +172,7 @@
 
     function checkIfInsideTarget() {
         var distance = BABYLON.Vector3.Distance(sphere.position, targetCircle.position);
-        if (distance < 1 && !targetReached) {
+        if (distance < 0.5 && !targetReached) {
             console.log("Target reached!");
             targetReached = true;
             enableRandomMovement = false;
