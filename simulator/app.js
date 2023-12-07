@@ -33,7 +33,7 @@ window.addEventListener('DOMContentLoaded', function () {
             wall.position = position;
             wall.physicsImpostor = new BABYLON.PhysicsImpostor(wall, BABYLON.PhysicsImpostor.BoxImpostor, {
                 mass: 0,
-                restitution: 0.2 // Slightly higher than the box for a small bounce effect
+                restitution: 0.2
             }, scene);
         }
 
@@ -48,9 +48,11 @@ window.addEventListener('DOMContentLoaded', function () {
     };
 
     var scene = createScene();
+    var fpsCounter = document.getElementById('fpsCounter');
 
     engine.runRenderLoop(function () {
         scene.render();
+        fpsCounter.innerHTML = engine.getFps().toFixed(2) + ' fps';
     });
 
     window.addEventListener('resize', function () {
