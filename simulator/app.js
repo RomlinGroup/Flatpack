@@ -2,8 +2,8 @@ var box;
 var currentDirection = null;
 var enableRandomMovement = true;
 var lastMoveTime = 0;
-var moveInterval = 500;
-var movementSpeed = 0.1;
+var moveInterval = 4000;
+var movementSpeed = 0.2;
 
 window.addEventListener('DOMContentLoaded', function () {
     var canvas = document.getElementById('renderCanvas');
@@ -25,7 +25,7 @@ window.addEventListener('DOMContentLoaded', function () {
         box.material = boxMaterial;
         box.physicsImpostor = new BABYLON.PhysicsImpostor(box, BABYLON.PhysicsImpostor.BoxImpostor, {
             mass: 1,
-            restitution: 0.9
+            restitution: 0
         }, scene);
 
         function createWall(position, size) {
@@ -33,11 +33,11 @@ window.addEventListener('DOMContentLoaded', function () {
             wall.position = position;
             wall.physicsImpostor = new BABYLON.PhysicsImpostor(wall, BABYLON.PhysicsImpostor.BoxImpostor, {
                 mass: 0,
-                restitution: 0.9
+                restitution: 0.2 // Slightly higher than the box for a small bounce effect
             }, scene);
         }
 
-        var wallHeight = 4, wallDepth = 1;
+        var wallHeight = 5, wallDepth = 1;
         createWall(new BABYLON.Vector3(0, wallHeight / 2, -10), {height: wallHeight, width: 20, depth: wallDepth});
         createWall(new BABYLON.Vector3(0, wallHeight / 2, 10), {height: wallHeight, width: 20, depth: wallDepth});
         createWall(new BABYLON.Vector3(-10, wallHeight / 2, 0), {height: wallHeight, width: wallDepth, depth: 20});
@@ -105,4 +105,4 @@ function randomMovement() {
     }
 }
 
-setInterval(randomMovement, 100);
+setInterval(randomMovement, 200);
