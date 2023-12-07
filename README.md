@@ -20,9 +20,7 @@ We are developing a first-of-its-kind decentralised and open-source platform tha
 
 When we were children, we imagined our toys could come to life. This dream is becoming a reality with the advancement of AI and micro-LLMs. These technological wonders have the potential to transform the ordinary into something extraordinary, making our real-world environment as captivating as any metaverse or virtual reality.
 
-This fusion of AI with the physical world accelerates scientific progress, enhances life quality, and opens vast business opportunities. By imbuing our surroundings with intelligence, we unlock limitless potential for connection, creativity, and growth, heralding a new frontier of human accomplishment.
-
-We must recognise that the most significant challenges and opportunities of our time are related to the physical world and not some hyped-up metaverse or virtual reality. However, we can address these issues with a newfound sense of curiosity and efficiency by utilising AI and micro-LLMs. These tools can unlock unprecedented potential and pave the way for a brighter future.
+This fusion of AI with the physical world accelerates scientific progress, enhances life quality, and opens vast business opportunities. By imbuing our surroundings with intelligence, we unlock limitless potential for connection, creativity, and growth, heralding a new frontier of human accomplishment. We must recognise that the most significant challenges and opportunities of our time are related to the physical world and not some hyped-up metaverse or virtual reality. However, we can address these issues with a newfound sense of curiosity and efficiency by utilising AI and micro-LLMs. These tools can unlock unprecedented potential and pave the way for a brighter future.
 
 Our commitment to that future is clear - we pledge to use technology not as an escape from reality but as a tool for tangible progress, enriching the natural world in which we live and work. Join us in our mission to flatten the complexity of AI, electronics and robotics.
 

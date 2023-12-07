@@ -1,5 +1,9 @@
 var box;
+var currentDirection = null;
 var enableRandomMovement = true;
+var lastMoveTime = 0;
+var moveInterval = 500;
+var movementSpeed = 0.1;
 
 window.addEventListener('DOMContentLoaded', function () {
     var canvas = document.getElementById('renderCanvas');
@@ -55,7 +59,6 @@ window.addEventListener('DOMContentLoaded', function () {
 });
 
 window.addEventListener('keydown', function (event) {
-    var movementSpeed = 0.1;
     switch (event.key) {
         case 'w':
         case 'W':
@@ -75,11 +78,6 @@ window.addEventListener('keydown', function (event) {
             break;
     }
 });
-
-var lastMoveTime = 0;
-var moveInterval = 500;
-var currentDirection = null;
-var movementSpeed = 0.1;
 
 function randomMovement() {
     if (!enableRandomMovement) return;
