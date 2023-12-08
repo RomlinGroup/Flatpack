@@ -76,12 +76,15 @@
 <script>
     var canvas;
     var collisionCount = 0;
+    var countdown;
+    var countdownIntervalId;
     var enableRandomMovement = false;
     var engine;
     var failCount = 0;
     var lastMoveTime = 0;
     var moveInterval = 500;
     var movementSpeed = 50;
+    var pauseTime = 0;
     var scene;
     var simulationTimeoutId;
     var sphere;
@@ -317,6 +320,7 @@
         if (!targetReached) {
             var targetDirection = targetCircle.position.subtract(sphere.position).normalize();
             var closestKey = getClosestDirectionKey(targetDirection);
+            console.log(closestKey);
             moveSphere(movements[closestKey]);
         }
     }
@@ -353,6 +357,33 @@
         }
     }
 
+    function startSimulationTimeout(remainingTime = 10) {
+        countdown = remainingTime;
+        updateCountdownDisplay();
+        clearInterval(countdownIntervalId);
+        countdownIntervalId = setInterval(updateCountdown, 1000);
+    }
+
+    function updateCountdown() {
+        countdown -= 1;
+        updateCountdownDisplay();
+        if (countdown <= 0) {
+            clearInterval(countdownIntervalId);
+            failCount++;
+            updateScoreDisplay();
+            resetSimulation();
+        }
+    }
+
+    function pauseSimulationTimeout() {
+        clearInterval(countdownIntervalId);
+        pauseTime = countdown; // Save remaining time
+    }
+
+    function resumeSimulationTimeout() {
+        startSimulationTimeout(pauseTime); // Resume with remaining time
+    }
+
     function initialize() {
         canvas = document.getElementById('renderCanvas');
         engine = new BABYLON.Engine(canvas, true);
@@ -365,13 +396,6 @@
             let now = Date.now(), deltaTime = now - lastRenderTime;
             lastRenderTime = now;
 
-            if (deltaTime > 100) {
-                if (sphere.physicsImpostor) {
-                    sphere.physicsImpostor.setLinearVelocity(BABYLON.Vector3.Zero());
-                    sphere.physicsImpostor.setAngularVelocity(BABYLON.Vector3.Zero());
-                }
-            }
-
             if (document.visibilityState === 'visible') {
                 scene.render();
                 updateCoordinates();
@@ -380,15 +404,40 @@
                     lastFpsUpdateTime = now;
                 }
             }
-
         });
 
         window.addEventListener('resize', () => engine.resize());
 
-        //setInterval(randomMovement, 200);
         setInterval(randomOrTargetedMovement, 200);
 
-        document.addEventListener('visibilitychange', () => lastRenderTime = Date.now());
+        document.addEventListener('visibilitychange', function () {
+            if (document.visibilityState === 'hidden') {
+
+                engine.stopRenderLoop();
+                scene.physicsEnabled = false;
+                pauseSimulationTimeout();
+
+            } else {
+
+                lastRenderTime = Date.now();
+
+                engine.runRenderLoop(function () {
+                    let now = Date.now(), deltaTime = now - lastRenderTime;
+                    lastRenderTime = now;
+
+                    scene.render();
+                    scene.physicsEnabled = true;
+
+                    updateCoordinates();
+                    if (now - lastFpsUpdateTime > fpsDisplayUpdateInterval) {
+                        document.getElementById('fpsCounter').innerText = `${engine.getFps().toFixed(0)} fps`;
+                        lastFpsUpdateTime = now;
+                    }
+                });
+
+                resumeSimulationTimeout();
+            }
+        });
     }
 
     window.addEventListener('DOMContentLoaded', function () {
