@@ -98,9 +98,14 @@
 
     // Add Lighting to the Scene
     function addLighting() {
+        // Directional Light
         const light = new THREE.DirectionalLight(0xffffff, 1);
         light.position.set(0, 1, 1).normalize();
         scene.add(light);
+
+        // Ambient Light
+        const ambientLight = new THREE.AmbientLight(0x404040); // Color of the ambient light
+        scene.add(ambientLight);
     }
 
     // Add Robot Arm Components to the Scene
