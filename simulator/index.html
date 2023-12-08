@@ -79,6 +79,7 @@
     var countdown;
     var countdownIntervalId;
     var enableRandomMovement = false;
+    var executeRandomMovement = true;
     var engine;
     var failCount = 0;
     var lastMoveTime = 0;
@@ -343,6 +344,10 @@
     }
 
     function randomOrTargetedMovement() {
+        if (!executeRandomMovement) {
+            return;
+        }
+
         var currentTime = new Date().getTime();
         if (currentTime - lastMoveTime > moveInterval) {
             if (Math.random() < 0.5) {
@@ -412,22 +417,18 @@
 
         document.addEventListener('visibilitychange', function () {
             if (document.visibilityState === 'hidden') {
-
                 engine.stopRenderLoop();
                 scene.physicsEnabled = false;
                 pauseSimulationTimeout();
-
+                executeRandomMovement = false;
             } else {
-
                 lastRenderTime = Date.now();
-
+                scene.physicsEnabled = true;
                 engine.runRenderLoop(function () {
                     let now = Date.now(), deltaTime = now - lastRenderTime;
                     lastRenderTime = now;
 
                     scene.render();
-                    scene.physicsEnabled = true;
-
                     updateCoordinates();
                     if (now - lastFpsUpdateTime > fpsDisplayUpdateInterval) {
                         document.getElementById('fpsCounter').innerText = `${engine.getFps().toFixed(0)} fps`;
@@ -436,8 +437,10 @@
                 });
 
                 resumeSimulationTimeout();
+                executeRandomMovement = true;
             }
         });
+
     }
 
     window.addEventListener('DOMContentLoaded', function () {
