@@ -169,11 +169,17 @@
         document.addEventListener("keydown", onDocumentKeyDown, false);
     }
 
-    // Animation Loop
+    // Inside the animate function
     function animate() {
         requestAnimationFrame(animate);
         controls.update();
         renderer.render(scene, camera);
+
+        // Update the cameraView position to follow the elbow
+        cameraView.position.copy(elbow.getWorldPosition());
+
+        // Make the cameraView look at the forearm
+        cameraView.lookAt(forearm.getWorldPosition());
         cameraViewportRenderer.render(scene, cameraView);
     }
 
