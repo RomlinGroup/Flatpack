@@ -230,6 +230,7 @@
 
             freezeBall();
 
+            endRound('success');
             setTimeout(resetSimulation, 1000);
         }
     }
@@ -252,9 +253,39 @@
         'sd': new BABYLON.Vector3(-1, 0, 1)
     };
 
+    var simulationData = {
+        rounds: [],
+        currentRound: null
+    };
+
+    function startNewRound() {
+        simulationData.currentRound = {
+            movements: [],
+            startTime: Date.now(),
+            endTime: null,
+            outcome: null
+        };
+    }
+
+    function endRound(outcome) {
+        simulationData.currentRound.endTime = Date.now();
+        simulationData.currentRound.outcome = outcome;
+        simulationData.rounds.push(simulationData.currentRound);
+        console.log('Round data:', simulationData.currentRound);
+        simulationData.currentRound = null;
+    }
+
+    function recordMovement(direction) {
+        simulationData.currentRound.movements.push({
+            time: Date.now(),
+            direction: direction
+        });
+    }
+
     function moveSphere(direction) {
         var forceDirection = direction.clone().normalize().scale(movementSpeed);
         sphere.physicsImpostor.applyImpulse(forceDirection, sphere.getAbsolutePosition());
+        recordMovement(direction);
     }
 
     function reapplyWallPhysics() {
@@ -330,7 +361,7 @@
         if (!targetReached) {
             var targetDirection = targetCircle.position.subtract(sphere.position).normalize();
             var closestKey = getClosestDirectionKey(targetDirection);
-            console.log(closestKey);
+            //console.log(closestKey);
             moveSphere(movements[closestKey]);
         }
     }
@@ -364,7 +395,7 @@
             } else {
                 var keys = Object.keys(movements);
                 var randomKey = keys[Math.floor(Math.random() * keys.length)];
-                console.log(randomKey);
+                //console.log(randomKey);
                 moveSphere(movements[randomKey]);
             }
             lastMoveTime = currentTime;
@@ -386,6 +417,7 @@
             failCount++;
             updateScoreDisplay();
             resetSimulation();
+            endRound('fail');
         }
     }
 
@@ -456,6 +488,7 @@
         initialize();
         resetSimulation();
         updateScoreDisplay();
+        startNewRound();
     });
 
     startSimulationTimeout();
