@@ -23,7 +23,7 @@
         .infoDisplay {
             position: absolute;
             color: white;
-            background: rgba(0, 0, 0, 0.75);
+            background: rgba(0, 0, 0, 1);
             padding: 5px;
         }
 
@@ -43,7 +43,7 @@
             left: 50%;
             transform: translateX(-50%);
             color: white;
-            background: rgba(0, 0, 0, 0.75);
+            background: rgba(0, 0, 0, 1);
             padding: 5px;
         }
 
@@ -51,7 +51,7 @@
             position: absolute;
             bottom: 10px;
             color: white;
-            background: rgba(0, 0, 0, 0.75);
+            background: rgba(0, 0, 0, 1);
             padding: 5px;
         }
 
@@ -80,8 +80,8 @@
     var engine;
     var failCount = 0;
     var lastMoveTime = 0;
-    var moveInterval = 150;
-    var movementSpeed = 5;
+    var moveInterval = 500;
+    var movementSpeed = 50;
     var scene;
     var simulationTimeoutId;
     var sphere;
@@ -94,13 +94,13 @@
         scene.enablePhysics(new BABYLON.Vector3(0, -9.81, 0), new BABYLON.CannonJSPlugin());
         scene.clearColor = new BABYLON.Color3(0.75, 0.75, 0.75);
 
-        var camera = new BABYLON.FreeCamera("Camera", new BABYLON.Vector3(0, 40, 0), scene);
+        var camera = new BABYLON.FreeCamera("Camera", new BABYLON.Vector3(0, 30, 0), scene);
         camera.setTarget(BABYLON.Vector3.Zero());
         camera.rotation.x = Math.PI / 2;
 
         var light = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(1, 1, 0), scene);
 
-        sphere = BABYLON.MeshBuilder.CreateSphere("sphere", {diameter: 1}, scene);
+        sphere = BABYLON.MeshBuilder.CreateSphere("sphere", {diameter: 2}, scene);
         sphere.position = new BABYLON.Vector3(0, 1, 5);
         var sphereMaterial = new BABYLON.StandardMaterial("sphereMat", scene);
         sphereMaterial.diffuseColor = new BABYLON.Color3(0.75, 0.75, 0.75);
@@ -108,7 +108,7 @@
         sphereMaterial.ambientColor = new BABYLON.Color3(0.75, 0.75, 0.75);
         sphere.material = sphereMaterial;
         sphere.physicsImpostor = new BABYLON.PhysicsImpostor(sphere, BABYLON.PhysicsImpostor.SphereImpostor, {
-            mass: 1,
+            mass: 10,
             restitution: 0.5
         }, scene);
         sphere.physicsImpostor.registerOnPhysicsCollide(scene.meshes, function (main, collided) {
@@ -121,13 +121,13 @@
             }
         });
 
-        targetCircle = BABYLON.MeshBuilder.CreateDisc("target", {radius: 0.5, tessellation: 0}, scene);
+        targetCircle = BABYLON.MeshBuilder.CreateDisc("target", {radius: 1, tessellation: 0}, scene);
         targetCircle.position.y = 0.1;
         targetCircle.position.x = 0;
         targetCircle.position.z = -5;
         targetCircle.rotation.x = Math.PI / 2;
         var targetMaterial = new BABYLON.StandardMaterial("targetMat", scene);
-        targetMaterial.diffuseColor = new BABYLON.Color3(0.25, 0.25, 0.25);
+        targetMaterial.diffuseColor = new BABYLON.Color3(0, 0, 0);
         targetCircle.material = targetMaterial;
 
         createWalls();
@@ -152,13 +152,13 @@
         var wall = BABYLON.MeshBuilder.CreateBox("wall", size, scene);
         wall.position = position;
         wall.physicsImpostor = new BABYLON.PhysicsImpostor(wall, BABYLON.PhysicsImpostor.BoxImpostor, {
-            mass: 0,
+            mass: 100,
             restitution: 0.9
         }, scene);
 
         if (position.equals(new BABYLON.Vector3(0, 0.5, 0))) {
             var specialWallMaterial = new BABYLON.StandardMaterial("specialWallMat", scene);
-            specialWallMaterial.diffuseColor = new BABYLON.Color3(1, 0, 0);
+            specialWallMaterial.diffuseColor = new BABYLON.Color3(0.75, 0.75, 0.75);
             wall.material = specialWallMaterial;
         } else {
         }
@@ -203,13 +203,20 @@
 
     function checkIfInsideTarget() {
         var distance = BABYLON.Vector3.Distance(sphere.position, targetCircle.position);
-        if (distance < 0.5 && !targetReached) {
+        if (distance < 1 && !targetReached) {
             targetReached = true;
             enableRandomMovement = false;
             clearTimeout(simulationTimeoutId);
             successCount++;
             updateScoreDisplay();
+
+            sphere.position.x = targetCircle.position.x;
+            sphere.position.z = targetCircle.position.z;
+
+            sphere.isVisible = false;
+
             freezeBall();
+
             setTimeout(resetSimulation, 1000);
         }
     }
@@ -269,16 +276,47 @@
             }
         });
 
+        sphere.isVisible = true;
         enableRandomMovement = false;
         startSimulationTimeout();
+    }
+
+    function findClearPath(currentDirection) {
+        // Check several directions around the current direction
+        var testDirections = [
+            currentDirection,
+            rotateDirection(currentDirection, Math.PI / 4),
+            rotateDirection(currentDirection, -Math.PI / 4)
+        ];
+
+        var bestDirection = currentDirection;
+        var longestClearPath = 0;
+
+        testDirections.forEach(function (dir) {
+            var rayLength = measureClearPathLength(dir);
+            if (rayLength > longestClearPath) {
+                longestClearPath = rayLength;
+                bestDirection = dir;
+            }
+        });
+
+        return bestDirection;
+    }
+
+    function measureClearPathLength(direction) {
+        var ray = new BABYLON.Ray(sphere.position, direction, 10);
+        var hit = scene.pickWithRay(ray);
+
+        if (hit.pickedMesh && hit.pickedMesh.isWall) {
+            return BABYLON.Vector3.Distance(sphere.position, hit.pickedPoint);
+        }
+        return 10;
     }
 
     function moveToTarget() {
         if (!targetReached) {
             var targetDirection = targetCircle.position.subtract(sphere.position).normalize();
-
             var closestKey = getClosestDirectionKey(targetDirection);
-            console.log(closestKey);
             moveSphere(movements[closestKey]);
         }
     }
@@ -318,6 +356,7 @@
     function initialize() {
         canvas = document.getElementById('renderCanvas');
         engine = new BABYLON.Engine(canvas, true);
+
         createScene();
 
         let fpsDisplayUpdateInterval = 1000, lastFpsUpdateTime = 0, lastRenderTime = Date.now();
@@ -341,6 +380,7 @@
                     lastFpsUpdateTime = now;
                 }
             }
+
         });
 
         window.addEventListener('resize', () => engine.resize());
