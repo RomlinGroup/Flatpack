@@ -79,8 +79,8 @@
     var engine;
     var failCount = 0;
     var lastMoveTime = 0;
-    var moveInterval = 500;
-    var movementSpeed = 50;
+    var moveInterval = 1000;
+    var movementSpeed = 10;
     var pauseTime = 0;
     var scene;
     var simulationTimeoutId;
@@ -112,7 +112,7 @@
         sphere.material = sphereMaterial;
 
         sphere.physicsImpostor = new BABYLON.PhysicsImpostor(sphere, BABYLON.PhysicsImpostor.SphereImpostor, {
-            mass: 10,
+            mass: 5,
             restitution: 0.5
         }, scene);
         sphere.physicsImpostor.registerOnPhysicsCollide(scene.meshes, function (main, collided) {
@@ -156,8 +156,8 @@
         var wall = BABYLON.MeshBuilder.CreateBox("wall", size, scene);
         wall.position = position;
         wall.physicsImpostor = new BABYLON.PhysicsImpostor(wall, BABYLON.PhysicsImpostor.BoxImpostor, {
-            mass: 100,
-            restitution: 0.9
+            mass: 10,
+            restitution: 0.5
         }, scene);
 
         if (position.equals(new BABYLON.Vector3(0, 0.5, 0))) {
@@ -366,11 +366,16 @@
     }
 
     function moveToTarget() {
-        if (!targetReached) {
-            var targetDirection = targetCircle.position.subtract(sphere.position).normalize();
-            var closestKey = getClosestDirectionKey(targetDirection);
-            moveSphere(movements[closestKey], closestKey); // Pass the key
-        }
+        if (targetReached) return;
+
+        var directionToTarget = targetCircle.position.subtract(sphere.position).normalize();
+
+        var distanceToTarget = BABYLON.Vector3.Distance(sphere.position, targetCircle.position);
+        var speedFactor = Math.min(distanceToTarget / 10, 1);
+        var movementSpeedAdjusted = movementSpeed * speedFactor;
+
+        var moveDirection = directionToTarget.scale(movementSpeedAdjusted);
+        sphere.physicsImpostor.applyImpulse(moveDirection, sphere.getAbsolutePosition());
     }
 
     function getClosestDirectionKey(targetDirection) {
