@@ -180,11 +180,15 @@
         controls.update();
         renderer.render(scene, camera);
 
+        // Create a vector to hold the elbow's world position
+        const elbowWorldPosition = new THREE.Vector3();
+        elbow.getWorldPosition(elbowWorldPosition);
+
         // Update the cameraView position to follow the elbow
-        cameraView.position.copy(elbow.getWorldPosition());
+        cameraView.position.copy(elbowWorldPosition);
 
         // Make the cameraView look at the forearm
-        cameraView.lookAt(forearm.getWorldPosition());
+        cameraView.lookAt(forearm.getWorldPosition(new THREE.Vector3()));
         cameraViewportRenderer.render(scene, cameraView);
     }
 
