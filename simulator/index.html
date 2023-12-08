@@ -276,10 +276,12 @@
     }
 
     function recordMovement(direction) {
-        simulationData.currentRound.movements.push({
-            time: Date.now(),
-            direction: direction
-        });
+        if (simulationData.currentRound) {
+            simulationData.currentRound.movements.push({
+                time: Date.now(),
+                direction: direction
+            });
+        }
     }
 
     function moveSphere(direction) {
@@ -384,7 +386,7 @@
     }
 
     function randomOrTargetedMovement() {
-        if (!executeRandomMovement) {
+        if (!executeRandomMovement || !simulationData.currentRound) {
             return;
         }
 
