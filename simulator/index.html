@@ -11,7 +11,7 @@
             padding: 0;
             overflow: hidden;
             font-family: 'Courier New', monospace;
-            font-size: 16px;
+            font-size: 20px;
         }
 
         #renderCanvas {
@@ -23,7 +23,7 @@
         .infoDisplay {
             position: absolute;
             color: white;
-            background: rgba(0, 0, 0, 1);
+            background: rgba(0, 0, 0, 0.75);
             padding: 5px;
         }
 
@@ -43,7 +43,7 @@
             left: 50%;
             transform: translateX(-50%);
             color: white;
-            background: rgba(0, 0, 0, 1);
+            background: rgba(0, 0, 0, 0.75);
             padding: 5px;
         }
 
@@ -51,7 +51,7 @@
             position: absolute;
             bottom: 10px;
             color: white;
-            background: rgba(0, 0, 0, 1);
+            background: rgba(0, 0, 0, 0.75);
             padding: 5px;
         }
 
@@ -91,6 +91,7 @@
     function createScene() {
         scene = new BABYLON.Scene(engine);
         scene.enablePhysics(new BABYLON.Vector3(0, -9.81, 0), new BABYLON.CannonJSPlugin());
+        scene.clearColor = new BABYLON.Color3(0.75, 0.75, 0.75);
 
         var camera = new BABYLON.FreeCamera("Camera", new BABYLON.Vector3(0, 40, 0), scene);
         camera.setTarget(BABYLON.Vector3.Zero());
@@ -101,11 +102,13 @@
         sphere = BABYLON.MeshBuilder.CreateSphere("sphere", {diameter: 1}, scene);
         sphere.position = new BABYLON.Vector3(0, 1, 8);
         var sphereMaterial = new BABYLON.StandardMaterial("sphereMat", scene);
-        sphereMaterial.diffuseColor = new BABYLON.Color3(0.345, 0.396, 0.949);
+        sphereMaterial.diffuseColor = new BABYLON.Color3(0.75, 0.75, 0.75);
+        sphereMaterial.specularColor = new BABYLON.Color3(1, 1, 1);
+        sphereMaterial.ambientColor = new BABYLON.Color3(0.75, 0.75, 0.75);
         sphere.material = sphereMaterial;
         sphere.physicsImpostor = new BABYLON.PhysicsImpostor(sphere, BABYLON.PhysicsImpostor.SphereImpostor, {
             mass: 1,
-            restitution: 0.9
+            restitution: 0.5
         }, scene);
 
         targetCircle = BABYLON.MeshBuilder.CreateDisc("target", {radius: 0.5, tessellation: 0}, scene);
@@ -114,14 +117,14 @@
         targetCircle.position.z = -8;
         targetCircle.rotation.x = Math.PI / 2;
         var targetMaterial = new BABYLON.StandardMaterial("targetMat", scene);
-        targetMaterial.diffuseColor = new BABYLON.Color3(0.75, 0.75, 0.75);
+        targetMaterial.diffuseColor = new BABYLON.Color3(0.25, 0.25, 0.25);
         targetCircle.material = targetMaterial;
 
         createWalls();
     }
 
     function createWalls() {
-        const wallHeight = 5;
+        const wallHeight = 1;
 
         const wallConfigs = [
             {position: new BABYLON.Vector3(0, wallHeight / 2, -10), size: {height: wallHeight, width: 20, depth: 1}},
@@ -221,10 +224,9 @@
     }
 
     function moveSphere(direction) {
-        if (!targetReached) { // Check if target is not reached before moving
-            var forceDirection = direction.clone().normalize().scale(movementSpeed);
-            sphere.physicsImpostor.applyImpulse(forceDirection, sphere.getAbsolutePosition());
-        }
+        var reducedSpeed = movementSpeed * 0.5;
+        var forceDirection = direction.clone().normalize().scale(reducedSpeed);
+        sphere.physicsImpostor.applyImpulse(forceDirection, sphere.getAbsolutePosition());
     }
 
     function reapplyWallPhysics() {
