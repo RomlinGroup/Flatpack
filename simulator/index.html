@@ -74,12 +74,18 @@
 <script src="https://cdn.babylonjs.com/babylon.js"></script>
 <script src="https://cdn.babylonjs.com/cannon.js"></script>
 <script>
-    var sphere, scene, engine, canvas;
-    var enableRandomMovement = false, lastMoveTime = 0;
-    var moveInterval = 1000, movementSpeed = 10;
-    var targetCircle, simulationTimeoutId;
-    var successCount = 0;
+    var canvas;
+    var enableRandomMovement = false;
+    var engine;
     var failCount = 0;
+    var lastMoveTime = 0;
+    var moveInterval = 1000;
+    var movementSpeed = 10;
+    var scene;
+    var simulationTimeoutId;
+    var sphere;
+    var successCount = 0;
+    var targetCircle;
     var targetReached = false;
 
     function createScene() {
@@ -115,11 +121,13 @@
     }
 
     function createWalls() {
+        const wallHeight = 5;
+
         const wallConfigs = [
-            {position: new BABYLON.Vector3(0, 0.5, -10), size: {height: 1, width: 20, depth: 1}},
-            {position: new BABYLON.Vector3(0, 0.5, 10), size: {height: 1, width: 20, depth: 1}},
-            {position: new BABYLON.Vector3(-10, 0.5, 0), size: {height: 1, width: 1, depth: 20}},
-            {position: new BABYLON.Vector3(10, 0.5, 0), size: {height: 1, width: 1, depth: 20}},
+            {position: new BABYLON.Vector3(0, wallHeight / 2, -10), size: {height: wallHeight, width: 20, depth: 1}},
+            {position: new BABYLON.Vector3(0, wallHeight / 2, 10), size: {height: wallHeight, width: 20, depth: 1}},
+            {position: new BABYLON.Vector3(-10, wallHeight / 2, 0), size: {height: wallHeight, width: 1, depth: 20}},
+            {position: new BABYLON.Vector3(10, wallHeight / 2, 0), size: {height: wallHeight, width: 1, depth: 20}},
             {position: new BABYLON.Vector3(0, -0.5, 0), size: {height: 1, width: 20, depth: 20}}
         ];
 
@@ -173,17 +181,20 @@
     function checkIfInsideTarget() {
         var distance = BABYLON.Vector3.Distance(sphere.position, targetCircle.position);
         if (distance < 0.5 && !targetReached) {
-            //console.log("Target reached!");
             targetReached = true;
             enableRandomMovement = false;
             clearTimeout(simulationTimeoutId);
             successCount++;
             updateScoreDisplay();
-            if (sphere.physicsImpostor) {
-                sphere.physicsImpostor.setLinearVelocity(BABYLON.Vector3.Zero());
-                sphere.physicsImpostor.setAngularVelocity(BABYLON.Vector3.Zero());
-            }
+            freezeBall();
             setTimeout(resetSimulation, 1000);
+        }
+    }
+
+    function freezeBall() {
+        if (sphere.physicsImpostor) {
+            sphere.physicsImpostor.setLinearVelocity(BABYLON.Vector3.Zero());
+            sphere.physicsImpostor.setAngularVelocity(BABYLON.Vector3.Zero());
         }
     }
 
@@ -203,15 +214,17 @@
         if (new Date().getTime() - lastMoveTime > moveInterval) {
             var keys = Object.keys(movements);
             var randomKey = keys[Math.floor(Math.random() * keys.length)];
-            moveCube(movements[randomKey]);
+            moveSphere(movements[randomKey]);
             //console.log(randomKey);
             lastMoveTime = new Date().getTime();
         }
     }
 
-    function moveCube(direction) {
-        var forceDirection = direction.clone().normalize().scale(movementSpeed);
-        sphere.physicsImpostor.applyImpulse(forceDirection, sphere.getAbsolutePosition());
+    function moveSphere(direction) {
+        if (!targetReached) { // Check if target is not reached before moving
+            var forceDirection = direction.clone().normalize().scale(movementSpeed);
+            sphere.physicsImpostor.applyImpulse(forceDirection, sphere.getAbsolutePosition());
+        }
     }
 
     function reapplyWallPhysics() {
@@ -230,6 +243,7 @@
         targetReached = false;
 
         sphere.position = new BABYLON.Vector3(0, 1, 8);
+
         if (sphere.physicsImpostor) {
             sphere.physicsImpostor.setLinearVelocity(BABYLON.Vector3.Zero());
             sphere.physicsImpostor.setAngularVelocity(BABYLON.Vector3.Zero());
@@ -245,14 +259,16 @@
             }
         });
 
-        enableRandomMovement = true;
+        enableRandomMovement = false;
         startSimulationTimeout();
     }
 
     function moveToTarget() {
-        var targetDirection = targetCircle.position.subtract(sphere.position);
-        targetDirection = targetDirection.normalize().scale(movementSpeed);
-        sphere.physicsImpostor.applyImpulse(targetDirection, sphere.getAbsolutePosition());
+        if (!targetReached) {
+            var targetDirection = targetCircle.position.subtract(sphere.position);
+            targetDirection = targetDirection.normalize().scale(movementSpeed);
+            sphere.physicsImpostor.applyImpulse(targetDirection, sphere.getAbsolutePosition());
+        }
     }
 
     function randomOrTargetedMovement() {
@@ -261,7 +277,7 @@
             if (enableRandomMovement) {
                 var keys = Object.keys(movements);
                 var randomKey = keys[Math.floor(Math.random() * keys.length)];
-                moveCube(movements[randomKey]);
+                moveSphere(movements[randomKey]);
             } else {
                 moveToTarget();
             }
