@@ -75,12 +75,14 @@
 <script src="https://cdn.babylonjs.com/cannon.js"></script>
 <script>
     var canvas;
+    var collisionCount = 0;
     var enableRandomMovement = false;
     var engine;
     var failCount = 0;
     var lastMoveTime = 0;
-    var moveInterval = 1000;
-    var movementSpeed = 10;
+    var moveInterval = 100;
+    var movementSpeed = 1;
+    var recentCollisions = [];
     var scene;
     var simulationTimeoutId;
     var sphere;
@@ -100,7 +102,7 @@
         var light = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(1, 1, 0), scene);
 
         sphere = BABYLON.MeshBuilder.CreateSphere("sphere", {diameter: 1}, scene);
-        sphere.position = new BABYLON.Vector3(0, 1, 8);
+        sphere.position = new BABYLON.Vector3(0, 1, 5);
         var sphereMaterial = new BABYLON.StandardMaterial("sphereMat", scene);
         sphereMaterial.diffuseColor = new BABYLON.Color3(0.75, 0.75, 0.75);
         sphereMaterial.specularColor = new BABYLON.Color3(1, 1, 1);
@@ -110,11 +112,20 @@
             mass: 1,
             restitution: 0.5
         }, scene);
+        sphere.physicsImpostor.registerOnPhysicsCollide(scene.meshes, function (main, collided) {
+            if (collided.object.isWall) {
+                collisionCount++;
+                if (collisionCount > 1) {
+                    randomOrTargetedMovement();
+                    collisionCount = 0;
+                }
+            }
+        });
 
         targetCircle = BABYLON.MeshBuilder.CreateDisc("target", {radius: 0.5, tessellation: 0}, scene);
         targetCircle.position.y = 0.1;
-        targetCircle.position.x = -8;
-        targetCircle.position.z = -8;
+        targetCircle.position.x = 0;
+        targetCircle.position.z = -5;
         targetCircle.rotation.x = Math.PI / 2;
         var targetMaterial = new BABYLON.StandardMaterial("targetMat", scene);
         targetMaterial.diffuseColor = new BABYLON.Color3(0.25, 0.25, 0.25);
@@ -131,7 +142,8 @@
             {position: new BABYLON.Vector3(0, wallHeight / 2, 10), size: {height: wallHeight, width: 20, depth: 1}},
             {position: new BABYLON.Vector3(-10, wallHeight / 2, 0), size: {height: wallHeight, width: 1, depth: 20}},
             {position: new BABYLON.Vector3(10, wallHeight / 2, 0), size: {height: wallHeight, width: 1, depth: 20}},
-            {position: new BABYLON.Vector3(0, -0.5, 0), size: {height: 1, width: 20, depth: 20}}
+            {position: new BABYLON.Vector3(0, -0.5, 0), size: {height: 1, width: 20, depth: 20}},
+            {position: new BABYLON.Vector3(0, 0.5, 0), size: {height: 1, width: 5, depth: 1}}
         ];
 
         wallConfigs.forEach(config => createWall(config.position, config.size));
@@ -144,6 +156,15 @@
             mass: 0,
             restitution: 0.9
         }, scene);
+
+        if (position.equals(new BABYLON.Vector3(0, 0.5, 0))) {
+            var specialWallMaterial = new BABYLON.StandardMaterial("specialWallMat", scene);
+            specialWallMaterial.diffuseColor = new BABYLON.Color3(1, 0, 0);
+            wall.material = specialWallMaterial;
+        } else {
+        }
+
+        wall.isWall = true;
     }
 
     function updateCoordinates() {
@@ -212,20 +233,8 @@
         'sd': new BABYLON.Vector3(-1, 0, 1)
     };
 
-    function randomMovement() {
-        if (!enableRandomMovement) return;
-        if (new Date().getTime() - lastMoveTime > moveInterval) {
-            var keys = Object.keys(movements);
-            var randomKey = keys[Math.floor(Math.random() * keys.length)];
-            moveSphere(movements[randomKey]);
-            //console.log(randomKey);
-            lastMoveTime = new Date().getTime();
-        }
-    }
-
     function moveSphere(direction) {
-        var reducedSpeed = movementSpeed * 0.5;
-        var forceDirection = direction.clone().normalize().scale(reducedSpeed);
+        var forceDirection = direction.clone().normalize().scale(movementSpeed);
         sphere.physicsImpostor.applyImpulse(forceDirection, sphere.getAbsolutePosition());
     }
 
@@ -244,7 +253,7 @@
         //console.log("Resetting simulation");
         targetReached = false;
 
-        sphere.position = new BABYLON.Vector3(0, 1, 8);
+        sphere.position = new BABYLON.Vector3(0, 1, 5);
 
         if (sphere.physicsImpostor) {
             sphere.physicsImpostor.setLinearVelocity(BABYLON.Vector3.Zero());
@@ -267,21 +276,41 @@
 
     function moveToTarget() {
         if (!targetReached) {
-            var targetDirection = targetCircle.position.subtract(sphere.position);
-            targetDirection = targetDirection.normalize().scale(movementSpeed);
-            sphere.physicsImpostor.applyImpulse(targetDirection, sphere.getAbsolutePosition());
+            var targetDirection = targetCircle.position.subtract(sphere.position).normalize();
+
+            var closestKey = getClosestDirectionKey(targetDirection);
+            console.log(closestKey);
+            moveSphere(movements[closestKey]);
         }
+    }
+
+    function getClosestDirectionKey(targetDirection) {
+        var closestKey = '';
+        var closestDot = -Infinity;
+
+        Object.keys(movements).forEach(function (key) {
+            var direction = movements[key].normalize();
+            var dotProduct = BABYLON.Vector3.Dot(direction, targetDirection);
+
+            if (dotProduct > closestDot) {
+                closestDot = dotProduct;
+                closestKey = key;
+            }
+        });
+
+        return closestKey;
     }
 
     function randomOrTargetedMovement() {
         var currentTime = new Date().getTime();
         if (currentTime - lastMoveTime > moveInterval) {
-            if (enableRandomMovement) {
+            if (Math.random() < 0.5) {
+                moveToTarget();
+            } else {
                 var keys = Object.keys(movements);
                 var randomKey = keys[Math.floor(Math.random() * keys.length)];
+                console.log(randomKey);
                 moveSphere(movements[randomKey]);
-            } else {
-                moveToTarget();
             }
             lastMoveTime = currentTime;
         }
