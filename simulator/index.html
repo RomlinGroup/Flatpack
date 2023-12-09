@@ -1,372 +1,476 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-    <title>Simulator</title>
-    <style>
-        body {
-            margin: 0;
-        }
+	<title>Simulator</title>
+	<style>
+		body {
+			margin: 0;
+		}
 
-        canvas {
-            display: block;
-        }
+		canvas {
+			display: block;
+		}
 
-        #demoStatus {
-            position: fixed;
-            top: 10px;
-            left: 10px;
-            padding: 10px;
-            background: rgba(255, 255, 255, 0.8);
-            border-radius: 5px;
-            font-family: Arial, sans-serif;
-            font-size: 14px;
-            color: #333
-        }
+		#demoStatus {
+			position: fixed;
+			top: 10px;
+			left: 10px;
+			padding: 10px;
+			background: rgba(255, 255, 255, 0.8);
+			border-radius: 5px;
+			font-family: Arial, sans-serif;
+			font-size: 14px;
+			color: #333
+		}
 
-        #keyGuide {
-            position: fixed;
-            bottom: 10px;
-            right: 10px;
-            padding: 10px;
-            background: rgba(0, 0, 0, 1);
-            border-radius: 5px;
-            font-family: Arial, sans-serif;
-            font-size: 14px;
-            color: #ffffff;
-        }
-    </style>
+		#keyGuide {
+			position: fixed;
+			bottom: 10px;
+			right: 10px;
+			padding: 10px;
+			background: rgba(0, 0, 0, 1);
+			border-radius: 5px;
+			font-family: Arial, sans-serif;
+			font-size: 14px;
+			color: #ffffff;
+		}
+	</style>
 </head>
 
 <body>
 
-<div id="demoStatus">
-    Demo Mode: OFF
-</div>
+	<div id="demoStatus">
+		Demo Mode: OFF
+	</div>
 
 
-<!-- Controls Guide -->
-<div id="keyGuide">
-    <strong>Controls:</strong><br>
-    Base - Q/E<br>
-    Upper Arm - W/S<br>
-    Forearm - R/F<br>
-    Open Pincers - O<br>
-    Close Pincers - P<br>
-    Rotate Pincers - T/Y<br>
-    Toggle Demo Mode - D
-</div>
+	<!-- Controls Guide -->
+	<div id="keyGuide">
+		<strong>Controls:</strong><br>
+		Base - Q/E<br>
+		Upper Arm - W/S<br>
+		Forearm - R/F<br>
+		Open Pincers - O<br>
+		Close Pincers - P<br>
+		Rotate Pincers - T/Y<br>
+		Toggle Demo Mode - M
+	</div>
 
-<!-- Three.js and OrbitControls Scripts -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+	<!-- Three.js and OrbitControls Scripts -->
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/cannon.js/0.6.2/cannon.min.js"></script>
+	<script src="CannonDebugRenderer.js"></script>
 
-<!-- Main Script for Robot Arm Simulation -->
-<script>
-    // Constants and Configuration
-    const ARM_COLORS = {
-        base: 0xff0000,
-        shoulder: 0x00ff00,
-        upperArm: 0x00ff00,
-        forearm: 0x0000ff
-    };
+	<!-- Main Script for Robot Arm Simulation -->
+	<script>
+		// Constants and Configuration
+		const ARM_COLORS = {
+			base: 0xff0000,
+			shoulder: 0x00ff00,
+			upperArm: 0x00ff00,
+			forearm: 0x0000ff
+		};
 
-    // Scene Objects
-    let scene, camera, renderer, controls;
-    let base, shoulder, upperArm, elbow, forearm;
-    let pincerClosing = true;
-    let pincerAngle = 0;
-    const pincerSpeed = 0.005;
-    const maxPincerAngle = Math.PI / 5;
-    let pincerClaw1, pincerClaw2;
-    let demoMode = false;
-    const demoSpeed = 0.01;
-    let forearmRotation = 0;
-    let fullCycleCount = 0;
-    const maxCycles = 1;
-    let cylinderDot;
+		let world, scene, camera, renderer, controls;
+		let base, shoulder, upperArm, elbow, forearm;
+		let pincerClosing = true;
+		let pincerAngle = 0;
+		const pincerSpeed = 0.005;
+		const maxPincerAngle = Math.PI / 5;
+		let pincerClaw1, pincerClaw2;
+		let demoMode = false;
+		const demoSpeed = 0.01;
+		let forearmRotation = 0;
+		let fullCycleCount = 0;
+		const maxCycles = 1;
+		let cylinderDot;
 
-    // Initialize Scene, Camera, and Renderer
-    function init() {
-        setupScene();
-        setupCamera();
-        setupRenderer();
-        addLighting();
-        addRobotArm();
-        addFloor();
-        setupControls();
-        animate();
-    }
+		// Initialize Scene, Camera, and Renderer
+		function init() {
+			world = new CANNON.World();
 
-    // Setup the Three.js Scene
-    function setupScene() {
-        scene = new THREE.Scene();
-    }
+			world.gravity.set(0, 0, 0);
+			if (world) {
+				world.step(1 / 60);
+			}
 
-    // Setup the Camera
-    function setupCamera() {
-        camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        camera.position.set(2, 1, 2);
-    }
+			setupScene();
 
-    // Setup the Renderer
-    function setupRenderer() {
-        renderer = new THREE.WebGLRenderer();
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        document.body.appendChild(renderer.domElement);
-    }
+			cannonDebugRenderer = new THREE.CannonDebugRenderer(scene, world);
 
-    // Add Lighting to the Scene
-    function addLighting() {
-        // Directional Light
-        const light = new THREE.DirectionalLight(0xffffff, 1);
-        light.position.set(0, 1, 1).normalize();
-        scene.add(light);
+			addPhysicsBox();
+			setupCamera();
+			setupRenderer();
+			addLighting();
+			addFloor();
+			addRobotArm();
+			setupControls();
+			animate();
+		}
 
-        // Ambient Light
-        const ambientLight = new THREE.AmbientLight(0x404040); // Color of the ambient light
-        scene.add(ambientLight);
-    }
+		// Setup the Three.js Scene
+		function setupScene() {
+			scene = new THREE.Scene();
+		}
 
-    // Add Robot Arm Components to the Scene
-    function addRobotArm() {
-        base = createSegment(0.5, 0.6, 0.3, ARM_COLORS.base, 0.15);
-        shoulder = createSegment(0, 0, 0.3, ARM_COLORS.shoulder, 0.15);
-        upperArm = createSegment(0.15, 0.15, 1.2, ARM_COLORS.upperArm, 0.6);
+		// Setup the Camera
+		function setupCamera() {
+			camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+			camera.position.set(2, 1, 2);
+		}
 
-        // Create the green elbow joint sphere
-        const elbowGeometry = new THREE.SphereGeometry(0.15, 32, 32);
-        const elbowMaterial = new THREE.MeshStandardMaterial({
-            color: 0x00ff00
-        });
-        elbow = new THREE.Mesh(elbowGeometry, elbowMaterial);
-        elbow.position.y = 0.6; // Adjust the position as needed
+		// Setup the Renderer
+		function setupRenderer() {
+			renderer = new THREE.WebGLRenderer();
+			renderer.setSize(window.innerWidth, window.innerHeight);
+			document.body.appendChild(renderer.domElement);
+		}
 
-        forearm = createSegment(0.1, 0.1, 1.0, ARM_COLORS.forearm, 0.5);
+		// Add Lighting to the Scene
+		function addLighting() {
+			// Directional Light
+			const light = new THREE.DirectionalLight(0xffffff, 1);
+			light.position.set(0, 1, 1).normalize();
+			scene.add(light);
 
-        scene.add(base);
-        base.add(shoulder);
-        shoulder.add(upperArm);
-        upperArm.add(elbow); // Add the elbow joint to the upper arm
-        elbow.add(forearm);
+			// Ambient Light
+			const ambientLight = new THREE.AmbientLight(0x404040); // Color of the ambient light
+			scene.add(ambientLight);
+		}
 
-        // Set the initial rotation of the shoulder to the maximum downward angle within the constraints
-        shoulder.rotation.x = THREE.MathUtils.degToRad(-30); // Convert -65 degrees to radians
+		// Function to add a physics box to the scene
+		function addPhysicsBox() {
+			// Three.js box
+			const boxGeometry = new THREE.BoxGeometry(0.5, 0.5, 0.5); // Box size
+			const boxMaterial = new THREE.MeshStandardMaterial({
+				color: 0xffffff
+			}); // Box color
+			const boxMesh = new THREE.Mesh(boxGeometry, boxMaterial);
+			boxMesh.position.set(1, 0.25, 1); // Box initial position (x, y, z)
 
-        // Set the initial rotation of the elbow to the maximum downward angle within the constraints
-        elbow.rotation.x = THREE.MathUtils.degToRad(-90); // Convert -90 degrees to radians
+			scene.add(boxMesh);
 
-        // Create Pincers
-        const pincerMaterial = new THREE.MeshStandardMaterial({
-            color: 0xffff00
-        }); // Yellow color for pincers
-        const pincerBaseGeometry = new THREE.BoxGeometry(0.1, 0.05, 0.05);
-        const pincerBase1 = new THREE.Mesh(pincerBaseGeometry, pincerMaterial);
-        const pincerBase2 = new THREE.Mesh(pincerBaseGeometry, pincerMaterial);
-        const pincerClawGeometry = new THREE.BoxGeometry(0.1, 0.01, 0.1);
-        pincerClaw1 = new THREE.Mesh(pincerClawGeometry, pincerMaterial);
-        pincerClaw2 = new THREE.Mesh(pincerClawGeometry, pincerMaterial);
+			// Cannon.js physics body
+			const boxShape = new CANNON.Box(new CANNON.Vec3(0.25, 0.25, 0.25)); // Half extents of the box
+			const boxBody = new CANNON.Body({
+				mass: 1, // Non-zero mass for a dynamic body
+				shape: boxShape,
+				position: new CANNON.Vec3(1, 0.25, 1) // Match the Three.js position
+			});
 
-        pincerBase1.position.set(0.05, 0.5, 0);
-        pincerBase2.position.set(-0.05, 0.5, 0);
-        pincerBase1.rotation.x = Math.PI / 2;
-        pincerBase2.rotation.x = Math.PI / 2;
-        pincerBase1.rotation.z = 55;
-        pincerBase2.rotation.z = -55;
-        forearm.add(pincerBase1);
-        forearm.add(pincerBase2);
+			world.addBody(boxBody);
 
-        pincerClaw1.position.set(0, 0.02, -0.05);
-        pincerClaw2.position.set(0, 0.02, -0.05);
-        pincerClaw1.rotation.x = 0;
-        pincerClaw2.rotation.x = 0;
-        pincerClaw1.rotation.z = 0;
-        pincerClaw2.rotation.z = 0;
-        pincerBase1.add(pincerClaw1);
-        pincerBase2.add(pincerClaw2);
+			boxMesh.userData.physicsBody = boxBody;
 
-        const dotGeometry = new THREE.SphereGeometry(0.05, 32, 32);
-        const dotMaterial = new THREE.MeshBasicMaterial({color: 0xff0000});
-        sphereDot = new THREE.Mesh(dotGeometry, dotMaterial);
-        sphereDot.position.set(0, forearm.geometry.parameters.height / 2 + 0.1, 0);
-        forearm.add(sphereDot);
-    }
+			boxBody.addEventListener('collide', function(e) {
+				//console.log('Box collided with', e.body);
+			});
+		}
 
-    // Create a Segment of the Robot Arm
-    function createSegment(topRadius, bottomRadius, height, color, yPos) {
-        var geometry, segment;
+		// Add Robot Arm Components to the Scene
+		function addRobotArm() {
+			base = createSegment(0.5, 0.6, 0.3, ARM_COLORS.base, 0.15);
+			shoulder = createSegment(0, 0, 0.3, ARM_COLORS.shoulder, 0.15);
+			upperArm = createSegment(0.15, 0.15, 1.2, ARM_COLORS.upperArm, 0.6);
 
-        if (topRadius === 0 && bottomRadius === 0) {
-            // Create a sphere geometry since the top and bottom radius are 0
-            geometry = new THREE.SphereGeometry(height, 32, 32); // height is used as the sphere radius
-            var material = new THREE.MeshStandardMaterial({
-                color: color
-            });
-            segment = new THREE.Mesh(geometry, material);
-        } else {
-            // Create a cylinder geometry
-            geometry = new THREE.CylinderGeometry(topRadius, bottomRadius, height, 32);
-            var material = new THREE.MeshStandardMaterial({
-                color: color
-            });
-            segment = new THREE.Mesh(geometry, material);
-        }
+			// Create the green elbow joint sphere
+			const elbowGeometry = new THREE.SphereGeometry(0.15, 32, 32);
+			const elbowMaterial = new THREE.MeshStandardMaterial({
+				color: 0x00ff00
+			});
+			elbow = new THREE.Mesh(elbowGeometry, elbowMaterial);
+			elbow.position.y = 0.6; // Adjust the position as needed
 
-        segment.position.y = yPos;
-        return segment;
-    }
+			forearm = createSegment(0.1, 0.1, 1.0, ARM_COLORS.forearm, 0.5);
 
-    // Add Floor to the Scene with Grey Background and Black Grid Pattern
-    function addFloor() {
-        // Create a grey background plane
-        const backgroundGeometry = new THREE.PlaneGeometry(10, 10);
-        const backgroundMaterial = new THREE.MeshStandardMaterial({
-            color: 0xffffff,
-            side: THREE.DoubleSide,
-        });
-        const background = new THREE.Mesh(backgroundGeometry, backgroundMaterial);
-        background.rotation.x = -Math.PI / 2;
-        background.position.y = -0.01;
-        scene.add(background);
+			scene.add(base);
+			base.add(shoulder);
+			shoulder.add(upperArm);
+			upperArm.add(elbow); // Add the elbow joint to the upper arm
+			elbow.add(forearm);
 
-        // Create a black grid pattern on top of the background
-        const gridGeometry = new THREE.PlaneGeometry(10, 10, 10, 10);
-        const gridMaterial = new THREE.MeshBasicMaterial({
-            color: 0x000000,
-            side: THREE.DoubleSide,
-            transparent: true,
-            opacity: 0.5,
-            wireframe: true,
-        });
-        const grid = new THREE.Mesh(gridGeometry, gridMaterial);
-        grid.rotation.x = -Math.PI / 2;
-        grid.position.y = 0.001; // Slightly above the grey background
-        scene.add(grid);
-    }
+			// Set the initial rotation of the shoulder to the maximum downward angle within the constraints
+			shoulder.rotation.x = THREE.MathUtils.degToRad(-30); // Convert -65 degrees to radians
 
-    // Setup Controls for the Scene
-    function setupControls() {
-        controls = new THREE.OrbitControls(camera, renderer.domElement);
-        controls.target.set(0, 1, 0);
-        controls.update();
-        document.addEventListener("keydown", onDocumentKeyDown, false);
-    }
+			// Set the initial rotation of the elbow to the maximum downward angle within the constraints
+			elbow.rotation.x = THREE.MathUtils.degToRad(-90); // Convert -90 degrees to radians
 
-    function animate() {
-        requestAnimationFrame(animate);
+			// Create Pincers
+			const pincerMaterial = new THREE.MeshStandardMaterial({
+				color: 0xffff00
+			}); // Yellow color for pincers
+			const pincerBaseGeometry = new THREE.BoxGeometry(0.1, 0.05, 0.05);
+			const pincerBase1 = new THREE.Mesh(pincerBaseGeometry, pincerMaterial);
+			const pincerBase2 = new THREE.Mesh(pincerBaseGeometry, pincerMaterial);
+			const pincerClawGeometry = new THREE.BoxGeometry(0.1, 0.01, 0.1);
+			pincerClaw1 = new THREE.Mesh(pincerClawGeometry, pincerMaterial);
+			pincerClaw2 = new THREE.Mesh(pincerClawGeometry, pincerMaterial);
 
-        if (demoMode) {
-            automatedMovements();
-        }
+			pincerBase1.position.set(0.05, 0.5, 0);
+			pincerBase2.position.set(-0.05, 0.5, 0);
+			pincerBase1.rotation.x = Math.PI / 2;
+			pincerBase2.rotation.x = Math.PI / 2;
+			pincerBase1.rotation.z = 55;
+			pincerBase2.rotation.z = -55;
+			forearm.add(pincerBase1);
+			forearm.add(pincerBase2);
 
-        renderer.render(scene, camera); // Render the main scene
-    }
+			pincerClaw1.position.set(0, 0.02, -0.05);
+			pincerClaw2.position.set(0, 0.02, -0.05);
+			pincerClaw1.rotation.x = 0;
+			pincerClaw2.rotation.x = 0;
+			pincerClaw1.rotation.z = 0;
+			pincerClaw2.rotation.z = 0;
+			pincerBase1.add(pincerClaw1);
+			pincerBase2.add(pincerClaw2);
 
-    // Clamp Rotation Function
-    function clampRotation(currentRotation, minAngle, maxAngle) {
-        const minRadians = THREE.MathUtils.degToRad(minAngle);
-        const maxRadians = THREE.MathUtils.degToRad(maxAngle);
-        return Math.max(minRadians, Math.min(maxRadians, currentRotation));
-    }
+			const dotGeometry = new THREE.SphereGeometry(0.05, 32, 32);
+			const dotMaterial = new THREE.MeshBasicMaterial({
+				color: 0xff0000
+			});
+			sphereDot = new THREE.Mesh(dotGeometry, dotMaterial);
+			sphereDot.position.set(0, forearm.geometry.parameters.height / 2 + 0.1, 0);
+			forearm.add(sphereDot);
+		}
 
-    // Function to open the pincers (straight out)
-    function openPincers() {
-        pincerClaw1.position.set(0, 0.02, -0.05);
-        pincerClaw2.position.set(0, 0.02, -0.05);
-    }
+		// Create a Segment of the Robot Arm
+		function createSegment(topRadius, bottomRadius, height, color, yPos) {
+			var geometry, segment;
 
-    // Function to close the pincers (reset to default position)
-    function closePincers() {
-        pincerClaw1.position.set(0, -0.02, -0.05);
-        pincerClaw2.position.set(0, -0.02, -0.05);
-    }
+			if (topRadius === 0 && bottomRadius === 0) {
+				// Create a sphere geometry since the top and bottom radius are 0
+				geometry = new THREE.SphereGeometry(height, 32, 32); // height is used as the sphere radius
+				var material = new THREE.MeshStandardMaterial({
+					color: color
+				});
+				segment = new THREE.Mesh(geometry, material);
+			} else {
+				// Create a cylinder geometry
+				geometry = new THREE.CylinderGeometry(topRadius, bottomRadius, height, 32);
+				var material = new THREE.MeshStandardMaterial({
+					color: color
+				});
+				segment = new THREE.Mesh(geometry, material);
+			}
 
-    // Variables to track movement state
-    let movementStep = 0;
-    let isPincerOpen = false;
+			segment.position.y = yPos;
+			return segment;
+		}
 
-    function automatedMovements() {
-        switch (movementStep) {
-            case 0:
-                // Rotate base
-                rotateBase(1);
-                fullCycleCount += demoSpeed;
-                if (fullCycleCount >= 2 * Math.PI) { // Full rotation
-                    fullCycleCount = 0; // Reset the cycle count
-                    movementStep++;
-                }
-                movementStep = 0;
-                break;
-        }
-    }
+		// Add Floor to the Scene with Grey Background and Black Grid Pattern
+		// Add Floor to the Scene with Grey Background and Black Grid Pattern
+		function addFloor() {
 
-    // Movement functions
-    function rotateBase(direction) {
-        const delta = (demoMode ? demoSpeed : 0.05) * direction;
-        base.rotation.y += delta;
-    }
+			/*// Create a grey background plane
+			const backgroundGeometry = new THREE.PlaneGeometry(10, 10);
+			const backgroundMaterial = new THREE.MeshStandardMaterial({
+				color: 0xffffff,
+				side: THREE.DoubleSide,
+			});
+			const background = new THREE.Mesh(backgroundGeometry, backgroundMaterial);
+			background.rotation.x = -Math.PI / 2;
+			background.position.y = -0.01;
+			scene.add(background);
 
-    function moveShoulder(direction) {
-        const delta = (demoMode ? demoSpeed : 0.05) * direction;
-        shoulder.rotation.x += delta;
-        shoulder.rotation.x = clampRotation(shoulder.rotation.x, -55, 0);
-    }
+			// Create a black grid pattern on top of the background
+			const gridGeometry = new THREE.PlaneGeometry(10, 10, 10, 10);
+			const gridMaterial = new THREE.MeshBasicMaterial({
+				color: 0x000000,
+				side: THREE.DoubleSide,
+				transparent: true,
+				opacity: 0.5,
+				wireframe: true,
+			});
+			const grid = new THREE.Mesh(gridGeometry, gridMaterial);
+			grid.rotation.x = -Math.PI / 2;
+			grid.position.y = 0.001; // Slightly above the grey background
+			scene.add(grid);*/
 
-    function moveElbow(direction) {
-        const delta = (demoMode ? demoSpeed : 0.05) * direction;
-        elbow.rotation.x += delta;
-        elbow.rotation.x = clampRotation(elbow.rotation.x, -90, 0);
-    }
+			// Create a physics body for the floor
+			var floorShape = new CANNON.Plane();
+			var floorBody = new CANNON.Body({
+				mass: 0
+			});
+			floorBody.addShape(floorShape);
+			floorBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0); // Align horizontally
+			world.addBody(floorBody);
 
-    function rotateForearm(direction) {
-        const rotationSpeed = demoMode ? demoSpeed : 0.1; // Respect demo speed
-        forearmRotation += direction * rotationSpeed;
-        forearm.rotation.y = forearmRotation;
-    }
+			// Visual representation of the Cannon.js floor
+			const floorVisualGeometry = new THREE.PlaneGeometry(10, 10);
+			const floorVisualMaterial = new THREE.MeshBasicMaterial({
+				color: 0x00ff00, // Bright green for visibility
+				side: THREE.DoubleSide,
+				transparent: true,
+				opacity: 0.5,
+				wireframe: true
+			});
+			const floorVisual = new THREE.Mesh(floorVisualGeometry, floorVisualMaterial);
+			floorVisual.rotation.x = -Math.PI / 2;
+			floorVisual.position.y = -0.01;
+			scene.add(floorVisual);
+		}
 
-    // Handle Keyboard Inputs
-    function onDocumentKeyDown(event) {
-        var keyCode = event.which;
+		function createBox(width, height, depth, color, position) {
+			const geometry = new THREE.BoxGeometry(width, height, depth);
+			const material = new THREE.MeshStandardMaterial({
+				color: color
+			});
+			const box = new THREE.Mesh(geometry, material);
+			box.position.copy(position);
+			return box;
+		}
 
-        if (!demoMode) {
-            if (keyCode == 81) {
-                rotateBase(-1);
-            } // Q
-            else if (keyCode == 69) {
-                rotateBase(1);
-            } // E
-            else if (keyCode == 87) {
-                moveShoulder(1);
-            } // W
-            else if (keyCode == 83) {
-                moveShoulder(-1);
-            } // S
-            else if (keyCode == 82) {
-                moveElbow(1);
-            } // R
-            else if (keyCode == 70) {
-                moveElbow(-1);
-            } // F
-            else if (keyCode == 79) {
-                openPincers();
-            } // O
-            else if (keyCode == 80) {
-                closePincers();
-            } // P
-            else if (keyCode == 84) {
-                rotateForearm(1);
-            } // T
-            else if (keyCode == 89) {
-                rotateForearm(-1);
-            } // Y
-        }
+		// Setup Controls for the Scene
+		function setupControls() {
+			controls = new THREE.OrbitControls(camera, renderer.domElement);
+			controls.target.set(0, 1, 0);
+			controls.update();
+			document.addEventListener("keydown", onDocumentKeyDown, false);
+		}
 
-        if (keyCode == 68) {
-            demoMode = !demoMode;
-            document.getElementById("demoStatus").innerText = "Demo Mode: " + (demoMode ? "ON" : "OFF");
-        } // D
-    }
+		function animate() {
+			requestAnimationFrame(animate);
 
-    init();
-</script>
+			if (world) {
+				world.step(1 / 60);
+
+				// Update positions and quaternions after stepping the world
+				scene.children.forEach(function(child) {
+					if (child.userData.physicsBody) {
+						child.position.copy(child.userData.physicsBody.position);
+						child.quaternion.copy(child.userData.physicsBody.quaternion);
+					}
+				});
+
+				// Update Cannon Debug Renderer
+				cannonDebugRenderer.update();
+			}
+
+			if (demoMode) {
+				automatedMovements();
+			}
+
+			renderer.render(scene, camera);
+		}
+
+		// Clamp Rotation Function
+		function clampRotation(currentRotation, minAngle, maxAngle) {
+			const minRadians = THREE.MathUtils.degToRad(minAngle);
+			const maxRadians = THREE.MathUtils.degToRad(maxAngle);
+			return Math.max(minRadians, Math.min(maxRadians, currentRotation));
+		}
+
+		// Function to open the pincers (straight out)
+		function openPincers() {
+			pincerClaw1.position.set(0, 0.02, -0.05);
+			pincerClaw2.position.set(0, 0.02, -0.05);
+		}
+
+		// Function to close the pincers (reset to default position)
+		function closePincers() {
+			pincerClaw1.position.set(0, -0.02, -0.05);
+			pincerClaw2.position.set(0, -0.02, -0.05);
+		}
+
+		// Variables to track movement state
+		let movementStep = 0;
+		let isPincerOpen = false;
+
+		function automatedMovements() {
+			switch (movementStep) {
+				case 0:
+					// Rotate base
+					rotateBase(1);
+					fullCycleCount += demoSpeed;
+					if (fullCycleCount >= 2 * Math.PI) { // Full rotation
+						fullCycleCount = 0; // Reset the cycle count
+						movementStep++;
+					}
+					movementStep = 0;
+					break;
+			}
+		}
+
+		// Movement functions
+		function rotateBase(direction) {
+			const delta = (demoMode ? demoSpeed : 0.05) * direction;
+			base.rotation.y += delta;
+		}
+
+		function moveShoulder(direction) {
+			const delta = (demoMode ? demoSpeed : 0.05) * direction;
+			shoulder.rotation.x += delta;
+			shoulder.rotation.x = clampRotation(shoulder.rotation.x, -60, 0);
+		}
+
+		function moveElbow(direction) {
+			const delta = (demoMode ? demoSpeed : 0.05) * direction;
+			elbow.rotation.x += delta;
+			elbow.rotation.x = clampRotation(elbow.rotation.x, -90, 0);
+		}
+
+		function rotateForearm(direction) {
+			const rotationSpeed = demoMode ? demoSpeed : 0.1;
+			forearmRotation += direction * rotationSpeed;
+			forearm.rotation.y = forearmRotation;
+
+			// Update the physics body's quaternion and position
+			var quaternion = new THREE.Quaternion();
+			forearm.getWorldQuaternion(quaternion);
+			forearm.userData.physicsBody.quaternion.copy(quaternion);
+
+			var worldPosition = new THREE.Vector3();
+			forearm.getWorldPosition(worldPosition);
+			forearm.userData.physicsBody.position.copy(worldPosition);
+		}
+
+		// Handle Keyboard Inputs
+		function onDocumentKeyDown(event) {
+			var keyCode = event.which;
+
+			if (!demoMode) {
+				if (keyCode == 81) {
+					rotateBase(-1);
+				} // Q
+				else if (keyCode == 69) {
+					rotateBase(1);
+				} // E
+				else if (keyCode == 87) {
+					moveShoulder(1);
+				} // W
+				else if (keyCode == 83) {
+					moveShoulder(-1);
+				} // S
+				else if (keyCode == 82) {
+					moveElbow(1);
+				} // R
+				else if (keyCode == 70) {
+					moveElbow(-1);
+				} // F
+				else if (keyCode == 79) {
+					openPincers();
+				} // O
+				else if (keyCode == 80) {
+					closePincers();
+				} // P
+				else if (keyCode == 84) {
+					rotateForearm(1);
+				} // T
+				else if (keyCode == 89) {
+					rotateForearm(-1);
+				} // Y
+			}
+
+			if (keyCode == 77) {
+				demoMode = !demoMode;
+				document.getElementById("demoStatus").innerText = "Demo Mode: " + (demoMode ? "ON" : "OFF");
+			} // M
+		}
+
+		init();
+	</script>
 </body>
+
 </html>
