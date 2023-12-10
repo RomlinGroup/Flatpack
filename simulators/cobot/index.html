@@ -64,7 +64,7 @@
 	<div id="forearmView"></div>
 
 	<div id="positionDisplay">
-		Position: x: 0, y: 0, z: 0
+		x: 0, y: 0, z: 0
 	</div>
 
 	<div id="demoStatus">
@@ -85,6 +85,51 @@
 	<script src="https://cdn.jsdelivr.net/npm/cannon@0.6.2/tools/threejs/CannonDebugRenderer.js"></script>
 
 	<script>
+		class cobotController {
+			constructor() {
+				this.demoMode = false;
+				this.fullCycleCount = 0;
+			}
+
+			rotateBase(direction) {
+				const delta = (this.demoMode ? demoSpeed : 0.05) * direction;
+				base.rotation.y += delta;
+			}
+
+			moveShoulder(direction) {
+				const delta = (this.demoMode ? demoSpeed : 0.05) * direction;
+				shoulder.rotation.x += delta;
+				shoulder.rotation.x = this.clampRotation(shoulder.rotation.x, 0, 45);
+			}
+
+			moveElbow(direction) {
+				const delta = (this.demoMode ? demoSpeed : 0.05) * direction;
+				elbow.rotation.x += delta;
+				elbow.rotation.x = this.clampRotation(elbow.rotation.x, -90, 45);
+			}
+
+			automatedMovements() {
+				switch (this.movementStep) {
+					case 0:
+						this.rotateBase(1);
+						this.fullCycleCount += demoSpeed;
+						if (this.fullCycleCount >= 2 * Math.PI) {
+							this.fullCycleCount = 0;
+							this.movementStep++;
+						}
+						this.movementStep = 0;
+						break;
+				}
+			}
+
+			clampRotation(currentRotation, minAngle, maxAngle) {
+				const minRadians = THREE.MathUtils.degToRad(minAngle);
+				const maxRadians = THREE.MathUtils.degToRad(maxAngle);
+				return Math.max(minRadians, Math.min(maxRadians, currentRotation));
+			}
+		}
+
+		const cobot = new cobotController();
 		const demoSpeed = 0.01;
 		let base;
 		let boxBody;
@@ -443,8 +488,8 @@
 				document.getElementById("positionDisplay").innerText = `x: ${pos.x.toFixed(2)}, y: ${pos.y.toFixed(2)}, z: ${pos.z.toFixed(2)}`;
 			}
 
-			if (demoMode) {
-				automatedMovements();
+			if (cobot.demoMode) {
+				cobot.automatedMovements();
 			}
 
 			if (forearmCamera) {
@@ -484,45 +529,40 @@
 			}
 		}
 
-		function rotateBase(direction) {
-			const delta = (demoMode ? demoSpeed : 0.05) * direction;
-			base.rotation.y += delta;
+		function apiRotateBase(direction) {
+			cobot.rotateBase(direction);
 		}
 
-		function moveShoulder(direction) {
-			const delta = (demoMode ? demoSpeed : 0.05) * direction;
-			shoulder.rotation.x += delta;
-			shoulder.rotation.x = clampRotation(shoulder.rotation.x, 0, 45);
+		function apiMoveShoulder(direction) {
+			cobot.moveShoulder(direction);
 		}
 
-		function moveElbow(direction) {
-			const delta = (demoMode ? demoSpeed : 0.05) * direction;
-			elbow.rotation.x += delta;
-			elbow.rotation.x = clampRotation(elbow.rotation.x, -90, 45);
+		function apiMoveElbow(direction) {
+			cobot.moveElbow(direction);
 		}
 
 		function onDocumentKeyDown(event) {
 			var keyCode = event.which;
 
-			if (!demoMode) {
+			if (!cobot.demoMode) {
 				if (keyCode == 65) {
-					rotateBase(1);
+					cobot.rotateBase(1);
 				} else if (keyCode == 68) {
-					rotateBase(-1);
+					cobot.rotateBase(-1);
 				} else if (keyCode == 87) {
-					moveShoulder(-1);
+					cobot.moveShoulder(-1);
 				} else if (keyCode == 83) {
-					moveShoulder(1);
+					cobot.moveShoulder(1);
 				} else if (keyCode == 82) {
-					moveElbow(-1);
+					cobot.moveElbow(-1);
 				} else if (keyCode == 70) {
-					moveElbow(1);
+					cobot.moveElbow(1);
 				}
 			}
 
 			if (keyCode == 77) {
-				demoMode = !demoMode;
-				document.getElementById("demoStatus").innerText = "Demo Mode: " + (demoMode ? "ON" : "OFF");
+				cobot.demoMode = !cobot.demoMode;
+				document.getElementById("demoStatus").innerText = "Demo Mode: " + (cobot.demoMode ? "ON" : "OFF");
 			}
 		}
 
