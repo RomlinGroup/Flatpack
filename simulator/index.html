@@ -24,6 +24,16 @@
 			color: #333
 		}
 
+		#forearmView {
+			position: fixed;
+			top: 10px;
+			right: 10px;
+			width: 200px;
+			height: 150px;
+			border: 1px solid black;
+			border: 1px solid #fff;
+		}
+
 		#keyGuide {
 			position: fixed;
 			bottom: 10px;
@@ -51,6 +61,8 @@
 </head>
 
 <body>
+	<div id="forearmView"></div>
+
 	<div id="positionDisplay">
 		Position: x: 0, y: 0, z: 0
 	</div>
@@ -104,6 +116,7 @@
 		let sphereDot;
 		let sphereDotBody;
 		let boxBody;
+		let forearmCamera, forearmRenderer;
 
 		// Initialize Scene, Camera, and Renderer
 		function init() {
@@ -121,7 +134,21 @@
 			addFloor();
 			addRobotArm();
 			setupControls();
+
+			// Initialize the forearm camera and renderer
+			initForearmCamera();
+
 			animate();
+		}
+
+		function initForearmCamera() {
+			// Create the forearm camera
+			forearmCamera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
+
+			// Create a renderer for the forearm view
+			forearmRenderer = new THREE.WebGLRenderer();
+			forearmRenderer.setSize(200, 150); // Match the size of the #forearmView div
+			document.getElementById('forearmView').appendChild(forearmRenderer.domElement);
 		}
 
 		function setupScene() {
@@ -199,7 +226,7 @@
 				color: 0xffffff
 			});
 			elbow = new THREE.Mesh(elbowGeometry, elbowMaterial);
-			elbow.position.y = 0.6; // Adjust the position as needed
+			elbow.position.y = 0.6;
 
 			forearm = createSegment(0.1, 0.1, 1.0, ARM_COLORS.forearm, 0.5);
 
@@ -403,6 +430,27 @@
 			if (demoMode) {
 				automatedMovements();
 			}
+
+			if (forearmCamera && sphereDot) {
+				// Position the camera at the sphereDot
+				var sphereDotPosition = new THREE.Vector3();
+				sphereDot.getWorldPosition(sphereDotPosition);
+				forearmCamera.position.copy(sphereDotPosition);
+
+				// Orient the camera to look forward from the forearm
+				var forearmDirection = new THREE.Vector3(0, 0, -1); // Assuming the forearm points along the negative Z-axis
+				forearm.getWorldDirection(forearmDirection);
+				forearmCamera.lookAt(forearmDirection.add(sphereDotPosition));
+
+				// Rotate the camera 90 degrees upwards
+				forearmCamera.rotateX(THREE.MathUtils.degToRad(-90));
+
+				// Render the forearm camera view
+				forearmRenderer.render(scene, forearmCamera);
+			}
+
+			// Render the main scene
+			renderer.render(scene, camera);
 		}
 
 		// Clamp Rotation Function
