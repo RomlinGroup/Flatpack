@@ -97,13 +97,12 @@
 		let forearmRenderer;
 		let forearmCameraIsActive = true;
 		let fullCycleCount = 0;
+		let pincerBase;
 		let pincerClaw1;
 		let pincerClaw2;
 		let renderer;
 		let scene;
 		let shoulder;
-		let sphereDot;
-		let sphereDotBody;
 		let upperArm;
 		let world;
 
@@ -149,10 +148,30 @@
 			scene.add(gridHelper);
 		}
 
-		function setupCamera() {
-			camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-			camera.position.set(2, 1, 0);
-			camera.lookAt(0, 0, 0);
+		function setupCamera(
+			fov = 75,
+			aspectRatio = window.innerWidth / window.innerHeight,
+			nearClippingPlane = 0.1,
+			farClippingPlane = 1000,
+			initialPosition = {
+				x: 2,
+				y: 1,
+				z: 0
+			},
+			lookAtPosition = {
+				x: 0,
+				y: 0,
+				z: 0
+			}
+		) {
+			camera = new THREE.PerspectiveCamera(fov, aspectRatio, nearClippingPlane, farClippingPlane);
+			camera.position.set(initialPosition.x, initialPosition.y, initialPosition.z);
+			camera.lookAt(lookAtPosition.x, lookAtPosition.y, lookAtPosition.z);
+
+			window.addEventListener('resize', () => {
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+			});
 		}
 
 		function setupRenderer() {
@@ -179,25 +198,52 @@
 			scene.add(ambientLight);
 		}
 
+		function pairMeshWithPhysicsBody(mesh, options = {}) {
+			let shape;
+			const geometry = mesh.geometry;
+			const mass = options.mass !== undefined ? options.mass : 1;
+			const isKinematic = options.isKinematic || false;
+
+			if (geometry instanceof THREE.BoxGeometry) {
+				const size = new CANNON.Vec3(geometry.parameters.width / 2, geometry.parameters.height / 2, geometry.parameters.depth / 2);
+				shape = new CANNON.Box(size);
+			} else if (geometry instanceof THREE.SphereGeometry) {
+				const radius = geometry.parameters.radius;
+				shape = new CANNON.Sphere(radius);
+			}
+
+			const body = new CANNON.Body({
+				mass: isKinematic ? 0 : mass,
+				material: new CANNON.Material({
+					friction: options.friction || 0.3,
+					restitution: options.restitution || 0.5,
+				}),
+				shape: shape,
+				type: isKinematic ? CANNON.Body.KINEMATIC : CANNON.Body.DYNAMIC
+			});
+
+			body.position.set(mesh.position.x, mesh.position.y, mesh.position.z);
+			body.quaternion.set(mesh.quaternion.x, mesh.quaternion.y, mesh.quaternion.z, mesh.quaternion.w);
+
+			world.addBody(body);
+			mesh.userData.physicsBody = body;
+		}
+
 		function addPhysicsBox() {
 			const boxGeometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
 			const boxMaterial = new THREE.MeshStandardMaterial({
 				color: 0x5865f2
 			});
 			const boxMesh = new THREE.Mesh(boxGeometry, boxMaterial);
+
+			boxMesh.position.set(0, 0.25, 1.25);
 			scene.add(boxMesh);
 
-			const boxShape = new CANNON.Box(new CANNON.Vec3(0.25, 0.25, 0.25));
-			boxBody = new CANNON.Body({
+			pairMeshWithPhysicsBody(boxMesh, {
 				mass: 10,
-				restitution: 0.5,
-				shape: boxShape,
-				position: new CANNON.Vec3(0, 0.25, 1.25)
-			});
-			world.addBody(boxBody);
-			boxMesh.userData.physicsBody = boxBody;
-			boxBody.addEventListener('collide', function(e) {
-				console.log('Box collided with', e.body);
+				friction: 0.4,
+				restitution: 0.6,
+				isKinematic: false
 			});
 		}
 
@@ -251,58 +297,61 @@
 			scene.add(base);
 			base.add(shoulder);
 			shoulder.add(upperArm);
+
+			pairMeshWithPhysicsBody(upperArm, {
+				mass: 0,
+				friction: 0.4,
+				restitution: 0.6,
+				isKinematic: true
+			});
+
 			upperArm.add(elbow);
 			elbow.add(forearm);
+
+			pairMeshWithPhysicsBody(forearm, {
+				mass: 0,
+				friction: 0.4,
+				restitution: 0.6,
+				isKinematic: true
+			});
 
 			const pincerMaterial = new THREE.MeshStandardMaterial({
 				color: 0x5865f2
 			});
-			const pincerBaseGeometry = new THREE.BoxGeometry(0.2, 0.2, 0.05);
-			const pincerBase1 = new THREE.Mesh(pincerBaseGeometry, pincerMaterial);
-			const pincerBase2 = new THREE.Mesh(pincerBaseGeometry, pincerMaterial);
+			const pincerBaseGeometry = new THREE.BoxGeometry(0.2, 0.4, 0.05);
+			pincerBase = new THREE.Mesh(pincerBaseGeometry, pincerMaterial);
 			const pincerClawGeometry = new THREE.BoxGeometry(0.2, 0.05, 0.2);
 			pincerClaw1 = new THREE.Mesh(pincerClawGeometry, pincerMaterial);
 			pincerClaw2 = new THREE.Mesh(pincerClawGeometry, pincerMaterial);
 
-			pincerBase1.position.set(0, 0.1, 0.36);
-			pincerBase2.position.set(0, -0.1, 0.36);
-			pincerBase1.rotation.x = 0;
-			pincerBase2.rotation.x = 0;
-			pincerBase1.rotation.z = 0;
-			pincerBase2.rotation.z = 0;
-			forearm.add(pincerBase1);
-			forearm.add(pincerBase2);
+			forearm.add(pincerBase);
+			pincerBase.position.set(0, 0, 0.36);
 
-			pincerClaw1.position.set(0, 0.1, 0.075);
-			pincerClaw2.position.set(0, -0.1, 0.075);
-			pincerClaw1.rotation.x = 0;
-			pincerClaw2.rotation.x = 0;
-			pincerClaw1.rotation.z = 0;
-			pincerClaw2.rotation.z = 0;
-			pincerBase1.add(pincerClaw1);
-			pincerBase2.add(pincerClaw2);
-
-			const dotGeometry = new THREE.SphereGeometry(0.05, 32, 32);
-			const dotMaterial = new THREE.MeshBasicMaterial({
-				color: 0x00ff00
-			});
-			sphereDot = new THREE.Mesh(dotGeometry, dotMaterial);
-			sphereDot.position.set(0, 0, 0.475);
-			forearm.add(sphereDot);
-
-			const sphereDotShape = new CANNON.Sphere(0.05);
-			sphereDotBody = new CANNON.Body({
+			pairMeshWithPhysicsBody(pincerBase, {
 				mass: 0,
-				restitution: 0.5,
-				shape: sphereDotShape,
-				position: new CANNON.Vec3(0, 2, 0)
-			});
-			world.addBody(sphereDotBody);
-			forearm.userData.physicsBody = sphereDotBody;
-			sphereDotBody.addEventListener('collide', function(e) {
-				console.log('Sphere collided with', e.body);
+				friction: 0.4,
+				restitution: 0.6,
+				isKinematic: true
 			});
 
+			pincerClaw1.position.set(0, 0.2, 0.075);
+			pincerClaw2.position.set(0, -0.2, 0.075);
+			pincerBase.add(pincerClaw1);
+			pincerBase.add(pincerClaw2);
+
+			pairMeshWithPhysicsBody(pincerClaw1, {
+				mass: 0,
+				friction: 0.4,
+				restitution: 0.6,
+				isKinematic: true
+			});
+
+			pairMeshWithPhysicsBody(pincerClaw2, {
+				mass: 0,
+				friction: 0.4,
+				restitution: 0.6,
+				isKinematic: true
+			});
 		}
 
 		function addFloor() {
@@ -362,30 +411,23 @@
 			requestAnimationFrame(animate);
 
 			if (world) {
-				var targetPosition = new CANNON.Vec3(1, 0, 1);
-				var forceDirection = targetPosition.vsub(sphereDotBody.position);
-				forceDirection.normalize();
-				var forceMagnitude = 5;
-				var force = forceDirection.scale(forceMagnitude);
-
-				sphereDotBody.applyForce(force, sphereDotBody.position);
-
 				world.step(1 / 60);
 
-				scene.children.forEach(function(child) {
-					if (child.userData.physicsBody) {
-						child.position.copy(child.userData.physicsBody.position);
-						child.quaternion.copy(child.userData.physicsBody.quaternion);
+				scene.traverse(function(object) {
+					if (object.userData.physicsBody) {
+						if (object.userData.physicsBody.type === CANNON.Body.DYNAMIC) {
+							object.position.copy(object.userData.physicsBody.position);
+							object.quaternion.copy(object.userData.physicsBody.quaternion);
+						} else if (object.userData.physicsBody.type === CANNON.Body.KINEMATIC) {
+							var worldPosition = new THREE.Vector3();
+							var worldQuaternion = new THREE.Quaternion();
+							object.getWorldPosition(worldPosition);
+							object.getWorldQuaternion(worldQuaternion);
+							object.userData.physicsBody.position.copy(worldPosition);
+							object.userData.physicsBody.quaternion.copy(worldQuaternion);
+						}
 					}
 				});
-
-				var worldPosition = new THREE.Vector3();
-				sphereDot.getWorldPosition(worldPosition);
-				sphereDotBody.position.copy(worldPosition);
-
-				var worldQuaternion = new THREE.Quaternion();
-				sphereDot.getWorldQuaternion(worldQuaternion);
-				sphereDotBody.quaternion.copy(worldQuaternion);
 
 				cannonDebugRenderer.update();
 
@@ -396,8 +438,8 @@
 				}
 			}
 
-			if (sphereDot) {
-				const pos = sphereDotBody.position;
+			if (pincerBase) {
+				const pos = pincerBase.position;
 				document.getElementById("positionDisplay").innerText = `x: ${pos.x.toFixed(2)}, y: ${pos.y.toFixed(2)}, z: ${pos.z.toFixed(2)}`;
 			}
 
@@ -405,14 +447,14 @@
 				automatedMovements();
 			}
 
-			if (forearmCamera && sphereDot) {
-				var sphereDotPosition = new THREE.Vector3();
-				sphereDot.getWorldPosition(sphereDotPosition);
-				forearmCamera.position.copy(sphereDotPosition);
+			if (forearmCamera) {
+				var pincerBasePosition = new THREE.Vector3();
+				pincerBase.getWorldPosition(pincerBasePosition);
+				forearmCamera.position.copy(pincerBasePosition);
 
 				var forearmDirection = new THREE.Vector3(0, 0, -1);
 				forearm.getWorldDirection(forearmDirection);
-				forearmCamera.lookAt(forearmDirection.add(sphereDotPosition));
+				forearmCamera.lookAt(forearmDirection.add(pincerBasePosition));
 				forearmCamera.rotateX(THREE.MathUtils.degToRad(0));
 				forearmRenderer.render(scene, forearmCamera);
 			}
