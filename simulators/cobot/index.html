@@ -134,7 +134,7 @@
 				antialias: true
 			});
 			forearmRenderer.setSize(250, 150);
-			forearmRenderer.gammaFactor = 2.2;
+			forearmRenderer.gammaFactor = 2.0;
 			forearmRenderer.outputEncoding = THREE.sRGBEncoding;
 			forearmRenderer.shadowMap.enabled = true;
 			forearmRenderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -151,8 +151,8 @@
 
 		function setupCamera() {
 			camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-			camera.position.set(4, 1, 0);
-			camera.lookAt(0, 1, 0);
+			camera.position.set(2, 1, 0);
+			camera.lookAt(0, 0, 0);
 		}
 
 		function setupRenderer() {
@@ -160,7 +160,7 @@
 				antialias: true
 			});
 			renderer.setSize(window.innerWidth, window.innerHeight);
-			renderer.gammaFactor = 2.2;
+			renderer.gammaFactor = 2.0;
 			renderer.outputEncoding = THREE.sRGBEncoding;
 			document.body.appendChild(renderer.domElement);
 		}
@@ -197,7 +197,7 @@
 			world.addBody(boxBody);
 			boxMesh.userData.physicsBody = boxBody;
 			boxBody.addEventListener('collide', function(e) {
-				//console.log('Box collided with', e.body);
+				console.log('Box collided with', e.body);
 			});
 		}
 
@@ -300,7 +300,7 @@
 			world.addBody(sphereDotBody);
 			forearm.userData.physicsBody = sphereDotBody;
 			sphereDotBody.addEventListener('collide', function(e) {
-				//console.log('Box collided with', e.body);
+				console.log('Sphere collided with', e.body);
 			});
 
 		}
