@@ -81,7 +81,6 @@
 		Forearm - R/F<br>
 		Open Pincers - O<br>
 		Close Pincers - P<br>
-		Rotate Pincers - T/Y<br>
 		Toggle Demo Mode - M
 	</div>
 
@@ -93,20 +92,8 @@
 
 	<!-- Main Script for Robot Arm Simulation -->
 	<script>
-		// Constants and Configuration
-		const ARM_COLORS = {
-			base: 0xffffff,
-			shoulder: 0xffffff,
-			upperArm: 0xffffff,
-			forearm: 0xffffff
-		};
-
 		let world, scene, camera, renderer, controls;
 		let base, shoulder, upperArm, elbow, forearm;
-		let pincerClosing = true;
-		let pincerAngle = 0;
-		const pincerSpeed = 0.005;
-		const maxPincerAngle = Math.PI / 5;
 		let pincerClaw1, pincerClaw2;
 		let demoMode = false;
 		const demoSpeed = 0.01;
@@ -216,8 +203,6 @@
 				color: 0x5865f2
 			}); // Box color
 			const boxMesh = new THREE.Mesh(boxGeometry, boxMaterial);
-			boxMesh.position.set(1, 0.25, 1); // Box initial position (x, y, z)
-
 			scene.add(boxMesh);
 
 			// Cannon.js physics body
@@ -226,7 +211,7 @@
 				mass: 10,
 				restitution: 0.5,
 				shape: boxShape,
-				position: new CANNON.Vec3(1, 0.25, 1) // Match the Three.js position
+				position: new CANNON.Vec3(0, 0.25, 1.25) // Match the Three.js position
 			});
 			world.addBody(boxBody);
 			boxMesh.userData.physicsBody = boxBody;
@@ -237,64 +222,90 @@
 
 		// Add Robot Arm Components to the Scene
 		function addRobotArm() {
-			base = createSegment(0.5, 0.6, 0.3, ARM_COLORS.base, 0.15);
-			base.castShadow = true;
-			base.receiveShadow = true;
 
-			shoulder = createSegment(0, 0, 0.3, ARM_COLORS.shoulder, 0.15);
-			shoulder.castShadow = true;
-			shoulder.receiveShadow = true;
+			const baseMaterial = new THREE.MeshStandardMaterial({
+				color: 0x5865f2,
+				metalness: 0.5,
+				roughness: 0.4
+			});
 
-			upperArm = createSegment(0.15, 0.15, 1.2, ARM_COLORS.upperArm, 0.6);
-			upperArm.castShadow = true;
-			upperArm.receiveShadow = true;
+			const material = new THREE.MeshStandardMaterial({
+				color: 0xffffff,
+				metalness: 0.5,
+				roughness: 0.4
+			});
 
-			// Create the green elbow joint sphere
-			const elbowGeometry = new THREE.SphereGeometry(0.15, 32, 32);
+			const baseGeometry = new THREE.CylinderGeometry(0.2, 0.2, 0.2, 32); // RadiusTop, RadiusBottom, Height, RadialSegments
+			base = new THREE.Mesh(baseGeometry, baseMaterial);
+			base.position.y = 0.1; // Half of its height to position it above the ground
+
+			const shoulderGeometry = new THREE.SphereGeometry(0.2, 32, 32); // Radius, WidthSegments, HeightSegments
+			shoulder = new THREE.Mesh(shoulderGeometry, baseMaterial);
+			shoulder.position.y = 0.1; // Adjust the position as needed
+			const maxShoulderAngle = 45; // Maximum angle in degrees
+			shoulder.rotation.x = THREE.MathUtils.degToRad(maxShoulderAngle);
+
+			const upperArmGeometry = new THREE.BoxGeometry(0.1, 1, 0.1);
+			upperArm = new THREE.Mesh(upperArmGeometry, material);
+			upperArm.position.y = 0.5;
+
+			const elbowGeometry = new THREE.CylinderGeometry(0.15, 0.15, 0.15, 32); // Adjust the dimensions as needed
 			const elbowMaterial = new THREE.MeshStandardMaterial({
-				color: 0xffffff
+				color: 0x5865f2
 			});
 			elbow = new THREE.Mesh(elbowGeometry, elbowMaterial);
 			elbow.position.y = 0.6;
+			elbow.rotation.z = Math.PI / 2; // Rotate the elbow 90 degrees around the Z-axis
 			elbow.castShadow = true;
 			elbow.receiveShadow = true;
+			const maxElbowAngle = 45; // Choose -90 or 45 based on your requirement
+			elbow.rotation.x = THREE.MathUtils.degToRad(maxElbowAngle);
 
-			forearm = createSegment(0.1, 0.1, 1.0, ARM_COLORS.forearm, 0.5);
+			// Create the forearm and attach it to the rounded side of the elbow
+			const forearmGeometry = new THREE.BoxGeometry(0.1, 0.1, 0.7); // Adjust the dimensions as needed
+			const forearmMaterial = new THREE.MeshStandardMaterial({
+				color: 0xffffff
+			});
+			forearm = new THREE.Mesh(forearmGeometry, forearmMaterial);
+
+			// Position the forearm relative to the elbow
+			forearm.position.set(0, 0, 0.4); // Adjust the position as needed
 
 			scene.add(base);
 			base.add(shoulder);
 			shoulder.add(upperArm);
 			upperArm.add(elbow); // Add the elbow joint to the upper arm
-			elbow.add(forearm);
+			elbow.add(forearm); // Add the forearm to the elbow joint
+
 
 			// Set the initial rotation of the shoulder to the maximum downward angle within the constraints
-			shoulder.rotation.x = THREE.MathUtils.degToRad(-30); // Convert -65 degrees to radians
+			//shoulder.rotation.x = THREE.MathUtils.degToRad(-30); // Convert -65 degrees to radians
 
 			// Set the initial rotation of the elbow to the maximum downward angle within the constraints
-			elbow.rotation.x = THREE.MathUtils.degToRad(-130); // Convert -90 degrees to radians
+			//elbow.rotation.x = THREE.MathUtils.degToRad(-130); // Convert -90 degrees to radians
 
 			// Create Pincers
 			const pincerMaterial = new THREE.MeshStandardMaterial({
-				color: 0xffffff
+				color: 0x5865f2
 			}); // Yellow color for pincers
-			const pincerBaseGeometry = new THREE.BoxGeometry(0.1, 0.05, 0.05);
+			const pincerBaseGeometry = new THREE.BoxGeometry(0.2, 0.2, 0.05);
 			const pincerBase1 = new THREE.Mesh(pincerBaseGeometry, pincerMaterial);
 			const pincerBase2 = new THREE.Mesh(pincerBaseGeometry, pincerMaterial);
-			const pincerClawGeometry = new THREE.BoxGeometry(0.1, 0.01, 0.1);
+			const pincerClawGeometry = new THREE.BoxGeometry(0.2, 0.05, 0.2);
 			pincerClaw1 = new THREE.Mesh(pincerClawGeometry, pincerMaterial);
 			pincerClaw2 = new THREE.Mesh(pincerClawGeometry, pincerMaterial);
 
-			pincerBase1.position.set(0.05, 0.5, 0);
-			pincerBase2.position.set(-0.05, 0.5, 0);
-			pincerBase1.rotation.x = Math.PI / 2;
-			pincerBase2.rotation.x = Math.PI / 2;
-			pincerBase1.rotation.z = 55;
-			pincerBase2.rotation.z = -55;
+			pincerBase1.position.set(0, 0.1, 0.36);
+			pincerBase2.position.set(0, -0.1, 0.36);
+			pincerBase1.rotation.x = 0;
+			pincerBase2.rotation.x = 0;
+			pincerBase1.rotation.z = 0;
+			pincerBase2.rotation.z = 0;
 			forearm.add(pincerBase1);
 			forearm.add(pincerBase2);
 
-			pincerClaw1.position.set(0, 0.02, -0.05);
-			pincerClaw2.position.set(0, 0.02, -0.05);
+			pincerClaw1.position.set(0, 0.1, 0.075);
+			pincerClaw2.position.set(0, -0.1, 0.075);
 			pincerClaw1.rotation.x = 0;
 			pincerClaw2.rotation.x = 0;
 			pincerClaw1.rotation.z = 0;
@@ -307,7 +318,7 @@
 				color: 0x00ff00
 			});
 			sphereDot = new THREE.Mesh(dotGeometry, dotMaterial);
-			sphereDot.position.set(0, forearm.geometry.parameters.height / 2 + 0.1, 0);
+			sphereDot.position.set(0, 0, 0.475);
 			forearm.add(sphereDot);
 
 			const sphereDotShape = new CANNON.Sphere(0.05);
@@ -325,33 +336,6 @@
 
 		}
 
-		// Create a Segment of the Robot Arm
-		function createSegment(topRadius, bottomRadius, height, color, yPos) {
-			var geometry, segment;
-
-			if (topRadius === 0 && bottomRadius === 0) {
-				// Create a sphere geometry since the top and bottom radius are 0
-				geometry = new THREE.SphereGeometry(height, 32, 32);
-				var material = new THREE.MeshStandardMaterial({
-					color: color,
-					metalness: 0.5,
-					roughness: 0.4
-				});
-				segment = new THREE.Mesh(geometry, material);
-			} else {
-				// Create a cylinder geometry
-				geometry = new THREE.CylinderGeometry(topRadius, bottomRadius, height, 32);
-				var material = new THREE.MeshStandardMaterial({
-					color: color
-				});
-				segment = new THREE.Mesh(geometry, material);
-			}
-
-			segment.position.y = yPos;
-			return segment;
-		}
-
-		// Add Floor to the Scene with Grey Background and Black Grid Pattern
 		// Add Floor to the Scene with Grey Background and Black Grid Pattern
 		function addFloor() {
 
@@ -480,7 +464,7 @@
 				forearmCamera.lookAt(forearmDirection.add(sphereDotPosition));
 
 				// Rotate the camera 90 degrees upwards
-				forearmCamera.rotateX(THREE.MathUtils.degToRad(-90));
+				forearmCamera.rotateX(THREE.MathUtils.degToRad(0));
 
 				// Render the forearm camera view
 				forearmRenderer.render(scene, forearmCamera);
@@ -497,21 +481,8 @@
 			return Math.max(minRadians, Math.min(maxRadians, currentRotation));
 		}
 
-		// Function to open the pincers (straight out)
-		function openPincers() {
-			pincerClaw1.position.set(0, 0.02, -0.05);
-			pincerClaw2.position.set(0, 0.02, -0.05);
-		}
-
-		// Function to close the pincers (reset to default position)
-		function closePincers() {
-			pincerClaw1.position.set(0, -0.02, -0.05);
-			pincerClaw2.position.set(0, -0.02, -0.05);
-		}
-
 		// Variables to track movement state
 		let movementStep = 0;
-		let isPincerOpen = false;
 
 		function automatedMovements() {
 			switch (movementStep) {
@@ -537,28 +508,13 @@
 		function moveShoulder(direction) {
 			const delta = (demoMode ? demoSpeed : 0.05) * direction;
 			shoulder.rotation.x += delta;
-			shoulder.rotation.x = clampRotation(shoulder.rotation.x, -45, 0);
+			shoulder.rotation.x = clampRotation(shoulder.rotation.x, 0, 45);
 		}
 
 		function moveElbow(direction) {
 			const delta = (demoMode ? demoSpeed : 0.05) * direction;
 			elbow.rotation.x += delta;
-			elbow.rotation.x = clampRotation(elbow.rotation.x, -130, 0);
-		}
-
-		function rotateForearm(direction) {
-			const rotationSpeed = demoMode ? demoSpeed : 0.1;
-			forearmRotation += direction * rotationSpeed;
-			forearm.rotation.y = forearmRotation;
-
-			// Update the physics body's quaternion and position
-			var quaternion = new THREE.Quaternion();
-			forearm.getWorldQuaternion(quaternion);
-			forearm.userData.physicsBody.quaternion.copy(quaternion);
-
-			var worldPosition = new THREE.Vector3();
-			forearm.getWorldPosition(worldPosition);
-			forearm.userData.physicsBody.position.copy(worldPosition);
+			elbow.rotation.x = clampRotation(elbow.rotation.x, -90, 45);
 		}
 
 		// Handle Keyboard Inputs
@@ -584,18 +540,6 @@
 				else if (keyCode == 70) {
 					moveElbow(-1);
 				} // F
-				else if (keyCode == 79) {
-					openPincers();
-				} // O
-				else if (keyCode == 80) {
-					closePincers();
-				} // P
-				else if (keyCode == 84) {
-					rotateForearm(1);
-				} // T
-				else if (keyCode == 89) {
-					rotateForearm(-1);
-				} // Y
 			}
 
 			if (keyCode == 77) {
