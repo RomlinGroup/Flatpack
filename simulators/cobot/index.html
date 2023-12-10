@@ -89,6 +89,7 @@
 			constructor() {
 				this.demoMode = false;
 				this.fullCycleCount = 0;
+				this.movementStep = 0;
 			}
 
 			rotateBase(direction) {
@@ -117,6 +118,8 @@
 							this.fullCycleCount = 0;
 							this.movementStep++;
 						}
+						break;
+					default:
 						this.movementStep = 0;
 						break;
 				}
