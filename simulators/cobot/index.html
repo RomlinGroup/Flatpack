@@ -86,18 +86,26 @@
 
 	<script>
 		const demoSpeed = 0.01;
-		const maxCycles = 1;
-		let base, shoulder, upperArm, elbow, forearm;
+		let base;
 		let boxBody;
+		let camera;
+		let controls;
 		let demoMode = false;
-		let forearmCamera, forearmRenderer;
+		let elbow;
+		let forearm;
+		let forearmCamera;
+		let forearmRenderer;
 		let forearmCameraIsActive = true;
-		let forearmRotation = 0;
 		let fullCycleCount = 0;
-		let pincerClaw1, pincerClaw2;
+		let pincerClaw1;
+		let pincerClaw2;
+		let renderer;
+		let scene;
+		let shoulder;
 		let sphereDot;
 		let sphereDotBody;
-		let world, scene, camera, renderer, controls;
+		let upperArm;
+		let world;
 
 		function init() {
 			world = new CANNON.World();
