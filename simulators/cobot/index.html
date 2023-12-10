@@ -438,8 +438,8 @@
 				}
 			}
 
-			if (pincerBase) {
-				const pos = pincerBase.position;
+			if (pincerBase && pincerBase.userData.physicsBody) {
+				const pos = pincerBase.userData.physicsBody.position;
 				document.getElementById("positionDisplay").innerText = `x: ${pos.x.toFixed(2)}, y: ${pos.y.toFixed(2)}, z: ${pos.z.toFixed(2)}`;
 			}
 
