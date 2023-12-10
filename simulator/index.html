@@ -85,16 +85,14 @@
 		let forearmRotation = 0;
 		let fullCycleCount = 0;
 		const maxCycles = 1;
-		let cylinderDot;
+		let sphereDot;
+		let sphereDotBody;
+		let boxBody;
 
 		// Initialize Scene, Camera, and Renderer
 		function init() {
 			world = new CANNON.World();
-
-			world.gravity.set(0, 0, 0);
-			if (world) {
-				world.step(1 / 60);
-			}
+			world.gravity.set(0, -9.82, 0); // Earth's gravity acceleration in meters per second squared
 
 			setupScene();
 
@@ -145,7 +143,7 @@
 			// Three.js box
 			const boxGeometry = new THREE.BoxGeometry(0.5, 0.5, 0.5); // Box size
 			const boxMaterial = new THREE.MeshStandardMaterial({
-				color: 0xffffff
+				color: 0xffff00
 			}); // Box color
 			const boxMesh = new THREE.Mesh(boxGeometry, boxMaterial);
 			boxMesh.position.set(1, 0.25, 1); // Box initial position (x, y, z)
@@ -154,16 +152,14 @@
 
 			// Cannon.js physics body
 			const boxShape = new CANNON.Box(new CANNON.Vec3(0.25, 0.25, 0.25)); // Half extents of the box
-			const boxBody = new CANNON.Body({
-				mass: 1, // Non-zero mass for a dynamic body
+			boxBody = new CANNON.Body({
+				mass: 10,
+				restitution: 0.5,
 				shape: boxShape,
 				position: new CANNON.Vec3(1, 0.25, 1) // Match the Three.js position
 			});
-
 			world.addBody(boxBody);
-
 			boxMesh.userData.physicsBody = boxBody;
-
 			boxBody.addEventListener('collide', function(e) {
 				//console.log('Box collided with', e.body);
 			});
@@ -233,6 +229,20 @@
 			sphereDot = new THREE.Mesh(dotGeometry, dotMaterial);
 			sphereDot.position.set(0, forearm.geometry.parameters.height / 2 + 0.1, 0);
 			forearm.add(sphereDot);
+
+			const sphereDotShape = new CANNON.Sphere(0.05);
+			sphereDotBody = new CANNON.Body({
+				mass: 0,
+				restitution: 0.5,
+				shape: sphereDotShape,
+				position: new CANNON.Vec3(0, 2, 0)
+			});
+			world.addBody(sphereDotBody);
+			forearm.userData.physicsBody = sphereDotBody;
+			sphereDotBody.addEventListener('collide', function(e) {
+				//console.log('Box collided with', e.body);
+			});
+
 		}
 
 		// Create a Segment of the Robot Arm
@@ -263,10 +273,10 @@
 		// Add Floor to the Scene with Grey Background and Black Grid Pattern
 		function addFloor() {
 
-			/*// Create a grey background plane
+			// Create a grey background plane
 			const backgroundGeometry = new THREE.PlaneGeometry(10, 10);
 			const backgroundMaterial = new THREE.MeshStandardMaterial({
-				color: 0xffffff,
+				color: 0x666666,
 				side: THREE.DoubleSide,
 			});
 			const background = new THREE.Mesh(backgroundGeometry, backgroundMaterial);
@@ -286,7 +296,7 @@
 			const grid = new THREE.Mesh(gridGeometry, gridMaterial);
 			grid.rotation.x = -Math.PI / 2;
 			grid.position.y = 0.001; // Slightly above the grey background
-			scene.add(grid);*/
+			scene.add(grid);
 
 			// Create a physics body for the floor
 			var floorShape = new CANNON.Plane();
@@ -312,16 +322,6 @@
 			scene.add(floorVisual);
 		}
 
-		function createBox(width, height, depth, color, position) {
-			const geometry = new THREE.BoxGeometry(width, height, depth);
-			const material = new THREE.MeshStandardMaterial({
-				color: color
-			});
-			const box = new THREE.Mesh(geometry, material);
-			box.position.copy(position);
-			return box;
-		}
-
 		// Setup Controls for the Scene
 		function setupControls() {
 			controls = new THREE.OrbitControls(camera, renderer.domElement);
@@ -334,6 +334,17 @@
 			requestAnimationFrame(animate);
 
 			if (world) {
+				// Calculate the force needed to move the sphereDot towards a target position
+				var targetPosition = new CANNON.Vec3(1, 0, 1); // replace with your target position
+				var forceDirection = targetPosition.vsub(sphereDotBody.position);
+				forceDirection.normalize();
+				var forceMagnitude = 5; // replace with the desired force magnitude
+				var force = forceDirection.scale(forceMagnitude);
+
+				// Apply the force to the sphereDotBody at its center
+				sphereDotBody.applyForce(force, sphereDotBody.position);
+
+				// Step the physics world
 				world.step(1 / 60);
 
 				// Update positions and quaternions after stepping the world
@@ -344,15 +355,26 @@
 					}
 				});
 
+				// Update sphereDotBody's position and quaternion
+				var worldPosition = new THREE.Vector3();
+				sphereDot.getWorldPosition(worldPosition);
+				sphereDotBody.position.copy(worldPosition);
+
+				var worldQuaternion = new THREE.Quaternion();
+				sphereDot.getWorldQuaternion(worldQuaternion);
+				sphereDotBody.quaternion.copy(worldQuaternion);
+
 				// Update Cannon Debug Renderer
 				cannonDebugRenderer.update();
 			}
 
+			// Render the scene
+			renderer.render(scene, camera);
+
+			// Optional: Implement any additional animations or state updates
 			if (demoMode) {
 				automatedMovements();
 			}
-
-			renderer.render(scene, camera);
 		}
 
 		// Clamp Rotation Function
@@ -408,7 +430,7 @@
 		function moveElbow(direction) {
 			const delta = (demoMode ? demoSpeed : 0.05) * direction;
 			elbow.rotation.x += delta;
-			elbow.rotation.x = clampRotation(elbow.rotation.x, -90, 0);
+			elbow.rotation.x = clampRotation(elbow.rotation.x, -145, 0);
 		}
 
 		function rotateForearm(direction) {
