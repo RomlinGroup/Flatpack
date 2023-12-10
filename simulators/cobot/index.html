@@ -67,49 +67,41 @@
 		Position: x: 0, y: 0, z: 0
 	</div>
 
-
 	<div id="demoStatus">
 		Demo Mode: OFF
 	</div>
 
-
-	<!-- Controls Guide -->
 	<div id="keyGuide">
 		<strong>Controls:</strong><br>
 		Base - Q/E<br>
 		Upper Arm - W/S<br>
 		Forearm - R/F<br>
-		Open Pincers - O<br>
-		Close Pincers - P<br>
 		Toggle Demo Mode - M
 	</div>
 
-	<!-- Three.js and OrbitControls Scripts -->
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 	<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/cannon.js/0.6.2/cannon.min.js"></script>
 	<script src="https://cdn.jsdelivr.net/npm/cannon@0.6.2/tools/threejs/CannonDebugRenderer.js"></script>
 
-	<!-- Main Script for Robot Arm Simulation -->
 	<script>
-		let world, scene, camera, renderer, controls;
-		let base, shoulder, upperArm, elbow, forearm;
-		let pincerClaw1, pincerClaw2;
-		let demoMode = false;
 		const demoSpeed = 0.01;
-		let forearmRotation = 0;
-		let fullCycleCount = 0;
 		const maxCycles = 1;
-		let sphereDot;
-		let sphereDotBody;
+		let base, shoulder, upperArm, elbow, forearm;
 		let boxBody;
+		let demoMode = false;
 		let forearmCamera, forearmRenderer;
 		let forearmCameraIsActive = true;
+		let forearmRotation = 0;
+		let fullCycleCount = 0;
+		let pincerClaw1, pincerClaw2;
+		let sphereDot;
+		let sphereDotBody;
+		let world, scene, camera, renderer, controls;
 
-		// Initialize Scene, Camera, and Renderer
 		function init() {
 			world = new CANNON.World();
-			world.gravity.set(0, -9.82, 0); // Earth's gravity acceleration in meters per second squared
+			world.gravity.set(0, -9.82, 0);
 
 			setupScene();
 
@@ -122,96 +114,77 @@
 			addFloor();
 			addRobotArm();
 			setupControls();
-
-			// Initialize the forearm camera and renderer
 			initForearmCamera();
-
 			animate();
 		}
 
 		function initForearmCamera() {
-			// Create the forearm camera
-			const fov = 60; // Field of View (degrees)
-			const aspect = 16 / 9; // Aspect ratio (width/height)
+			const aspect = 16 / 9;
+			const fov = 60;
 			forearmCamera = new THREE.PerspectiveCamera(fov, aspect, 0.1, 1000);
-
-			// Create a renderer for the forearm view with similar settings to the main renderer
 			forearmRenderer = new THREE.WebGLRenderer({
 				antialias: true
 			});
-			forearmRenderer.setSize(250, 150); // Match the size of the #forearmView div
+			forearmRenderer.setSize(250, 150);
 			forearmRenderer.gammaFactor = 2.2;
 			forearmRenderer.outputEncoding = THREE.sRGBEncoding;
 			forearmRenderer.shadowMap.enabled = true;
-			forearmRenderer.shadowMap.type = THREE.PCFSoftShadowMap; // Optional, for softer shadows
-
+			forearmRenderer.shadowMap.type = THREE.PCFSoftShadowMap;
 			document.getElementById('forearmView').appendChild(forearmRenderer.domElement);
 		}
 
 		function setupScene() {
 			scene = new THREE.Scene();
-
-			// Create a grid helper
-			const gridSize = 10; // Size of the grid
-			const gridDivisions = 10; // Number of divisions
+			const gridSize = 10;
+			const gridDivisions = 10;
 			const gridHelper = new THREE.GridHelper(gridSize, gridDivisions);
 			scene.add(gridHelper);
 		}
 
-
-		// Setup the Camera
 		function setupCamera() {
 			camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 			camera.position.set(4, 1, 0);
 			camera.lookAt(0, 1, 0);
 		}
 
-		// Setup the Renderer
 		function setupRenderer() {
 			renderer = new THREE.WebGLRenderer({
 				antialias: true
 			});
 			renderer.setSize(window.innerWidth, window.innerHeight);
 			renderer.gammaFactor = 2.2;
-			renderer.outputEncoding = THREE.sRGBEncoding; // Updated line
+			renderer.outputEncoding = THREE.sRGBEncoding;
 			document.body.appendChild(renderer.domElement);
 		}
 
-		// Add Lighting to the Scene
 		function addLighting() {
-			// Existing Directional Light
 			const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
 			directionalLight.position.set(0, 10, 10).normalize();
 			directionalLight.castShadow = true;
 			scene.add(directionalLight);
 
-			// Add a Point Light
 			const pointLight = new THREE.PointLight(0xffffff, 1, 100);
 			pointLight.position.set(10, 10, 10);
 			scene.add(pointLight);
 
-			// Ambient Light
-			const ambientLight = new THREE.AmbientLight(0x404040); // Soft white light
+			const ambientLight = new THREE.AmbientLight(0x404040);
 			scene.add(ambientLight);
 		}
 
-		// Function to add a physics box to the scene
 		function addPhysicsBox() {
-			// Three.js box
-			const boxGeometry = new THREE.BoxGeometry(0.5, 0.5, 0.5); // Box size
+			const boxGeometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
 			const boxMaterial = new THREE.MeshStandardMaterial({
 				color: 0x5865f2
-			}); // Box color
+			});
 			const boxMesh = new THREE.Mesh(boxGeometry, boxMaterial);
 			scene.add(boxMesh);
 
-			// Cannon.js physics body
-			const boxShape = new CANNON.Box(new CANNON.Vec3(0.25, 0.25, 0.25)); // Half extents of the box
+			const boxShape = new CANNON.Box(new CANNON.Vec3(0.25, 0.25, 0.25));
 			boxBody = new CANNON.Body({
 				mass: 10,
 				restitution: 0.5,
 				shape: boxShape,
-				position: new CANNON.Vec3(0, 0.25, 1.25) // Match the Three.js position
+				position: new CANNON.Vec3(0, 0.25, 1.25)
 			});
 			world.addBody(boxBody);
 			boxMesh.userData.physicsBody = boxBody;
@@ -220,7 +193,6 @@
 			});
 		}
 
-		// Add Robot Arm Components to the Scene
 		function addRobotArm() {
 
 			const baseMaterial = new THREE.MeshStandardMaterial({
@@ -235,59 +207,48 @@
 				roughness: 0.4
 			});
 
-			const baseGeometry = new THREE.CylinderGeometry(0.2, 0.2, 0.2, 32); // RadiusTop, RadiusBottom, Height, RadialSegments
+			const baseGeometry = new THREE.CylinderGeometry(0.2, 0.2, 0.2, 32);
 			base = new THREE.Mesh(baseGeometry, baseMaterial);
-			base.position.y = 0.1; // Half of its height to position it above the ground
+			base.position.y = 0.1;
 
-			const shoulderGeometry = new THREE.SphereGeometry(0.2, 32, 32); // Radius, WidthSegments, HeightSegments
+			const shoulderGeometry = new THREE.SphereGeometry(0.2, 32, 32);
 			shoulder = new THREE.Mesh(shoulderGeometry, baseMaterial);
-			shoulder.position.y = 0.1; // Adjust the position as needed
-			const maxShoulderAngle = 45; // Maximum angle in degrees
+			shoulder.position.y = 0.1;
+			const maxShoulderAngle = 45;
 			shoulder.rotation.x = THREE.MathUtils.degToRad(maxShoulderAngle);
 
 			const upperArmGeometry = new THREE.BoxGeometry(0.1, 1, 0.1);
 			upperArm = new THREE.Mesh(upperArmGeometry, material);
 			upperArm.position.y = 0.5;
 
-			const elbowGeometry = new THREE.CylinderGeometry(0.15, 0.15, 0.15, 32); // Adjust the dimensions as needed
+			const elbowGeometry = new THREE.CylinderGeometry(0.15, 0.15, 0.15, 32);
 			const elbowMaterial = new THREE.MeshStandardMaterial({
 				color: 0x5865f2
 			});
 			elbow = new THREE.Mesh(elbowGeometry, elbowMaterial);
 			elbow.position.y = 0.6;
-			elbow.rotation.z = Math.PI / 2; // Rotate the elbow 90 degrees around the Z-axis
+			elbow.rotation.z = Math.PI / 2;
 			elbow.castShadow = true;
 			elbow.receiveShadow = true;
-			const maxElbowAngle = 45; // Choose -90 or 45 based on your requirement
+			const maxElbowAngle = 45;
 			elbow.rotation.x = THREE.MathUtils.degToRad(maxElbowAngle);
 
-			// Create the forearm and attach it to the rounded side of the elbow
-			const forearmGeometry = new THREE.BoxGeometry(0.1, 0.1, 0.7); // Adjust the dimensions as needed
+			const forearmGeometry = new THREE.BoxGeometry(0.1, 0.1, 0.7);
 			const forearmMaterial = new THREE.MeshStandardMaterial({
 				color: 0xffffff
 			});
 			forearm = new THREE.Mesh(forearmGeometry, forearmMaterial);
-
-			// Position the forearm relative to the elbow
-			forearm.position.set(0, 0, 0.4); // Adjust the position as needed
+			forearm.position.set(0, 0, 0.4);
 
 			scene.add(base);
 			base.add(shoulder);
 			shoulder.add(upperArm);
-			upperArm.add(elbow); // Add the elbow joint to the upper arm
-			elbow.add(forearm); // Add the forearm to the elbow joint
+			upperArm.add(elbow);
+			elbow.add(forearm);
 
-
-			// Set the initial rotation of the shoulder to the maximum downward angle within the constraints
-			//shoulder.rotation.x = THREE.MathUtils.degToRad(-30); // Convert -65 degrees to radians
-
-			// Set the initial rotation of the elbow to the maximum downward angle within the constraints
-			//elbow.rotation.x = THREE.MathUtils.degToRad(-130); // Convert -90 degrees to radians
-
-			// Create Pincers
 			const pincerMaterial = new THREE.MeshStandardMaterial({
 				color: 0x5865f2
-			}); // Yellow color for pincers
+			});
 			const pincerBaseGeometry = new THREE.BoxGeometry(0.2, 0.2, 0.05);
 			const pincerBase1 = new THREE.Mesh(pincerBaseGeometry, pincerMaterial);
 			const pincerBase2 = new THREE.Mesh(pincerBaseGeometry, pincerMaterial);
@@ -336,10 +297,7 @@
 
 		}
 
-		// Add Floor to the Scene with Grey Background and Black Grid Pattern
 		function addFloor() {
-
-			// Create a grey background plane
 			const backgroundGeometry = new THREE.PlaneGeometry(10, 10);
 			const backgroundMaterial = new THREE.MeshStandardMaterial({
 				color: 0x777777,
@@ -350,7 +308,6 @@
 			background.position.y = -0.01;
 			scene.add(background);
 
-			// Create a black grid pattern on top of the background
 			const gridGeometry = new THREE.PlaneGeometry(10, 10, 10, 10);
 			const gridMaterial = new THREE.MeshBasicMaterial({
 				color: 0x000000,
@@ -361,22 +318,20 @@
 			});
 			const grid = new THREE.Mesh(gridGeometry, gridMaterial);
 			grid.rotation.x = -Math.PI / 2;
-			grid.position.y = 0.001; // Slightly above the grey background
+			grid.position.y = 0.001;
 			scene.add(grid);
 
-			// Create a physics body for the floor
 			var floorShape = new CANNON.Plane();
 			var floorBody = new CANNON.Body({
 				mass: 0
 			});
 			floorBody.addShape(floorShape);
-			floorBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0); // Align horizontally
+			floorBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0);
 			world.addBody(floorBody);
 
-			// Visual representation of the Cannon.js floor
 			const floorVisualGeometry = new THREE.PlaneGeometry(10, 10);
 			const floorVisualMaterial = new THREE.MeshBasicMaterial({
-				color: 0x00ff00, // Bright green for visibility
+				color: 0x00ff00,
 				side: THREE.DoubleSide,
 				transparent: true,
 				opacity: 0.5,
@@ -388,7 +343,6 @@
 			scene.add(floorVisual);
 		}
 
-		// Setup Controls for the Scene
 		function setupControls() {
 			controls = new THREE.OrbitControls(camera, renderer.domElement);
 			controls.target.set(0, 1, 0);
@@ -400,20 +354,16 @@
 			requestAnimationFrame(animate);
 
 			if (world) {
-				// Calculate the force needed to move the sphereDot towards a target position
-				var targetPosition = new CANNON.Vec3(1, 0, 1); // replace with your target position
+				var targetPosition = new CANNON.Vec3(1, 0, 1);
 				var forceDirection = targetPosition.vsub(sphereDotBody.position);
 				forceDirection.normalize();
-				var forceMagnitude = 5; // replace with the desired force magnitude
+				var forceMagnitude = 5;
 				var force = forceDirection.scale(forceMagnitude);
 
-				// Apply the force to the sphereDotBody at its center
 				sphereDotBody.applyForce(force, sphereDotBody.position);
 
-				// Step the physics world
 				world.step(1 / 60);
 
-				// Update positions and quaternions after stepping the world
 				scene.children.forEach(function(child) {
 					if (child.userData.physicsBody) {
 						child.position.copy(child.userData.physicsBody.position);
@@ -421,7 +371,6 @@
 					}
 				});
 
-				// Update sphereDotBody's position and quaternion
 				var worldPosition = new THREE.Vector3();
 				sphereDot.getWorldPosition(worldPosition);
 				sphereDotBody.position.copy(worldPosition);
@@ -430,10 +379,8 @@
 				sphereDot.getWorldQuaternion(worldQuaternion);
 				sphereDotBody.quaternion.copy(worldQuaternion);
 
-				// Update Cannon Debug Renderer
 				cannonDebugRenderer.update();
 
-				// Render the main scene
 				renderer.render(scene, camera);
 
 				if (forearmCameraIsActive) {
@@ -441,57 +388,45 @@
 				}
 			}
 
-			// Update the position display
 			if (sphereDot) {
 				const pos = sphereDotBody.position;
 				document.getElementById("positionDisplay").innerText = `x: ${pos.x.toFixed(2)}, y: ${pos.y.toFixed(2)}, z: ${pos.z.toFixed(2)}`;
 			}
 
-			// Optional: Implement any additional animations or state updates
 			if (demoMode) {
 				automatedMovements();
 			}
 
 			if (forearmCamera && sphereDot) {
-				// Position the camera at the sphereDot
 				var sphereDotPosition = new THREE.Vector3();
 				sphereDot.getWorldPosition(sphereDotPosition);
 				forearmCamera.position.copy(sphereDotPosition);
 
-				// Orient the camera to look forward from the forearm
-				var forearmDirection = new THREE.Vector3(0, 0, -1); // Assuming the forearm points along the negative Z-axis
+				var forearmDirection = new THREE.Vector3(0, 0, -1);
 				forearm.getWorldDirection(forearmDirection);
 				forearmCamera.lookAt(forearmDirection.add(sphereDotPosition));
-
-				// Rotate the camera 90 degrees upwards
 				forearmCamera.rotateX(THREE.MathUtils.degToRad(0));
-
-				// Render the forearm camera view
 				forearmRenderer.render(scene, forearmCamera);
 			}
 
-			// Render the main scene
 			renderer.render(scene, camera);
 		}
 
-		// Clamp Rotation Function
 		function clampRotation(currentRotation, minAngle, maxAngle) {
 			const minRadians = THREE.MathUtils.degToRad(minAngle);
 			const maxRadians = THREE.MathUtils.degToRad(maxAngle);
 			return Math.max(minRadians, Math.min(maxRadians, currentRotation));
 		}
 
-		// Variables to track movement state
 		let movementStep = 0;
 
 		function automatedMovements() {
 			switch (movementStep) {
 				case 0:
-					// Rotate base
 					rotateBase(1);
 					fullCycleCount += demoSpeed;
-					if (fullCycleCount >= 2 * Math.PI) { // Full rotation
-						fullCycleCount = 0; // Reset the cycle count
+					if (fullCycleCount >= 2 * Math.PI) {
+						fullCycleCount = 0;
 						movementStep++;
 					}
 					movementStep = 0;
@@ -499,7 +434,6 @@
 			}
 		}
 
-		// Movement functions
 		function rotateBase(direction) {
 			const delta = (demoMode ? demoSpeed : 0.05) * direction;
 			base.rotation.y += delta;
@@ -517,35 +451,29 @@
 			elbow.rotation.x = clampRotation(elbow.rotation.x, -90, 45);
 		}
 
-		// Handle Keyboard Inputs
 		function onDocumentKeyDown(event) {
 			var keyCode = event.which;
 
 			if (!demoMode) {
 				if (keyCode == 81) {
 					rotateBase(-1);
-				} // Q
-				else if (keyCode == 69) {
+				} else if (keyCode == 69) {
 					rotateBase(1);
-				} // E
-				else if (keyCode == 87) {
+				} else if (keyCode == 87) {
 					moveShoulder(1);
-				} // W
-				else if (keyCode == 83) {
+				} else if (keyCode == 83) {
 					moveShoulder(-1);
-				} // S
-				else if (keyCode == 82) {
+				} else if (keyCode == 82) {
 					moveElbow(1);
-				} // R
-				else if (keyCode == 70) {
+				} else if (keyCode == 70) {
 					moveElbow(-1);
-				} // F
+				}
 			}
 
 			if (keyCode == 77) {
 				demoMode = !demoMode;
 				document.getElementById("demoStatus").innerText = "Demo Mode: " + (demoMode ? "ON" : "OFF");
-			} // M
+			}
 		}
 
 		init();
