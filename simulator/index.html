@@ -28,7 +28,7 @@
 			position: fixed;
 			top: 10px;
 			right: 10px;
-			width: 200px;
+			width: 250px;
 			height: 150px;
 			border: 1px solid black;
 			border: 1px solid #fff;
@@ -117,6 +117,7 @@
 		let sphereDotBody;
 		let boxBody;
 		let forearmCamera, forearmRenderer;
+		let forearmCameraIsActive = true;
 
 		// Initialize Scene, Camera, and Renderer
 		function init() {
@@ -143,11 +144,20 @@
 
 		function initForearmCamera() {
 			// Create the forearm camera
-			forearmCamera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
+			const fov = 60; // Field of View (degrees)
+			const aspect = 16 / 9; // Aspect ratio (width/height)
+			forearmCamera = new THREE.PerspectiveCamera(fov, aspect, 0.1, 1000);
 
-			// Create a renderer for the forearm view
-			forearmRenderer = new THREE.WebGLRenderer();
-			forearmRenderer.setSize(200, 150); // Match the size of the #forearmView div
+			// Create a renderer for the forearm view with similar settings to the main renderer
+			forearmRenderer = new THREE.WebGLRenderer({
+				antialias: true
+			});
+			forearmRenderer.setSize(250, 150); // Match the size of the #forearmView div
+			forearmRenderer.gammaFactor = 2.2;
+			forearmRenderer.outputEncoding = THREE.sRGBEncoding;
+			forearmRenderer.shadowMap.enabled = true;
+			forearmRenderer.shadowMap.type = THREE.PCFSoftShadowMap; // Optional, for softer shadows
+
 			document.getElementById('forearmView').appendChild(forearmRenderer.domElement);
 		}
 
@@ -170,20 +180,30 @@
 
 		// Setup the Renderer
 		function setupRenderer() {
-			renderer = new THREE.WebGLRenderer();
+			renderer = new THREE.WebGLRenderer({
+				antialias: true
+			});
 			renderer.setSize(window.innerWidth, window.innerHeight);
+			renderer.gammaFactor = 2.2;
+			renderer.gammaOutput = true;
 			document.body.appendChild(renderer.domElement);
 		}
 
 		// Add Lighting to the Scene
 		function addLighting() {
-			// Directional Light
-			const light = new THREE.DirectionalLight(0xffffff, 1);
-			light.position.set(0, 10, 10).normalize();
-			scene.add(light);
+			// Existing Directional Light
+			const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+			directionalLight.position.set(0, 10, 10).normalize();
+			directionalLight.castShadow = true;
+			scene.add(directionalLight);
+
+			// Add a Point Light
+			const pointLight = new THREE.PointLight(0xffffff, 1, 100);
+			pointLight.position.set(10, 10, 10);
+			scene.add(pointLight);
 
 			// Ambient Light
-			const ambientLight = new THREE.AmbientLight(0x777777); // Color of the ambient light
+			const ambientLight = new THREE.AmbientLight(0x404040); // Soft white light
 			scene.add(ambientLight);
 		}
 
@@ -217,8 +237,16 @@
 		// Add Robot Arm Components to the Scene
 		function addRobotArm() {
 			base = createSegment(0.5, 0.6, 0.3, ARM_COLORS.base, 0.15);
+			base.castShadow = true;
+			base.receiveShadow = true;
+
 			shoulder = createSegment(0, 0, 0.3, ARM_COLORS.shoulder, 0.15);
+			shoulder.castShadow = true;
+			shoulder.receiveShadow = true;
+
 			upperArm = createSegment(0.15, 0.15, 1.2, ARM_COLORS.upperArm, 0.6);
+			upperArm.castShadow = true;
+			upperArm.receiveShadow = true;
 
 			// Create the green elbow joint sphere
 			const elbowGeometry = new THREE.SphereGeometry(0.15, 32, 32);
@@ -227,6 +255,8 @@
 			});
 			elbow = new THREE.Mesh(elbowGeometry, elbowMaterial);
 			elbow.position.y = 0.6;
+			elbow.castShadow = true;
+			elbow.receiveShadow = true;
 
 			forearm = createSegment(0.1, 0.1, 1.0, ARM_COLORS.forearm, 0.5);
 
@@ -300,9 +330,11 @@
 
 			if (topRadius === 0 && bottomRadius === 0) {
 				// Create a sphere geometry since the top and bottom radius are 0
-				geometry = new THREE.SphereGeometry(height, 32, 32); // height is used as the sphere radius
+				geometry = new THREE.SphereGeometry(height, 32, 32);
 				var material = new THREE.MeshStandardMaterial({
-					color: color
+					color: color,
+					metalness: 0.5,
+					roughness: 0.4
 				});
 				segment = new THREE.Mesh(geometry, material);
 			} else {
@@ -415,6 +447,13 @@
 
 				// Update Cannon Debug Renderer
 				cannonDebugRenderer.update();
+
+				// Render the main scene
+				renderer.render(scene, camera);
+
+				if (forearmCameraIsActive) {
+					forearmRenderer.render(scene, forearmCamera);
+				}
 			}
 
 			// Update the position display
@@ -422,9 +461,6 @@
 				const pos = sphereDotBody.position;
 				document.getElementById("positionDisplay").innerText = `x: ${pos.x.toFixed(2)}, y: ${pos.y.toFixed(2)}, z: ${pos.z.toFixed(2)}`;
 			}
-
-			// Render the scene
-			renderer.render(scene, camera);
 
 			// Optional: Implement any additional animations or state updates
 			if (demoMode) {
