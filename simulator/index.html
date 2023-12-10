@@ -180,12 +180,10 @@
 
 		// Setup the Renderer
 		function setupRenderer() {
-			renderer = new THREE.WebGLRenderer({
-				antialias: true
-			});
+			renderer = new THREE.WebGLRenderer({ antialias: true });
 			renderer.setSize(window.innerWidth, window.innerHeight);
 			renderer.gammaFactor = 2.2;
-			renderer.gammaOutput = true;
+			renderer.outputEncoding = THREE.sRGBEncoding; // Updated line
 			document.body.appendChild(renderer.domElement);
 		}
 
