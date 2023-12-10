@@ -35,10 +35,26 @@
 			font-size: 14px;
 			color: #ffffff;
 		}
+
+		#positionDisplay {
+			position: fixed;
+			bottom: 10px;
+			left: 10px;
+			padding: 10px;
+			background: rgba(0, 0, 0, 1);
+			border-radius: 5px;
+			font-family: Arial, sans-serif;
+			font-size: 14px;
+			color: #ffffff;
+		}
 	</style>
 </head>
 
 <body>
+	<div id="positionDisplay">
+		Position: x: 0, y: 0, z: 0
+	</div>
+
 
 	<div id="demoStatus">
 		Demo Mode: OFF
@@ -108,10 +124,16 @@
 			animate();
 		}
 
-		// Setup the Three.js Scene
 		function setupScene() {
 			scene = new THREE.Scene();
+
+			// Create a grid helper
+			const gridSize = 10; // Size of the grid
+			const gridDivisions = 10; // Number of divisions
+			const gridHelper = new THREE.GridHelper(gridSize, gridDivisions);
+			scene.add(gridHelper);
 		}
+
 
 		// Setup the Camera
 		function setupCamera() {
@@ -368,6 +390,12 @@
 				cannonDebugRenderer.update();
 			}
 
+			// Update the position display
+			if (sphereDot) {
+				const pos = sphereDotBody.position;
+				document.getElementById("positionDisplay").innerText = `Position: x: ${pos.x.toFixed(2)}, y: ${pos.y.toFixed(2)}, z: ${pos.z.toFixed(2)}`;
+			}
+
 			// Render the scene
 			renderer.render(scene, camera);
 
@@ -424,13 +452,13 @@
 		function moveShoulder(direction) {
 			const delta = (demoMode ? demoSpeed : 0.05) * direction;
 			shoulder.rotation.x += delta;
-			shoulder.rotation.x = clampRotation(shoulder.rotation.x, -60, 0);
+			shoulder.rotation.x = clampRotation(shoulder.rotation.x, -45, 0);
 		}
 
 		function moveElbow(direction) {
 			const delta = (demoMode ? demoSpeed : 0.05) * direction;
 			elbow.rotation.x += delta;
-			elbow.rotation.x = clampRotation(elbow.rotation.x, -145, 0);
+			elbow.rotation.x = clampRotation(elbow.rotation.x, -130, 0);
 		}
 
 		function rotateForearm(direction) {
