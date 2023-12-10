@@ -317,7 +317,10 @@
 			shoulder.rotation.x = THREE.MathUtils.degToRad(maxShoulderAngle);
 
 			const upperArmGeometry = new THREE.BoxGeometry(0.1, 1, 0.1);
-			upperArm = new THREE.Mesh(upperArmGeometry, material);
+			const upperArmMaterial = new THREE.MeshStandardMaterial({
+				color: 0xffffff
+			});
+			upperArm = new THREE.Mesh(upperArmGeometry, upperArmMaterial);
 			upperArm.position.y = 0.5;
 
 			const elbowGeometry = new THREE.CylinderGeometry(0.15, 0.15, 0.15, 32);
