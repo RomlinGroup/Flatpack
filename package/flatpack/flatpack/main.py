@@ -1,6 +1,7 @@
 from cryptography.fernet import Fernet
 from .parsers import parse_toml_to_venv_script
 from pathlib import Path
+from transformers import GPT2LMHeadModel, GPT2Tokenizer
 from typing import List, Optional
 
 import argparse
@@ -455,6 +456,20 @@ def fpk_valid_directory_name(name: str) -> bool:
     return re.match(r'^[\w-]+$', name) is not None
 
 
+def fpk_generate_text(prompt):
+    """Generate text using GPT-2."""
+    # Load model and tokenizer
+    tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
+    model = GPT2LMHeadModel.from_pretrained("gpt2")
+
+    # Encode the input prompt and generate a response
+    inputs = tokenizer.encode(prompt, return_tensors="pt")
+    outputs = model.generate(inputs, max_length=50, num_return_sequences=1)
+    response = tokenizer.decode(outputs[0], skip_special_tokens=True)
+
+    return response
+
+
 def main():
     try:
         with SessionManager() as session:
@@ -508,19 +523,19 @@ def main():
             elif command == "ps":
                 print(fpk_list_processes())
             elif command == "run":
-                def greet(name):
-                    return "Hello " + name + "!"
 
                 try:
                     try:
+
                         interface = gr.Interface(
-                            fn=greet,
+                            fn=fpk_generate_text,
                             inputs="text",
                             outputs="text",
-                            title="flatpack.ai 👋"
+                            title="GPT-2 👋"
                         )
 
                         interface.launch(share=True)
+
                     except KeyboardInterrupt:
                         print("Gradio interface has been stopped.")
                 except Exception as e:
