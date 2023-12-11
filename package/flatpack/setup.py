@@ -5,11 +5,11 @@ with open("README.md", "r") as f:
 
 setup(
     name="flatpack",
-    version="3.0.80",
+    version="3.0.82",
     packages=find_packages(),
     install_requires=[
         "cryptography==41.0.7",
-        "Django==5.0",
+        "gradio==4.8.0",
         "httpx==0.25.2",
         "requests==2.31.0",
         "toml==0.10.2"

@@ -28,8 +28,17 @@ trust with our users. We invite you to explore our new release strategy and appr
 
 ## install_requires
 
-- [cryptography](https://pypi.org/project/cryptography/) (Apache Software License, BSD License)
-- [Django](https://pypi.org/project/Django/) (BSD License)
-- [httpx](https://pypi.org/project/httpx/) (BSD License)
-- [requests](https://pypi.org/project/requests/) (Apache Software License)
-- [toml](https://pypi.org/project/toml/) (MIT License)
+### [cryptography](https://pypi.org/project/cryptography/)
+> Apache Software License, BSD License (Apache-2.0 OR BSD-3-Clause)
+
+### [gradio](https://pypi.org/project/gradio/)
+> Apache Software License
+
+### [httpx](https://pypi.org/project/httpx/)
+> BSD License
+
+### [requests](https://pypi.org/project/requests/)
+> Apache Software License (Apache 2.0)
+
+### [toml](https://pypi.org/project/toml/)
+> MIT License (MIT)

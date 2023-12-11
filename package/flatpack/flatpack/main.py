@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import List, Optional
 
 import argparse
+import gradio as gr
 import httpx
 import logging
 import os
@@ -507,7 +508,11 @@ def main():
             elif command == "ps":
                 print(fpk_list_processes())
             elif command == "run":
-                print("[RUN]")
+                def greet(name):
+                    return "Hello " + name + "!"
+
+                demo = gr.Interface(fn=greet, inputs="text", outputs="text")
+                demo.launch(share=True)
             elif command == "set-api-key":
                 if not args.input:
                     print("❌ Please provide an API key to set.")
