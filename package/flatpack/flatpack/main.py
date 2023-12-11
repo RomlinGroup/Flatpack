@@ -401,6 +401,11 @@ class FPKCustomHTTPHandler(http.server.SimpleHTTPRequestHandler):
 
 
 def fpk_run_server():
+    # Check if NGROK_AUTHTOKEN is set
+    if "NGROK_AUTHTOKEN" not in os.environ or not os.environ["NGROK_AUTHTOKEN"]:
+        print("NGROK_AUTHTOKEN is not set. Please set it before running the server.")
+        return  # Exit the function if NGROK_AUTHTOKEN is not set
+    
     port = fpk_find_free_port()
     handler = FPKCustomHTTPHandler
     httpd = socketserver.TCPServer(("", port), handler)

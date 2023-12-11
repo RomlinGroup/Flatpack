@@ -12,7 +12,7 @@
 
 ## Ready-to-assemble AI
 
-Just as Arduino or Raspberry Pi have found their place in professional environments for developing and testing new ideas, flatpack.ai aims to be the go-to platform for AI experimentation and innovation, from educational settings to the highest echelons of industry and research.
+Just as Arduino and Raspberry Pi (no affiliation) have found their place in professional environments for developing and testing new ideas, flatpack.ai aims to be the go-to platform for AI experimentation and innovation, from educational settings to the highest echelons of industry and research.
 
 ## Elevator pitch
 
