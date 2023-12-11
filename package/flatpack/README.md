@@ -26,19 +26,24 @@ trust with our users. We invite you to explore our new release strategy and appr
 
 [Explore the Project on GitHub](https://github.com/romlingroup/flatpack-ai)
 
-## install_requires
+## install_requires (no affiliation)
 
-### [cryptography](https://pypi.org/project/cryptography/)
-> Apache Software License, BSD License (Apache-2.0 OR BSD-3-Clause)
+- **[cryptography](https://pypi.org/project/cryptography/)**\
+  Author: The Python Cryptographic Authority and individual contributors\
+  License: Apache Software License, BSD License (Apache-2.0 OR BSD-3-Clause)
 
-### [gradio](https://pypi.org/project/gradio/)
-> Apache Software License
+- **[gradio](https://pypi.org/project/gradio/)**\
+  Author: Abubakar Abid\
+  License: Apache Software License
 
-### [httpx](https://pypi.org/project/httpx/)
-> BSD License
+- **[httpx](https://pypi.org/project/httpx/)**\
+  Author: Tom Christie\
+  License: BSD License
 
-### [requests](https://pypi.org/project/requests/)
-> Apache Software License (Apache 2.0)
+- **[requests](https://pypi.org/project/requests/)**\
+  Author: Kenneth Reitz\
+  License: Apache Software License (Apache 2.0)
 
-### [toml](https://pypi.org/project/toml/)
-> MIT License (MIT)
+- **[toml](https://pypi.org/project/toml/)**\
+  Author: William Pearson\
+  License: MIT License (MIT)
