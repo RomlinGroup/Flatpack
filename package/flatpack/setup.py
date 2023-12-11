@@ -5,16 +5,14 @@ with open("README.md", "r") as f:
 
 setup(
     name="flatpack",
-    version="3.0.58",
+    version="3.0.80",
     packages=find_packages(),
     install_requires=[
-        "cryptography",
-        "httpx",
-        "ngrok",
-        "numpy",
-        "requests",
-        "toml",
-        "torch"
+        "cryptography==41.0.7",
+        "Django==5.0",
+        "httpx==0.25.2",
+        "requests==2.31.0",
+        "toml==0.10.2"
     ],
     author="Romlin Group AB",
     author_email="hello@romlin.com",
