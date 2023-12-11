@@ -12,6 +12,12 @@ highest echelons of industry and research.
 *Aglaonice, an ancient Greek astronomer from the 2nd or 1st century BC, was celebrated for her precise lunar eclipse
 predictions. Her mastery inspired the Greek proverb: "As the moon obeys Aglaonice," signifying unwavering certainty.*
 
+`3.1.0` (2023-12-11)\
+*Added support for Gradio UI and Hugging Face models.*
+
+`3.0.0` (2023-10-20)\
+*Moved to a predictable and structured release strategy.*
+
 ## Moving to versioning structure: 3.0.0
 
 Our previous releases were a mix of minor tweaks and significant shifts, making it challenging to anticipate the nature
