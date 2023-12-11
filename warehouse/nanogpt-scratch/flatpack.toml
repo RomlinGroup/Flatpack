@@ -28,6 +28,12 @@ wget = "*"
 
 [packages.python]
 datasets = "*"
+numpy = "*"
+tiktoken = "*"
+transformers = "*"
+torch = "*"
+tqdm = "*"
+wandb = "*"
 
 [[git]]
 from_source = "https://github.com/romlingroup/nanoGPT-colab"

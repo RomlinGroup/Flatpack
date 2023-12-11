@@ -28,6 +28,12 @@ wget = "*"
 
 [packages.python]
 datasets = "*"
+numpy = "*"
+tiktoken = "*"
+transformers = "*"
+torch = "*"
+tqdm = "*"
+wandb = "*"
 
 # [[git]]
 # from_source = "{{git_source_url}}"
