@@ -511,8 +511,18 @@ def main():
                 def greet(name):
                     return "Hello " + name + "!"
 
-                demo = gr.Interface(fn=greet, inputs="text", outputs="text")
-                demo.launch(share=True)
+                interface = gr.Interface(
+                    fn=greet,
+                    inputs="text",
+                    outputs="text",
+                    title="flatpack.ai 👋"
+                )
+
+                try:
+                    interface.launch(share=True)
+                except KeyboardInterrupt:
+                    print("Gradio interface has been stopped.")
+                    
             elif command == "set-api-key":
                 if not args.input:
                     print("❌ Please provide an API key to set.")

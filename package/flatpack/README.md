@@ -29,21 +29,17 @@ trust with our users. We invite you to explore our new release strategy and appr
 ## install_requires (no affiliation)
 
 - **[cryptography](https://pypi.org/project/cryptography/)**\
-  Author: The Python Cryptographic Authority and individual contributors\
-  License: Apache Software License, BSD License (Apache-2.0 OR BSD-3-Clause)
+  The Python Cryptographic Authority and individual contributors\
+  (Apache-2.0 OR BSD-3-Clause)
 
 - **[gradio](https://pypi.org/project/gradio/)**\
-  Author: Abubakar Abid\
-  License: Apache Software License
+  Abubakar Abid (Apache-2.0)
 
 - **[httpx](https://pypi.org/project/httpx/)**\
-  Author: Tom Christie\
-  License: BSD License
+  Tom Christie (BSD-3-Clause)
 
 - **[requests](https://pypi.org/project/requests/)**\
-  Author: Kenneth Reitz\
-  License: Apache Software License (Apache 2.0)
+  Kenneth Reitz (Apache-2.0)
 
 - **[toml](https://pypi.org/project/toml/)**\
-  Author: William Pearson\
-  License: MIT License (MIT)
+  William Pearson (MIT)
