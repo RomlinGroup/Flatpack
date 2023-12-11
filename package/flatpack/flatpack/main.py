@@ -401,6 +401,10 @@ class FPKCustomHTTPHandler(http.server.SimpleHTTPRequestHandler):
 
 
 def fpk_run_server():
+    if "NGROK_AUTHTOKEN" not in os.environ or not os.environ["NGROK_AUTHTOKEN"].strip():
+        print("❌ NGROK_AUTHTOKEN is not set. Please set it before running the server.")
+        return
+
     port = fpk_find_free_port()
     handler = FPKCustomHTTPHandler
     httpd = socketserver.TCPServer(("", port), handler)
@@ -420,10 +424,6 @@ def fpk_run_server():
         httpd.server_close()
         ngrok.disconnect(listener.url())
         print("Server stopped")
-
-
-# Run the server
-fpk_run_server()
 
 
 def fpk_train(directory_name: str = None, session: httpx.Client = None):
@@ -554,11 +554,7 @@ def main():
             elif command == "ps":
                 print(fpk_list_processes())
             elif command == "run-server":
-                if "NGROK_AUTHTOKEN" not in os.environ or not os.environ["NGROK_AUTHTOKEN"]:
-                    print("❌ NGROK_AUTHTOKEN is not set. Please set it before running the server.")
-                    return
-                else:
-                    fpk_run_server()
+                fpk_run_server()
             elif command == "set-api-key":
                 if not args.input:
                     print("❌ Please provide an API key to set.")
