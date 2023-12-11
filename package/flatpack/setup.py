@@ -5,11 +5,12 @@ with open("README.md", "r") as f:
 
 setup(
     name="flatpack",
-    version="3.0.37",
+    version="3.0.50",
     packages=find_packages(),
     install_requires=[
         "cryptography",
         "httpx",
+        "ngrok",
         "numpy",
         "requests",
         "toml",
@@ -17,7 +18,7 @@ setup(
     ],
     author="Romlin Group AB",
     author_email="hello@romlin.com",
-    description="Train AI models - not your patience",
+    description="Ready-to-assemble AI",
     long_description=long_description,
     long_description_content_type="text/markdown",
     entry_points={

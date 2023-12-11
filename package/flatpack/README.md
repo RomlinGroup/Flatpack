@@ -2,7 +2,9 @@
 
 **NOTE:** flatpack.ai is currently experimental. Please refrain from using it in production environments.
 
-(OPEN SOURCE) flatpack.ai will democratize AI by providing a modular and open platform for anyone to train their AI models from scratch with cutting-edge technology accessible to all. What flatpacks did for the furniture industry, we will do for the AI industry.
+## Ready-to-assemble AI
+
+Just as Arduino or Raspberry Pi have found their place in professional environments for developing and testing new ideas, flatpack.ai aims to be the go-to platform for AI experimentation and innovation, from educational settings to the highest echelons of industry and research.
 
 ## flatpack 3.X.X (Aglaonice)
 
@@ -19,3 +21,13 @@ Our previous releases were a mix of minor tweaks and significant shifts, making 
 This move is not merely about [semantic versioning](https://semver.org/). It is a pledge for clear communication and trust with our users. We invite you to explore our new release strategy and appreciate your patience as we evolve.
 
 [Explore the Project on GitHub](https://github.com/romlingroup/flatpack-ai)
+
+## install_requires
+
+- [cryptography](https://pypi.org/project/cryptography/) (Apache-2.0 OR BSD-3-Clause)
+- [httpx](https://pypi.org/project/httpx/) (BSD-3)
+- [numpy](https://pypi.org/project/numpy/) (BSD-3)
+- [ngrok](https://pypi.org/project/ngrok/) (MIT OR Apache-2.0)
+- [requests](https://pypi.org/project/requests/) (Apache 2.0)
+- [toml](https://pypi.org/project/toml/) (MIT)
+- [torch](https://pypi.org/project/torch/) (BSD-3)

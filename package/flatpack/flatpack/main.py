@@ -4,15 +4,20 @@ from pathlib import Path
 from typing import List, Optional
 
 import argparse
+import http.server
 import httpx
 import logging
+import ngrok
 import os
 import re
 import select
 import shlex
+import socket
+import socketserver
 import stat
 import subprocess
 import sys
+import threading
 import toml
 
 CONFIG_FILE_PATH = os.path.join(os.path.expanduser("~"), ".fpk_config.toml")
@@ -377,6 +382,50 @@ def fpk_process_output(output, session, last_installed_flatpack):
                 fpk_log_to_api(line, session, api_key=api_key, model_name=last_installed_flatpack)
 
 
+def fpk_find_free_port():
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.bind(("", 0))
+        return s.getsockname()[1]
+
+
+class FPKCustomHTTPHandler(http.server.SimpleHTTPRequestHandler):
+    def do_GET(self):
+        # Sending an '200 OK' response
+        self.send_response(200)
+        # Setting the header
+        self.send_header("Content-type", "text/html")
+        # Whenever using 'send_header', you also have to call 'end_headers'
+        self.end_headers()
+        # Writing the response body
+        self.wfile.write(bytes("Hello, flatpack.ai!", "utf-8"))
+
+
+def fpk_run_server():
+    port = fpk_find_free_port()
+    handler = FPKCustomHTTPHandler
+    httpd = socketserver.TCPServer(("", port), handler)
+    server_thread = threading.Thread(target=httpd.serve_forever)
+    server_thread.daemon = True
+    server_thread.start()
+    listener = ngrok.forward(port, authtoken_from_env=True)
+    print(f"Ingress established at {listener.url()}")
+
+    try:
+        # Keep the server running
+        server_thread.join()
+    except KeyboardInterrupt:
+        pass
+    finally:
+        httpd.shutdown()
+        httpd.server_close()
+        ngrok.disconnect(listener.url())
+        print("Server stopped")
+
+
+# Run the server
+fpk_run_server()
+
+
 def fpk_train(directory_name: str = None, session: httpx.Client = None):
     """Train a model using a training script from a specific or last installed flatpack."""
     cache_file_path = Path.cwd() / 'last_flatpack.cache'
@@ -504,6 +553,8 @@ def main():
                 print(fpk_list_directories(session))
             elif command == "ps":
                 print(fpk_list_processes())
+            elif command == "run-server":
+                fpk_run_server()
             elif command == "set-api-key":
                 if not args.input:
                     print("❌ Please provide an API key to set.")
