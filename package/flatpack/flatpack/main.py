@@ -511,17 +511,22 @@ def main():
                 def greet(name):
                     return "Hello " + name + "!"
 
-                interface = gr.Interface(
-                    fn=greet,
-                    inputs="text",
-                    outputs="text",
-                    title="flatpack.ai 👋"
-                )
-
                 try:
-                    interface.launch(share=True)
+                    try:
+                        interface = gr.Interface(
+                            fn=greet,
+                            inputs="text",
+                            outputs="text",
+                            title="flatpack.ai 👋"
+                        )
+
+                        interface.launch(share=True)
+                    except KeyboardInterrupt:
+                        print("Gradio interface has been stopped.")
                 except Exception as e:
-                    print(f"Gradio interface stopped or encountered an error.")
+                    print(f"An unexpected error occurred: {e}")
+                finally:
+                    print("Finalizing...")
 
             elif command == "set-api-key":
                 if not args.input:
