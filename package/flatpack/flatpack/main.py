@@ -520,9 +520,9 @@ def main():
 
                 try:
                     interface.launch(share=True)
-                except KeyboardInterrupt:
-                    print("Gradio interface has been stopped.")
-                    
+                except Exception as e:
+                    print(f"Gradio interface stopped or encountered an error.")
+
             elif command == "set-api-key":
                 if not args.input:
                     print("❌ Please provide an API key to set.")
