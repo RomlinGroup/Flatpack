@@ -62,9 +62,15 @@
 		}
 
 		#forearmView {
-			width: 200px;
-			height: 112.5px;
+			width: 250px;
+			height: 162.5px;
 			border: 1px solid #fff;
+		}
+
+		#saveImageButton {
+			position: absolute;
+			right: 10px;
+			top: 10px;
 		}
 
 		#generateButton {
@@ -143,8 +149,9 @@
 <body>
 	<div id="forearmViewWrapper">
 		<div id="forearmView"></div>
+		<button id="saveImageButton">Save</button>
 		<div id="positionDisplay">
-			x: 0, y: 0, z: 0
+			X: 0, Y: 0, Z: 0
 		</div>
 	</div>
 
@@ -153,7 +160,7 @@
 	</div>
 
 	<div id="keyGuide">
-		Base: A/D<br>
+		Base: Q/E<br>
 		Upper Arm: W/S<br>
 		Forearm: R/F<br>
 		Demo: M
@@ -333,14 +340,28 @@
 			stopRecording() {
 				if (this.isRecording) {
 					if (this.lastRecordedCommand !== null) {
-						this.recordedCommands.push(`${this.lastRecordedCommand} ${this.radiansToDegrees(this.lastRecordedValue)} degrees`);
+						this.recordedCommands.push(`${this.lastRecordedCommand} ${this.radiansToDegrees(this.lastRecordedValue)}`);
 					}
 					this.isRecording = false;
 					this.lastRecordedCommand = null;
 					this.lastRecordedValue = null;
 					console.log("Recording stopped");
 					console.log(this.recordedCommands);
+
+					this.downloadRecordedCommands();
 				}
+			}
+
+			downloadRecordedCommands() {
+				const text = this.recordedCommands.join('\n');
+				const blob = new Blob([text], {
+					type: 'text/plain'
+				});
+				const anchor = document.createElement('a');
+				anchor.download = 'recorded_commands.txt';
+				anchor.href = window.URL.createObjectURL(blob);
+				anchor.click();
+				window.URL.revokeObjectURL(anchor.href);
 			}
 		}
 
@@ -381,7 +402,7 @@
 
 			switch (type) {
 				case 'cobot':
-					addPhysicsBox();
+					addPhysicsObject('box');
 					addRobotArm();
 					initForearmCamera();
 					setupControls();
@@ -398,7 +419,7 @@
 			forearmRenderer = new THREE.WebGLRenderer({
 				antialias: true
 			});
-			forearmRenderer.setSize(200, 112.5);
+			forearmRenderer.setSize(250, 162.5);
 			forearmRenderer.gammaFactor = 2.2;
 			forearmRenderer.outputEncoding = THREE.sRGBEncoding;
 			forearmRenderer.shadowMap.enabled = true;
@@ -500,7 +521,7 @@
 			mesh.userData.physicsBody = body;
 		}
 
-		function addPhysicsBox() {
+		function addPhysicsObject(type) {
 			const boxGeometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
 			const boxMaterial = new THREE.MeshStandardMaterial({
 				color: 0x5865f2
@@ -765,9 +786,9 @@
 			var keyCode = event.which;
 
 			if (!robot.demoMode) {
-				if (keyCode == 65) {
+				if (keyCode == 81) {
 					robot.rotateBase(1);
-				} else if (keyCode == 68) {
+				} else if (keyCode == 69) {
 					robot.rotateBase(-1);
 				} else if (keyCode == 87) {
 					robot.moveShoulder(-1);
@@ -809,6 +830,32 @@
 			}
 		}
 
+		function saveImage() {
+			try {
+				forearmRenderer.render(scene, forearmCamera);
+
+				var strMime = "image/jpeg";
+				var imgData = forearmRenderer.domElement.toDataURL(strMime);
+				saveFile(imgData, "forearm_view.jpg");
+			} catch (e) {
+				console.log(e);
+				return;
+			}
+		}
+
+		var saveFile = function(strData, filename) {
+			var link = document.createElement('a');
+			if (typeof link.download === 'string') {
+				document.body.appendChild(link); //Firefox requires the link to be in the body
+				link.download = filename;
+				link.href = strData;
+				link.click();
+				document.body.removeChild(link); //remove the link when done
+			} else {
+				location.replace(strData);
+			}
+		}
+
 		document.getElementById('recordButton').addEventListener('click', function() {
 			if (robot.isRecording) {
 				robot.stopRecording();
@@ -818,6 +865,8 @@
 				this.innerText = "Stop";
 			}
 		});
+
+		document.getElementById('saveImageButton').addEventListener('click', saveImage);
 
 		initRobot('cobot');
 	</script>
