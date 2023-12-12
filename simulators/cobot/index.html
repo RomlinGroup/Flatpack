@@ -221,6 +221,11 @@
 				this.targetBaseRotation = 0;
 				this.targetElbowRotation = 0;
 				this.targetShoulderRotation = 0;
+
+				this.maxShoulderRotation = 45;
+				this.minShoulderRotation = 0;
+				this.maxElbowRotation = 45;
+				this.minElbowRotation = -90;
 			}
 
 			rotateBase(direction) {
@@ -234,7 +239,7 @@
 			moveShoulder(direction) {
 				const delta = (this.demoMode ? demoSpeed : 0.05) * direction;
 				shoulder.rotation.x += delta;
-				shoulder.rotation.x = this.clampRotation(shoulder.rotation.x, 0, 45);
+				shoulder.rotation.x = this.clampRotation(shoulder.rotation.x, this.minShoulderRotation, this.maxShoulderRotation);
 				if (this.isRecording) {
 					this.recordCommand("moveShoulder", shoulder.rotation.x);
 				}
@@ -243,7 +248,7 @@
 			moveElbow(direction) {
 				const delta = (this.demoMode ? demoSpeed : 0.05) * direction;
 				elbow.rotation.x += delta;
-				elbow.rotation.x = this.clampRotation(elbow.rotation.x, -90, 45);
+				elbow.rotation.x = this.clampRotation(elbow.rotation.x, this.minElbowRotation, this.maxElbowRotation);
 				if (this.isRecording) {
 					this.recordCommand("moveElbow", elbow.rotation.x);
 				}
@@ -820,11 +825,15 @@
 					robot.isBaseMoving = true;
 					break;
 				case 'moveShoulder':
-					robot.targetShoulderRotation = THREE.MathUtils.degToRad(parseFloat(args[1]));
+					let shoulderTarget = THREE.MathUtils.degToRad(parseFloat(args[1]));
+					shoulderTarget = robot.clampRotation(shoulderTarget, robot.minShoulderRotation, robot.maxShoulderRotation);
+					robot.targetShoulderRotation = shoulderTarget;
 					robot.isShoulderMoving = true;
 					break;
 				case 'moveElbow':
-					robot.targetElbowRotation = THREE.MathUtils.degToRad(parseFloat(args[1]));
+					let elbowTarget = THREE.MathUtils.degToRad(parseFloat(args[1]));
+					elbowTarget = robot.clampRotation(elbowTarget, robot.minElbowRotation, robot.maxElbowRotation);
+					robot.targetElbowRotation = elbowTarget;
 					robot.isElbowMoving = true;
 					break;
 			}
