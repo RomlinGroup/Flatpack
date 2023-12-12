@@ -166,8 +166,8 @@
 			button.innerText = "Loading...";
 
 			try {
-				const app = await client("https://89db9ec39b1c7ee278.gradio.live/");
-				const result = await app.predict("/predict", ["Hello!"]);
+				const app = await client("https://9d964b7a2822d57c26.gradio.live/");
+				const result = await app.predict("/predict", ["How are you?"]);
 				console.log(result.data);
 			} catch (error) {
 				console.error('Error during prediction:', error);
@@ -181,8 +181,12 @@
 	</script>
 
 	<script>
-		class cobotController {
+		class RobotController {
 			constructor() {
+				this.targetBaseRotation = 0;
+				this.targetShoulderRotation = 0;
+				this.targetElbowRotation = 0;
+				this.isAutomatedCommandActive = false; // New flag
 				this.demoMode = false;
 				this.fullCycleCount = 0;
 				this.movementStep = 0;
@@ -226,9 +230,46 @@
 				const maxRadians = THREE.MathUtils.degToRad(maxAngle);
 				return Math.max(minRadians, Math.min(maxRadians, currentRotation));
 			}
+
+			update() {
+				if (this.isAutomatedCommandActive) {
+					this.interpolateRotation(base, 'y', this.targetBaseRotation);
+					this.interpolateRotation(shoulder, 'x', this.targetShoulderRotation);
+					this.interpolateRotation(elbow, 'x', this.targetElbowRotation);
+
+					if (this.hasReachedTarget(base, 'y', this.targetBaseRotation) &&
+						this.hasReachedTarget(shoulder, 'x', this.targetShoulderRotation) &&
+						this.hasReachedTarget(elbow, 'x', this.targetElbowRotation)) {
+						this.isAutomatedCommandActive = false;
+					}
+				}
+			}
+
+			hasReachedTarget(joint, axis, targetRotation) {
+				return Math.abs(joint.rotation[axis] - targetRotation) < 0.01;
+			}
+
+			interpolateRotation(joint, axis, targetRotation) {
+				const delta = targetRotation - joint.rotation[axis];
+
+				if (Math.abs(delta) > 0.01) {
+					joint.rotation[axis] += delta * 0.1;
+				} else {
+					this.checkAndResetAutomation();
+				}
+			}
+
+			checkAndResetAutomation() {
+				if (this.targetBaseRotation === base.rotation.y &&
+					this.targetShoulderRotation === shoulder.rotation.x &&
+					this.targetElbowRotation === elbow.rotation.x) {
+					this.isAutomatedCommandActive = false;
+				}
+			}
 		}
 
-		const cobot = new cobotController();
+		const robot = new RobotController();
+
 		const demoSpeed = 0.01;
 		let base;
 		let boxBody;
@@ -250,22 +291,27 @@
 		let upperArm;
 		let world;
 
-		function init() {
+		function initRobot(type) {
 			world = new CANNON.World();
 			world.gravity.set(0, -9.82, 0);
 
 			setupScene();
+			addFloor();
+			addLighting();
+			setupCamera();
+			setupRenderer();
 
 			cannonDebugRenderer = new THREE.CannonDebugRenderer(scene, world);
 
-			addPhysicsBox();
-			setupCamera();
-			setupRenderer();
-			addLighting();
-			addFloor();
-			addRobotArm();
-			setupControls();
-			initForearmCamera();
+			switch (type) {
+				case 'cobot':
+					addPhysicsBox();
+					addRobotArm();
+					initForearmCamera();
+					setupControls();
+					break;
+			}
+
 			animate();
 		}
 
@@ -604,8 +650,8 @@
 				document.getElementById("positionDisplay").innerText = `X: ${pos.x.toFixed(2)}, Y: ${pos.y.toFixed(2)}, Z: ${pos.z.toFixed(2)}`;
 			}
 
-			if (cobot.demoMode) {
-				cobot.automatedMovements();
+			if (robot.demoMode) {
+				robot.automatedMovements();
 			}
 
 			if (forearmCamera) {
@@ -619,6 +665,8 @@
 				forearmCamera.rotateX(THREE.MathUtils.degToRad(0));
 				forearmRenderer.render(scene, forearmCamera);
 			}
+
+			robot.update();
 
 			renderer.render(scene, camera);
 		}
@@ -646,39 +694,39 @@
 		}
 
 		function apiRotateBase(direction) {
-			cobot.rotateBase(direction);
+			robot.rotateBase(direction);
 		}
 
 		function apiMoveShoulder(direction) {
-			cobot.moveShoulder(direction);
+			robot.moveShoulder(direction);
 		}
 
 		function apiMoveElbow(direction) {
-			cobot.moveElbow(direction);
+			robot.moveElbow(direction);
 		}
 
 		function onDocumentKeyDown(event) {
 			var keyCode = event.which;
 
-			if (!cobot.demoMode) {
+			if (!robot.demoMode) {
 				if (keyCode == 65) {
-					cobot.rotateBase(1);
+					robot.rotateBase(1);
 				} else if (keyCode == 68) {
-					cobot.rotateBase(-1);
+					robot.rotateBase(-1);
 				} else if (keyCode == 87) {
-					cobot.moveShoulder(-1);
+					robot.moveShoulder(-1);
 				} else if (keyCode == 83) {
-					cobot.moveShoulder(1);
+					robot.moveShoulder(1);
 				} else if (keyCode == 82) {
-					cobot.moveElbow(-1);
+					robot.moveElbow(-1);
 				} else if (keyCode == 70) {
-					cobot.moveElbow(1);
+					robot.moveElbow(1);
 				}
 			}
 
 			if (keyCode == 77) {
-				cobot.demoMode = !cobot.demoMode;
-				document.getElementById("demoStatus").innerText = "Demo: " + (cobot.demoMode ? "ON" : "OFF");
+				robot.demoMode = !robot.demoMode;
+				document.getElementById("demoStatus").innerText = "Demo: " + (robot.demoMode ? "ON" : "OFF");
 			}
 		}
 
@@ -688,21 +736,25 @@
 		});
 
 		function executeCommand(command) {
+			robot.isAutomatedCommandActive = true;
+
 			const args = command.split(' ');
 			switch (args[0]) {
 				case 'rotateBase':
-					cobot.rotateBase(parseFloat(args[1]));
+					robot.targetBaseRotation = THREE.MathUtils.degToRad(parseFloat(args[1]));
 					break;
 				case 'moveShoulder':
-					cobot.moveShoulder(parseFloat(args[1]));
+					const newShoulderRotation = THREE.MathUtils.degToRad(parseFloat(args[1]));
+					robot.targetShoulderRotation = newShoulderRotation;
 					break;
 				case 'moveElbow':
-					cobot.moveElbow(parseFloat(args[1]));
+					const newElbowRotation = THREE.MathUtils.degToRad(parseFloat(args[1]));
+					robot.targetElbowRotation = newElbowRotation;
 					break;
 			}
 		}
 
-		init();
+		initRobot('cobot');
 	</script>
 </body>
 
