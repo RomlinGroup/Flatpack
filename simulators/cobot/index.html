@@ -62,15 +62,43 @@
 		}
 
 		#forearmView {
+			position: relative;
 			width: 250px;
 			height: 162.5px;
 			border: 1px solid #fff;
+			display: none;
+		}
+
+		#forearmView canvas {
+			position: absolute;
+			top: 0;
+			left: 0;
+			max-width: 100%;
+			max-height: 100%;
+			transition: opacity 0.2s ease-in-out;
+		}
+
+		#forearmViewObjectDetection {
+			position: relative;
+			width: 250px;
+			height: 162.5px;
+			background: #000;
+			border: 1px solid #fff;
+			overflow: hidden;
+		}
+
+		#forearmViewObjectDetection img {
+			position: absolute;
+			top: 0;
+			left: 0;
+			max-width: 100%;
+			max-height: 100%;
 		}
 
 		#saveImageButton {
 			position: absolute;
 			right: 10px;
-			top: 10px;
+			bottom: 10px;
 		}
 
 		#generateButton {
@@ -124,15 +152,6 @@
 			color: #ffffff;
 		}
 
-		#positionDisplay {
-			padding: 10px;
-			border-radius: 0px;
-			font-family: Arial, sans-serif;
-			font-size: 16px;
-			text-align: center;
-			color: #ffffff;
-		}
-
 		#scriptControls {
 			width: 180px;
 			position: fixed;
@@ -143,16 +162,36 @@
 			font-size: 16px;
 			z-index: 2;
 		}
+
+		#forearmViewObjectDetection img {
+			position: absolute;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+		}
+
+		.hidden {
+			opacity: 0;
+		}
+
+		.visible {
+			opacity: 1;
+		}
 	</style>
 </head>
 
 <body>
 	<div id="forearmViewWrapper">
 		<div id="forearmView"></div>
-		<button id="saveImageButton">Save</button>
-		<div id="positionDisplay">
-			X: 0, Y: 0, Z: 0
+
+		<div id="forearmViewObjectDetection">
+			<img id="img1" class="visible" style="width: 100%; height: 100%;" />
+			<img id="img2" class="hidden" style="width: 100%; height: 100%;" />
+			<button id="saveImageButton">Save</button>
 		</div>
+
+		<div id="detectionResults"></div>
 	</div>
 
 	<div id="demoStatus">
@@ -165,8 +204,8 @@
 		Forearm: R/F<br>
 		Demo: M
 	</div>
-	<button id="recordButton">Record</button>
 
+	<button id="recordButton">Record</button>
 	<button id="generateButton">Generate</button>
 
 	<div id="scriptControls">
@@ -176,6 +215,7 @@
 
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 	<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/cannon.js/0.6.2/cannon.min.js"></script>
 	<script src="https://cdn.jsdelivr.net/npm/cannon@0.6.2/tools/threejs/CannonDebugRenderer.js"></script>
 
@@ -226,31 +266,60 @@
 				this.minShoulderRotation = 0;
 				this.maxElbowRotation = 45;
 				this.minElbowRotation = -90;
+
+				this.baseTargetRotationY = 0;
+				this.shoulderTargetRotationX = 0;
+				this.elbowTargetRotationX = 0;
+
+				this.isBaseRotating = false;
+				this.isShoulderRotating = false;
+				this.isElbowRotating = false;
+			}
+
+			onMovementDetected() {
+				console.log("Movement detected!");
+				const imageDataUrl = captureImage();
+				updateForearmViewObjectDetection(imageDataUrl);
 			}
 
 			rotateBase(direction) {
-				const delta = (this.demoMode ? demoSpeed : 0.05) * direction;
+				const previousRotation = base.rotation.y;
+				const delta = (this.demoMode ? demoSpeed : 0.1) * direction;
 				base.rotation.y += delta;
 				if (this.isRecording) {
 					this.recordCommand("rotateBase", base.rotation.y);
 				}
+
+				if (base.rotation.y !== previousRotation) {
+					this.onMovementDetected();
+				}
 			}
 
 			moveShoulder(direction) {
-				const delta = (this.demoMode ? demoSpeed : 0.05) * direction;
+				const previousRotation = shoulder.rotation.x;
+				const delta = (this.demoMode ? demoSpeed : 0.1) * direction;
 				shoulder.rotation.x += delta;
 				shoulder.rotation.x = this.clampRotation(shoulder.rotation.x, this.minShoulderRotation, this.maxShoulderRotation);
 				if (this.isRecording) {
 					this.recordCommand("moveShoulder", shoulder.rotation.x);
 				}
+
+				if (shoulder.rotation.x !== previousRotation) {
+					this.onMovementDetected();
+				}
 			}
 
 			moveElbow(direction) {
-				const delta = (this.demoMode ? demoSpeed : 0.05) * direction;
+				const previousRotation = elbow.rotation.x;
+				const delta = (this.demoMode ? demoSpeed : 0.1) * direction;
 				elbow.rotation.x += delta;
 				elbow.rotation.x = this.clampRotation(elbow.rotation.x, this.minElbowRotation, this.maxElbowRotation);
 				if (this.isRecording) {
 					this.recordCommand("moveElbow", elbow.rotation.x);
+				}
+
+				if (elbow.rotation.x !== previousRotation) {
+					this.onMovementDetected();
 				}
 			}
 
@@ -289,6 +358,35 @@
 					this.interpolateRotation(elbow, 'x', this.targetElbowRotation);
 					this.isElbowMoving = !this.hasReachedTarget(elbow, 'x', this.targetElbowRotation);
 				}
+
+				if (this.isBaseRotating) {
+					this.interpolateRotation(base, 'y', this.baseTargetRotationY);
+				}
+				if (this.isShoulderRotating) {
+					this.interpolateRotation(shoulder, 'x', this.shoulderTargetRotationX);
+				}
+				if (this.isElbowRotating) {
+					this.interpolateRotation(elbow, 'x', this.elbowTargetRotationX);
+				}
+			}
+
+			interpolateRotation(joint, axis, targetRotation) {
+				const currentRotation = joint.rotation[axis];
+				const delta = targetRotation - currentRotation;
+
+				if (Math.abs(delta) > 0.01) {
+					joint.rotation[axis] += delta * 0.05;
+				} else {
+					if (axis === 'y') {
+						this.isBaseRotating = false;
+					} else if (axis === 'x') {
+						if (joint === shoulder) {
+							this.isShoulderRotating = false;
+						} else if (joint === elbow) {
+							this.isElbowRotating = false;
+						}
+					}
+				}
 			}
 
 			hasReachedTarget(joint, axis, targetRotation) {
@@ -296,13 +394,9 @@
 			}
 
 			interpolateRotation(joint, axis, targetRotation) {
-				const delta = targetRotation - joint.rotation[axis];
-
-				if (Math.abs(delta) > 0.01) {
-					joint.rotation[axis] += delta * 0.1;
-				} else {
-					this.checkAndResetAutomation();
-				}
+				const currentRotation = joint.rotation[axis];
+				const delta = targetRotation - currentRotation;
+				joint.rotation[axis] += delta * 0.05;
 			}
 
 			checkAndResetAutomation() {
@@ -411,6 +505,9 @@
 					addRobotArm();
 					initForearmCamera();
 					setupControls();
+
+					const initialImage = captureImage();
+					updateForearmViewObjectDetection(initialImage);
 					break;
 			}
 
@@ -418,13 +515,16 @@
 		}
 
 		function initForearmCamera() {
-			const aspect = 16 / 9;
+			const aspect = 250 / 162.5;
 			const fov = 60;
 			forearmCamera = new THREE.PerspectiveCamera(fov, aspect, 0.1, 1000);
 			forearmRenderer = new THREE.WebGLRenderer({
 				antialias: true
 			});
-			forearmRenderer.setSize(250, 162.5);
+
+			forearmRenderer.setSize(250 * window.devicePixelRatio, 162.5 * window.devicePixelRatio);
+			forearmRenderer.setPixelRatio(window.devicePixelRatio);
+
 			forearmRenderer.gammaFactor = 2.2;
 			forearmRenderer.outputEncoding = THREE.sRGBEncoding;
 			forearmRenderer.shadowMap.enabled = true;
@@ -477,6 +577,11 @@
 			camera.aspect = window.innerWidth / window.innerHeight;
 			camera.updateProjectionMatrix();
 			renderer.setSize(window.innerWidth, window.innerHeight);
+
+			const forearmAspect = 250 / 162.5;
+			forearmCamera.aspect = forearmAspect;
+			forearmCamera.updateProjectionMatrix();
+			forearmRenderer.setSize(250 * window.devicePixelRatio, 162.5 * window.devicePixelRatio);
 		}
 
 		window.addEventListener('resize', onWindowResize, false);
@@ -528,9 +633,9 @@
 
 		function addPhysicsObject(type) {
 			const boxGeometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
-			const boxMaterial = new THREE.MeshStandardMaterial({
-				color: 0x5865f2
-			});
+
+			var boxMaterial = new THREE.MeshNormalMaterial();
+
 			const boxMesh = new THREE.Mesh(boxGeometry, boxMaterial);
 
 			boxMesh.position.set(0, 0.25, 1.25);
@@ -546,40 +651,24 @@
 
 		function addRobotArm() {
 
-			const baseMaterial = new THREE.MeshStandardMaterial({
-				color: 0x5865f2,
-				metalness: 0,
-				roughness: 0.4
-			});
-
-			const material = new THREE.MeshStandardMaterial({
-				color: 0xffffff,
-				metalness: 0,
-				roughness: 0.4
-			});
+			var robotMaterial = new THREE.MeshNormalMaterial();
 
 			const baseGeometry = new THREE.CylinderGeometry(0.2, 0.2, 0.2, 32);
-			base = new THREE.Mesh(baseGeometry, baseMaterial);
+			base = new THREE.Mesh(baseGeometry, robotMaterial);
 			base.position.y = 0.1;
 
 			const shoulderGeometry = new THREE.SphereGeometry(0.2, 32, 32);
-			shoulder = new THREE.Mesh(shoulderGeometry, baseMaterial);
+			shoulder = new THREE.Mesh(shoulderGeometry, robotMaterial);
 			shoulder.position.y = 0.1;
 			const maxShoulderAngle = 45;
 			shoulder.rotation.x = THREE.MathUtils.degToRad(0);
 
 			const upperArmGeometry = new THREE.BoxGeometry(0.1, 1, 0.1);
-			const upperArmMaterial = new THREE.MeshStandardMaterial({
-				color: 0xffffff
-			});
-			upperArm = new THREE.Mesh(upperArmGeometry, upperArmMaterial);
+			upperArm = new THREE.Mesh(upperArmGeometry, robotMaterial);
 			upperArm.position.y = 0.5;
 
 			const elbowGeometry = new THREE.CylinderGeometry(0.15, 0.15, 0.15, 32);
-			const elbowMaterial = new THREE.MeshStandardMaterial({
-				color: 0x5865f2
-			});
-			elbow = new THREE.Mesh(elbowGeometry, elbowMaterial);
+			elbow = new THREE.Mesh(elbowGeometry, robotMaterial);
 			elbow.position.y = 0.6;
 			elbow.rotation.z = Math.PI / 2;
 			elbow.castShadow = true;
@@ -588,11 +677,7 @@
 			elbow.rotation.x = THREE.MathUtils.degToRad(45);
 
 			const forearmGeometry = new THREE.BoxGeometry(0.1, 0.1, 0.7);
-			const forearmMaterial = new THREE.MeshStandardMaterial({
-				color: 0xffffff
-			});
-
-			forearm = new THREE.Mesh(forearmGeometry, forearmMaterial);
+			forearm = new THREE.Mesh(forearmGeometry, robotMaterial);
 			forearm.position.set(0, 0, 0.4);
 
 			scene.add(base);
@@ -616,14 +701,11 @@
 				isKinematic: true
 			});
 
-			const pincerMaterial = new THREE.MeshStandardMaterial({
-				color: 0x5865f2
-			});
 			const pincerBaseGeometry = new THREE.BoxGeometry(0.2, 0.4, 0.05);
-			pincerBase = new THREE.Mesh(pincerBaseGeometry, pincerMaterial);
+			pincerBase = new THREE.Mesh(pincerBaseGeometry, robotMaterial);
 			const pincerClawGeometry = new THREE.BoxGeometry(0.2, 0.05, 0.1);
-			pincerClaw1 = new THREE.Mesh(pincerClawGeometry, pincerMaterial);
-			pincerClaw2 = new THREE.Mesh(pincerClawGeometry, pincerMaterial);
+			pincerClaw1 = new THREE.Mesh(pincerClawGeometry, robotMaterial);
+			pincerClaw2 = new THREE.Mesh(pincerClawGeometry, robotMaterial);
 
 			forearm.add(pincerBase);
 			pincerBase.position.set(0, 0, 0.36);
@@ -657,10 +739,12 @@
 
 		function addFloor() {
 			const backgroundGeometry = new THREE.PlaneGeometry(10, 10);
+
 			const backgroundMaterial = new THREE.MeshStandardMaterial({
-				color: 0x777777,
+				color: 0x000000,
 				side: THREE.DoubleSide,
 			});
+
 			const background = new THREE.Mesh(backgroundGeometry, backgroundMaterial);
 			background.rotation.x = -Math.PI / 2;
 			background.position.y = -0.01;
@@ -729,40 +813,20 @@
 						}
 					}
 				});
-
-				//cannonDebugRenderer.update();
-
-				renderer.render(scene, camera);
-
-				if (forearmCameraIsActive) {
-					forearmRenderer.render(scene, forearmCamera);
-				}
-			}
-
-			if (pincerBase && pincerBase.userData.physicsBody) {
-				const pos = pincerBase.userData.physicsBody.position;
-				document.getElementById("positionDisplay").innerText = `X: ${pos.x.toFixed(2)}, Y: ${pos.y.toFixed(2)}, Z: ${pos.z.toFixed(2)}`;
 			}
 
 			if (robot.demoMode) {
 				robot.automatedMovements();
 			}
 
-			if (forearmCamera) {
-				var pincerBasePosition = new THREE.Vector3();
-				pincerBase.getWorldPosition(pincerBasePosition);
-				forearmCamera.position.copy(pincerBasePosition);
+			robot.update();
+			//cannonDebugRenderer.update();
+			renderer.render(scene, camera);
 
-				var forearmDirection = new THREE.Vector3(0, 0, -1);
-				forearm.getWorldDirection(forearmDirection);
-				forearmCamera.lookAt(forearmDirection.add(pincerBasePosition));
-				forearmCamera.rotateX(THREE.MathUtils.degToRad(0));
+			if (forearmCameraIsActive) {
+				updateForearmCamera();
 				forearmRenderer.render(scene, forearmCamera);
 			}
-
-			robot.update();
-
-			renderer.render(scene, camera);
 		}
 
 		function clampRotation(currentRotation, minAngle, maxAngle) {
@@ -774,43 +838,63 @@
 		let movementStep = 0;
 
 		function automatedMovements() {
-			switch (movementStep) {
+			switch (this.movementStep) {
 				case 0:
-					rotateBase(1);
-					fullCycleCount += demoSpeed;
-					if (fullCycleCount >= 2 * Math.PI) {
-						fullCycleCount = 0;
-						movementStep++;
+					this.rotateBase(1);
+					this.onMovementDetected();
+					this.fullCycleCount += demoSpeed;
+					if (this.fullCycleCount >= 2 * Math.PI) {
+						this.fullCycleCount = 0;
+						this.movementStep++;
 					}
-					movementStep = 0;
+					break;
+
+				default:
+					this.movementStep = 0;
 					break;
 			}
 		}
 
+		document.addEventListener("keydown", onDocumentKeyDown, false);
+
 		function onDocumentKeyDown(event) {
 			var keyCode = event.which;
 
-			if (!robot.demoMode) {
-				if (keyCode == 81) {
+			switch (keyCode) {
+				case 77:
+					toggleDemoMode();
+					break;
+				case 81:
 					robot.rotateBase(1);
-				} else if (keyCode == 69) {
+					break;
+				case 69:
 					robot.rotateBase(-1);
-				} else if (keyCode == 87) {
+					break;
+				case 87:
 					robot.moveShoulder(-1);
-				} else if (keyCode == 83) {
+					break;
+				case 83:
 					robot.moveShoulder(1);
-				} else if (keyCode == 82) {
+					break;
+				case 82:
 					robot.moveElbow(-1);
-				} else if (keyCode == 70) {
+					break;
+				case 70:
 					robot.moveElbow(1);
-				}
+					break;
+				default:
+					break;
 			}
 
-			if (keyCode == 77) {
-				robot.demoMode = !robot.demoMode;
-				document.getElementById("demoStatus").innerText = "Demo: " + (robot.demoMode ? "ON" : "OFF");
-			}
 		}
+
+		function toggleDemoMode() {
+			robot.demoMode = !robot.demoMode;
+			document.getElementById("demoStatus").innerText = "Demo: " + (robot.demoMode ? "ON" : "OFF");
+			document.getElementById('executeButton').disabled = robot.demoMode;
+		}
+
+		document.addEventListener("keydown", onDocumentKeyDown, false);
 
 		document.getElementById('executeButton').addEventListener('click', function() {
 			const command = document.getElementById('commandInput').value;
@@ -837,12 +921,64 @@
 					robot.isElbowMoving = true;
 					break;
 			}
+
+			setTimeout(() => {
+				const imageDataUrl = captureImage();
+				updateForearmViewObjectDetection(imageDataUrl);
+			}, 500);
+		}
+
+		let currentImage = 1;
+
+		async function updateForearmViewObjectDetection(imageDataUrl) {
+			const img1 = document.getElementById('img1');
+			const img2 = document.getElementById('img2');
+			const preloadedImage = await preloadImage(imageDataUrl);
+
+			requestAnimationFrame(() => {
+				const showImg = currentImage === 1 ? img1 : img2;
+				const hideImg = currentImage === 1 ? img2 : img1;
+
+				showImg.src = preloadedImage.src;
+				showImg.classList.add('visible');
+				showImg.classList.remove('hidden');
+				hideImg.classList.add('hidden');
+				hideImg.classList.remove('visible');
+				currentImage = currentImage === 1 ? 2 : 1;
+			});
+		}
+
+		function preloadImage(src) {
+			return new Promise((resolve, reject) => {
+				const img = new Image();
+				img.onload = () => {
+					resolve(img);
+				};
+				img.onerror = reject;
+				img.src = src;
+			});
+		}
+
+		function updateForearmCamera() {
+			var pincerBasePosition = new THREE.Vector3();
+			pincerBase.getWorldPosition(pincerBasePosition);
+			forearmCamera.position.copy(pincerBasePosition);
+
+			var forearmDirection = new THREE.Vector3(0, 0, -1);
+			forearm.getWorldDirection(forearmDirection);
+			forearmCamera.lookAt(forearmDirection.add(pincerBasePosition));
+			forearmCamera.rotateX(THREE.MathUtils.degToRad(0));
+		}
+
+		function captureImage() {
+			updateForearmCamera();
+			forearmRenderer.render(scene, forearmCamera);
+			return forearmRenderer.domElement.toDataURL("image/jpeg");
 		}
 
 		function saveImage() {
 			try {
 				forearmRenderer.render(scene, forearmCamera);
-
 				var strMime = "image/jpeg";
 				var imgData = forearmRenderer.domElement.toDataURL(strMime);
 				saveFile(imgData, "forearm_view.jpg");
@@ -855,11 +991,11 @@
 		var saveFile = function(strData, filename) {
 			var link = document.createElement('a');
 			if (typeof link.download === 'string') {
-				document.body.appendChild(link); //Firefox requires the link to be in the body
+				document.body.appendChild(link);
 				link.download = filename;
 				link.href = strData;
 				link.click();
-				document.body.removeChild(link); //remove the link when done
+				document.body.removeChild(link);
 			} else {
 				location.replace(strData);
 			}
