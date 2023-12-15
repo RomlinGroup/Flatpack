@@ -63,8 +63,8 @@
 
 		#forearmView {
 			position: relative;
-			width: 250px;
-			height: 162.5px;
+			width: 320px;
+			height: 240px;
 			border: 1px solid #fff;
 			display: none;
 		}
@@ -80,8 +80,8 @@
 
 		#forearmViewObjectDetection {
 			position: relative;
-			width: 250px;
-			height: 162.5px;
+			width: 320px;
+			height: 240px;
 			background: #000;
 			border: 1px solid #fff;
 			overflow: hidden;
@@ -245,6 +245,8 @@
 	</script>
 
 	<script>
+		let isRetinaResolution = false;
+
 		class RobotController {
 			constructor() {
 				this.currentCommand = null;
@@ -524,23 +526,26 @@
 		}
 
 		function initForearmCamera() {
-			const aspect = 250 / 162.5;
+			let width = 640;
+			let height = 480;
+			const aspect = width / height;
 			const fov = 60;
 			forearmCamera = new THREE.PerspectiveCamera(fov, aspect, 0.1, 1000);
 			forearmRenderer = new THREE.WebGLRenderer({
 				antialias: true
 			});
 
-			forearmRenderer.setSize(250 * window.devicePixelRatio, 162.5 * window.devicePixelRatio);
-			forearmRenderer.setPixelRatio(window.devicePixelRatio);
-
+			forearmRenderer.setSize(width, height);
 			forearmRenderer.gammaFactor = 2.2;
 			forearmRenderer.outputEncoding = THREE.sRGBEncoding;
 			forearmRenderer.shadowMap.enabled = true;
 			forearmRenderer.shadowMap.type = THREE.PCFSoftShadowMap;
 			forearmRenderer.setClearColor(0x000000);
+			document.getElementById('forearmViewObjectDetection').style.width = `320px`;
+			document.getElementById('forearmViewObjectDetection').style.height = `240px`;
 			document.getElementById('forearmView').appendChild(forearmRenderer.domElement);
 		}
+
 
 		function setupScene() {
 			scene = new THREE.Scene();
@@ -587,13 +592,17 @@
 			camera.updateProjectionMatrix();
 			renderer.setSize(window.innerWidth, window.innerHeight);
 
-			const forearmAspect = 250 / 162.5;
+			const forearmAspect = 640 / 480;
 			forearmCamera.aspect = forearmAspect;
 			forearmCamera.updateProjectionMatrix();
-			forearmRenderer.setSize(250 * window.devicePixelRatio, 162.5 * window.devicePixelRatio);
+			forearmRenderer.setSize(640 * window.devicePixelRatio, 480 * window.devicePixelRatio);
 		}
 
-		window.addEventListener('resize', onWindowResize, false);
+		let resizeTimer;
+		window.addEventListener('resize', function() {
+			clearTimeout(resizeTimer);
+			resizeTimer = setTimeout(onWindowResize, 250);
+		}, false);
 
 		function addLighting() {
 			const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
@@ -887,10 +896,16 @@
 		function onDocumentKeyDown(event) {
 			var keyCode = event.which;
 
+			if (keyCode === 77) {
+				toggleDemoMode();
+				return;
+			}
+
+			if (robot.demoMode) {
+				return;
+			}
+
 			switch (keyCode) {
-				case 77:
-					toggleDemoMode();
-					break;
 				case 81:
 					robot.rotateBase(1);
 					break;
@@ -912,7 +927,6 @@
 				default:
 					break;
 			}
-
 		}
 
 		function toggleDemoMode() {
@@ -957,9 +971,10 @@
 
 		let currentImage = 1;
 
+		const img1 = document.getElementById('img1');
+		const img2 = document.getElementById('img2');
+
 		async function updateForearmViewObjectDetection(imageDataUrl) {
-			const img1 = document.getElementById('img1');
-			const img2 = document.getElementById('img2');
 			const preloadedImage = await preloadImage(imageDataUrl);
 
 			requestAnimationFrame(() => {
@@ -1000,14 +1015,15 @@
 		function captureImage() {
 			updateForearmCamera();
 			forearmRenderer.render(scene, forearmCamera);
-			return forearmRenderer.domElement.toDataURL("image/jpeg");
+			var strMime = "image/jpeg";
+			return forearmRenderer.domElement.toDataURL(strMime, 1.0);
 		}
 
 		function saveImage() {
 			try {
 				forearmRenderer.render(scene, forearmCamera);
 				var strMime = "image/jpeg";
-				var imgData = forearmRenderer.domElement.toDataURL(strMime);
+				var imgData = forearmRenderer.domElement.toDataURL(strMime, 1.0);
 				saveFile(imgData, "forearm_view.jpg");
 			} catch (e) {
 				console.log(e);
