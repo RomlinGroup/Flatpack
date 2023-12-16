@@ -6,6 +6,6 @@
 
 `llama-cpp-python` offers a flatpack.ai adaptation of [llama-cpp-python](https://github.com/abetlen/llama-cpp-python) by Andrei (@abetlen), licensed under the [MIT License](https://github.com/abetlen/llama-cpp-python/blob/main/LICENSE.md).
 
-We have no official affiliation or association with Andrei, nor are we endorsed or authorized by him. For the official GitHub profile of Andrei, please visit [https://github.com/abetlen](https://github.com/abetlen).
+We have no official affiliation or association with Andrei, nor are we endorsed or authorised by him. For the official GitHub profile of Andrei, please visit [https://github.com/abetlen](https://github.com/abetlen).
 
 flatpack.ai is experimental; please avoid using it for production.

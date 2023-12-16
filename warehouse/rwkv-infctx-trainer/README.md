@@ -6,7 +6,7 @@
 
 `rwkv-infctx-trainer` offers a flatpack.ai adaptation of [RWKV-infctx-trainer](https://github.com/RWKV/RWKV-infctx-trainer/) by RWKV, licensed under the [Apache License 2.0](https://github.com/RWKV/RWKV-infctx-trainer/blob/main/LICENSE).
 
-We have no official affiliation or association with RWKV, nor are we endorsed or authorized by them. For the official RWKV website, please visit [https://rwkv.com](https://rwkv.com).
+We have no official affiliation or association with RWKV, nor are we endorsed or authorised by them. For the official RWKV website, please visit [https://rwkv.com](https://rwkv.com).
 
 flatpack.ai is experimental; please avoid using it for production.
 
