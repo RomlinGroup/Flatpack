@@ -1,7 +1,7 @@
 from cryptography.fernet import Fernet
 from .parsers import parse_toml_to_venv_script
 from pathlib import Path
-from transformers import GPT2LMHeadModel, GPT2Tokenizer
+from transformers import GPT2LMHeadModel, GPT2Tokenizer, set_seed
 from typing import List, Optional
 
 import argparse
@@ -16,6 +16,7 @@ import stat
 import subprocess
 import sys
 import toml
+import torch
 
 CONFIG_FILE_PATH = os.path.join(os.path.expanduser("~"), ".fpk_config.toml")
 LOGGING_BATCH_SIZE = 10
@@ -456,13 +457,13 @@ def fpk_valid_directory_name(name: str) -> bool:
     return re.match(r'^[\w-]+$', name) is not None
 
 
-def fpk_generate_text(prompt):
-    """Generate text using GPT-2."""
-    # Load model and tokenizer
+def fpk_generate_text(prompt, seed=42):
+    """Generate text using GPT-2 with a specified random seed for reproducibility."""
+    set_seed(seed)
+
     tokenizer = GPT2Tokenizer.from_pretrained("romlingroup/gpt2-cobot")
     model = GPT2LMHeadModel.from_pretrained("romlingroup/gpt2-cobot")
 
-    # Encode the input prompt and generate a response
     inputs = tokenizer.encode(prompt, return_tensors="pt")
     outputs = model.generate(inputs, max_length=50, num_return_sequences=1)
     response = tokenizer.decode(outputs[0], skip_special_tokens=True)
