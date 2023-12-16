@@ -9,6 +9,7 @@ import gradio as gr
 import httpx
 import logging
 import os
+import random
 import re
 import select
 import shlex
@@ -457,15 +458,25 @@ def fpk_valid_directory_name(name: str) -> bool:
     return re.match(r'^[\w-]+$', name) is not None
 
 
-def fpk_generate_text(prompt, seed=42):
-    """Generate text using GPT-2 with a specified random seed for reproducibility."""
+def fpk_generate_text(prompt, seed=None, max_length=50, temperature=0.7, top_k=50, top_p=0.95):
+    """Generate text using GPT-2 with optional random seed and text generation parameters."""
+    if seed is None:
+        seed = random.randint(0, 10000)
+
     set_seed(seed)
 
     tokenizer = GPT2Tokenizer.from_pretrained("romlingroup/gpt2-cobot")
     model = GPT2LMHeadModel.from_pretrained("romlingroup/gpt2-cobot")
 
-    inputs = tokenizer.encode(prompt, return_tensors="pt")
-    outputs = model.generate(inputs, max_length=50, num_return_sequences=1)
+    inputs = tokenizer.encode(prompt, return_tensors="pt", truncation=True, max_length=512)
+    outputs = model.generate(
+        inputs,
+        max_length=max_length,
+        num_return_sequences=1,
+        temperature=temperature,
+        top_k=top_k,
+        top_p=top_p
+    )
     response = tokenizer.decode(outputs[0], skip_special_tokens=True)
 
     return response
