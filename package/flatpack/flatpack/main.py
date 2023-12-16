@@ -459,8 +459,8 @@ def fpk_valid_directory_name(name: str) -> bool:
 def fpk_generate_text(prompt):
     """Generate text using GPT-2."""
     # Load model and tokenizer
-    tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
-    model = GPT2LMHeadModel.from_pretrained("gpt2")
+    tokenizer = GPT2Tokenizer.from_pretrained("romlingroup/gpt2-cobot")
+    model = GPT2LMHeadModel.from_pretrained("romlingroup/gpt2-cobot")
 
     # Encode the input prompt and generate a response
     inputs = tokenizer.encode(prompt, return_tensors="pt")
@@ -531,7 +531,7 @@ def main():
                             fn=fpk_generate_text,
                             inputs="text",
                             outputs="text",
-                            title="GPT-2 👋"
+                            title="romlingroup/gpt2-cobot"
                         )
 
                         interface.launch(share=True)
