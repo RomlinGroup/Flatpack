@@ -219,6 +219,22 @@
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/cannon.js/0.6.2/cannon.min.js"></script>
 	<script src="https://cdn.jsdelivr.net/npm/cannon@0.6.2/tools/threejs/CannonDebugRenderer.js"></script>
 
+	<script>
+		function parseCommands(commandsArray) {
+			if (!commandsArray.length || typeof commandsArray[0] !== 'string') {
+				return [];
+			}
+
+			const commands = commandsArray[0].split('\n');
+			return commands.map(command => {
+				const [type, valueString] = command.split(' ');
+				return {
+					type,
+					value: parseFloat(valueString)
+				};
+			});
+		}
+	</script>
 	<script type="module">
 		import {
 			client
@@ -230,14 +246,15 @@
 			button.innerText = "Loading...";
 
 			try {
-				const app = await client("https://9d964b7a2822d57c26.gradio.live/");
-				const result = await app.predict("/predict", ["How are you?"]);
-				console.log(result.data);
+				const app = await client("https://6b7a04eb6ae254ad7a.gradio.live/");
+				const result = await app.predict("/predict", ["rotateBase 90"]);
+				const commands = parseCommands(result.data);
+				document.getElementById('commandInput').value = commands.map(c => `${c.type} ${c.value}`).join('\n');
 			} catch (error) {
 				console.error('Error during prediction:', error);
 			} finally {
 				button.disabled = false;
-				button.innerText = "Click to generate";
+				button.innerText = "Generate";
 			}
 		}
 
@@ -937,36 +954,60 @@
 
 		document.addEventListener("keydown", onDocumentKeyDown, false);
 
-		document.getElementById('executeButton').addEventListener('click', function() {
-			const command = document.getElementById('commandInput').value;
-			executeCommand(command);
+		document.getElementById('executeButton').addEventListener('click', async function() {
+			const commandString = document.getElementById('commandInput').value;
+			const commands = parseCommands([commandString]);
+
+			for (const command of commands) {
+				await executeCommand(`${command.type} ${command.value}`);
+			}
 		});
 
 		function executeCommand(command) {
-			const args = command.split(' ');
-			switch (args[0]) {
-				case 'rotateBase':
-					robot.targetBaseRotation = THREE.MathUtils.degToRad(parseFloat(args[1]));
-					robot.isBaseMoving = true;
-					break;
-				case 'moveShoulder':
-					let shoulderTarget = THREE.MathUtils.degToRad(parseFloat(args[1]));
-					shoulderTarget = robot.clampRotation(shoulderTarget, robot.minShoulderRotation, robot.maxShoulderRotation);
-					robot.targetShoulderRotation = shoulderTarget;
-					robot.isShoulderMoving = true;
-					break;
-				case 'moveElbow':
-					let elbowTarget = THREE.MathUtils.degToRad(parseFloat(args[1]));
-					elbowTarget = robot.clampRotation(elbowTarget, robot.minElbowRotation, robot.maxElbowRotation);
-					robot.targetElbowRotation = elbowTarget;
-					robot.isElbowMoving = true;
-					break;
-			}
+			return new Promise((resolve, reject) => {
+				const args = command.split(' ');
+				const commandType = args[0];
+				const commandValue = parseFloat(args[1]);
 
-			setTimeout(() => {
-				const imageDataUrl = captureImage();
-				updateForearmViewObjectDetection(imageDataUrl);
-			}, 500);
+				if (isNaN(commandValue)) {
+					console.error(`Invalid command value for '${commandType}': ${args[1]}`);
+					reject(`Invalid command value: ${args[1]}`);
+					return;
+				}
+
+				try {
+					switch (commandType) {
+						case 'rotateBase':
+							robot.targetBaseRotation = THREE.MathUtils.degToRad(commandValue);
+							robot.isBaseMoving = true;
+							break;
+						case 'moveShoulder':
+							let shoulderTarget = THREE.MathUtils.degToRad(commandValue);
+							shoulderTarget = robot.clampRotation(shoulderTarget, robot.minShoulderRotation, robot.maxShoulderRotation);
+							robot.targetShoulderRotation = shoulderTarget;
+							robot.isShoulderMoving = true;
+							break;
+						case 'moveElbow':
+							let elbowTarget = THREE.MathUtils.degToRad(commandValue);
+							elbowTarget = robot.clampRotation(elbowTarget, robot.minElbowRotation, robot.maxElbowRotation);
+							robot.targetElbowRotation = elbowTarget;
+							robot.isElbowMoving = true;
+							break;
+						default:
+							console.error(`Unknown command type: ${commandType}`);
+							reject(`Unknown command type: ${commandType}`);
+							return;
+					}
+
+					setTimeout(() => {
+						console.log(`Executed command: ${command}`);
+						resolve();
+					}, 1000);
+				} catch (error) {
+					console.error(`Error executing command '${commandType}': ${error}`);
+					reject(`Error executing command: ${error}`);
+				}
+			});
 		}
 
 		let currentImage = 1;
