@@ -458,7 +458,7 @@ def fpk_valid_directory_name(name: str) -> bool:
     return re.match(r'^[\w-]+$', name) is not None
 
 
-def fpk_generate_text(prompt, seed=None, max_length=50, temperature=0.7, top_k=50, top_p=0.95):
+def fpk_generate_text(prompt, seed=None, max_length=512, temperature=0.7, top_k=50, top_p=0.95):
     """Generate text using GPT-2 with optional random seed and text generation parameters."""
     if seed is None:
         seed = random.randint(0, 10000)
