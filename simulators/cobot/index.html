@@ -228,11 +228,14 @@
 			const commands = commandsArray[0].split('\n');
 			return commands.map(command => {
 				const [type, valueString] = command.split(' ');
-				return {
-					type,
-					value: parseFloat(valueString)
-				};
-			});
+				const value = parseFloat(valueString);
+				if (!isNaN(value)) {
+					return {
+						type,
+						value: value
+					};
+				}
+			}).filter(command => command !== undefined);
 		}
 	</script>
 	<script type="module">
@@ -245,9 +248,11 @@
 			button.disabled = true;
 			button.innerText = "Loading...";
 
+			const rotateBase = Math.floor(Math.random() * 361);
+
 			try {
-				const app = await client("https://6b7a04eb6ae254ad7a.gradio.live/");
-				const result = await app.predict("/predict", ["rotateBase 90"]);
+				const app = await client("https://659745f521c8930c58.gradio.live");
+				const result = await app.predict("/predict", [`rotateBase ${rotateBase}`]);
 				const commands = parseCommands(result.data);
 				document.getElementById('commandInput').value = commands.map(c => `${c.type} ${c.value}`).join('\n');
 			} catch (error) {
