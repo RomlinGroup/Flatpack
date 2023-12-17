@@ -16,7 +16,7 @@ def generate_dataset(num_entries):
     return [generate_command() for _ in range(num_entries)]
 
 
-dataset = generate_dataset(1000000)
+dataset = generate_dataset(10000)
 
 with open("fake_robot_dataset.txt", "w") as file:
     for command in dataset:
