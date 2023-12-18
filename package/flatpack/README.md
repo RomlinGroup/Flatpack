@@ -46,9 +46,9 @@ trust with our users. We invite you to explore our new release strategy and appr
   *Tom Christie*\
   BSD-3-Clause
 
-- **[requests](https://pypi.org/project/requests/)**\
-  *Kenneth Reitz*\
-  Apache-2.0
+- **[numpy](https://pypi.org/project/numpy/)**\
+  *Travis E. Oliphant et al.*\
+  BSD-3-Clause
 
 - **[toml](https://pypi.org/project/toml/)**\
   *William Pearson*\

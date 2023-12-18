@@ -1,13 +1,14 @@
 from cryptography.fernet import Fernet
 from .parsers import parse_toml_to_venv_script
 from pathlib import Path
-from transformers import GPT2LMHeadModel, GPT2Tokenizer, set_seed
+from transformers import AutoProcessor, AutoModelForCausalLM, GPT2LMHeadModel, GPT2Tokenizer, set_seed
 from typing import List, Optional
 
 import argparse
 import gradio as gr
 import httpx
 import logging
+import numpy as np
 import os
 import random
 import re
@@ -17,7 +18,6 @@ import stat
 import subprocess
 import sys
 import toml
-import torch
 
 CONFIG_FILE_PATH = os.path.join(os.path.expanduser("~"), ".fpk_config.toml")
 LOGGING_BATCH_SIZE = 10
@@ -103,28 +103,35 @@ def fpk_cache_last_flatpack(directory_name: str):
         f.write(directory_name)
 
 
-def fpk_callback(input_variable=None):
-    """Print a callback message with or without a provided input.
+def set_seed(seed):
+    """Set the random seed for reproducibility."""
+    random.seed(seed)
 
-    Args:
-        input_variable (Optional[str]): User-provided input. Defaults to None.
-    """
 
-    # Define a regular expression pattern for valid input
-    valid_pattern = re.compile(r'^[a-zA-Z0-9_\- ]+$')  # Adjust pattern as needed
+def fpk_generate_text(prompt, seed=None, max_length=512, temperature=0.7, top_k=50, top_p=0.95):
+    """Generate text using GPT-2 with optional random seed and text generation parameters."""
+    if seed is not None:
+        set_seed(seed)
 
-    if input_variable:
-        # Validate input against the pattern
-        if not valid_pattern.match(input_variable):
-            print("Invalid input. Please provide alphanumeric characters only.")
-            return
+    tokenizer = GPT2Tokenizer.from_pretrained("romlingroup/gpt2-cobot")
+    model = GPT2LMHeadModel.from_pretrained("romlingroup/gpt2-cobot")
 
-        # Proceed if input is valid
-        print(f"You provided the input: {input_variable}")
-    else:
-        print("No input provided!")
+    inputs = tokenizer(prompt, return_tensors="pt", truncation=True, max_length=512)
+    attention_mask = inputs['attention_mask']
 
-    print("It works!")
+    outputs = model.generate(
+        inputs['input_ids'],
+        attention_mask=attention_mask,
+        max_length=max_length,
+        num_return_sequences=1,
+        temperature=temperature,
+        top_k=top_k,
+        top_p=top_p,
+        do_sample=True
+    )
+    response = tokenizer.decode(outputs[0], skip_special_tokens=True)
+
+    return response
 
 
 def fpk_colorize(text, color):
@@ -482,6 +489,20 @@ def fpk_generate_text(prompt, seed=None, max_length=512, temperature=0.7, top_k=
     return response
 
 
+def fpk_generate_text_with_image(prompt, image, model_name="microsoft/git-base-coco", max_length=64):
+    """Generate text using a model that takes an image as input."""
+    processor = AutoProcessor.from_pretrained(model_name)
+    model = AutoModelForCausalLM.from_pretrained(model_name)
+
+    inputs = processor(text=prompt, images=image, return_tensors="pt")
+
+    generated_ids = model.generate(**inputs, max_length=max_length)
+
+    response = processor.batch_decode(generated_ids, skip_special_tokens=True)[0]
+
+    return response
+
+
 def main():
     try:
         with SessionManager() as session:
@@ -539,11 +560,19 @@ def main():
                 try:
                     try:
 
+                        def combined_interface(prompt, image=None):
+                            if image is not None:
+                                return fpk_generate_text_with_image(prompt, image)
+                            else:
+                                return fpk_generate_text(prompt)
+
                         interface = gr.Interface(
-                            fn=fpk_generate_text,
-                            inputs="text",
+                            fn=combined_interface,
+                            inputs=["text", gr.Image(type="numpy", label="Optional Image")],
                             outputs="text",
-                            title="romlingroup/gpt2-cobot"
+                            title="flatpack.ai",
+                            allow_flagging="never",
+                            analytics_enabled=False
                         )
 
                         interface.launch(share=True)

@@ -219,6 +219,8 @@
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/cannon.js/0.6.2/cannon.min.js"></script>
 	<script src="https://cdn.jsdelivr.net/npm/cannon@0.6.2/tools/threejs/CannonDebugRenderer.js"></script>
 
+	<script src="https://docs.opencv.org/4.8.0/opencv.js"></script>
+
 	<script>
 		function parseCommands(commandsArray) {
 			if (!commandsArray.length || typeof commandsArray[0] !== 'string') {
@@ -249,12 +251,22 @@
 			button.innerText = "Loading...";
 
 			const rotateBase = Math.floor(Math.random() * 361);
+			const command = `rotateBase ${rotateBase}`;
 
 			try {
-				const app = await client("https://659745f521c8930c58.gradio.live");
-				const result = await app.predict("/predict", [`rotateBase ${rotateBase}`]);
-				const commands = parseCommands(result.data);
-				document.getElementById('commandInput').value = commands.map(c => `${c.type} ${c.value}`).join('\n');
+				const currentImageBlob = await captureImageBlob();
+
+				const app = await client("https://26b6f4e0f8e8ee3736.gradio.live/");
+
+				const inputs = [
+					command,
+					currentImageBlob || null
+				];
+
+				const result = await app.predict("/predict", inputs);
+
+				console.log(result.data);
+
 			} catch (error) {
 				console.error('Error during prediction:', error);
 			} finally {
@@ -264,6 +276,27 @@
 		}
 
 		document.getElementById('generateButton').addEventListener('click', runPrediction);
+
+		async function captureImageBlob() {
+			if (forearmRenderer && forearmRenderer.domElement instanceof HTMLCanvasElement && document.body.contains(forearmRenderer.domElement)) {
+				const context = forearmRenderer.domElement.getContext('2d');
+
+				if (context) {
+					const pixelBuffer = new Uint32Array(
+						context.getImageData(0, 0, forearmRenderer.domElement.width, forearmRenderer.domElement.height).data.buffer
+					);
+
+					if (pixelBuffer.some(color => color & 0xff000000)) {
+						return new Promise(resolve => {
+							forearmRenderer.domElement.toBlob(blob => {
+								resolve(blob);
+							}, 'image/jpeg');
+						});
+					}
+				}
+			}
+			return null;
+		}
 	</script>
 
 	<script>
