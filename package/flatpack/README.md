@@ -54,10 +54,6 @@ trust with our users. We invite you to explore our new release strategy and appr
   *Jeffrey A. Clark*\
   HPND
 
-- **[tensorflow](https://pypi.org/project/tensorflow/)**\
-  *Google Inc.*\
-  Apache-2.0
-
 - **[toml](https://pypi.org/project/toml/)**\
   *William Pearson*\
   MIT
