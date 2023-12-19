@@ -1,12 +1,14 @@
 from cryptography.fernet import Fernet
+from fastapi import FastAPI, File, UploadFile
 from .parsers import parse_toml_to_venv_script
 from pathlib import Path
+from PIL import Image
 from transformers import AutoProcessor, AutoModelForCausalLM, GPT2LMHeadModel, GPT2Tokenizer, set_seed
 from typing import List, Optional
 
 import argparse
-import gradio as gr
 import httpx
+import io
 import logging
 import numpy as np
 import os
@@ -17,7 +19,12 @@ import shlex
 import stat
 import subprocess
 import sys
+
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+import tensorflow as tf
+
 import toml
+import uvicorn
 
 CONFIG_FILE_PATH = os.path.join(os.path.expanduser("~"), ".fpk_config.toml")
 LOGGING_BATCH_SIZE = 10
@@ -31,6 +38,8 @@ log_queue = []
 config = {
     "api_key": None
 }
+
+app = FastAPI()
 
 
 class SessionManager:
@@ -518,9 +527,7 @@ def main():
 
             fpk_get_api_key()
 
-            if command == "callback":
-                fpk_callback(args.input)
-            elif command == "find":
+            if command == "find":
                 print(fpk_find_models())
             elif command == "help":
                 print("[HELP]")
@@ -558,27 +565,21 @@ def main():
             elif command == "run":
 
                 try:
-                    try:
+                    @app.post("/process/")
+                    async def process(prompt: str, file: UploadFile = File(None)):
+                        if file:
+                            contents = await file.read()
+                            image = Image.open(io.BytesIO(contents))
+                            image_np = np.array(image)
+                            response = fpk_generate_text_with_image(prompt, image_np)
+                        else:
+                            response = fpk_generate_text(prompt)
+                        return {"response": response}
 
-                        def combined_interface(prompt, image=None):
-                            if image is not None:
-                                return fpk_generate_text_with_image(prompt, image)
-                            else:
-                                return fpk_generate_text(prompt)
+                    uvicorn.run(app, host="0.0.0.0", port=8000)
 
-                        interface = gr.Interface(
-                            fn=combined_interface,
-                            inputs=["text", gr.Image(type="numpy", label="Optional Image")],
-                            outputs="text",
-                            title="flatpack.ai",
-                            allow_flagging="never",
-                            analytics_enabled=False
-                        )
-
-                        interface.launch(share=True)
-
-                    except KeyboardInterrupt:
-                        print("Gradio interface has been stopped.")
+                except KeyboardInterrupt:
+                    print("FastAPI server has been stopped.")
                 except Exception as e:
                     print(f"An unexpected error occurred: {e}")
                 finally:

@@ -22,10 +22,6 @@ When we were children, we imagined our toys could come to life. This dream is be
 
 This fusion of AI with the physical world accelerates scientific progress, enhances life quality, and opens vast business opportunities. By imbuing our surroundings with intelligence, we unlock limitless potential for connection, creativity, and growth, heralding a new frontier of human accomplishment.
 
-We must recognise that the most significant challenges and opportunities of our time are related to the physical world and not some hyped-up metaverse or virtual reality. However, we can address these issues with a newfound sense of curiosity and efficiency by utilising AI and micro-LLMs. These tools can unlock unprecedented potential and pave the way for a brighter future.
-
-Our commitment to that future is clear - we pledge to use technology not as an escape from reality but as a tool for tangible progress, enriching the natural world in which we live and work. Join us in our mission to flatten the complexity of AI, electronics and robotics.
-
 > **flatpack.ai:** "What we are creating here is distinct from the well-known AI models. Picture merging the Swedish ingenuity of flatpacks (hence our name) and ready-to-assemble furniture with the imaginative appeal of certain Danish snap-together toy bricks (the best of two worlds - like my native region of Skåne). Our method of developing micro-LLMs is designed to be interactive and intelligently integrated into the physical world (better known as reality)." (Henric Romlin 2023)
 ## flatpack 3.X.X (Aglaonice)
 
