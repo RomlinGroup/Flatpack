@@ -2,6 +2,7 @@ from cryptography.fernet import Fernet
 from fastapi import FastAPI, File, UploadFile
 from .parsers import parse_toml_to_venv_script
 from pathlib import Path
+from transformers import AutoProcessor, AutoModelForCausalLM
 from typing import List, Optional
 
 import argparse
@@ -30,6 +31,8 @@ log_queue = []
 config = {
     "api_key": None
 }
+
+app = FastAPI()
 
 
 class SessionManager:
