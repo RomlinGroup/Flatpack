@@ -47,6 +47,10 @@ trust with our users. We invite you to explore our new release strategy and appr
   *William Pearson*\
   MIT
 
+- **[transformers](https://pypi.org/project/transformers/)**\
+  *The Hugging Face team and contributors*\
+  Apache-2.0
+
 - **[uvicorn](https://pypi.org/project/uvicorn/)**\
   *Tom Christie*\
   BSD-3-Clause
