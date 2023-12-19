@@ -12,9 +12,6 @@ highest echelons of industry and research.
 *Aglaonice, an ancient Greek astronomer from the 2nd or 1st century BC, was celebrated for her precise lunar eclipse
 predictions. Her mastery inspired the Greek proverb: "As the moon obeys Aglaonice," signifying unwavering certainty.*
 
-`3.1.0` (2023-12-11)\
-*Added support for Gradio UI and Hugging Face models.*
-
 `3.0.0` (2023-10-20)\
 *Moved to a predictable and structured release strategy.*
 
@@ -38,6 +35,10 @@ trust with our users. We invite you to explore our new release strategy and appr
   *The Python Cryptographic Authority and contributors*\
   Apache-2.0 OR BSD-3-Clause
 
+- **[fastapi](https://pypi.org/project/fastapi/)**\
+  *Sebastián Ramírez*\
+  MIT
+
 - **[httpx](https://pypi.org/project/httpx/)**\
   *Tom Christie*\
   BSD-3-Clause
@@ -46,6 +47,6 @@ trust with our users. We invite you to explore our new release strategy and appr
   *William Pearson*\
   MIT
 
-- **[transformers](https://pypi.org/project/transformers/)**\
-  *The Hugging Face team and contributors*\
-  Apache-2.0
+- **[uvicorn](https://pypi.org/project/uvicorn/)**\
+  *Tom Christie*\
+  BSD-3-Clause

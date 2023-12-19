@@ -2,15 +2,11 @@ from cryptography.fernet import Fernet
 from fastapi import FastAPI, File, UploadFile
 from .parsers import parse_toml_to_venv_script
 from pathlib import Path
-from PIL import Image
-from transformers import AutoProcessor, AutoModelForCausalLM, GPT2LMHeadModel, GPT2Tokenizer, set_seed
 from typing import List, Optional
 
 import argparse
 import httpx
-import io
 import logging
-import numpy as np
 import os
 import random
 import re
@@ -34,8 +30,6 @@ log_queue = []
 config = {
     "api_key": None
 }
-
-app = FastAPI()
 
 
 class SessionManager:
@@ -476,8 +470,6 @@ def main():
             parser = argparse.ArgumentParser(description='flatpack.ai command line interface')
             parser.add_argument('command', help='Command to run')
             parser.add_argument('input', nargs='?', default=None, help='Input for the callback')
-            parser.add_argument('--model-name', default="YOUR_MODEL_NAME",
-                                help='Name of the model to associate with the log')
             parser.add_argument('--verbose', action='store_true', help='Display detailed outputs for debugging.')
 
             args = parser.parse_args()

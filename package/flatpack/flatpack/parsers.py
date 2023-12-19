@@ -125,7 +125,6 @@ echo "Cloning repository from: {from_source}"
 git clone -b {branch} {from_source} {repo_path}
 if [ $? -eq 0 ]; then
     echo "Git clone was successful."
-    flatpack callback git-success
 else
     echo "Git clone failed."
     exit 1
