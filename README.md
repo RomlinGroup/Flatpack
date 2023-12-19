@@ -22,7 +22,7 @@ When we were children, we imagined our toys could come to life. This dream is be
 
 This fusion of AI with the physical world accelerates scientific progress, enhances life quality, and opens vast business opportunities. By imbuing our surroundings with intelligence, we unlock limitless potential for connection, creativity, and growth, heralding a new frontier of human accomplishment.
 
-> **flatpack.ai:** "What we are creating here is distinct from the well-known AI models. Picture merging the Swedish ingenuity of flatpacks (hence our name) and ready-to-assemble furniture with the imaginative appeal of certain Danish snap-together toy bricks (the best of two worlds - like my native region of Skåne). Our method of developing micro-LLMs is designed to be interactive and intelligently integrated into the physical world (better known as reality)." (Henric Romlin 2023)
+> **flatpack.ai:** "Picture merging the Swedish ingenuity of flatpacks (hence our name) and ready-to-assemble furniture with the imaginative appeal of certain Danish snap-together toy bricks. Our method of developing micro-LLMs is designed to be interactive and intelligently integrated into the physical world (better known as reality)." (Henric Romlin 2023)
 ## flatpack 3.X.X (Aglaonice)
 
 *Aglaonice, an ancient Greek astronomer from the 2nd or 1st century BC, was celebrated for her precise lunar eclipse predictions. Her mastery inspired the Greek proverb: "As the moon obeys Aglaonice," signifying unwavering certainty.*
