@@ -43,6 +43,10 @@ trust with our users. We invite you to explore our new release strategy and appr
   *Tom Christie*\
   BSD-3-Clause
 
+- **[Pillow](https://pypi.org/project/Pillow/)**\
+  *Jeffrey A. Clark*\
+  HPND
+
 - **[toml](https://pypi.org/project/toml/)**\
   *William Pearson*\
   MIT

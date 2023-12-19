@@ -2,12 +2,15 @@ from cryptography.fernet import Fernet
 from fastapi import FastAPI, File, UploadFile
 from .parsers import parse_toml_to_venv_script
 from pathlib import Path
-from transformers import AutoProcessor, AutoModelForCausalLM
+from PIL import Image
+from transformers import AutoProcessor, AutoModelForCausalLM, GPT2LMHeadModel, GPT2Tokenizer, set_seed
 from typing import List, Optional
 
 import argparse
 import httpx
+import io
 import logging
+import numpy as np
 import os
 import random
 import re
@@ -105,16 +108,8 @@ def fpk_cache_last_flatpack(directory_name: str):
         f.write(directory_name)
 
 
-def set_seed(seed):
-    """Set the random seed for reproducibility."""
-    random.seed(seed)
-
-
 def fpk_generate_text(prompt, seed=None, max_length=512, temperature=0.7, top_k=50, top_p=0.95):
     """Generate text using GPT-2 with optional random seed and text generation parameters."""
-    if seed is not None:
-        set_seed(seed)
-
     tokenizer = GPT2Tokenizer.from_pretrained("romlingroup/gpt2-cobot")
     model = GPT2LMHeadModel.from_pretrained("romlingroup/gpt2-cobot")
 
@@ -467,6 +462,44 @@ def fpk_valid_directory_name(name: str) -> bool:
     return re.match(r'^[\w-]+$', name) is not None
 
 
+def fpk_generate_text(prompt, seed=None, max_length=512, temperature=0.7, top_k=50, top_p=0.95):
+    """Generate text using GPT-2 with optional random seed and text generation parameters."""
+    if seed is None:
+        seed = random.randint(0, 10000)
+
+    set_seed(seed)
+
+    tokenizer = GPT2Tokenizer.from_pretrained("romlingroup/gpt2-cobot")
+    model = GPT2LMHeadModel.from_pretrained("romlingroup/gpt2-cobot")
+
+    inputs = tokenizer.encode(prompt, return_tensors="pt", truncation=True, max_length=512)
+    outputs = model.generate(
+        inputs,
+        max_length=max_length,
+        num_return_sequences=1,
+        temperature=temperature,
+        top_k=top_k,
+        top_p=top_p
+    )
+    response = tokenizer.decode(outputs[0], skip_special_tokens=True)
+
+    return response
+
+
+def fpk_generate_text_with_image(prompt, image, model_name="microsoft/git-base-coco", max_length=64):
+    """Generate text using a model that takes an image as input."""
+    processor = AutoProcessor.from_pretrained(model_name)
+    model = AutoModelForCausalLM.from_pretrained(model_name)
+
+    inputs = processor(text=prompt, images=image, return_tensors="pt")
+
+    generated_ids = model.generate(**inputs, max_length=max_length)
+
+    response = processor.batch_decode(generated_ids, skip_special_tokens=True)[0]
+
+    return response
+
+
 def main():
     try:
         with SessionManager() as session:
@@ -516,7 +549,28 @@ def main():
             elif command == "ps":
                 print(fpk_list_processes())
             elif command == "run":
-                print("[RUN]")
+
+                try:
+                    @app.post("/process/")
+                    async def process(prompt: str, file: UploadFile = File(None)):
+                        if file:
+                            contents = await file.read()
+                            image = Image.open(io.BytesIO(contents))
+                            image_np = np.array(image)
+                            response = fpk_generate_text_with_image(prompt, image_np)
+                        else:
+                            response = fpk_generate_text(prompt)
+                        return {"response": response}
+
+                    uvicorn.run(app, host="0.0.0.0", port=8000)
+
+                except KeyboardInterrupt:
+                    print("FastAPI server has been stopped.")
+                except Exception as e:
+                    print(f"An unexpected error occurred: {e}")
+                finally:
+                    print("Finalizing...")
+
             elif command == "set-api-key":
                 if not args.input:
                     print("❌ Please provide an API key to set.")
