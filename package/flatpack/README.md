@@ -43,6 +43,10 @@ trust with our users. We invite you to explore our new release strategy and appr
   *Tom Christie*\
   BSD-3-Clause
 
+- **[ngrok](https://pypi.org/project/ngrok/)**\
+  *ngrok*\
+  MIT
+
 - **[Pillow](https://pypi.org/project/Pillow/)**\
   *Jeffrey A. Clark*\
   HPND

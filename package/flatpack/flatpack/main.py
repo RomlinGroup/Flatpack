@@ -1,8 +1,10 @@
 from cryptography.fernet import Fernet
 from fastapi import FastAPI, File, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
 from .parsers import parse_toml_to_venv_script
 from pathlib import Path
 from PIL import Image
+from starlette.responses import PlainTextResponse
 from transformers import AutoProcessor, AutoModelForCausalLM, GPT2LMHeadModel, GPT2Tokenizer, set_seed
 from typing import List, Optional
 
@@ -10,6 +12,7 @@ import argparse
 import httpx
 import io
 import logging
+import ngrok
 import numpy as np
 import os
 import random
@@ -34,8 +37,6 @@ log_queue = []
 config = {
     "api_key": None
 }
-
-app = FastAPI()
 
 
 class SessionManager:
@@ -63,7 +64,7 @@ def fpk_decrypt_data(data, key):
 
 
 def fpk_set_secure_file_permissions(file_path):
-    os.chmod(file_path, stat.S_IRUSR | stat.S_IWUSR)  # Read/write for file owner only
+    os.chmod(file_path, stat.S_IRUSR | stat.S_IWUSR)
 
 
 class FPKEncryptionKeyError(Exception):
@@ -486,18 +487,49 @@ def fpk_generate_text(prompt, seed=None, max_length=512, temperature=0.7, top_k=
     return response
 
 
-def fpk_generate_text_with_image(prompt, image, model_name="microsoft/git-base-coco", max_length=64):
-    """Generate text using a model that takes an image as input."""
-    processor = AutoProcessor.from_pretrained(model_name)
-    model = AutoModelForCausalLM.from_pretrained(model_name)
+def fpk_generate_text_with_image(prompt, image_np):
+    try:
+        model_name = "microsoft/git-base-coco"
+        processor = AutoProcessor.from_pretrained(model_name)
+        model = AutoModelForCausalLM.from_pretrained(model_name)
 
-    inputs = processor(text=prompt, images=image, return_tensors="pt")
+        image = Image.fromarray(image_np)
 
-    generated_ids = model.generate(**inputs, max_length=max_length)
+        pixel_values = processor(images=image, return_tensors="pt").pixel_values
+        generated_ids = model.generate(pixel_values=pixel_values, max_length=50)
+        generated_caption = processor.batch_decode(generated_ids, skip_special_tokens=True)[0]
 
-    response = processor.batch_decode(generated_ids, skip_special_tokens=True)[0]
+        return generated_caption
+    except Exception as e:
+        print(f"Error in fpk_generate_text_with_image: {e}")
 
-    return response
+
+app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+@app.get("/test")
+async def test_endpoint():
+    return PlainTextResponse("Hello World")
+
+
+@app.post("/process/")
+async def process(prompt: str, file: UploadFile = File(None)):
+    if file:
+        contents = await file.read()
+        image = Image.open(io.BytesIO(contents))
+        image_np = np.array(image)
+        response = fpk_generate_text_with_image(prompt, image_np)
+    else:
+        response = fpk_generate_text(prompt)
+    return {"response": response}
 
 
 def main():
@@ -551,25 +583,19 @@ def main():
             elif command == "run":
 
                 try:
-                    @app.post("/process/")
-                    async def process(prompt: str, file: UploadFile = File(None)):
-                        if file:
-                            contents = await file.read()
-                            image = Image.open(io.BytesIO(contents))
-                            image_np = np.array(image)
-                            response = fpk_generate_text_with_image(prompt, image_np)
-                        else:
-                            response = fpk_generate_text(prompt)
-                        return {"response": response}
-
-                    uvicorn.run(app, host="0.0.0.0", port=8000)
-
+                    port = 8000
+                    listener = ngrok.forward(port, authtoken_from_env=True)
+                    print(f"Ingress established at {listener.url()}")
+                    uvicorn.run(app, host="0.0.0.0", port=port)
+                except Exception as e:
+                    print(f"An unexpected error occurred: {e}")
                 except KeyboardInterrupt:
                     print("FastAPI server has been stopped.")
                 except Exception as e:
                     print(f"An unexpected error occurred: {e}")
                 finally:
                     print("Finalizing...")
+                    ngrok.disconnect(listener.url())
 
             elif command == "set-api-key":
                 if not args.input:
