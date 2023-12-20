@@ -274,7 +274,13 @@
 					formData.append("file", currentImageBlob, "image.jpg");
 				}
 
-				const response = await fetch(`https://3d58-34-123-27-103.ngrok-free.app/process/?prompt=${encodeURIComponent(prompt)}`, {
+				const url = "";
+
+				if (!url) {
+					throw new Error("Configuration error: Server URL is not set.");
+				}
+
+				const response = await fetch(`${url}/process/?prompt=${encodeURIComponent(prompt)}`, {
 					method: 'POST',
 					body: formData
 				});
@@ -286,11 +292,12 @@
 				const data = await response.json();
 				console.log(data);
 			} catch (error) {
-				if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
-					console.error('Network error: Server is unreachable or URL is incorrect.');
+				console.error('Error during prediction:', error.message);
+				if (error.message.includes('Failed to fetch')) {
 					alert('Network error: Server is unreachable or URL is incorrect.');
+				} else if (error.message.includes('Server URL is not set')) {
+					alert('Configuration error: Please set the server URL.');
 				} else {
-					console.error('Error during prediction:', error.message);
 					alert(`Error: ${error.message}`);
 				}
 			} finally {
