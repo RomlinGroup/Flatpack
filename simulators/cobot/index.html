@@ -222,22 +222,7 @@
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/cannon.js/0.6.2/cannon.min.js"></script>
 	<script src="https://cdn.jsdelivr.net/npm/cannon@0.6.2/tools/threejs/CannonDebugRenderer.js"></script>
 
-	<script src="https://docs.opencv.org/4.8.0/opencv.js"></script>
-
 	<script>
-		let cvReady = false;
-
-		function onOpenCvReady() {
-			cvReady = true;
-			console.log('opencv-js is ready.');
-		}
-
-		if (cv) {
-			onOpenCvReady();
-		} else {
-			document.addEventListener('opencvready', onOpenCvReady);
-		}
-
 		function parseCommands(commandsArray) {
 			if (!commandsArray.length || typeof commandsArray[0] !== 'string') {
 				return [];
