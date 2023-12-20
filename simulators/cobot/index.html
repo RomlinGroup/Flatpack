@@ -266,28 +266,30 @@
 			try {
 				const currentImageBlob = await captureImageBlob();
 
-				// Prepare the form data only for the image
 				let formData = new FormData();
 				if (currentImageBlob) {
 					formData.append("file", currentImageBlob, "image.jpg");
 				}
 
-				// Send the request to the FastAPI server
 				const response = await fetch(`https://3d58-34-123-27-103.ngrok-free.app/process/?prompt=${encodeURIComponent(prompt)}`, {
 					method: 'POST',
 					body: formData
 				});
 
 				if (!response.ok) {
-					throw new Error(`HTTP error! status: ${response.status}`);
+					throw new Error(`Server response error: status ${response.status}`);
 				}
 
 				const data = await response.json();
 				console.log(data);
-				// Process the response here
-
 			} catch (error) {
-				console.error('Error during prediction:', error);
+				if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
+					console.error('Network error: Server is unreachable or URL is incorrect.');
+					alert('Network error: Server is unreachable or URL is incorrect.');
+				} else {
+					console.error('Error during prediction:', error.message);
+					alert(`Error: ${error.message}`);
+				}
 			} finally {
 				button.disabled = false;
 				button.innerText = "Generate";
