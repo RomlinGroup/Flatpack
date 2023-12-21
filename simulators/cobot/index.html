@@ -2,1147 +2,1147 @@
 <html>
 
 <head>
-	<title>Cobot</title>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<link rel="icon" href="https://romlin.com/wp-content/uploads/2023/05/flatpack_ai_logo.svg">
-	<style>
-		body {
-			margin: 0;
-		}
+    <title>Cobot</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="https://romlin.com/wp-content/uploads/2023/05/flatpack_ai_logo.svg">
+    <style>
+        body {
+            margin: 0;
+        }
 
-		canvas {
-			display: block;
-		}
+        canvas {
+            display: block;
+        }
 
-		#commandInput {
-			font-family: Arial, sans-serif;
-			font-size: 16px;
-			line-height: 1.5em;
-			border-radius: 0px;
-			width: 180px;
-			height: 80px;
-			padding: 10px;
-			margin-bottom: 10px;
-			border: 0px;
-			resize: none;
-		}
+        #commandInput {
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            line-height: 1.5em;
+            border-radius: 0px;
+            width: 180px;
+            height: 80px;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 0px;
+            resize: none;
+        }
 
-		#demoStatus {
-			position: fixed;
-			top: 10px;
-			left: 10px;
-			background: rgba(255, 255, 255, 0.8);
-			border-radius: 0px;
-			font-family: Arial, sans-serif;
-			text-align: center;
-			font-size: 16px;
-			line-height: 1.5em;
-			color: #333;
-			width: 100px;
-			padding: 10px 0;
-		}
+        #demoStatus {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 0px;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            font-size: 16px;
+            line-height: 1.5em;
+            color: #333;
+            width: 100px;
+            padding: 10px 0;
+        }
 
-		#executeButton {
-			background: #5865f2;
-			color: #fff;
-			font-family: Arial, sans-serif;
-			font-size: 16px;
-			line-height: 1.5em;
-			border-radius: 0px;
-			margin-left: 0px;
-			width: 200px;
-			padding: 10px 0;
-			border: 0px;
-			position: relative;
-			cursor: pointer;
-		}
+        #executeButton {
+            background: #5865f2;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            line-height: 1.5em;
+            border-radius: 0px;
+            margin-left: 0px;
+            width: 200px;
+            padding: 10px 0;
+            border: 0px;
+            position: relative;
+            cursor: pointer;
+        }
 
-		#forearmViewWrapper {
-			position: fixed;
-			top: 10px;
-			right: 10px;
-		}
+        #forearmViewWrapper {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+        }
 
-		#forearmView {
-			position: relative;
-			width: 320px;
-			height: 240px;
-			border: 1px solid #fff;
-			display: none;
-		}
+        #forearmView {
+            position: relative;
+            width: 320px;
+            height: 240px;
+            border: 1px solid #fff;
+            display: none;
+        }
 
-		#forearmView canvas {
-			position: absolute;
-			top: 0;
-			left: 0;
-			max-width: 100%;
-			max-height: 100%;
-			transition: opacity 0.2s ease-in-out;
-		}
+        #forearmView canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            max-width: 100%;
+            max-height: 100%;
+            transition: opacity 0.2s ease-in-out;
+        }
 
-		#forearmViewObjectDetection {
-			position: relative;
-			width: 320px;
-			height: 240px;
-			background: #000;
-			border: 1px solid #fff;
-			overflow: hidden;
-		}
+        #forearmViewObjectDetection {
+            position: relative;
+            width: 320px;
+            height: 240px;
+            background: #000;
+            border: 1px solid #fff;
+            overflow: hidden;
+        }
 
-		#forearmViewObjectDetection img {
-			position: absolute;
-			top: 0;
-			left: 0;
-			max-width: 100%;
-			max-height: 100%;
-		}
+        #forearmViewObjectDetection img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            max-width: 100%;
+            max-height: 100%;
+        }
 
-		#saveImageButton {
-			position: absolute;
-			right: 10px;
-			bottom: 10px;
-		}
+        #saveImageButton {
+            position: absolute;
+            right: 10px;
+            bottom: 10px;
+        }
 
-		#generateButton {
-			position: fixed;
-			top: 64px;
-			left: 10px;
-			background: #5865f2;
-			border-radius: 0px;
-			border: none;
-			font-family: Arial, sans-serif;
-			font-size: 16px;
-			line-height: 1.5em;
-			cursor: pointer;
-			color: #fff;
-			width: 100px;
-			padding: 10px 0;
-		}
+        #generateButton {
+            position: fixed;
+            top: 64px;
+            left: 10px;
+            background: #5865f2;
+            border-radius: 0px;
+            border: none;
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            line-height: 1.5em;
+            cursor: pointer;
+            color: #fff;
+            width: 100px;
+            padding: 10px 0;
+        }
 
-		#generateButton:disabled {
-			background: #a0a0a0;
-			color: #666;
-			cursor: not-allowed;
-		}
+        #generateButton:disabled {
+            background: #a0a0a0;
+            color: #666;
+            cursor: not-allowed;
+        }
 
-		#recordButton {
-			position: fixed;
-			top: 118px;
-			left: 10px;
-			background: #5865f2;
-			border-radius: 0px;
-			border: none;
-			font-family: Arial, sans-serif;
-			font-size: 16px;
-			line-height: 1.5em;
-			cursor: pointer;
-			color: #fff;
-			width: 100px;
-			padding: 10px 0;
-		}
+        #recordButton {
+            position: fixed;
+            top: 118px;
+            left: 10px;
+            background: #5865f2;
+            border-radius: 0px;
+            border: none;
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            line-height: 1.5em;
+            cursor: pointer;
+            color: #fff;
+            width: 100px;
+            padding: 10px 0;
+        }
 
-		#keyGuide {
-			position: fixed;
-			bottom: 10px;
-			right: 10px;
-			padding: 10px;
-			background: rgba(0, 0, 0, 1);
-			border-radius: 0px;
-			font-family: Arial, sans-serif;
-			font-size: 16px;
-			line-height: 1.5em;
-			color: #ffffff;
-		}
+        #keyGuide {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 1);
+            border-radius: 0px;
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            line-height: 1.5em;
+            color: #ffffff;
+        }
 
-		#scriptControls {
-			width: 180px;
-			position: fixed;
-			bottom: 10px;
-			left: 10px;
-			border-radius: 0px;
-			font-family: Arial, sans-serif;
-			font-size: 16px;
-			z-index: 2;
-		}
+        #scriptControls {
+            width: 180px;
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            border-radius: 0px;
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            z-index: 2;
+        }
 
-		#forearmViewObjectDetection img {
-			position: absolute;
-			top: 0;
-			left: 0;
-			width: 100%;
-			height: 100%;
-		}
+        #forearmViewObjectDetection img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
 
-		.hidden {
-			opacity: 0;
-		}
+        .hidden {
+            opacity: 0;
+        }
 
-		.visible {
-			opacity: 1;
-		}
-	</style>
+        .visible {
+            opacity: 1;
+        }
+    </style>
 </head>
 
 <body>
-	<div id="forearmViewWrapper">
-		<div id="forearmView"></div>
-
-		<div id="forearmViewObjectDetection">
-			<img id="img1" class="visible" style="width: 100%; height: 100%;" />
-			<img id="img2" class="hidden" style="width: 100%; height: 100%;" />
-			<button id="saveImageButton">Save</button>
-		</div>
-
-		<div id="detectionResults"></div>
-	</div>
-
-	<div id="demoStatus">
-		Demo: OFF
-	</div>
-
-	<div id="keyGuide">
-		Base: Q/E<br>
-		Upper Arm: W/S<br>
-		Forearm: R/F<br>
-		Demo: M
-	</div>
-
-	<button id="recordButton">Record</button>
-	<button id="generateButton">Generate</button>
-
-	<div id="scriptControls">
-		<textarea id="commandInput" placeholder="Enter command" autocomplete="off"></textarea>
-		<button id="executeButton">Execute</button>
-	</div>
-
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-	<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/cannon.js/0.6.2/cannon.min.js"></script>
-	<script src="https://cdn.jsdelivr.net/npm/cannon@0.6.2/tools/threejs/CannonDebugRenderer.js"></script>
-
-	<script>
-		function parseCommands(commandsArray) {
-			if (!commandsArray.length || typeof commandsArray[0] !== 'string') {
-				return [];
-			}
-
-			const commands = commandsArray[0].split('\n');
-			return commands.map(command => {
-				const [type, valueString] = command.split(' ');
-				const value = parseFloat(valueString);
-				if (!isNaN(value)) {
-					return {
-						type,
-						value: value
-					};
-				}
-			}).filter(command => command !== undefined);
-		}
-	</script>
-
-	<script type="module">
-		async function runPrediction() {
-			const button = document.getElementById('generateButton');
-			button.disabled = true;
-			button.innerText = "Loading...";
-
-			const rotateBase = Math.floor(Math.random() * 361);
-			const prompt = `rotateBase ${rotateBase}`;
-
-			try {
-				const currentImageBlob = await captureImageBlob();
-
-				let formData = new FormData();
-				if (currentImageBlob) {
-					formData.append("file", currentImageBlob, "image.jpg");
-				}
-
-				const url = "";
-
-				if (!url) {
-					throw new Error("Configuration error: Server URL is not set.");
-				}
-
-				const response = await fetch(`${url}/process/?prompt=${encodeURIComponent(prompt)}`, {
-					method: 'POST',
-					body: formData
-				});
-
-				if (!response.ok) {
-					throw new Error(`Server response error: status ${response.status}`);
-				}
-
-				const data = await response.json();
-				console.log(data);
-			} catch (error) {
-				console.error('Error during prediction:', error.message);
-				if (error.message.includes('Failed to fetch')) {
-					alert('Network error: Server is unreachable or URL is incorrect.');
-				} else if (error.message.includes('Server URL is not set')) {
-					alert('Configuration error: Please set the server URL.');
-				} else {
-					alert(`Error: ${error.message}`);
-				}
-			} finally {
-				button.disabled = false;
-				button.innerText = "Generate";
-			}
-		}
-
-		document.getElementById('generateButton').addEventListener('click', runPrediction);
-
-		async function captureImageBlob() {
-			if (forearmRenderer && forearmRenderer.domElement instanceof HTMLCanvasElement) {
-				return new Promise(resolve => {
-					forearmRenderer.domElement.toBlob(blob => {
-						resolve(blob);
-					}, 'image/jpeg');
-				});
-			}
-			return null;
-		}
-	</script>
-
-	<script>
-		let isRetinaResolution = false;
-
-		class RobotController {
-			constructor() {
-				this.currentCommand = null;
-				this.demoMode = false;
-				this.fullCycleCount = 0;
-				this.isBaseMoving = false;
-				this.isElbowMoving = false;
-				this.isRecording = false;
-				this.isShoulderMoving = false;
-				this.lastRecordedCommand = null;
-				this.lastRecordedValue = null;
-				this.movementStep = 0;
-				this.recordedCommands = [];
-				this.targetBaseRotation = 0;
-				this.targetElbowRotation = 0;
-				this.targetShoulderRotation = 0;
-
-				this.maxShoulderRotation = 45;
-				this.minShoulderRotation = 0;
-				this.maxElbowRotation = 45;
-				this.minElbowRotation = -90;
-
-				this.baseTargetRotationY = 0;
-				this.shoulderTargetRotationX = 0;
-				this.elbowTargetRotationX = 0;
-
-				this.isBaseRotating = false;
-				this.isShoulderRotating = false;
-				this.isElbowRotating = false;
-			}
-
-			onMovementDetected() {
-				console.log("Movement detected!");
-				const imageDataUrl = captureImage();
-				updateForearmViewObjectDetection(imageDataUrl);
-			}
-
-			rotateBase(direction) {
-				const previousRotation = base.rotation.y;
-				const delta = (this.demoMode ? demoSpeed : 0.1) * direction;
-				base.rotation.y += delta;
-				if (this.isRecording) {
-					this.recordCommand("rotateBase", base.rotation.y);
-				}
-
-				if (base.rotation.y !== previousRotation) {
-					this.onMovementDetected();
-				}
-			}
-
-			moveShoulder(direction) {
-				const previousRotation = shoulder.rotation.x;
-				const delta = (this.demoMode ? demoSpeed : 0.1) * direction;
-				shoulder.rotation.x += delta;
-				shoulder.rotation.x = this.clampRotation(shoulder.rotation.x, this.minShoulderRotation, this.maxShoulderRotation);
-				if (this.isRecording) {
-					this.recordCommand("moveShoulder", shoulder.rotation.x);
-				}
-
-				if (shoulder.rotation.x !== previousRotation) {
-					this.onMovementDetected();
-				}
-			}
-
-			moveElbow(direction) {
-				const previousRotation = elbow.rotation.x;
-				const delta = (this.demoMode ? demoSpeed : 0.1) * direction;
-				elbow.rotation.x += delta;
-				elbow.rotation.x = this.clampRotation(elbow.rotation.x, this.minElbowRotation, this.maxElbowRotation);
-				if (this.isRecording) {
-					this.recordCommand("moveElbow", elbow.rotation.x);
-				}
-
-				if (elbow.rotation.x !== previousRotation) {
-					this.onMovementDetected();
-				}
-			}
-
-			automatedMovements() {
-				switch (this.movementStep) {
-					case 0:
-						this.rotateBase(1);
-						this.fullCycleCount += demoSpeed;
-						if (this.fullCycleCount >= 2 * Math.PI) {
-							this.fullCycleCount = 0;
-							this.movementStep++;
-						}
-						break;
-					default:
-						this.movementStep = 0;
-						break;
-				}
-			}
-
-			clampRotation(currentRotation, minAngle, maxAngle) {
-				const minRadians = THREE.MathUtils.degToRad(minAngle);
-				const maxRadians = THREE.MathUtils.degToRad(maxAngle);
-				return Math.max(minRadians, Math.min(maxRadians, currentRotation));
-			}
-
-			update() {
-				if (this.isBaseMoving) {
-					this.interpolateRotation(base, 'y', this.targetBaseRotation);
-					this.isBaseMoving = !this.hasReachedTarget(base, 'y', this.targetBaseRotation);
-				}
-				if (this.isShoulderMoving) {
-					this.interpolateRotation(shoulder, 'x', this.targetShoulderRotation);
-					this.isShoulderMoving = !this.hasReachedTarget(shoulder, 'x', this.targetShoulderRotation);
-				}
-				if (this.isElbowMoving) {
-					this.interpolateRotation(elbow, 'x', this.targetElbowRotation);
-					this.isElbowMoving = !this.hasReachedTarget(elbow, 'x', this.targetElbowRotation);
-				}
-
-				if (this.isBaseRotating) {
-					this.interpolateRotation(base, 'y', this.baseTargetRotationY);
-				}
-				if (this.isShoulderRotating) {
-					this.interpolateRotation(shoulder, 'x', this.shoulderTargetRotationX);
-				}
-				if (this.isElbowRotating) {
-					this.interpolateRotation(elbow, 'x', this.elbowTargetRotationX);
-				}
-			}
-
-			interpolateRotation(joint, axis, targetRotation) {
-				const currentRotation = joint.rotation[axis];
-				const delta = targetRotation - currentRotation;
-
-				if (Math.abs(delta) > 0.01) {
-					joint.rotation[axis] += delta * 0.05;
-				} else {
-					if (axis === 'y') {
-						this.isBaseRotating = false;
-					} else if (axis === 'x') {
-						if (joint === shoulder) {
-							this.isShoulderRotating = false;
-						} else if (joint === elbow) {
-							this.isElbowRotating = false;
-						}
-					}
-				}
-			}
-
-			hasReachedTarget(joint, axis, targetRotation) {
-				return Math.abs(joint.rotation[axis] - targetRotation) < 0.01;
-			}
-
-			interpolateRotation(joint, axis, targetRotation) {
-				const currentRotation = joint.rotation[axis];
-				const delta = targetRotation - currentRotation;
-				joint.rotation[axis] += delta * 0.05;
-			}
-
-			checkAndResetAutomation() {
-				if (this.targetBaseRotation === base.rotation.y &&
-					this.targetShoulderRotation === shoulder.rotation.x &&
-					this.targetElbowRotation === elbow.rotation.x) {
-					this.isAutomatedCommandActive = false;
-				}
-			}
-
-			turnOffDemoMode() {
-				this.demoMode = false;
-				document.getElementById("demoStatus").innerText = "Demo: OFF";
-			}
-
-			startRecording() {
-				this.isRecording = true;
-				this.recordedCommands = [];
-				console.log("Recording started");
-			}
-
-			recordCommand(command, value) {
-				if (this.isRecording) {
-					if (this.lastRecordedCommand !== command) {
-						if (this.lastRecordedCommand !== null) {
-							this.recordedCommands.push(`${this.lastRecordedCommand} ${this.radiansToDegrees(this.lastRecordedValue)}`);
-						}
-						this.lastRecordedCommand = command;
-						this.lastRecordedValue = value;
-					} else {
-						this.lastRecordedValue = value;
-					}
-				}
-			}
-
-			radiansToDegrees(radians) {
-				return (radians * 180 / Math.PI).toFixed(2);
-			}
-
-			stopRecording() {
-				if (this.isRecording) {
-					if (this.lastRecordedCommand !== null) {
-						this.recordedCommands.push(`${this.lastRecordedCommand} ${this.radiansToDegrees(this.lastRecordedValue)}`);
-					}
-					this.isRecording = false;
-					this.lastRecordedCommand = null;
-					this.lastRecordedValue = null;
-					console.log("Recording stopped");
-					console.log(this.recordedCommands);
-
-					this.downloadRecordedCommands();
-				}
-			}
-
-			downloadRecordedCommands() {
-				const text = this.recordedCommands.join('\n');
-				const blob = new Blob([text], {
-					type: 'text/plain'
-				});
-				const anchor = document.createElement('a');
-				anchor.download = 'recorded_commands.txt';
-				anchor.href = window.URL.createObjectURL(blob);
-				anchor.click();
-				window.URL.revokeObjectURL(anchor.href);
-			}
-		}
-
-		const robot = new RobotController();
-
-		const demoSpeed = 0.01;
-		let base;
-		let boxBody;
-		let camera;
-		let controls;
-		let demoMode = false;
-		let elbow;
-		let forearm;
-		let forearmCamera;
-		let forearmRenderer;
-		let forearmCameraIsActive = true;
-		let fullCycleCount = 0;
-		let pincerBase;
-		let pincerClaw1;
-		let pincerClaw2;
-		let renderer;
-		let scene;
-		let shoulder;
-		let upperArm;
-		let world;
-
-		function initRobot(type) {
-			world = new CANNON.World();
-			world.gravity.set(0, -9.82, 0);
-
-			setupScene();
-			addFloor();
-			addLighting();
-			setupCamera();
-			setupRenderer();
-
-			cannonDebugRenderer = new THREE.CannonDebugRenderer(scene, world);
-
-			switch (type) {
-				case 'cobot':
-					addPhysicsObject('box', {
-						x: 0.4,
-						y: 0.4,
-						z: 0.4
-					}, {
-						x: 0,
-						y: 0.2,
-						z: 1.20
-					});
-
-					addRobotArm();
-					initForearmCamera();
-					setupControls();
-
-					const initialImage = captureImage();
-					updateForearmViewObjectDetection(initialImage);
-					break;
-			}
-
-			animate();
-		}
-
-		function initForearmCamera() {
-			let width = 640;
-			let height = 480;
-			const aspect = width / height;
-			const fov = 60;
-			forearmCamera = new THREE.PerspectiveCamera(fov, aspect, 0.1, 1000);
-			forearmRenderer = new THREE.WebGLRenderer({
-				antialias: true
-			});
-
-			forearmRenderer.setSize(width, height);
-			forearmRenderer.gammaFactor = 2.2;
-			forearmRenderer.outputEncoding = THREE.sRGBEncoding;
-			forearmRenderer.shadowMap.enabled = true;
-			forearmRenderer.shadowMap.type = THREE.PCFSoftShadowMap;
-			forearmRenderer.setClearColor(0x000000);
-			document.getElementById('forearmViewObjectDetection').style.width = `320px`;
-			document.getElementById('forearmViewObjectDetection').style.height = `240px`;
-			document.getElementById('forearmView').appendChild(forearmRenderer.domElement);
-		}
-
-
-		function setupScene() {
-			scene = new THREE.Scene();
-			const gridSize = 10;
-			const gridDivisions = 10;
-			const gridHelper = new THREE.GridHelper(gridSize, gridDivisions);
-			scene.add(gridHelper);
-		}
-
-		function setupCamera(
-			fov = 75,
-			aspectRatio = window.innerWidth / window.innerHeight,
-			nearClippingPlane = 0.1,
-			farClippingPlane = 1000,
-			initialPosition = {
-				x: 2,
-				y: 1,
-				z: 0
-			},
-			lookAtPosition = {
-				x: 0,
-				y: 0,
-				z: 0
-			}
-		) {
-			camera = new THREE.PerspectiveCamera(fov, aspectRatio, nearClippingPlane, farClippingPlane);
-			camera.position.set(initialPosition.x, initialPosition.y, initialPosition.z);
-			camera.lookAt(lookAtPosition.x, lookAtPosition.y, lookAtPosition.z);
-		}
-
-		function setupRenderer() {
-			renderer = new THREE.WebGLRenderer({
-				antialias: true
-			});
-			renderer.setSize(window.innerWidth, window.innerHeight);
-			renderer.gammaFactor = 2.2;
-			renderer.outputEncoding = THREE.sRGBEncoding;
-			renderer.setClearColor(0x000000);
-			document.body.appendChild(renderer.domElement);
-		}
-
-		function onWindowResize() {
-			camera.aspect = window.innerWidth / window.innerHeight;
-			camera.updateProjectionMatrix();
-			renderer.setSize(window.innerWidth, window.innerHeight);
-
-			const forearmAspect = 640 / 480;
-			forearmCamera.aspect = forearmAspect;
-			forearmCamera.updateProjectionMatrix();
-			forearmRenderer.setSize(640 * window.devicePixelRatio, 480 * window.devicePixelRatio);
-		}
-
-		let resizeTimer;
-		window.addEventListener('resize', function() {
-			clearTimeout(resizeTimer);
-			resizeTimer = setTimeout(onWindowResize, 250);
-		}, false);
-
-		function addLighting() {
-			const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
-			directionalLight.position.set(0, 10, 10).normalize();
-			directionalLight.castShadow = true;
-			scene.add(directionalLight);
-
-			const pointLight = new THREE.PointLight(0xffffff, 0.5, 100);
-			pointLight.position.set(10, 10, 10);
-			scene.add(pointLight);
-
-			const ambientLight = new THREE.AmbientLight(0x404040);
-			scene.add(ambientLight);
-		}
-
-		function pairMeshWithPhysicsBody(mesh, options = {}) {
-			let shape;
-			const geometry = mesh.geometry;
-			const mass = options.mass !== undefined ? options.mass : 1;
-			const isKinematic = options.isKinematic || false;
-
-			if (geometry instanceof THREE.BoxGeometry) {
-				const size = new CANNON.Vec3(geometry.parameters.width / 2, geometry.parameters.height / 2, geometry.parameters.depth / 2);
-				shape = new CANNON.Box(size);
-			} else if (geometry instanceof THREE.SphereGeometry) {
-				const radius = geometry.parameters.radius;
-				shape = new CANNON.Sphere(radius);
-			}
-
-			const body = new CANNON.Body({
-				mass: isKinematic ? 0 : mass,
-				material: new CANNON.Material({
-					friction: options.friction || 0.3,
-					restitution: options.restitution || 0.5,
-				}),
-				shape: shape,
-				type: isKinematic ? CANNON.Body.KINEMATIC : CANNON.Body.DYNAMIC
-			});
-
-			body.position.set(mesh.position.x, mesh.position.y, mesh.position.z);
-			body.quaternion.set(mesh.quaternion.x, mesh.quaternion.y, mesh.quaternion.z, mesh.quaternion.w);
-
-			world.addBody(body);
-			mesh.userData.physicsBody = body;
-		}
-
-		function addPhysicsObject(type, size = {
-			x: 0.5,
-			y: 0.5,
-			z: 0.5
-		}, position = {
-			x: 0,
-			y: 0.25,
-			z: 1.25
-		}) {
-			let geometry;
-			let meshMaterial = new THREE.MeshNormalMaterial();
-
-			switch (type) {
-				case 'box':
-					geometry = new THREE.BoxGeometry(size.x, size.y, size.z);
-					break;
-				case 'sphere':
-					geometry = new THREE.SphereGeometry(size.x, 32, 32);
-					break;
-				default:
-					console.warn('Unsupported physics object type:', type);
-					return;
-			}
-
-			const mesh = new THREE.Mesh(geometry, meshMaterial);
-			mesh.position.set(position.x, position.y, position.z);
-			scene.add(mesh);
-
-			pairMeshWithPhysicsBody(mesh, {
-				mass: 10,
-				friction: 0.4,
-				restitution: 0.6,
-				isKinematic: false
-			});
-		}
-
-		function addRobotArm() {
-
-			var robotMaterial = new THREE.MeshNormalMaterial();
-
-			const baseGeometry = new THREE.CylinderGeometry(0.2, 0.2, 0.2, 32);
-			base = new THREE.Mesh(baseGeometry, robotMaterial);
-			base.position.y = 0.1;
-
-			const shoulderGeometry = new THREE.SphereGeometry(0.2, 32, 32);
-			shoulder = new THREE.Mesh(shoulderGeometry, robotMaterial);
-			shoulder.position.y = 0.1;
-			const maxShoulderAngle = 45;
-			shoulder.rotation.x = THREE.MathUtils.degToRad(0);
-
-			const upperArmGeometry = new THREE.BoxGeometry(0.1, 1, 0.1);
-			upperArm = new THREE.Mesh(upperArmGeometry, robotMaterial);
-			upperArm.position.y = 0.5;
-
-			const elbowGeometry = new THREE.CylinderGeometry(0.15, 0.15, 0.15, 32);
-			elbow = new THREE.Mesh(elbowGeometry, robotMaterial);
-			elbow.position.y = 0.6;
-			elbow.rotation.z = Math.PI / 2;
-			elbow.castShadow = true;
-			elbow.receiveShadow = true;
-			const maxElbowAngle = 45;
-			elbow.rotation.x = THREE.MathUtils.degToRad(45);
-
-			const forearmGeometry = new THREE.BoxGeometry(0.1, 0.1, 0.7);
-			forearm = new THREE.Mesh(forearmGeometry, robotMaterial);
-			forearm.position.set(0, 0, 0.4);
-
-			scene.add(base);
-			base.add(shoulder);
-			shoulder.add(upperArm);
-
-			pairMeshWithPhysicsBody(upperArm, {
-				mass: 0,
-				friction: 0.4,
-				restitution: 0.6,
-				isKinematic: true
-			});
-
-			upperArm.add(elbow);
-			elbow.add(forearm);
-
-			pairMeshWithPhysicsBody(forearm, {
-				mass: 0,
-				friction: 0.4,
-				restitution: 0.6,
-				isKinematic: true
-			});
-
-			const pincerBaseGeometry = new THREE.BoxGeometry(0.2, 0.4, 0.05);
-			pincerBase = new THREE.Mesh(pincerBaseGeometry, robotMaterial);
-			const pincerClawGeometry = new THREE.BoxGeometry(0.2, 0.05, 0.1);
-			pincerClaw1 = new THREE.Mesh(pincerClawGeometry, robotMaterial);
-			pincerClaw2 = new THREE.Mesh(pincerClawGeometry, robotMaterial);
-
-			forearm.add(pincerBase);
-			pincerBase.position.set(0, 0, 0.36);
-
-			pairMeshWithPhysicsBody(pincerBase, {
-				mass: 0,
-				friction: 0.4,
-				restitution: 0.6,
-				isKinematic: true
-			});
-
-			pincerClaw1.position.set(0, 0.175, 0.075);
-			pincerClaw2.position.set(0, -0.175, 0.075);
-			pincerBase.add(pincerClaw1);
-			pincerBase.add(pincerClaw2);
-
-			pairMeshWithPhysicsBody(pincerClaw1, {
-				mass: 0,
-				friction: 0.4,
-				restitution: 0.6,
-				isKinematic: true
-			});
-
-			pairMeshWithPhysicsBody(pincerClaw2, {
-				mass: 0,
-				friction: 0.4,
-				restitution: 0.6,
-				isKinematic: true
-			});
-		}
-
-		function addFloor() {
-			const backgroundGeometry = new THREE.PlaneGeometry(10, 10);
-
-			const backgroundMaterial = new THREE.MeshStandardMaterial({
-				color: 0x000000,
-				side: THREE.DoubleSide,
-			});
-
-			const background = new THREE.Mesh(backgroundGeometry, backgroundMaterial);
-			background.rotation.x = -Math.PI / 2;
-			background.position.y = -0.01;
-			scene.add(background);
-
-			/*const gridGeometry = new THREE.PlaneGeometry(10, 10, 10, 10);
-			const gridMaterial = new THREE.MeshBasicMaterial({
-				color: 0x000000,
-				side: THREE.DoubleSide,
-				transparent: true,
-				opacity: 0.5,
-				wireframe: true,
-			});
-			const grid = new THREE.Mesh(gridGeometry, gridMaterial);
-			grid.rotation.x = -Math.PI / 2;
-			grid.position.y = 0.001;
-			scene.add(grid);*/
-
-			var floorShape = new CANNON.Plane();
-			var floorBody = new CANNON.Body({
-				mass: 0
-			});
-			floorBody.addShape(floorShape);
-			floorBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0);
-			world.addBody(floorBody);
-
-			/*const floorVisualGeometry = new THREE.PlaneGeometry(10, 10);
-			const floorVisualMaterial = new THREE.MeshBasicMaterial({
-				color: 0x00ff00,
-				side: THREE.DoubleSide,
-				transparent: true,
-				opacity: 0.5,
-				wireframe: true
-			});
-			const floorVisual = new THREE.Mesh(floorVisualGeometry, floorVisualMaterial);
-			floorVisual.rotation.x = -Math.PI / 2;
-			floorVisual.position.y = -0.01;
-			scene.add(floorVisual);*/
-		}
-
-		function setupControls() {
-			controls = new THREE.OrbitControls(camera, renderer.domElement);
-			controls.target.set(0, 1, 0);
-			controls.update();
-			document.addEventListener("keydown", onDocumentKeyDown, false);
-		}
-
-		function animate() {
-			requestAnimationFrame(animate);
-
-			if (world) {
-				world.step(1 / 60);
-
-				scene.traverse(function(object) {
-					if (object.userData.physicsBody) {
-						if (object.userData.physicsBody.type === CANNON.Body.DYNAMIC) {
-							object.position.copy(object.userData.physicsBody.position);
-							object.quaternion.copy(object.userData.physicsBody.quaternion);
-						} else if (object.userData.physicsBody.type === CANNON.Body.KINEMATIC) {
-							var worldPosition = new THREE.Vector3();
-							var worldQuaternion = new THREE.Quaternion();
-							object.getWorldPosition(worldPosition);
-							object.getWorldQuaternion(worldQuaternion);
-							object.userData.physicsBody.position.copy(worldPosition);
-							object.userData.physicsBody.quaternion.copy(worldQuaternion);
-						}
-					}
-				});
-			}
-
-			if (robot.demoMode) {
-				robot.automatedMovements();
-			}
-
-			robot.update();
-			//cannonDebugRenderer.update();
-			renderer.render(scene, camera);
-
-			if (forearmCameraIsActive) {
-				updateForearmCamera();
-				forearmRenderer.render(scene, forearmCamera);
-			}
-		}
-
-		function clampRotation(currentRotation, minAngle, maxAngle) {
-			const minRadians = THREE.MathUtils.degToRad(minAngle);
-			const maxRadians = THREE.MathUtils.degToRad(maxAngle);
-			return Math.max(minRadians, Math.min(maxRadians, currentRotation));
-		}
-
-		let movementStep = 0;
-
-		function automatedMovements() {
-			switch (this.movementStep) {
-				case 0:
-					this.rotateBase(1);
-					this.onMovementDetected();
-					this.fullCycleCount += demoSpeed;
-					if (this.fullCycleCount >= 2 * Math.PI) {
-						this.fullCycleCount = 0;
-						this.movementStep++;
-					}
-					break;
-
-				default:
-					this.movementStep = 0;
-					break;
-			}
-		}
-
-		document.addEventListener("keydown", onDocumentKeyDown, false);
-
-		function onDocumentKeyDown(event) {
-			var keyCode = event.which;
-
-			if (keyCode === 77) {
-				toggleDemoMode();
-				return;
-			}
-
-			if (robot.demoMode) {
-				return;
-			}
-
-			switch (keyCode) {
-				case 81:
-					robot.rotateBase(1);
-					break;
-				case 69:
-					robot.rotateBase(-1);
-					break;
-				case 87:
-					robot.moveShoulder(-1);
-					break;
-				case 83:
-					robot.moveShoulder(1);
-					break;
-				case 82:
-					robot.moveElbow(-1);
-					break;
-				case 70:
-					robot.moveElbow(1);
-					break;
-				default:
-					break;
-			}
-		}
-
-		function toggleDemoMode() {
-			robot.demoMode = !robot.demoMode;
-			document.getElementById("demoStatus").innerText = "Demo: " + (robot.demoMode ? "ON" : "OFF");
-			document.getElementById('executeButton').disabled = robot.demoMode;
-		}
-
-		document.addEventListener("keydown", onDocumentKeyDown, false);
-
-		document.getElementById('executeButton').addEventListener('click', async function() {
-			const commandString = document.getElementById('commandInput').value;
-			const commands = parseCommands([commandString]);
-
-			for (const command of commands) {
-				await executeCommand(`${command.type} ${command.value}`);
-			}
-		});
-
-		function executeCommand(command) {
-			return new Promise((resolve, reject) => {
-				const args = command.split(' ');
-				const commandType = args[0];
-				const commandValue = parseFloat(args[1]);
-
-				if (isNaN(commandValue)) {
-					console.error(`Invalid command value for '${commandType}': ${args[1]}`);
-					reject(`Invalid command value: ${args[1]}`);
-					return;
-				}
-
-				try {
-					switch (commandType) {
-						case 'rotateBase':
-							robot.targetBaseRotation = THREE.MathUtils.degToRad(commandValue);
-							robot.isBaseMoving = true;
-							break;
-						case 'moveShoulder':
-							let shoulderTarget = THREE.MathUtils.degToRad(commandValue);
-							shoulderTarget = robot.clampRotation(shoulderTarget, robot.minShoulderRotation, robot.maxShoulderRotation);
-							robot.targetShoulderRotation = shoulderTarget;
-							robot.isShoulderMoving = true;
-							break;
-						case 'moveElbow':
-							let elbowTarget = THREE.MathUtils.degToRad(commandValue);
-							elbowTarget = robot.clampRotation(elbowTarget, robot.minElbowRotation, robot.maxElbowRotation);
-							robot.targetElbowRotation = elbowTarget;
-							robot.isElbowMoving = true;
-							break;
-						default:
-							console.error(`Unknown command type: ${commandType}`);
-							reject(`Unknown command type: ${commandType}`);
-							return;
-					}
-
-					setTimeout(() => {
-						console.log(`Executed command: ${command}`);
-						resolve();
-					}, 1000);
-				} catch (error) {
-					console.error(`Error executing command '${commandType}': ${error}`);
-					reject(`Error executing command: ${error}`);
-				}
-			});
-		}
-
-		let currentImage = 1;
-
-		const img1 = document.getElementById('img1');
-		const img2 = document.getElementById('img2');
-
-		async function updateForearmViewObjectDetection(imageDataUrl) {
-			const preloadedImage = await preloadImage(imageDataUrl);
-
-			requestAnimationFrame(() => {
-				const showImg = currentImage === 1 ? img1 : img2;
-				const hideImg = currentImage === 1 ? img2 : img1;
-
-				showImg.src = preloadedImage.src;
-				showImg.classList.add('visible');
-				showImg.classList.remove('hidden');
-				hideImg.classList.add('hidden');
-				hideImg.classList.remove('visible');
-				currentImage = currentImage === 1 ? 2 : 1;
-			});
-		}
-
-		function preloadImage(src) {
-			return new Promise((resolve, reject) => {
-				const img = new Image();
-				img.onload = () => {
-					resolve(img);
-				};
-				img.onerror = reject;
-				img.src = src;
-			});
-		}
-
-		function updateForearmCamera() {
-			var pincerBasePosition = new THREE.Vector3();
-			pincerBase.getWorldPosition(pincerBasePosition);
-			forearmCamera.position.copy(pincerBasePosition);
-
-			var forearmDirection = new THREE.Vector3(0, 0, -1);
-			forearm.getWorldDirection(forearmDirection);
-			forearmCamera.lookAt(forearmDirection.add(pincerBasePosition));
-			forearmCamera.rotateX(THREE.MathUtils.degToRad(0));
-		}
-
-		function captureImage() {
-			updateForearmCamera();
-			forearmRenderer.render(scene, forearmCamera);
-			var strMime = "image/jpeg";
-			return forearmRenderer.domElement.toDataURL(strMime, 1.0);
-		}
-
-		function saveImage() {
-			try {
-				forearmRenderer.render(scene, forearmCamera);
-				var strMime = "image/jpeg";
-				var imgData = forearmRenderer.domElement.toDataURL(strMime, 1.0);
-				saveFile(imgData, "forearm_view.jpg");
-			} catch (e) {
-				console.log(e);
-				return;
-			}
-		}
-
-		var saveFile = function(strData, filename) {
-			var link = document.createElement('a');
-			if (typeof link.download === 'string') {
-				document.body.appendChild(link);
-				link.download = filename;
-				link.href = strData;
-				link.click();
-				document.body.removeChild(link);
-			} else {
-				location.replace(strData);
-			}
-		}
-
-		document.getElementById('recordButton').addEventListener('click', function() {
-			if (robot.isRecording) {
-				robot.stopRecording();
-				this.innerText = "Record";
-			} else {
-				robot.startRecording();
-				this.innerText = "Stop";
-			}
-		});
-
-		document.getElementById('saveImageButton').addEventListener('click', saveImage);
-
-		initRobot('cobot');
-	</script>
+<div id="forearmViewWrapper">
+    <div id="forearmView"></div>
+
+    <div id="forearmViewObjectDetection">
+        <img id="img1" class="visible" style="width: 100%; height: 100%;"/>
+        <img id="img2" class="hidden" style="width: 100%; height: 100%;"/>
+        <button id="saveImageButton">Save</button>
+    </div>
+
+    <div id="detectionResults"></div>
+</div>
+
+<div id="demoStatus">
+    Demo: OFF
+</div>
+
+<div id="keyGuide">
+    Base: Q/E<br>
+    Upper Arm: W/S<br>
+    Forearm: R/F<br>
+    Demo: M
+</div>
+
+<button id="recordButton">Record</button>
+<button id="generateButton">Generate</button>
+
+<div id="scriptControls">
+    <textarea id="commandInput" placeholder="Enter command" autocomplete="off"></textarea>
+    <button id="executeButton">Execute</button>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cannon.js/0.6.2/cannon.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/cannon@0.6.2/tools/threejs/CannonDebugRenderer.js"></script>
+
+<script>
+    function parseCommands(commandsArray) {
+        if (!commandsArray.length || typeof commandsArray[0] !== 'string') {
+            return [];
+        }
+
+        const commands = commandsArray[0].split('\n');
+        return commands.map(command => {
+            const [type, valueString] = command.split(' ');
+            const value = parseFloat(valueString);
+            if (!isNaN(value)) {
+                return {
+                    type,
+                    value: value
+                };
+            }
+        }).filter(command => command !== undefined);
+    }
+</script>
+
+<script type="module">
+    async function runPrediction() {
+        const button = document.getElementById('generateButton');
+        button.disabled = true;
+        button.innerText = "Loading...";
+
+        const rotateBase = Math.floor(Math.random() * 361);
+        const prompt = `rotateBase ${rotateBase}`;
+
+        try {
+            const currentImageBlob = await captureImageBlob();
+
+            let formData = new FormData();
+            if (currentImageBlob) {
+                formData.append("file", currentImageBlob, "image.jpg");
+            }
+
+            const url = "";
+
+            if (!url) {
+                throw new Error("Configuration error: Server URL is not set.");
+            }
+
+            const response = await fetch(`${url}/process/?prompt=${encodeURIComponent(prompt)}`, {
+                method: 'POST',
+                body: formData
+            });
+
+            if (!response.ok) {
+                throw new Error(`Server response error: status ${response.status}`);
+            }
+
+            const data = await response.json();
+            console.log(data);
+        } catch (error) {
+            console.error('Error during prediction:', error.message);
+            if (error.message.includes('Failed to fetch')) {
+                alert('Network error: Server is unreachable or URL is incorrect.');
+            } else if (error.message.includes('Server URL is not set')) {
+                alert('Configuration error: Please set the server URL.');
+            } else {
+                alert(`Error: ${error.message}`);
+            }
+        } finally {
+            button.disabled = false;
+            button.innerText = "Generate";
+        }
+    }
+
+    document.getElementById('generateButton').addEventListener('click', runPrediction);
+
+    async function captureImageBlob() {
+        if (forearmRenderer && forearmRenderer.domElement instanceof HTMLCanvasElement) {
+            return new Promise(resolve => {
+                forearmRenderer.domElement.toBlob(blob => {
+                    resolve(blob);
+                }, 'image/jpeg');
+            });
+        }
+        return null;
+    }
+</script>
+
+<script>
+    let isRetinaResolution = false;
+
+    class RobotController {
+        constructor() {
+            this.currentCommand = null;
+            this.demoMode = false;
+            this.fullCycleCount = 0;
+            this.isBaseMoving = false;
+            this.isElbowMoving = false;
+            this.isRecording = false;
+            this.isShoulderMoving = false;
+            this.lastRecordedCommand = null;
+            this.lastRecordedValue = null;
+            this.movementStep = 0;
+            this.recordedCommands = [];
+            this.targetBaseRotation = 0;
+            this.targetElbowRotation = 0;
+            this.targetShoulderRotation = 0;
+
+            this.maxShoulderRotation = 45;
+            this.minShoulderRotation = 0;
+            this.maxElbowRotation = 45;
+            this.minElbowRotation = -90;
+
+            this.baseTargetRotationY = 0;
+            this.shoulderTargetRotationX = 0;
+            this.elbowTargetRotationX = 0;
+
+            this.isBaseRotating = false;
+            this.isShoulderRotating = false;
+            this.isElbowRotating = false;
+        }
+
+        onMovementDetected() {
+            console.log("Movement detected!");
+            const imageDataUrl = captureImage();
+            updateForearmViewObjectDetection(imageDataUrl);
+        }
+
+        rotateBase(direction) {
+            const previousRotation = base.rotation.y;
+            const delta = (this.demoMode ? demoSpeed : 0.1) * direction;
+            base.rotation.y += delta;
+            if (this.isRecording) {
+                this.recordCommand("rotateBase", base.rotation.y);
+            }
+
+            if (base.rotation.y !== previousRotation) {
+                this.onMovementDetected();
+            }
+        }
+
+        moveShoulder(direction) {
+            const previousRotation = shoulder.rotation.x;
+            const delta = (this.demoMode ? demoSpeed : 0.1) * direction;
+            shoulder.rotation.x += delta;
+            shoulder.rotation.x = this.clampRotation(shoulder.rotation.x, this.minShoulderRotation, this.maxShoulderRotation);
+            if (this.isRecording) {
+                this.recordCommand("moveShoulder", shoulder.rotation.x);
+            }
+
+            if (shoulder.rotation.x !== previousRotation) {
+                this.onMovementDetected();
+            }
+        }
+
+        moveElbow(direction) {
+            const previousRotation = elbow.rotation.x;
+            const delta = (this.demoMode ? demoSpeed : 0.1) * direction;
+            elbow.rotation.x += delta;
+            elbow.rotation.x = this.clampRotation(elbow.rotation.x, this.minElbowRotation, this.maxElbowRotation);
+            if (this.isRecording) {
+                this.recordCommand("moveElbow", elbow.rotation.x);
+            }
+
+            if (elbow.rotation.x !== previousRotation) {
+                this.onMovementDetected();
+            }
+        }
+
+        automatedMovements() {
+            switch (this.movementStep) {
+                case 0:
+                    this.rotateBase(1);
+                    this.fullCycleCount += demoSpeed;
+                    if (this.fullCycleCount >= 2 * Math.PI) {
+                        this.fullCycleCount = 0;
+                        this.movementStep++;
+                    }
+                    break;
+                default:
+                    this.movementStep = 0;
+                    break;
+            }
+        }
+
+        clampRotation(currentRotation, minAngle, maxAngle) {
+            const minRadians = THREE.MathUtils.degToRad(minAngle);
+            const maxRadians = THREE.MathUtils.degToRad(maxAngle);
+            return Math.max(minRadians, Math.min(maxRadians, currentRotation));
+        }
+
+        update() {
+            if (this.isBaseMoving) {
+                this.interpolateRotation(base, 'y', this.targetBaseRotation);
+                this.isBaseMoving = !this.hasReachedTarget(base, 'y', this.targetBaseRotation);
+            }
+            if (this.isShoulderMoving) {
+                this.interpolateRotation(shoulder, 'x', this.targetShoulderRotation);
+                this.isShoulderMoving = !this.hasReachedTarget(shoulder, 'x', this.targetShoulderRotation);
+            }
+            if (this.isElbowMoving) {
+                this.interpolateRotation(elbow, 'x', this.targetElbowRotation);
+                this.isElbowMoving = !this.hasReachedTarget(elbow, 'x', this.targetElbowRotation);
+            }
+
+            if (this.isBaseRotating) {
+                this.interpolateRotation(base, 'y', this.baseTargetRotationY);
+            }
+            if (this.isShoulderRotating) {
+                this.interpolateRotation(shoulder, 'x', this.shoulderTargetRotationX);
+            }
+            if (this.isElbowRotating) {
+                this.interpolateRotation(elbow, 'x', this.elbowTargetRotationX);
+            }
+        }
+
+        interpolateRotation(joint, axis, targetRotation) {
+            const currentRotation = joint.rotation[axis];
+            const delta = targetRotation - currentRotation;
+
+            if (Math.abs(delta) > 0.01) {
+                joint.rotation[axis] += delta * 0.05;
+            } else {
+                if (axis === 'y') {
+                    this.isBaseRotating = false;
+                } else if (axis === 'x') {
+                    if (joint === shoulder) {
+                        this.isShoulderRotating = false;
+                    } else if (joint === elbow) {
+                        this.isElbowRotating = false;
+                    }
+                }
+            }
+        }
+
+        hasReachedTarget(joint, axis, targetRotation) {
+            return Math.abs(joint.rotation[axis] - targetRotation) < 0.01;
+        }
+
+        interpolateRotation(joint, axis, targetRotation) {
+            const currentRotation = joint.rotation[axis];
+            const delta = targetRotation - currentRotation;
+            joint.rotation[axis] += delta * 0.05;
+        }
+
+        checkAndResetAutomation() {
+            if (this.targetBaseRotation === base.rotation.y &&
+                this.targetShoulderRotation === shoulder.rotation.x &&
+                this.targetElbowRotation === elbow.rotation.x) {
+                this.isAutomatedCommandActive = false;
+            }
+        }
+
+        turnOffDemoMode() {
+            this.demoMode = false;
+            document.getElementById("demoStatus").innerText = "Demo: OFF";
+        }
+
+        startRecording() {
+            this.isRecording = true;
+            this.recordedCommands = [];
+            console.log("Recording started");
+        }
+
+        recordCommand(command, value) {
+            if (this.isRecording) {
+                if (this.lastRecordedCommand !== command) {
+                    if (this.lastRecordedCommand !== null) {
+                        this.recordedCommands.push(`${this.lastRecordedCommand} ${this.radiansToDegrees(this.lastRecordedValue)}`);
+                    }
+                    this.lastRecordedCommand = command;
+                    this.lastRecordedValue = value;
+                } else {
+                    this.lastRecordedValue = value;
+                }
+            }
+        }
+
+        radiansToDegrees(radians) {
+            return (radians * 180 / Math.PI).toFixed(2);
+        }
+
+        stopRecording() {
+            if (this.isRecording) {
+                if (this.lastRecordedCommand !== null) {
+                    this.recordedCommands.push(`${this.lastRecordedCommand} ${this.radiansToDegrees(this.lastRecordedValue)}`);
+                }
+                this.isRecording = false;
+                this.lastRecordedCommand = null;
+                this.lastRecordedValue = null;
+                console.log("Recording stopped");
+                console.log(this.recordedCommands);
+
+                this.downloadRecordedCommands();
+            }
+        }
+
+        downloadRecordedCommands() {
+            const text = this.recordedCommands.join('\n');
+            const blob = new Blob([text], {
+                type: 'text/plain'
+            });
+            const anchor = document.createElement('a');
+            anchor.download = 'recorded_commands.txt';
+            anchor.href = window.URL.createObjectURL(blob);
+            anchor.click();
+            window.URL.revokeObjectURL(anchor.href);
+        }
+    }
+
+    const robot = new RobotController();
+
+    const demoSpeed = 0.01;
+    let base;
+    let boxBody;
+    let camera;
+    let controls;
+    let demoMode = false;
+    let elbow;
+    let forearm;
+    let forearmCamera;
+    let forearmRenderer;
+    let forearmCameraIsActive = true;
+    let fullCycleCount = 0;
+    let pincerBase;
+    let pincerClaw1;
+    let pincerClaw2;
+    let renderer;
+    let scene;
+    let shoulder;
+    let upperArm;
+    let world;
+
+    function initRobot(type) {
+        world = new CANNON.World();
+        world.gravity.set(0, -9.82, 0);
+
+        setupScene();
+        addFloor();
+        addLighting();
+        setupCamera();
+        setupRenderer();
+
+        cannonDebugRenderer = new THREE.CannonDebugRenderer(scene, world);
+
+        switch (type) {
+            case 'cobot':
+                addPhysicsObject('box', {
+                    x: 0.4,
+                    y: 0.4,
+                    z: 0.4
+                }, {
+                    x: 0,
+                    y: 0.2,
+                    z: 1.20
+                });
+
+                addRobotArm();
+                initForearmCamera();
+                setupControls();
+
+                const initialImage = captureImage();
+                updateForearmViewObjectDetection(initialImage);
+                break;
+        }
+
+        animate();
+    }
+
+    function initForearmCamera() {
+        let width = 640;
+        let height = 480;
+        const aspect = width / height;
+        const fov = 60;
+        forearmCamera = new THREE.PerspectiveCamera(fov, aspect, 0.1, 1000);
+        forearmRenderer = new THREE.WebGLRenderer({
+            antialias: true
+        });
+
+        forearmRenderer.setSize(width, height);
+        forearmRenderer.gammaFactor = 2.2;
+        forearmRenderer.outputEncoding = THREE.sRGBEncoding;
+        forearmRenderer.shadowMap.enabled = true;
+        forearmRenderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        forearmRenderer.setClearColor(0x000000);
+        document.getElementById('forearmViewObjectDetection').style.width = `320px`;
+        document.getElementById('forearmViewObjectDetection').style.height = `240px`;
+        document.getElementById('forearmView').appendChild(forearmRenderer.domElement);
+    }
+
+
+    function setupScene() {
+        scene = new THREE.Scene();
+        const gridSize = 10;
+        const gridDivisions = 10;
+        const gridHelper = new THREE.GridHelper(gridSize, gridDivisions);
+        scene.add(gridHelper);
+    }
+
+    function setupCamera(
+        fov = 75,
+        aspectRatio = window.innerWidth / window.innerHeight,
+        nearClippingPlane = 0.1,
+        farClippingPlane = 1000,
+        initialPosition = {
+            x: 2,
+            y: 1,
+            z: 0
+        },
+        lookAtPosition = {
+            x: 0,
+            y: 0,
+            z: 0
+        }
+    ) {
+        camera = new THREE.PerspectiveCamera(fov, aspectRatio, nearClippingPlane, farClippingPlane);
+        camera.position.set(initialPosition.x, initialPosition.y, initialPosition.z);
+        camera.lookAt(lookAtPosition.x, lookAtPosition.y, lookAtPosition.z);
+    }
+
+    function setupRenderer() {
+        renderer = new THREE.WebGLRenderer({
+            antialias: true
+        });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.gammaFactor = 2.2;
+        renderer.outputEncoding = THREE.sRGBEncoding;
+        renderer.setClearColor(0x000000);
+        document.body.appendChild(renderer.domElement);
+    }
+
+    function onWindowResize() {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+
+        const forearmAspect = 640 / 480;
+        forearmCamera.aspect = forearmAspect;
+        forearmCamera.updateProjectionMatrix();
+        forearmRenderer.setSize(640 * window.devicePixelRatio, 480 * window.devicePixelRatio);
+    }
+
+    let resizeTimer;
+    window.addEventListener('resize', function () {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(onWindowResize, 250);
+    }, false);
+
+    function addLighting() {
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+        directionalLight.position.set(0, 10, 10).normalize();
+        directionalLight.castShadow = true;
+        scene.add(directionalLight);
+
+        const pointLight = new THREE.PointLight(0xffffff, 0.5, 100);
+        pointLight.position.set(10, 10, 10);
+        scene.add(pointLight);
+
+        const ambientLight = new THREE.AmbientLight(0x404040);
+        scene.add(ambientLight);
+    }
+
+    function pairMeshWithPhysicsBody(mesh, options = {}) {
+        let shape;
+        const geometry = mesh.geometry;
+        const mass = options.mass !== undefined ? options.mass : 1;
+        const isKinematic = options.isKinematic || false;
+
+        if (geometry instanceof THREE.BoxGeometry) {
+            const size = new CANNON.Vec3(geometry.parameters.width / 2, geometry.parameters.height / 2, geometry.parameters.depth / 2);
+            shape = new CANNON.Box(size);
+        } else if (geometry instanceof THREE.SphereGeometry) {
+            const radius = geometry.parameters.radius;
+            shape = new CANNON.Sphere(radius);
+        }
+
+        const body = new CANNON.Body({
+            mass: isKinematic ? 0 : mass,
+            material: new CANNON.Material({
+                friction: options.friction || 0.3,
+                restitution: options.restitution || 0.5,
+            }),
+            shape: shape,
+            type: isKinematic ? CANNON.Body.KINEMATIC : CANNON.Body.DYNAMIC
+        });
+
+        body.position.set(mesh.position.x, mesh.position.y, mesh.position.z);
+        body.quaternion.set(mesh.quaternion.x, mesh.quaternion.y, mesh.quaternion.z, mesh.quaternion.w);
+
+        world.addBody(body);
+        mesh.userData.physicsBody = body;
+    }
+
+    function addPhysicsObject(type, size = {
+        x: 0.5,
+        y: 0.5,
+        z: 0.5
+    }, position = {
+        x: 0,
+        y: 0.25,
+        z: 1.25
+    }) {
+        let geometry;
+        let meshMaterial = new THREE.MeshNormalMaterial();
+
+        switch (type) {
+            case 'box':
+                geometry = new THREE.BoxGeometry(size.x, size.y, size.z);
+                break;
+            case 'sphere':
+                geometry = new THREE.SphereGeometry(size.x, 32, 32);
+                break;
+            default:
+                console.warn('Unsupported physics object type:', type);
+                return;
+        }
+
+        const mesh = new THREE.Mesh(geometry, meshMaterial);
+        mesh.position.set(position.x, position.y, position.z);
+        scene.add(mesh);
+
+        pairMeshWithPhysicsBody(mesh, {
+            mass: 10,
+            friction: 0.4,
+            restitution: 0.6,
+            isKinematic: false
+        });
+    }
+
+    function addRobotArm() {
+
+        var robotMaterial = new THREE.MeshNormalMaterial();
+
+        const baseGeometry = new THREE.CylinderGeometry(0.2, 0.2, 0.2, 32);
+        base = new THREE.Mesh(baseGeometry, robotMaterial);
+        base.position.y = 0.1;
+
+        const shoulderGeometry = new THREE.SphereGeometry(0.2, 32, 32);
+        shoulder = new THREE.Mesh(shoulderGeometry, robotMaterial);
+        shoulder.position.y = 0.1;
+        const maxShoulderAngle = 45;
+        shoulder.rotation.x = THREE.MathUtils.degToRad(0);
+
+        const upperArmGeometry = new THREE.BoxGeometry(0.1, 1, 0.1);
+        upperArm = new THREE.Mesh(upperArmGeometry, robotMaterial);
+        upperArm.position.y = 0.5;
+
+        const elbowGeometry = new THREE.CylinderGeometry(0.15, 0.15, 0.15, 32);
+        elbow = new THREE.Mesh(elbowGeometry, robotMaterial);
+        elbow.position.y = 0.6;
+        elbow.rotation.z = Math.PI / 2;
+        elbow.castShadow = true;
+        elbow.receiveShadow = true;
+        const maxElbowAngle = 45;
+        elbow.rotation.x = THREE.MathUtils.degToRad(45);
+
+        const forearmGeometry = new THREE.BoxGeometry(0.1, 0.1, 0.7);
+        forearm = new THREE.Mesh(forearmGeometry, robotMaterial);
+        forearm.position.set(0, 0, 0.4);
+
+        scene.add(base);
+        base.add(shoulder);
+        shoulder.add(upperArm);
+
+        pairMeshWithPhysicsBody(upperArm, {
+            mass: 0,
+            friction: 0.4,
+            restitution: 0.6,
+            isKinematic: true
+        });
+
+        upperArm.add(elbow);
+        elbow.add(forearm);
+
+        pairMeshWithPhysicsBody(forearm, {
+            mass: 0,
+            friction: 0.4,
+            restitution: 0.6,
+            isKinematic: true
+        });
+
+        const pincerBaseGeometry = new THREE.BoxGeometry(0.2, 0.4, 0.05);
+        pincerBase = new THREE.Mesh(pincerBaseGeometry, robotMaterial);
+        const pincerClawGeometry = new THREE.BoxGeometry(0.2, 0.05, 0.1);
+        pincerClaw1 = new THREE.Mesh(pincerClawGeometry, robotMaterial);
+        pincerClaw2 = new THREE.Mesh(pincerClawGeometry, robotMaterial);
+
+        forearm.add(pincerBase);
+        pincerBase.position.set(0, 0, 0.36);
+
+        pairMeshWithPhysicsBody(pincerBase, {
+            mass: 0,
+            friction: 0.4,
+            restitution: 0.6,
+            isKinematic: true
+        });
+
+        pincerClaw1.position.set(0, 0.175, 0.075);
+        pincerClaw2.position.set(0, -0.175, 0.075);
+        pincerBase.add(pincerClaw1);
+        pincerBase.add(pincerClaw2);
+
+        pairMeshWithPhysicsBody(pincerClaw1, {
+            mass: 0,
+            friction: 0.4,
+            restitution: 0.6,
+            isKinematic: true
+        });
+
+        pairMeshWithPhysicsBody(pincerClaw2, {
+            mass: 0,
+            friction: 0.4,
+            restitution: 0.6,
+            isKinematic: true
+        });
+    }
+
+    function addFloor() {
+        const backgroundGeometry = new THREE.PlaneGeometry(10, 10);
+
+        const backgroundMaterial = new THREE.MeshStandardMaterial({
+            color: 0x000000,
+            side: THREE.DoubleSide,
+        });
+
+        const background = new THREE.Mesh(backgroundGeometry, backgroundMaterial);
+        background.rotation.x = -Math.PI / 2;
+        background.position.y = -0.01;
+        scene.add(background);
+
+        /*const gridGeometry = new THREE.PlaneGeometry(10, 10, 10, 10);
+        const gridMaterial = new THREE.MeshBasicMaterial({
+            color: 0x000000,
+            side: THREE.DoubleSide,
+            transparent: true,
+            opacity: 0.5,
+            wireframe: true,
+        });
+        const grid = new THREE.Mesh(gridGeometry, gridMaterial);
+        grid.rotation.x = -Math.PI / 2;
+        grid.position.y = 0.001;
+        scene.add(grid);*/
+
+        var floorShape = new CANNON.Plane();
+        var floorBody = new CANNON.Body({
+            mass: 0
+        });
+        floorBody.addShape(floorShape);
+        floorBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0);
+        world.addBody(floorBody);
+
+        /*const floorVisualGeometry = new THREE.PlaneGeometry(10, 10);
+        const floorVisualMaterial = new THREE.MeshBasicMaterial({
+            color: 0x00ff00,
+            side: THREE.DoubleSide,
+            transparent: true,
+            opacity: 0.5,
+            wireframe: true
+        });
+        const floorVisual = new THREE.Mesh(floorVisualGeometry, floorVisualMaterial);
+        floorVisual.rotation.x = -Math.PI / 2;
+        floorVisual.position.y = -0.01;
+        scene.add(floorVisual);*/
+    }
+
+    function setupControls() {
+        controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.target.set(0, 1, 0);
+        controls.update();
+        document.addEventListener("keydown", onDocumentKeyDown, false);
+    }
+
+    function animate() {
+        requestAnimationFrame(animate);
+
+        if (world) {
+            world.step(1 / 60);
+
+            scene.traverse(function (object) {
+                if (object.userData.physicsBody) {
+                    if (object.userData.physicsBody.type === CANNON.Body.DYNAMIC) {
+                        object.position.copy(object.userData.physicsBody.position);
+                        object.quaternion.copy(object.userData.physicsBody.quaternion);
+                    } else if (object.userData.physicsBody.type === CANNON.Body.KINEMATIC) {
+                        var worldPosition = new THREE.Vector3();
+                        var worldQuaternion = new THREE.Quaternion();
+                        object.getWorldPosition(worldPosition);
+                        object.getWorldQuaternion(worldQuaternion);
+                        object.userData.physicsBody.position.copy(worldPosition);
+                        object.userData.physicsBody.quaternion.copy(worldQuaternion);
+                    }
+                }
+            });
+        }
+
+        if (robot.demoMode) {
+            robot.automatedMovements();
+        }
+
+        robot.update();
+        //cannonDebugRenderer.update();
+        renderer.render(scene, camera);
+
+        if (forearmCameraIsActive) {
+            updateForearmCamera();
+            forearmRenderer.render(scene, forearmCamera);
+        }
+    }
+
+    function clampRotation(currentRotation, minAngle, maxAngle) {
+        const minRadians = THREE.MathUtils.degToRad(minAngle);
+        const maxRadians = THREE.MathUtils.degToRad(maxAngle);
+        return Math.max(minRadians, Math.min(maxRadians, currentRotation));
+    }
+
+    let movementStep = 0;
+
+    function automatedMovements() {
+        switch (this.movementStep) {
+            case 0:
+                this.rotateBase(1);
+                this.onMovementDetected();
+                this.fullCycleCount += demoSpeed;
+                if (this.fullCycleCount >= 2 * Math.PI) {
+                    this.fullCycleCount = 0;
+                    this.movementStep++;
+                }
+                break;
+
+            default:
+                this.movementStep = 0;
+                break;
+        }
+    }
+
+    document.addEventListener("keydown", onDocumentKeyDown, false);
+
+    function onDocumentKeyDown(event) {
+        var keyCode = event.which;
+
+        if (keyCode === 77) {
+            toggleDemoMode();
+            return;
+        }
+
+        if (robot.demoMode) {
+            return;
+        }
+
+        switch (keyCode) {
+            case 81:
+                robot.rotateBase(1);
+                break;
+            case 69:
+                robot.rotateBase(-1);
+                break;
+            case 87:
+                robot.moveShoulder(-1);
+                break;
+            case 83:
+                robot.moveShoulder(1);
+                break;
+            case 82:
+                robot.moveElbow(-1);
+                break;
+            case 70:
+                robot.moveElbow(1);
+                break;
+            default:
+                break;
+        }
+    }
+
+    function toggleDemoMode() {
+        robot.demoMode = !robot.demoMode;
+        document.getElementById("demoStatus").innerText = "Demo: " + (robot.demoMode ? "ON" : "OFF");
+        document.getElementById('executeButton').disabled = robot.demoMode;
+    }
+
+    document.addEventListener("keydown", onDocumentKeyDown, false);
+
+    document.getElementById('executeButton').addEventListener('click', async function () {
+        const commandString = document.getElementById('commandInput').value;
+        const commands = parseCommands([commandString]);
+
+        for (const command of commands) {
+            await executeCommand(`${command.type} ${command.value}`);
+        }
+    });
+
+    function executeCommand(command) {
+        return new Promise((resolve, reject) => {
+            const args = command.split(' ');
+            const commandType = args[0];
+            const commandValue = parseFloat(args[1]);
+
+            if (isNaN(commandValue)) {
+                console.error(`Invalid command value for '${commandType}': ${args[1]}`);
+                reject(`Invalid command value: ${args[1]}`);
+                return;
+            }
+
+            try {
+                switch (commandType) {
+                    case 'rotateBase':
+                        robot.targetBaseRotation = THREE.MathUtils.degToRad(commandValue);
+                        robot.isBaseMoving = true;
+                        break;
+                    case 'moveShoulder':
+                        let shoulderTarget = THREE.MathUtils.degToRad(commandValue);
+                        shoulderTarget = robot.clampRotation(shoulderTarget, robot.minShoulderRotation, robot.maxShoulderRotation);
+                        robot.targetShoulderRotation = shoulderTarget;
+                        robot.isShoulderMoving = true;
+                        break;
+                    case 'moveElbow':
+                        let elbowTarget = THREE.MathUtils.degToRad(commandValue);
+                        elbowTarget = robot.clampRotation(elbowTarget, robot.minElbowRotation, robot.maxElbowRotation);
+                        robot.targetElbowRotation = elbowTarget;
+                        robot.isElbowMoving = true;
+                        break;
+                    default:
+                        console.error(`Unknown command type: ${commandType}`);
+                        reject(`Unknown command type: ${commandType}`);
+                        return;
+                }
+
+                setTimeout(() => {
+                    console.log(`Executed command: ${command}`);
+                    resolve();
+                }, 1000);
+            } catch (error) {
+                console.error(`Error executing command '${commandType}': ${error}`);
+                reject(`Error executing command: ${error}`);
+            }
+        });
+    }
+
+    let currentImage = 1;
+
+    const img1 = document.getElementById('img1');
+    const img2 = document.getElementById('img2');
+
+    async function updateForearmViewObjectDetection(imageDataUrl) {
+        const preloadedImage = await preloadImage(imageDataUrl);
+
+        requestAnimationFrame(() => {
+            const showImg = currentImage === 1 ? img1 : img2;
+            const hideImg = currentImage === 1 ? img2 : img1;
+
+            showImg.src = preloadedImage.src;
+            showImg.classList.add('visible');
+            showImg.classList.remove('hidden');
+            hideImg.classList.add('hidden');
+            hideImg.classList.remove('visible');
+            currentImage = currentImage === 1 ? 2 : 1;
+        });
+    }
+
+    function preloadImage(src) {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.onload = () => {
+                resolve(img);
+            };
+            img.onerror = reject;
+            img.src = src;
+        });
+    }
+
+    function updateForearmCamera() {
+        var pincerBasePosition = new THREE.Vector3();
+        pincerBase.getWorldPosition(pincerBasePosition);
+        forearmCamera.position.copy(pincerBasePosition);
+
+        var forearmDirection = new THREE.Vector3(0, 0, -1);
+        forearm.getWorldDirection(forearmDirection);
+        forearmCamera.lookAt(forearmDirection.add(pincerBasePosition));
+        forearmCamera.rotateX(THREE.MathUtils.degToRad(0));
+    }
+
+    function captureImage() {
+        updateForearmCamera();
+        forearmRenderer.render(scene, forearmCamera);
+        var strMime = "image/jpeg";
+        return forearmRenderer.domElement.toDataURL(strMime, 1.0);
+    }
+
+    function saveImage() {
+        try {
+            forearmRenderer.render(scene, forearmCamera);
+            var strMime = "image/jpeg";
+            var imgData = forearmRenderer.domElement.toDataURL(strMime, 1.0);
+            saveFile(imgData, "forearm_view.jpg");
+        } catch (e) {
+            console.log(e);
+            return;
+        }
+    }
+
+    var saveFile = function (strData, filename) {
+        var link = document.createElement('a');
+        if (typeof link.download === 'string') {
+            document.body.appendChild(link);
+            link.download = filename;
+            link.href = strData;
+            link.click();
+            document.body.removeChild(link);
+        } else {
+            location.replace(strData);
+        }
+    }
+
+    document.getElementById('recordButton').addEventListener('click', function () {
+        if (robot.isRecording) {
+            robot.stopRecording();
+            this.innerText = "Record";
+        } else {
+            robot.startRecording();
+            this.innerText = "Stop";
+        }
+    });
+
+    document.getElementById('saveImageButton').addEventListener('click', saveImage);
+
+    initRobot('cobot');
+</script>
 </body>
 
 </html>
