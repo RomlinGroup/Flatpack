@@ -51,9 +51,17 @@ trust with our users. We invite you to explore our new release strategy and appr
   *Jeffrey A. Clark*\
   HPND
 
+- **[timm](https://pypi.org/project/timm/)**\
+  *Ross Wightman*\
+  Apache-2.0
+
 - **[toml](https://pypi.org/project/toml/)**\
   *William Pearson*\
   MIT
+
+- **[torch](https://pypi.org/project/torch/)**\
+  *PyTorch Team*\
+  BSD-3-Clause
 
 - **[transformers](https://pypi.org/project/transformers/)**\
   *The Hugging Face team and contributors*\

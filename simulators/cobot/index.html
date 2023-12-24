@@ -98,6 +98,16 @@
             max-height: 100%;
         }
 
+        #detectionResults {
+            position: relative;
+            width: 320px;
+            height: 240px;
+            background: #000;
+            border: 1px solid #fff;
+            margin-top: 10px;
+            overflow: hidden;
+        }
+
         #saveImageButton {
             position: absolute;
             right: 10px;
@@ -121,6 +131,28 @@
         }
 
         #generateButton:disabled {
+            background: #a0a0a0;
+            color: #666;
+            cursor: not-allowed;
+        }
+
+        #depthMapButton {
+            position: fixed;
+            top: 172px;
+            left: 10px;
+            background: #5865f2;
+            border-radius: 0px;
+            border: none;
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            line-height: 1.5em;
+            cursor: pointer;
+            color: #fff;
+            width: 100px;
+            padding: 10px 0;
+        }
+
+        #depthMapButton:disabled {
             background: #a0a0a0;
             color: #666;
             cursor: not-allowed;
@@ -210,6 +242,7 @@
 
 <button id="recordButton">Record</button>
 <button id="generateButton">Generate</button>
+<button id="depthMapButton">Depth map</button>
 
 <div id="scriptControls">
     <textarea id="commandInput" placeholder="Enter command" autocomplete="off"></textarea>
@@ -218,11 +251,10 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cannon.js/0.6.2/cannon.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/cannon@0.6.2/tools/threejs/CannonDebugRenderer.js"></script>
 
-<script>
+<script type="module">
     function parseCommands(commandsArray) {
         if (!commandsArray.length || typeof commandsArray[0] !== 'string') {
             return [];
@@ -240,9 +272,18 @@
             }
         }).filter(command => command !== undefined);
     }
-</script>
 
-<script type="module">
+    async function captureImageBlob() {
+        if (forearmRenderer && forearmRenderer.domElement instanceof HTMLCanvasElement) {
+            return new Promise(resolve => {
+                forearmRenderer.domElement.toBlob(blob => {
+                    resolve(blob);
+                }, 'image/jpeg');
+            });
+        }
+        return null;
+    }
+
     async function runPrediction() {
         const button = document.getElementById('generateButton');
         button.disabled = true;
@@ -293,20 +334,45 @@
 
     document.getElementById('generateButton').addEventListener('click', runPrediction);
 
-    async function captureImageBlob() {
-        if (forearmRenderer && forearmRenderer.domElement instanceof HTMLCanvasElement) {
-            return new Promise(resolve => {
-                forearmRenderer.domElement.toBlob(blob => {
-                    resolve(blob);
-                }, 'image/jpeg');
-            });
-        }
-        return null;
-    }
-</script>
+    async function processAndDisplayDepthMap() {
+        const depthMapButton = document.getElementById('depthMapButton');
+        depthMapButton.disabled = true; // Disable the button
 
-<script>
-    let isRetinaResolution = false;
+        const currentImageBlob = await captureImageBlob();
+        if (!currentImageBlob) {
+            console.error('No image blob captured.');
+            depthMapButton.disabled = false; // Re-enable the button
+            return;
+        }
+
+        let formData = new FormData();
+        formData.append("file", currentImageBlob, "image.jpg");
+
+        const url = "/process_depth_map/";
+
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                body: formData
+            });
+
+            if (!response.ok) {
+                throw new Error(`Server response error: status ${response.status}`);
+            }
+
+            const depthMapBlob = await response.blob();
+            const depthMapUrl = URL.createObjectURL(depthMapBlob);
+
+            const detectionResultsDiv = document.getElementById('detectionResults');
+            detectionResultsDiv.innerHTML = '<img src="' + depthMapUrl + '" alt="Depth Map" style="width:100%;height:auto;">';
+        } catch (error) {
+            console.error('Error processing depth map:', error);
+        } finally {
+            depthMapButton.disabled = false;
+        }
+    }
+
+    document.getElementById('depthMapButton').addEventListener('click', processAndDisplayDepthMap);
 
     class RobotController {
         constructor() {
@@ -343,6 +409,7 @@
             console.log("Movement detected!");
             const imageDataUrl = captureImage();
             updateForearmViewObjectDetection(imageDataUrl);
+            processAndDisplayDepthMap();
         }
 
         rotateBase(direction) {
@@ -560,7 +627,7 @@
         setupCamera();
         setupRenderer();
 
-        cannonDebugRenderer = new THREE.CannonDebugRenderer(scene, world);
+        let cannonDebugRenderer = new THREE.CannonDebugRenderer(scene, world);
 
         switch (type) {
             case 'cobot':
@@ -584,6 +651,7 @@
         }
 
         animate();
+        processAndDisplayDepthMap();
     }
 
     function initForearmCamera() {

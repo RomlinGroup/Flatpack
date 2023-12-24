@@ -1,5 +1,6 @@
 from cryptography.fernet import Fernet
 from fastapi import FastAPI, File, UploadFile
+from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from .parsers import parse_toml_to_venv_script
 from pathlib import Path
@@ -9,9 +10,11 @@ from transformers import AutoProcessor, AutoModelForCausalLM, GPT2LMHeadModel, G
 from typing import List, Optional
 
 import argparse
+import cv2
 import httpx
 import io
 import logging
+import matplotlib.pyplot as plt
 import ngrok
 import numpy as np
 import os
@@ -23,6 +26,7 @@ import stat
 import subprocess
 import sys
 import toml
+import torch
 import uvicorn
 
 CONFIG_FILE_PATH = os.path.join(os.path.expanduser("~"), ".fpk_config.toml")
@@ -37,6 +41,9 @@ log_queue = []
 config = {
     "api_key": None
 }
+
+midas_model = None
+midas_transforms = None
 
 
 class SessionManager:
@@ -515,9 +522,16 @@ app.add_middleware(
 )
 
 
-@app.get("/test")
-async def test_endpoint():
-    return PlainTextResponse("Hello World")
+@app.on_event("startup")
+async def startup_event():
+    global midas_model, midas_transforms
+    midas_model = torch.hub.load("intel-isl/MiDaS", "DPT_Large", trust_repo=True)
+    device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+    midas_model.to(device)
+    midas_model.eval()
+
+    midas_transforms_module = torch.hub.load("intel-isl/MiDaS", "transforms", trust_repo=True)
+    midas_transforms = midas_transforms_module.dpt_transform
 
 
 @app.post("/process/")
@@ -530,6 +544,49 @@ async def process(prompt: str, file: UploadFile = File(None)):
     else:
         response = fpk_generate_text(prompt)
     return {"response": response}
+
+
+@app.post("/process_depth_map/")
+async def process_depth_map(file: UploadFile = File(...), model_type: str = "DPT_Large"):
+    contents = await file.read()
+    image = Image.open(io.BytesIO(contents))
+    image_np = np.array(image.convert("RGB"))
+
+    depth_map = fpk_process_depth_map_np(image_np, model_type)
+
+    _, encoded_img = cv2.imencode('.png', depth_map)
+    return StreamingResponse(io.BytesIO(encoded_img.tobytes()), media_type="image/png")
+
+
+def fpk_process_depth_map_np(image_np: np.ndarray, model_type: str = "DPT_Large") -> np.ndarray:
+    global midas_model, midas_transforms
+
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    midas_model.to(device)
+    midas_model.eval()
+
+    input_batch = midas_transforms(image_np).to(device)
+
+    with torch.no_grad():
+        prediction = midas_model(input_batch)
+        prediction = torch.nn.functional.interpolate(
+            prediction.unsqueeze(1),
+            size=image_np.shape[:2],
+            mode="bicubic",
+            align_corners=False,
+        ).squeeze()
+
+    depth_normalized = prediction.cpu().numpy()
+    depth_normalized = (depth_normalized - depth_normalized.min()) / (depth_normalized.max() - depth_normalized.min())
+
+    depth_colored = cv2.applyColorMap((depth_normalized * 255).astype(np.uint8), cv2.COLORMAP_JET)
+
+    return depth_colored
+
+
+@app.get("/test")
+async def test_endpoint():
+    return PlainTextResponse("Hello World")
 
 
 def main():
