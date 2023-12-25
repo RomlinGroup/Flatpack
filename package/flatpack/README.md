@@ -67,6 +67,10 @@ trust with our users. We invite you to explore our new release strategy and appr
   *The Hugging Face team and contributors*\
   Apache-2.0
 
+- **[ultralytics](https://pypi.org/project/ultralytics/)**\
+  *Ultralytics*\
+  AGPL-3.0
+
 - **[uvicorn](https://pypi.org/project/uvicorn/)**\
   *Tom Christie*\
   BSD-3-Clause

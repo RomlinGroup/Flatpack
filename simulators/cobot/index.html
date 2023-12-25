@@ -255,6 +255,8 @@
 <script src="https://cdn.jsdelivr.net/npm/cannon@0.6.2/tools/threejs/CannonDebugRenderer.js"></script>
 
 <script type="module">
+    const SERVER_URL = "";
+
     function parseCommands(commandsArray) {
         if (!commandsArray.length || typeof commandsArray[0] !== 'string') {
             return [];
@@ -285,6 +287,11 @@
     }
 
     async function runPrediction() {
+
+        if (!SERVER_URL) {
+            throw new Error("Configuration error: Server URL is not set.");
+        }
+
         const button = document.getElementById('generateButton');
         button.disabled = true;
         button.innerText = "Loading...";
@@ -300,7 +307,7 @@
                 formData.append("file", currentImageBlob, "image.jpg");
             }
 
-            const url = "";
+            const url = SERVER_URL
 
             if (!url) {
                 throw new Error("Configuration error: Server URL is not set.");
@@ -335,20 +342,24 @@
     document.getElementById('generateButton').addEventListener('click', runPrediction);
 
     async function processAndDisplayDepthMap() {
+        if (!SERVER_URL) {
+            throw new Error("Configuration error: Server URL is not set.");
+        }
+
         const depthMapButton = document.getElementById('depthMapButton');
-        depthMapButton.disabled = true; // Disable the button
+        depthMapButton.disabled = true;
 
         const currentImageBlob = await captureImageBlob();
         if (!currentImageBlob) {
             console.error('No image blob captured.');
-            depthMapButton.disabled = false; // Re-enable the button
+            depthMapButton.disabled = false;
             return;
         }
 
         let formData = new FormData();
         formData.append("file", currentImageBlob, "image.jpg");
 
-        const url = "/process_depth_map/";
+        const url = SERVER_URL + "/process_depth_map/";
 
         try {
             const response = await fetch(url, {

@@ -8,13 +8,13 @@ from PIL import Image
 from starlette.responses import PlainTextResponse
 from transformers import AutoProcessor, AutoModelForCausalLM, GPT2LMHeadModel, GPT2Tokenizer, set_seed
 from typing import List, Optional
+from ultralytics import YOLO
 
 import argparse
 import cv2
 import httpx
 import io
 import logging
-import matplotlib.pyplot as plt
 import ngrok
 import numpy as np
 import os
@@ -44,6 +44,7 @@ config = {
 
 midas_model = None
 midas_transforms = None
+yolo_model = None
 
 
 class SessionManager:
@@ -114,29 +115,6 @@ def fpk_cache_last_flatpack(directory_name: str):
     cache_file_path = os.path.join(os.getcwd(), 'last_flatpack.cache')
     with open(cache_file_path, 'w') as f:
         f.write(directory_name)
-
-
-def fpk_generate_text(prompt, seed=None, max_length=512, temperature=0.7, top_k=50, top_p=0.95):
-    """Generate text using GPT-2 with optional random seed and text generation parameters."""
-    tokenizer = GPT2Tokenizer.from_pretrained("romlingroup/gpt2-cobot")
-    model = GPT2LMHeadModel.from_pretrained("romlingroup/gpt2-cobot")
-
-    inputs = tokenizer(prompt, return_tensors="pt", truncation=True, max_length=512)
-    attention_mask = inputs['attention_mask']
-
-    outputs = model.generate(
-        inputs['input_ids'],
-        attention_mask=attention_mask,
-        max_length=max_length,
-        num_return_sequences=1,
-        temperature=temperature,
-        top_k=top_k,
-        top_p=top_p,
-        do_sample=True
-    )
-    response = tokenizer.decode(outputs[0], skip_special_tokens=True)
-
-    return response
 
 
 def fpk_colorize(text, color):
@@ -326,11 +304,6 @@ def fpk_list_directories(session: httpx.Client) -> str:
     """
     dirs = fpk_fetch_github_dirs(session)
     return "\n".join(dirs)
-
-
-def fpk_list_processes():
-    """Placeholder for a function that lists processes."""
-    print("Placeholder for fpk_list_processes")
 
 
 def fpk_log_to_api(message: str, session: httpx.Client, api_key: Optional[str] = None,
@@ -524,7 +497,10 @@ app.add_middleware(
 
 @app.on_event("startup")
 async def startup_event():
-    global midas_model, midas_transforms
+    global midas_model, midas_transforms, yolo_model
+
+    yolo_model = YOLO('yolov8n.pt')
+
     midas_model = torch.hub.load("intel-isl/MiDaS", "DPT_Large", trust_repo=True)
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
     midas_model.to(device)
@@ -552,14 +528,14 @@ async def process_depth_map(file: UploadFile = File(...), model_type: str = "DPT
     image = Image.open(io.BytesIO(contents))
     image_np = np.array(image.convert("RGB"))
 
-    depth_map = fpk_process_depth_map_np(image_np, model_type)
+    depth_map_with_boxes = fpk_process_depth_map_np(image_np, model_type)
 
-    _, encoded_img = cv2.imencode('.png', depth_map)
+    _, encoded_img = cv2.imencode('.png', depth_map_with_boxes)
     return StreamingResponse(io.BytesIO(encoded_img.tobytes()), media_type="image/png")
 
 
 def fpk_process_depth_map_np(image_np: np.ndarray, model_type: str = "DPT_Large") -> np.ndarray:
-    global midas_model, midas_transforms
+    global midas_model, midas_transforms, yolo_model
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     midas_model.to(device)
@@ -581,7 +557,32 @@ def fpk_process_depth_map_np(image_np: np.ndarray, model_type: str = "DPT_Large"
 
     depth_colored = cv2.applyColorMap((depth_normalized * 255).astype(np.uint8), cv2.COLORMAP_JET)
 
-    return depth_colored
+    print("Processing depth map")
+
+    detection_results = yolo_model.predict(source=image_np)
+
+    print(f"Detections: {detection_results}")
+
+    depth_colored_with_boxes = overlay_bounding_boxes(depth_colored, detection_results)
+
+    return depth_colored_with_boxes
+
+
+def overlay_bounding_boxes(depth_map: np.ndarray, detection_results):
+    global yolo_model
+    for result in detection_results:
+        boxes = result.boxes.xyxy
+        confidences = result.boxes.conf
+        class_ids = result.boxes.cls
+
+        for box, conf, cls_id in zip(boxes, confidences, class_ids):
+            x1, y1, x2, y2 = box
+            label = f"{yolo_model.names[int(cls_id)]} {conf:.2f}"
+            cv2.rectangle(depth_map, (int(x1), int(y1)), (int(x2), int(y2)), (255, 0, 0), 2)
+            cv2.putText(depth_map, label, (int(x1), int(y1) - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
+            print(f"Drawing box: {x1}, {y1}, {x2}, {y2}, {conf}, {cls_id}")
+
+    return depth_map
 
 
 @app.get("/test")
@@ -635,8 +636,6 @@ def main():
                 fpk_install(directory_name, session, verbose=args.verbose)
             elif command == "list":
                 print(fpk_list_directories(session))
-            elif command == "ps":
-                print(fpk_list_processes())
             elif command == "run":
 
                 try:

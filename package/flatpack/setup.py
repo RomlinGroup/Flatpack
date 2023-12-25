@@ -5,7 +5,7 @@ with open("README.md", "r") as f:
 
 setup(
     name="flatpack",
-    version="3.1.68",
+    version="3.1.77",
     license="Apache Software License (Apache-2.0)",
     packages=find_packages(),
     install_requires=[
@@ -18,6 +18,7 @@ setup(
         "toml==0.10.2",
         "torch==2.1.0",
         "transformers==4.36.2",
+        "ultralytics==8.0.229",
         "uvicorn==0.24.0.post1"
     ],
     author="Romlin Group AB",
