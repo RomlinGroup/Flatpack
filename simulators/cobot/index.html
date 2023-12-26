@@ -414,6 +414,9 @@
             this.isBaseRotating = false;
             this.isShoulderRotating = false;
             this.isElbowRotating = false;
+
+            this.frameBuffer = [];
+            this.isRecordingVideo = false;
         }
 
         onMovementDetected() {
@@ -603,6 +606,51 @@
             anchor.click();
             window.URL.revokeObjectURL(anchor.href);
         }
+
+        startVideoRecording() {
+            this.isRecordingVideo = true;
+            console.log("Video recording started");
+
+            const stream = forearmRenderer.domElement.captureStream(30);
+
+            const options = {mimeType: 'video/webm'};
+            this.mediaRecorder = new MediaRecorder(stream, options);
+
+            this.recordedChunks = [];
+            this.mediaRecorder.ondataavailable = (event) => {
+                if (event.data.size > 0) {
+                    this.recordedChunks.push(event.data);
+                }
+            };
+
+            this.mediaRecorder.start();
+        }
+
+        stopVideoRecording() {
+            if (this.isRecordingVideo) {
+                this.isRecordingVideo = false;
+                console.log("Video recording stopped");
+
+                this.mediaRecorder.stop();
+                this.mediaRecorder.onstop = () => {
+                    const blob = new Blob(this.recordedChunks, {type: 'video/mp4'});
+                    console.log("Video compiled, starting download...");
+                    this.downloadVideo(blob);
+                };
+            }
+        }
+
+        downloadVideo(videoBlob) {
+            console.log("Preparing video for download...");
+            const url = URL.createObjectURL(videoBlob);
+            const anchor = document.createElement('a');
+            anchor.href = url;
+            anchor.download = 'recorded_video.mp4';
+            anchor.click();
+            window.URL.revokeObjectURL(url);
+            console.log("Download should start now");
+        }
+
     }
 
     const robot = new RobotController();
@@ -1209,13 +1257,17 @@
     }
 
     document.getElementById('recordButton').addEventListener('click', function () {
+
         if (robot.isRecording) {
             robot.stopRecording();
+            robot.stopVideoRecording();
             this.innerText = "Record";
         } else {
             robot.startRecording();
+            robot.startVideoRecording();
             this.innerText = "Stop";
         }
+
     });
 
     document.getElementById('saveImageButton').addEventListener('click', saveImage);
