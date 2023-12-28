@@ -5,7 +5,6 @@ import zipfile
 
 
 def distribute_images_and_labels(base_image_folder, train_json, val_json, output_root):
-    # Load the JSON data
     with open(train_json, 'r') as file:
         train_data = json.load(file)
     with open(val_json, 'r') as file:
@@ -26,8 +25,8 @@ def distribute_images_and_labels(base_image_folder, train_json, val_json, output
         elif image_name in val_images:
             shutil.copy(source_path, os.path.join(val_dir, image_name))
 
-    shutil.copy(train_json, os.path.join(output_root, 'train/label.json'))
-    shutil.copy(val_json, os.path.join(output_root, 'val/label.json'))
+    shutil.copy(train_json, os.path.join(output_root, 'train/labels.json'))
+    shutil.copy(val_json, os.path.join(output_root, 'val/labels.json'))
 
     def create_zip(directory, zip_name):
         with zipfile.ZipFile(zip_name, 'w', zipfile.ZIP_DEFLATED) as zipf:
