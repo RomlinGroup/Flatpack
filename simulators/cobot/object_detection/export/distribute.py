@@ -1,6 +1,7 @@
 import os
 import json
 import shutil
+import zipfile
 
 
 def distribute_images_and_labels(base_image_folder, train_json, val_json, output_root):
@@ -27,6 +28,15 @@ def distribute_images_and_labels(base_image_folder, train_json, val_json, output
 
     shutil.copy(train_json, os.path.join(output_root, 'train/label.json'))
     shutil.copy(val_json, os.path.join(output_root, 'val/label.json'))
+
+    def create_zip(directory, zip_name):
+        with zipfile.ZipFile(zip_name, 'w', zipfile.ZIP_DEFLATED) as zipf:
+            for root, dirs, files in os.walk(directory):
+                for file in files:
+                    if not file.startswith('__MACOSX'):
+                        zipf.write(os.path.join(root, file), os.path.relpath(os.path.join(root, file), directory))
+
+    create_zip(output_root, f"{output_root}.zip")
 
 
 base_image_folder = 'images'
