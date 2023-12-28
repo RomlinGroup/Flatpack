@@ -5,40 +5,46 @@ import zipfile
 import random
 
 
+def adjust_labels_and_file_names(data):
+    for category in data['categories']:
+        category['id'] += 1
+    for annotation in data['annotations']:
+        annotation['category_id'] += 1
+    for image in data['images']:
+        image['file_name'] = os.path.basename(image['file_name'])
+
+
 def split_dataset(json_path, train_ratio=0.8):
     with open(json_path, 'r') as file:
         data = json.load(file)
 
+    adjust_labels_and_file_names(data)
     random.shuffle(data['images'])
     num_train_images = int(len(data['images']) * train_ratio)
     train_images = data['images'][:num_train_images]
     val_images = data['images'][num_train_images:]
-
     train_annotations = [anno for anno in data['annotations'] if
                          anno['image_id'] in [img['id'] for img in train_images]]
     val_annotations = [anno for anno in data['annotations'] if anno['image_id'] in [img['id'] for img in val_images]]
-
     train_data = {'images': train_images, 'annotations': train_annotations, 'categories': data['categories']}
     val_data = {'images': val_images, 'annotations': val_annotations, 'categories': data['categories']}
-
     return train_data, val_data
 
 
 def distribute_images_and_labels(base_image_folder, train_data, val_data, output_root):
-    train_dir = os.path.join(output_root, 'train/images')
-    val_dir = os.path.join(output_root, 'val/images')
-    os.makedirs(train_dir, exist_ok=True)
-    os.makedirs(val_dir, exist_ok=True)
-
-    train_images = {os.path.basename(item['file_name']) for item in train_data['images']}
-    val_images = {os.path.basename(item['file_name']) for item in val_data['images']}
+    train_images_dir = os.path.join(output_root, 'train/images')
+    val_images_dir = os.path.join(output_root, 'val/images')
+    os.makedirs(train_images_dir, exist_ok=True)
+    os.makedirs(val_images_dir, exist_ok=True)
+    train_images = {item['file_name'] for item in train_data['images']}
+    val_images = {item['file_name'] for item in val_data['images']}
 
     for image_name in os.listdir(base_image_folder):
         source_path = os.path.join(base_image_folder, image_name)
         if image_name in train_images:
-            shutil.copy(source_path, os.path.join(train_dir, image_name))
+            shutil.copy(source_path, os.path.join(train_images_dir, image_name))
         elif image_name in val_images:
-            shutil.copy(source_path, os.path.join(val_dir, image_name))
+            shutil.copy(source_path, os.path.join(val_images_dir, image_name))
 
     train_json = os.path.join(output_root, 'train/labels.json')
     val_json = os.path.join(output_root, 'val/labels.json')
