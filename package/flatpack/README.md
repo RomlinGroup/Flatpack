@@ -29,48 +29,56 @@ trust with our users. We invite you to explore our new release strategy and appr
 
 [Explore the Project on GitHub](https://github.com/romlingroup/flatpack-ai)
 
-## install_requires (no affiliation)
+## License
+
+This project is released under [Apache-2.0](https://github.com/romlingroup/flatpack-ai/blob/main/LICENSE).
+
+## install_requires
+
+BSD-3-Clause (INBOUND) is compatible with Apache-2.0 (OUTBOUND) for combined works but does not allow re-licensing of
+the original BSD-licensed component when distributed
+separately ([JLA 2023](https://joinup.ec.europa.eu/licence/compatibility-check/BSD-3-Clause/Apache-2.0)).
+
+MIT (INBOUND) is compatible with Apache-2.0 (OUTBOUND) for combined works but does not allow re-licensing of the
+original MIT-licensed component when distributed
+separately ([JLA 2023](https://joinup.ec.europa.eu/licence/compatibility-check/MIT/Apache-2.0)).
+
+Pillow (INBOUND) is licensed under HPND, allowing use, modification, and distribution without fee, with requirements
+for
+copyright notice and disclaimer ([Pillow 2023](https://github.com/python-pillow/Pillow/blob/main/LICENSE)).
+
+*Check out
+the [JLA - Compatibility Checker](https://joinup.ec.europa.eu/collection/eupl/solution/joinup-licensing-assistant/jla-compatibility-checker) (European Commission 2023).*
 
 - **[cryptography](https://pypi.org/project/cryptography/)**\
-  *The Python Cryptographic Authority and contributors*\
-  Apache-2.0 OR BSD-3-Clause
+  Apache-2.0 OR BSD-3-Clause ([LICENSE](https://github.com/pyca/cryptography/blob/main/LICENSE.APACHE))
 
 - **[fastapi](https://pypi.org/project/fastapi/)**\
-  *Sebastián Ramírez*\
-  MIT
+  MIT ([LICENSE](https://github.com/tiangolo/fastapi/blob/master/LICENSE))
 
 - **[httpx](https://pypi.org/project/httpx/)**\
-  *Tom Christie*\
-  BSD-3-Clause
+  BSD-3-Clause ([LICENSE](https://github.com/encode/httpx/blob/master/LICENSE.md))
+
+- **[mediapipe](https://pypi.org/project/mediapipe/)**\
+  Apache-2.0 ([LICENSE](https://github.com/google/mediapipe/blob/master/LICENSE))
 
 - **[ngrok](https://pypi.org/project/ngrok/)**\
-  *ngrok*\
-  MIT
+  Apache-2.0 OR MIT ([LICENSE](https://github.com/ngrok/ngrok-python/blob/main/LICENSE-APACHE))
 
 - **[Pillow](https://pypi.org/project/Pillow/)**\
-  *Jeffrey A. Clark*\
-  HPND
+  HPND ([LICENSE](https://github.com/python-pillow/Pillow/blob/main/LICENSE))
 
 - **[timm](https://pypi.org/project/timm/)**\
-  *Ross Wightman*\
-  Apache-2.0
+  Apache-2.0 ([LICENSE](https://github.com/huggingface/pytorch-image-models/blob/main/LICENSE))
 
 - **[toml](https://pypi.org/project/toml/)**\
-  *William Pearson*\
-  MIT
+  MIT ([LICENSE](https://github.com/uiri/toml/blob/master/LICENSE))
 
 - **[torch](https://pypi.org/project/torch/)**\
-  *PyTorch Team*\
-  BSD-3-Clause
+  BSD-3-Clause ([LICENSE](https://github.com/pytorch/pytorch/blob/main/LICENSE))
 
 - **[transformers](https://pypi.org/project/transformers/)**\
-  *The Hugging Face team and contributors*\
-  Apache-2.0
-
-- **[ultralytics](https://pypi.org/project/ultralytics/)**\
-  *Ultralytics*\
-  AGPL-3.0
+  Apache-2.0 ([LICENSE](https://github.com/huggingface/transformers/blob/main/LICENSE))
 
 - **[uvicorn](https://pypi.org/project/uvicorn/)**\
-  *Tom Christie*\
-  BSD-3-Clause
+  BSD-3-Clause ([LICENSE](https://github.com/encode/uvicorn/blob/master/LICENSE.md))

@@ -8,7 +8,6 @@ from PIL import Image
 from starlette.responses import PlainTextResponse
 from transformers import AutoProcessor, AutoModelForCausalLM, GPT2LMHeadModel, GPT2Tokenizer, set_seed
 from typing import List, Optional
-from ultralytics import YOLO
 
 import argparse
 import cv2
@@ -44,7 +43,6 @@ config = {
 
 midas_model = None
 midas_transforms = None
-yolo_model = None
 
 
 class SessionManager:
@@ -497,9 +495,7 @@ app.add_middleware(
 
 @app.on_event("startup")
 async def startup_event():
-    global midas_model, midas_transforms, yolo_model
-
-    yolo_model = YOLO('yolov8n.pt')
+    global midas_model, midas_transforms
 
     midas_model = torch.hub.load("intel-isl/MiDaS", "DPT_Large", trust_repo=True)
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
@@ -535,7 +531,7 @@ async def process_depth_map(file: UploadFile = File(...), model_type: str = "DPT
 
 
 def fpk_process_depth_map_np(image_np: np.ndarray, model_type: str = "DPT_Large") -> np.ndarray:
-    global midas_model, midas_transforms, yolo_model
+    global midas_model, midas_transforms
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     midas_model.to(device)
@@ -557,32 +553,7 @@ def fpk_process_depth_map_np(image_np: np.ndarray, model_type: str = "DPT_Large"
 
     depth_colored = cv2.applyColorMap((depth_normalized * 255).astype(np.uint8), cv2.COLORMAP_JET)
 
-    print("Processing depth map")
-
-    detection_results = yolo_model.predict(source=image_np)
-
-    print(f"Detections: {detection_results}")
-
-    depth_colored_with_boxes = overlay_bounding_boxes(depth_colored, detection_results)
-
-    return depth_colored_with_boxes
-
-
-def overlay_bounding_boxes(depth_map: np.ndarray, detection_results):
-    global yolo_model
-    for result in detection_results:
-        boxes = result.boxes.xyxy
-        confidences = result.boxes.conf
-        class_ids = result.boxes.cls
-
-        for box, conf, cls_id in zip(boxes, confidences, class_ids):
-            x1, y1, x2, y2 = box
-            label = f"{yolo_model.names[int(cls_id)]} {conf:.2f}"
-            cv2.rectangle(depth_map, (int(x1), int(y1)), (int(x2), int(y2)), (255, 255, 255), 2)
-            cv2.putText(depth_map, label, (int(x1), int(y1) - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
-            print(f"Drawing box: {x1}, {y1}, {x2}, {y2}, {conf}, {cls_id}")
-
-    return depth_map
+    return depth_colored
 
 
 @app.get("/test")
