@@ -642,7 +642,7 @@ def fpk_load_and_detect(image_np):
     temp_file_path = fpk_save_image_to_temp_file(image_np)
     try:
         image = mp.Image.create_from_file(temp_file_path)
-        mp_detector.detect_async(image, time.time())
+        mp_detector.detect_async(image, time.time_ns())
     finally:
         os.remove(temp_file_path)
 
