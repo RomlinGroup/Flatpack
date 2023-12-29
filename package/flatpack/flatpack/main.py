@@ -508,7 +508,7 @@ app.add_middleware(
 )
 
 
-def fpk_create_detector(model_path, threshold=0.5):
+def fpk_create_detector(model_path, threshold=0.75):
     VisionRunningMode = mp.tasks.vision.RunningMode
 
     base_options = mp_python.BaseOptions(
