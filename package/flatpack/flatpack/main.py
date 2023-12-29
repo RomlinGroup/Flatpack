@@ -581,15 +581,13 @@ def fpk_process_depth_map_np(image_np: np.ndarray, model_type: str = "MiDaS_smal
         ).squeeze()
 
     depth_normalized = prediction.cpu().numpy()
-    depth_normalized = (depth_normalized - depth_normalized.min()) / (depth_normalized.max() - depth_normalized.min())
-    depth_colored = cv2.applyColorMap((depth_normalized * 255).astype(np.uint8), cv2.COLORMAP_JET)
 
     # TODO: Annotated depth map with bounding boxes
 
     end_time = time.time()
     print(f"fpk_process_depth_map_np completed in {end_time - start_time} seconds.")
 
-    return depth_colored
+    return depth_normalized
 
 
 @app.get("/test")
