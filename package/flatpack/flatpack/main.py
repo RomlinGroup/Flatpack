@@ -508,7 +508,7 @@ app.add_middleware(
 )
 
 
-def fpk_create_detector(model_path, threshold=0.75):
+def fpk_create_detector(model_path, threshold=0.5):
     VisionRunningMode = mp.tasks.vision.RunningMode
 
     base_options = mp_python.BaseOptions(
@@ -615,10 +615,10 @@ def fpk_process_depth_map_np(image_np: np.ndarray, model_type: str = "DPT_Large"
         ).squeeze()
 
     depth_normalized = prediction.cpu().numpy()
-    # depth_normalized = (depth_normalized - depth_normalized.min()) / (depth_normalized.max() - depth_normalized.min())
-    # depth_colored = cv2.applyColorMap((depth_normalized * 255).astype(np.uint8), cv2.COLORMAP_JET)
+    depth_normalized = (depth_normalized - depth_normalized.min()) / (depth_normalized.max() - depth_normalized.min())
+    depth_colored = cv2.applyColorMap((depth_normalized * 255).astype(np.uint8), cv2.COLORMAP_JET)
 
-    annotated_depth_map = fpk_visualize(depth_normalized, detection_result)
+    annotated_depth_map = fpk_visualize(depth_colored, detection_result)
 
     return annotated_depth_map
 
