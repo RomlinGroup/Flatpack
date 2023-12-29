@@ -28,6 +28,7 @@ import stat
 import subprocess
 import sys
 import tempfile
+import time
 import toml
 import torch
 import uvicorn
@@ -588,6 +589,8 @@ def fpk_visualize(image, detection_result) -> np.ndarray:
 def fpk_process_depth_map_np(image_np: np.ndarray, model_type: str = "DPT_Large") -> np.ndarray:
     global midas_model, midas_transforms, mp_detector
 
+    start_time = time.time()
+
     if image_np.shape[2] == 3:
         image_bgr = cv2.cvtColor(image_np, cv2.COLOR_RGB2BGR)
     else:
@@ -615,6 +618,9 @@ def fpk_process_depth_map_np(image_np: np.ndarray, model_type: str = "DPT_Large"
     depth_colored = cv2.applyColorMap((depth_normalized * 255).astype(np.uint8), cv2.COLORMAP_JET)
 
     annotated_depth_map = fpk_visualize(depth_colored, detection_result)
+
+    end_time = time.time()
+    print(f"fpk_process_depth_map_np completed in {end_time - start_time} seconds.")
 
     return annotated_depth_map
 
