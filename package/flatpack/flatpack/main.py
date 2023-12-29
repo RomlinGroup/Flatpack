@@ -522,15 +522,15 @@ def fpk_create_detector(model_path, threshold=0.5):
 async def startup_event():
     global midas_model, midas_transforms, mp_detector
 
-    midas_model = torch.hub.load("intel-isl/MiDaS", "MiDaS_small", trust_repo=True)
+    midas_model = torch.hub.load("intel-isl/MiDaS", "DPT_Large", trust_repo=True)
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
     midas_model.to(device)
     midas_model.eval()
     midas_transforms_module = torch.hub.load("intel-isl/MiDaS", "transforms", trust_repo=True)
     midas_transforms = midas_transforms_module.dpt_transform
 
-    model_url = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/simulators/cobot/object_detection/model_int8_qat.tflite"
-    model_path = "/tmp/model_int8_qat.tflite"
+    model_url = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/simulators/cobot/object_detection/model_fp16.tflite"
+    model_path = "/tmp/model_fp16.tflite"
 
     if not os.path.exists(model_path):
         async with httpx.AsyncClient() as client:
