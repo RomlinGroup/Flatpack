@@ -592,7 +592,7 @@ def fpk_visualize(image, detection_result) -> np.ndarray:
 
 
 def fpk_process_depth_map_np(image_np: np.ndarray, model_type: str = "DPT_Large") -> np.ndarray:
-    global midas_model, midas_transforms, mp_detector
+    global midas_model, midas_transforms
 
     start_time = time.time()
 
@@ -601,7 +601,7 @@ def fpk_process_depth_map_np(image_np: np.ndarray, model_type: str = "DPT_Large"
     else:
         image_bgr = image_np
 
-    detection_result = fpk_load_and_detect(mp_detector, image_bgr)
+    detection_result = fpk_load_and_detect(image_bgr)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     midas_model.to(device)
@@ -622,12 +622,13 @@ def fpk_process_depth_map_np(image_np: np.ndarray, model_type: str = "DPT_Large"
     depth_normalized = (depth_normalized - depth_normalized.min()) / (depth_normalized.max() - depth_normalized.min())
     depth_colored = cv2.applyColorMap((depth_normalized * 255).astype(np.uint8), cv2.COLORMAP_JET)
 
-    annotated_depth_map = fpk_visualize(depth_colored, detection_result)
+    # annotated_depth_map = fpk_visualize(depth_colored, detection_result)
 
     end_time = time.time()
     print(f"fpk_process_depth_map_np completed in {end_time - start_time} seconds.")
 
-    return annotated_depth_map
+    # return annotated_depth_map
+    return depth_normalized
 
 
 def fpk_save_image_to_temp_file(image_np):
@@ -636,14 +637,14 @@ def fpk_save_image_to_temp_file(image_np):
     return temp_file_path
 
 
-def fpk_load_and_detect(detector, image_np):
+def fpk_load_and_detect(image_np):
+    global mp_detector
     temp_file_path = fpk_save_image_to_temp_file(image_np)
     try:
         image = mp.Image.create_from_file(temp_file_path)
-        detection_result = detector.detect(image)
+        mp_detector.detect(image)
     finally:
         os.remove(temp_file_path)
-    return detection_result
 
 
 @app.get("/test")
