@@ -531,8 +531,8 @@ async def startup_event():
     midas_transforms_module = torch.hub.load("intel-isl/MiDaS", "transforms", trust_repo=True)
     midas_transforms = midas_transforms_module.dpt_transform
 
-    model_url = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/simulators/cobot/object_detection/model_fp16.tflite"
-    model_path = "/tmp/model_fp16.tflite"
+    model_url = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/simulators/cobot/object_detection/model_int8_qat.tflite"
+    model_path = "/tmp/model_int8_qat.tflite"
 
     if not os.path.exists(model_path):
         async with httpx.AsyncClient() as client:
