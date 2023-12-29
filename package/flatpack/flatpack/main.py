@@ -2,8 +2,8 @@ from cryptography.fernet import Fernet
 from fastapi import FastAPI, File, UploadFile
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
-from mediapipe.tasks import python as mp_python
-from mediapipe.tasks.python import vision as mp_vision
+from mediapipe.tasks import python
+from mediapipe.tasks.python import vision
 from .parsers import parse_toml_to_venv_script
 from pathlib import Path
 from PIL import Image
@@ -55,6 +55,9 @@ MARGIN = 20
 FONT_SIZE = 1
 FONT_THICKNESS = 1
 TEXT_COLOR = (255, 0, 0)
+
+COUNTER, FPS = 0, 0
+START_TIME = time.time()
 
 
 class SessionManager:
@@ -505,27 +508,6 @@ app.add_middleware(
 )
 
 
-def fpk_save_result(result):
-    print("Result:", result)
-
-
-def fpk_create_detector(model_path, threshold=0.5):
-    VisionRunningMode = mp.tasks.vision.RunningMode
-
-    base_options = mp_python.BaseOptions(
-        model_asset_path=model_path
-    )
-
-    options = mp_vision.ObjectDetectorOptions(
-        base_options=base_options,
-        running_mode=VisionRunningMode.LIVE_STREAM,
-        score_threshold=threshold,
-        result_callback=fpk_save_result
-    )
-
-    return mp_vision.ObjectDetector.create_from_options(options)
-
-
 @app.on_event("startup")
 async def startup_event():
     global midas_model, midas_transforms, mp_detector
@@ -549,7 +531,7 @@ async def startup_event():
 
         print("Model downloaded successfully.")
 
-    mp_detector = fpk_create_detector(model_path)
+    # Load MediaPipe object detection model
 
 
 @app.post("/process/")
@@ -576,21 +558,6 @@ async def process_depth_map(file: UploadFile = File(...), model_type: str = "DPT
     return StreamingResponse(io.BytesIO(encoded_img.tobytes()), media_type="image/png")
 
 
-def fpk_visualize(image, detection_result) -> np.ndarray:
-    for detection in detection_result.detections:
-        bbox = detection.bounding_box
-        start_point = (bbox.origin_x, bbox.origin_y)
-        end_point = (bbox.origin_x + bbox.width, bbox.origin_y + bbox.height)
-
-        cv2.rectangle(image, start_point, end_point, TEXT_COLOR, 3)
-        label = f"{detection.categories[0].category_name} ({round(detection.categories[0].score, 2)})"
-        text_position = (bbox.origin_x + MARGIN, bbox.origin_y + MARGIN)
-        cv2.putText(image, label, text_position, cv2.FONT_HERSHEY_PLAIN,
-                    FONT_SIZE, TEXT_COLOR, FONT_THICKNESS)
-
-    return image
-
-
 def fpk_process_depth_map_np(image_np: np.ndarray, model_type: str = "DPT_Large") -> np.ndarray:
     global midas_model, midas_transforms
 
@@ -601,7 +568,7 @@ def fpk_process_depth_map_np(image_np: np.ndarray, model_type: str = "DPT_Large"
     else:
         image_bgr = image_np
 
-    detection_result = fpk_load_and_detect(image_bgr)
+    # TODO: Detect objects in the image
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     midas_model.to(device)
@@ -622,29 +589,12 @@ def fpk_process_depth_map_np(image_np: np.ndarray, model_type: str = "DPT_Large"
     depth_normalized = (depth_normalized - depth_normalized.min()) / (depth_normalized.max() - depth_normalized.min())
     depth_colored = cv2.applyColorMap((depth_normalized * 255).astype(np.uint8), cv2.COLORMAP_JET)
 
-    # annotated_depth_map = fpk_visualize(depth_colored, detection_result)
+    # TODO: Annotated depth map with bounding boxes
 
     end_time = time.time()
     print(f"fpk_process_depth_map_np completed in {end_time - start_time} seconds.")
 
-    # return annotated_depth_map
-    return depth_normalized
-
-
-def fpk_save_image_to_temp_file(image_np):
-    _, temp_file_path = tempfile.mkstemp(suffix=".png")
-    cv2.imwrite(temp_file_path, image_np)
-    return temp_file_path
-
-
-def fpk_load_and_detect(image_np):
-    global mp_detector
-    temp_file_path = fpk_save_image_to_temp_file(image_np)
-    try:
-        image = mp.Image.create_from_file(temp_file_path)
-        mp_detector.detect_async(image, time.time_ns())
-    finally:
-        os.remove(temp_file_path)
+    return depth_colored
 
 
 @app.get("/test")
