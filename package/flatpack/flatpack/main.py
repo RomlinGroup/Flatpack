@@ -512,7 +512,7 @@ app.add_middleware(
 async def startup_event():
     global midas_model, midas_transforms, mp_detector
 
-    midas_model = torch.hub.load("intel-isl/MiDaS", "DPT_Large", trust_repo=True)
+    midas_model = torch.hub.load("intel-isl/MiDaS", "MiDaS_small", trust_repo=True)
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
     midas_model.to(device)
     midas_model.eval()
@@ -562,11 +562,6 @@ def fpk_process_depth_map_np(image_np: np.ndarray, model_type: str = "MiDaS_smal
     global midas_model, midas_transforms
 
     start_time = time.time()
-
-    if image_np.shape[2] == 3:
-        image_bgr = cv2.cvtColor(image_np, cv2.COLOR_RGB2BGR)
-    else:
-        image_bgr = image_np
 
     # TODO: Detect objects in the image
 
