@@ -54,10 +54,7 @@ mp_detector = None
 MARGIN = 20
 FONT_SIZE = 1
 FONT_THICKNESS = 1
-TEXT_COLOR = (255, 0, 0)
-
-COUNTER, FPS = 0, 0
-START_TIME = time.time()
+TEXT_COLOR = (255, 255, 255)
 
 
 class SessionManager:
