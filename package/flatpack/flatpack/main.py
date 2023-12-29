@@ -505,9 +505,16 @@ app.add_middleware(
 
 
 def fpk_create_detector(model_path, threshold=0.5):
-    base_options = mp_python.BaseOptions(model_asset_path=model_path)
-    options = mp_vision.ObjectDetectorOptions(base_options=base_options,
-                                              score_threshold=threshold)
+    VisionRunningMode = mp.tasks.vision.RunningMode
+
+    base_options = mp_python.BaseOptions(
+        model_asset_path=model_path
+    )
+    options = mp_vision.ObjectDetectorOptions(
+        base_options=base_options,
+        running_mode=VisionRunningMode.IMAGE,
+        score_threshold=threshold
+    )
     return mp_vision.ObjectDetector.create_from_options(options)
 
 
