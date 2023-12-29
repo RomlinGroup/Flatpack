@@ -2,8 +2,7 @@ from cryptography.fernet import Fernet
 from fastapi import FastAPI, File, UploadFile
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
-from mediapipe.tasks import python as mp_python
-from mediapipe.tasks.python import vision as mp_vision
+from mediapipe.tasks.vision import ObjectDetectorOptions, BaseOptions
 from .parsers import parse_toml_to_venv_script
 from pathlib import Path
 from PIL import Image
@@ -504,14 +503,12 @@ app.add_middleware(
 )
 
 
-def fpk_create_detector(model_path, threshold=0.5, running_mode="LIVE_STREAM"):
-    base_options = mp_python.BaseOptions(model_asset_path=model_path)
-    options = mp_vision.ObjectDetectorOptions(
-        base_options=base_options,
-        score_threshold=threshold,
-        running_mode=mp_vision.ObjectDetectorOptions.RunningMode.LIVE_STREAM
-    )
-    return mp_vision.ObjectDetector.create_from_options(options)
+def fpk_create_detector(model_path, threshold=0.5, running_mode=mp.tasks.vision.RunningMode.IMAGE):
+    base_options = BaseOptions(model_asset_path=model_path)
+    options = ObjectDetectorOptions(base_options=base_options,
+                                    score_threshold=threshold,
+                                    running_mode=running_mode)
+    return mp.tasks.vision.ObjectDetector.create_from_options(options)
 
 
 @app.on_event("startup")
@@ -537,8 +534,7 @@ async def startup_event():
 
         print("Model downloaded successfully.")
 
-    running_mode = "LIVE_STREAM"
-    mp_detector = fpk_create_detector(model_path, running_mode=running_mode)
+    mp_detector = fpk_create_detector(model_path)
 
 
 @app.post("/process/")
