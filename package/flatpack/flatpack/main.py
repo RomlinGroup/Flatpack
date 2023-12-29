@@ -27,6 +27,7 @@ import shlex
 import stat
 import subprocess
 import sys
+import tempfile
 import toml
 import torch
 import uvicorn
@@ -589,14 +590,20 @@ def fpk_process_depth_map_np(image_np: np.ndarray, model_type: str = "DPT_Large"
     return depth_colored
 
 
+def save_image_to_temp_file(image_np):
+    _, temp_file_path = tempfile.mkstemp(suffix=".png")
+    cv2.imwrite(temp_file_path, image_np)
+    return temp_file_path
+
+
 def fpk_load_and_detect(detector, image_np):
-    image_bgr = cv2.cvtColor(image_np, cv2.COLOR_RGB2BGR)
-
-    image_frame = mp.solutions.drawing_utils.ImageFrame.from_array(image_bgr)
-
-    results = detector.process(image_frame)
-
-    return results
+    temp_file_path = save_image_to_temp_file(image_np)
+    try:
+        image = mp.Image.create_from_file(temp_file_path)
+        detection_result = detector.detect(image)
+    finally:
+        os.remove(temp_file_path)
+    return detection_result
 
 
 @app.get("/test")
