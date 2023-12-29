@@ -583,13 +583,15 @@ def fpk_visualize(image, detection_result) -> np.ndarray:
     return image
 
 
-def fpk_process_depth_map_np(image_np: np.ndarray, model_type: str = "DPT_Large") -> np.ndarray:
+def fpk_process_depth_map_np(image_np: np.ndarray, model_type: str = "DPT_Large", resize_factor=0.5) -> np.ndarray:
     global midas_model, midas_transforms, mp_detector
 
-    if image_np.shape[2] == 3:
-        image_bgr = cv2.cvtColor(image_np, cv2.COLOR_RGB2BGR)
+    resized_image_np = cv2.resize(image_np, (0, 0), fx=resize_factor, fy=resize_factor)
+
+    if resized_image_np.shape[2] == 3:
+        image_bgr = cv2.cvtColor(resized_image_np, cv2.COLOR_RGB2BGR)
     else:
-        image_bgr = image_np
+        image_bgr = resized_image_np
 
     detection_result = fpk_load_and_detect(mp_detector, image_bgr)
 
