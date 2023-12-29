@@ -2,6 +2,8 @@ from cryptography.fernet import Fernet
 from fastapi import FastAPI, File, UploadFile
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
+from mediapipe.tasks import python as mp_python
+from mediapipe.tasks.python import vision as mp_vision
 from .parsers import parse_toml_to_venv_script
 from pathlib import Path
 from PIL import Image
@@ -14,6 +16,7 @@ import cv2
 import httpx
 import io
 import logging
+import mediapipe as mp
 import ngrok
 import numpy as np
 import os
@@ -43,6 +46,13 @@ config = {
 
 midas_model = None
 midas_transforms = None
+
+mp_detector = None
+
+MARGIN = 20
+FONT_SIZE = 1
+FONT_THICKNESS = 1
+TEXT_COLOR = (255, 0, 0)
 
 
 class SessionManager:
@@ -493,17 +503,37 @@ app.add_middleware(
 )
 
 
+def fpk_create_detector(model_path, threshold=0.5):
+    base_options = mp_python.BaseOptions(model_asset_path=model_path)
+    options = mp_vision.ObjectDetectorOptions(base_options=base_options,
+                                              score_threshold=threshold)
+    return mp_vision.ObjectDetector.create_from_options(options)
+
+
 @app.on_event("startup")
 async def startup_event():
-    global midas_model, midas_transforms
+    global midas_model, midas_transforms, mp_detector
 
     midas_model = torch.hub.load("intel-isl/MiDaS", "DPT_Large", trust_repo=True)
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
     midas_model.to(device)
     midas_model.eval()
-
     midas_transforms_module = torch.hub.load("intel-isl/MiDaS", "transforms", trust_repo=True)
     midas_transforms = midas_transforms_module.dpt_transform
+
+    model_url = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/simulators/cobot/object_detection/model_fp16.tflite"
+    model_path = "/tmp/model_fp16.tflite"
+
+    if not os.path.exists(model_path):
+        async with httpx.AsyncClient() as client:
+            response = await client.get(model_url)
+            response.raise_for_status()
+            with open(model_path, "wb") as file:
+                file.write(response.content)
+
+        print("Model downloaded successfully.")
+
+    mp_detector = fpk_create_detector(model_path)
 
 
 @app.post("/process/")
@@ -531,7 +561,11 @@ async def process_depth_map(file: UploadFile = File(...), model_type: str = "DPT
 
 
 def fpk_process_depth_map_np(image_np: np.ndarray, model_type: str = "DPT_Large") -> np.ndarray:
-    global midas_model, midas_transforms
+    global midas_model, midas_transforms, mp_detector
+
+    if image_np.shape[2] == 3:
+        image_bgr = cv2.cvtColor(image_np, cv2.COLOR_RGB2BGR)
+        detection_result = fpk_load_and_detect(mp_detector, image_bgr)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     midas_model.to(device)
@@ -550,10 +584,19 @@ def fpk_process_depth_map_np(image_np: np.ndarray, model_type: str = "DPT_Large"
 
     depth_normalized = prediction.cpu().numpy()
     depth_normalized = (depth_normalized - depth_normalized.min()) / (depth_normalized.max() - depth_normalized.min())
-
     depth_colored = cv2.applyColorMap((depth_normalized * 255).astype(np.uint8), cv2.COLORMAP_JET)
 
     return depth_colored
+
+
+def fpk_load_and_detect(detector, image_np):
+    image_bgr = cv2.cvtColor(image_np, cv2.COLOR_RGB2BGR)
+
+    image_frame = mp.solutions.drawing_utils.ImageFrame.from_array(image_bgr)
+
+    results = detector.process(image_frame)
+
+    return results
 
 
 @app.get("/test")
