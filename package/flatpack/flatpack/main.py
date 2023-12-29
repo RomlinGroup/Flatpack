@@ -546,23 +546,30 @@ async def process(prompt: str, file: UploadFile = File(None)):
     return {"response": response}
 
 
-# Depth map processing endpoint
 @app.post("/process_depth_map/")
-async def process_depth_map(file: UploadFile = File(...)):
+async def process_depth_map(file: UploadFile = File(...), model_type: str = "MiDaS_small"):
     contents = await file.read()
     image = Image.open(io.BytesIO(contents))
     image_np = np.array(image.convert("RGB"))
 
-    depth_map = fpk_process_depth_map_np(image_np)
+    depth_map_with_boxes = fpk_process_depth_map_np(image_np, model_type)
 
-    _, encoded_img = cv2.imencode('.png', depth_map)
+    _, encoded_img = cv2.imencode('.png', depth_map_with_boxes)
     return StreamingResponse(io.BytesIO(encoded_img.tobytes()), media_type="image/png")
 
 
-def fpk_process_depth_map_np(image_np: np.ndarray) -> np.ndarray:
+def fpk_process_depth_map_np(image_np: np.ndarray, model_type: str = "MiDaS_small") -> np.ndarray:
     global midas_model, midas_transforms
 
-    input_batch = midas_transforms(image_np).unsqueeze(0)
+    start_time = time.time()
+
+    # TODO: Detect objects in the image
+
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    midas_model.to(device)
+    midas_model.eval()
+
+    input_batch = midas_transforms(image_np).to(device)
 
     with torch.no_grad():
         prediction = midas_model(input_batch)
@@ -573,8 +580,14 @@ def fpk_process_depth_map_np(image_np: np.ndarray) -> np.ndarray:
             align_corners=False,
         ).squeeze()
 
-    depth_map = prediction.numpy()
-    return depth_map
+    depth_normalized = prediction.cpu().numpy()
+
+    # TODO: Annotated depth map with bounding boxes
+
+    end_time = time.time()
+    print(f"fpk_process_depth_map_np completed in {end_time - start_time} seconds.")
+
+    return depth_normalized
 
 
 @app.get("/test")
