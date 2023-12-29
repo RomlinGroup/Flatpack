@@ -278,9 +278,20 @@
     async function captureImageBlob() {
         if (forearmRenderer && forearmRenderer.domElement instanceof HTMLCanvasElement) {
             return new Promise(resolve => {
-                forearmRenderer.domElement.toBlob(blob => {
+
+                const offscreenCanvas = document.createElement('canvas');
+                const offscreenCtx = offscreenCanvas.getContext('2d');
+
+                offscreenCanvas.width = 320;
+                offscreenCanvas.height = 240;
+
+                offscreenCtx.drawImage(forearmRenderer.domElement, 0, 0, 640, 480, 0, 0, 320, 240);
+
+                const compressionQuality = 0.5;
+
+                offscreenCanvas.toBlob(blob => {
                     resolve(blob);
-                }, 'image/jpeg');
+                }, 'image/jpeg', compressionQuality);
             });
         }
         return null;
@@ -417,10 +428,12 @@
 
             this.frameBuffer = [];
             this.isRecordingVideo = false;
+
+            this.lastDepthMapTime = 0;
+            this.depthMapInterval = 5000;
         }
 
         onMovementDetected() {
-            console.log("Movement detected!");
             const imageDataUrl = captureImage();
             updateForearmViewObjectDetection(imageDataUrl);
             processAndDisplayDepthMap();

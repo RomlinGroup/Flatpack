@@ -2,8 +2,8 @@ from cryptography.fernet import Fernet
 from fastapi import FastAPI, File, UploadFile
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
-from mediapipe.tasks import python
-from mediapipe.tasks.python import vision
+from mediapipe.tasks import python as mp_python
+from mediapipe.tasks.python import vision as mp_vision
 from .parsers import parse_toml_to_venv_script
 from pathlib import Path
 from PIL import Image
@@ -508,6 +508,22 @@ app.add_middleware(
 )
 
 
+def fpk_create_detector(model_path, threshold=0.5):
+    VisionRunningMode = mp.tasks.vision.RunningMode
+
+    base_options = mp_python.BaseOptions(
+        model_asset_path=model_path
+    )
+
+    options = mp_vision.ObjectDetectorOptions(
+        base_options=base_options,
+        running_mode=VisionRunningMode.IMAGE,
+        score_threshold=threshold
+    )
+
+    return mp_vision.ObjectDetector.create_from_options(options)
+
+
 @app.on_event("startup")
 async def startup_event():
     global midas_model, midas_transforms, mp_detector
@@ -531,7 +547,7 @@ async def startup_event():
 
         print("Model downloaded successfully.")
 
-    # Load MediaPipe object detection model
+    mp_detector = fpk_create_detector(model_path)
 
 
 @app.post("/process/")
@@ -558,12 +574,30 @@ async def process_depth_map(file: UploadFile = File(...), model_type: str = "DPT
     return StreamingResponse(io.BytesIO(encoded_img.tobytes()), media_type="image/png")
 
 
+def fpk_visualize(image, detection_result) -> np.ndarray:
+    for detection in detection_result.detections:
+        bbox = detection.bounding_box
+        start_point = (bbox.origin_x, bbox.origin_y)
+        end_point = (bbox.origin_x + bbox.width, bbox.origin_y + bbox.height)
+
+        cv2.rectangle(image, start_point, end_point, TEXT_COLOR, 3)
+        label = f"{detection.categories[0].category_name} ({round(detection.categories[0].score, 2)})"
+        text_position = (bbox.origin_x + MARGIN, bbox.origin_y + MARGIN)
+        cv2.putText(image, label, text_position, cv2.FONT_HERSHEY_PLAIN,
+                    FONT_SIZE, TEXT_COLOR, FONT_THICKNESS)
+
+    return image
+
+
 def fpk_process_depth_map_np(image_np: np.ndarray, model_type: str = "DPT_Large") -> np.ndarray:
-    global midas_model, midas_transforms
+    global midas_model, midas_transforms, mp_detector
 
-    start_time = time.time()
+    if image_np.shape[2] == 3:
+        image_bgr = cv2.cvtColor(image_np, cv2.COLOR_RGB2BGR)
+    else:
+        image_bgr = image_np
 
-    # TODO: Detect objects in the image
+    detection_result = fpk_load_and_detect(mp_detector, image_bgr)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     midas_model.to(device)
@@ -584,12 +618,25 @@ def fpk_process_depth_map_np(image_np: np.ndarray, model_type: str = "DPT_Large"
     depth_normalized = (depth_normalized - depth_normalized.min()) / (depth_normalized.max() - depth_normalized.min())
     depth_colored = cv2.applyColorMap((depth_normalized * 255).astype(np.uint8), cv2.COLORMAP_JET)
 
-    # TODO: Annotated depth map with bounding boxes
+    annotated_depth_map = fpk_visualize(depth_colored, detection_result)
 
-    end_time = time.time()
-    print(f"fpk_process_depth_map_np completed in {end_time - start_time} seconds.")
+    return annotated_depth_map
 
-    return depth_colored
+
+def fpk_save_image_to_temp_file(image_np):
+    _, temp_file_path = tempfile.mkstemp(suffix=".png")
+    cv2.imwrite(temp_file_path, image_np)
+    return temp_file_path
+
+
+def fpk_load_and_detect(detector, image_np):
+    temp_file_path = fpk_save_image_to_temp_file(image_np)
+    try:
+        image = mp.Image.create_from_file(temp_file_path)
+        detection_result = detector.detect(image)
+    finally:
+        os.remove(temp_file_path)
+    return detection_result
 
 
 @app.get("/test")
