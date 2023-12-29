@@ -512,7 +512,7 @@ app.add_middleware(
 async def startup_event():
     global midas_model, midas_transforms, mp_detector
 
-    midas_model = torch.hub.load("intel-isl/MiDaS", "MiDaS_small", trust_repo=True)
+    midas_model = torch.hub.load("intel-isl/MiDaS", "DPT_Large", trust_repo=True)
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
     midas_model.to(device)
     midas_model.eval()
@@ -547,7 +547,7 @@ async def process(prompt: str, file: UploadFile = File(None)):
 
 
 @app.post("/process_depth_map/")
-async def process_depth_map(file: UploadFile = File(...), model_type: str = "MiDaS_small"):
+async def process_depth_map(file: UploadFile = File(...), model_type: str = "DPT_Large"):
     contents = await file.read()
     image = Image.open(io.BytesIO(contents))
     image_np = np.array(image.convert("RGB"))
@@ -558,7 +558,7 @@ async def process_depth_map(file: UploadFile = File(...), model_type: str = "MiD
     return StreamingResponse(io.BytesIO(encoded_img.tobytes()), media_type="image/png")
 
 
-def fpk_process_depth_map_np(image_np: np.ndarray, model_type: str = "MiDaS_small") -> np.ndarray:
+def fpk_process_depth_map_np(image_np: np.ndarray, model_type: str = "DPT_Large") -> np.ndarray:
     global midas_model, midas_transforms
 
     start_time = time.time()
