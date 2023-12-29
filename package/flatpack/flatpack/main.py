@@ -524,7 +524,7 @@ def fpk_create_detector(model_path, threshold=0.5):
 async def startup_event():
     global midas_model, midas_transforms, mp_detector
 
-    midas_model = torch.hub.load("intel-isl/MiDaS", "DPT_Hybrid", trust_repo=True)
+    midas_model = torch.hub.load("intel-isl/MiDaS", "DPT_Large", trust_repo=True)
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
     midas_model.to(device)
     midas_model.eval()
