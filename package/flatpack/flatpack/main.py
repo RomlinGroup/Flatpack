@@ -567,9 +567,9 @@ async def process_depth_map(file: UploadFile = File(...), model_type: str = "MiD
 
     depth_map_with_boxes = fpk_process_depth_map_np(image_np, model_type)
 
-    resized_img = cv2.resize(depth_map_with_boxes, (128, 128))
+    resized_img = cv2.resize(depth_map_with_boxes, (256, 256))
 
-    jpeg_quality = 50
+    jpeg_quality = 25
     _, encoded_img = cv2.imencode('.jpg', resized_img, [cv2.IMWRITE_JPEG_QUALITY, jpeg_quality])
 
     return StreamingResponse(io.BytesIO(encoded_img.tobytes()), media_type="image/jpeg")
