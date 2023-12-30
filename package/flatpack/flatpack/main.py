@@ -51,7 +51,7 @@ midas_transforms = None
 
 mp_detector = None
 
-MARGIN = 20
+MARGIN = 10
 FONT_SIZE = 1
 FONT_THICKNESS = 1
 TEXT_COLOR = (255, 255, 255)
@@ -525,7 +525,7 @@ def fpk_create_detector(model_path, threshold=0.5):
 async def startup_event():
     global midas_model, midas_transforms, mp_detector
 
-    midas_model = torch.hub.load("intel-isl/MiDaS", "DPT_Large", trust_repo=True)
+    midas_model = torch.hub.load("intel-isl/MiDaS", "MiDaS_small", trust_repo=True)
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
     midas_model.to(device)
     midas_model.eval()
@@ -560,14 +560,14 @@ async def process(prompt: str, file: UploadFile = File(None)):
 
 
 @app.post("/process_depth_map/")
-async def process_depth_map(file: UploadFile = File(...), model_type: str = "DPT_Large"):
+async def process_depth_map(file: UploadFile = File(...), model_type: str = "MiDaS_small"):
     contents = await file.read()
     image = Image.open(io.BytesIO(contents))
     image_np = np.array(image.convert("RGB"))
 
     depth_map_with_boxes = fpk_process_depth_map_np(image_np, model_type)
 
-    jpeg_quality = 90  # 0-100, higher is better quality
+    jpeg_quality = 25  # 0-100, higher is better quality
     _, encoded_img = cv2.imencode('.jpg', depth_map_with_boxes, [cv2.IMWRITE_JPEG_QUALITY, jpeg_quality])
 
     return StreamingResponse(io.BytesIO(encoded_img.tobytes()), media_type="image/jpeg")
@@ -588,7 +588,7 @@ def fpk_visualize(image, detection_result) -> np.ndarray:
     return image
 
 
-def fpk_process_depth_map_np(image_np: np.ndarray, model_type: str = "DPT_Large") -> np.ndarray:
+def fpk_process_depth_map_np(image_np: np.ndarray, model_type: str = "MiDaS_small") -> np.ndarray:
     global midas_model, midas_transforms, mp_detector
 
     if image_np.shape[2] == 3:
