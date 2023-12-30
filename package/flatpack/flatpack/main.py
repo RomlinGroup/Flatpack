@@ -569,7 +569,7 @@ async def process_depth_map(file: UploadFile = File(...), model_type: str = "MiD
 
     resized_img = cv2.resize(depth_map_with_boxes, (256, 256))
 
-    jpeg_quality = 75
+    jpeg_quality = 50
     _, encoded_img = cv2.imencode('.jpg', resized_img, [cv2.IMWRITE_JPEG_QUALITY, jpeg_quality])
 
     return StreamingResponse(io.BytesIO(encoded_img.tobytes()), media_type="image/jpeg")
