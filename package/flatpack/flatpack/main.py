@@ -51,9 +51,9 @@ midas_transforms = None
 
 mp_detector = None
 
-MARGIN = 20
+MARGIN = 40
 FONT_SIZE = 2
-FONT_THICKNESS = 1
+FONT_THICKNESS = 2
 TEXT_COLOR = (255, 255, 255)
 
 
