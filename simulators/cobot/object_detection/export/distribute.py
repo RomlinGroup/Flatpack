@@ -14,7 +14,7 @@ def adjust_labels_and_file_names(data):
         image['file_name'] = os.path.basename(image['file_name'])
 
 
-def split_dataset(json_path, train_ratio=0.8):
+def split_dataset(json_path, train_ratio=0.9):
     with open(json_path, 'r') as file:
         data = json.load(file)
 
