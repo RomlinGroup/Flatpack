@@ -570,21 +570,6 @@ async def process_depth_map(file: UploadFile = File(...), model_type: str = "MiD
     return StreamingResponse(io.BytesIO(encoded_img.tobytes()), media_type="image/jpeg")
 
 
-def fpk_visualize(image, detection_result) -> np.ndarray:
-    for detection in detection_result.detections:
-        bbox = detection.bounding_box
-        start_point = (bbox.origin_x, bbox.origin_y)
-        end_point = (bbox.origin_x + bbox.width, bbox.origin_y + bbox.height)
-
-        cv2.rectangle(image, start_point, end_point, TEXT_COLOR, 2)
-        label = f"{detection.categories[0].category_name} ({round(detection.categories[0].score, 2)})"
-        text_position = (bbox.origin_x + MARGIN, bbox.origin_y + MARGIN)
-        cv2.putText(image, label, text_position, cv2.FONT_HERSHEY_PLAIN,
-                    FONT_SIZE, TEXT_COLOR, FONT_THICKNESS)
-
-    return image
-
-
 def fpk_process_depth_map_np(image_np: np.ndarray, model_type: str = "MiDaS_small") -> np.ndarray:
     global midas_model, midas_transforms, mp_detector
 
@@ -610,9 +595,9 @@ def fpk_process_depth_map_np(image_np: np.ndarray, model_type: str = "MiDaS_smal
     depth_map = prediction.cpu().numpy()
 
     depth_normalized = (depth_map - depth_map.min()) / (depth_map.max() - depth_map.min())
-    depth_colored = cv2.applyColorMap((depth_normalized * 255).astype(np.uint8), cv2.COLORMAP_JET)
+    depth_colored = cv2.applyColorMap((depth_normalized * 255).astype(np.uint8), cv2.COLORMAP_BONE)
 
-    alpha = 0.5
+    alpha = 1
     annotated_image = cv2.addWeighted(image_np, alpha, depth_colored, 1 - alpha, 0)
 
     for detection in detection_result.detections:
@@ -627,7 +612,7 @@ def fpk_process_depth_map_np(image_np: np.ndarray, model_type: str = "MiDaS_smal
 
         label = f"{detection.categories[0].category_name} (Depth: {avg_depth:.2f})"
         cv2.putText(annotated_image, label, (start_point[0], start_point[1] - 10),
-                    cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.75, (255, 255, 255), 2)
 
     return annotated_image
 
