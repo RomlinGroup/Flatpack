@@ -614,11 +614,17 @@ def fpk_process_depth_map_np(image_np: np.ndarray, model_type: str = "MiDaS_smal
         ).squeeze()
     depth_map = prediction.cpu().numpy()
 
-    annotated_image = image_np.copy()
+    depth_normalized = (depth_map - depth_map.min()) / (depth_map.max() - depth_map.min())
+    depth_colored = cv2.applyColorMap((depth_normalized * 255).astype(np.uint8), cv2.COLORMAP_JET)
+
+    alpha = 0.5
+    annotated_image = cv2.addWeighted(image_np, alpha, depth_colored, 1 - alpha, 0)
+
     for detection in detection_result.detections:
         bbox = detection.bounding_box
         start_point = (int(bbox.origin_x), int(bbox.origin_y))
         end_point = (int(bbox.origin_x + bbox.width), int(bbox.origin_y + bbox.height))
+
         cv2.rectangle(annotated_image, start_point, end_point, (255, 0, 0), 2)
 
         bbox_depth = depth_map[start_point[1]:end_point[1], start_point[0]:end_point[0]]
