@@ -612,7 +612,7 @@ def fpk_process_depth_map_np(image_np: np.ndarray, model_type: str = "MiDaS_smal
             prediction.unsqueeze(1),
             size=image_np.shape[:2],
             mode="bicubic",
-            align_corners=False,
+            align_corners=True,
         ).squeeze()
 
     depth_normalized = prediction.cpu().numpy()
