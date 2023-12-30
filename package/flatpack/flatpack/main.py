@@ -567,8 +567,10 @@ async def process_depth_map(file: UploadFile = File(...), model_type: str = "DPT
 
     depth_map_with_boxes = fpk_process_depth_map_np(image_np, model_type)
 
-    _, encoded_img = cv2.imencode('.png', depth_map_with_boxes)
-    return StreamingResponse(io.BytesIO(encoded_img.tobytes()), media_type="image/png")
+    jpeg_quality = 50  # 0-100, higher is better quality
+    _, encoded_img = cv2.imencode('.jpg', depth_map_with_boxes, [cv2.IMWRITE_JPEG_QUALITY, jpeg_quality])
+
+    return StreamingResponse(io.BytesIO(encoded_img.tobytes()), media_type="image/jpeg")
 
 
 def fpk_visualize(image, detection_result) -> np.ndarray:
@@ -577,7 +579,7 @@ def fpk_visualize(image, detection_result) -> np.ndarray:
         start_point = (bbox.origin_x, bbox.origin_y)
         end_point = (bbox.origin_x + bbox.width, bbox.origin_y + bbox.height)
 
-        cv2.rectangle(image, start_point, end_point, TEXT_COLOR, 3)
+        cv2.rectangle(image, start_point, end_point, TEXT_COLOR, 1)
         label = f"{detection.categories[0].category_name} ({round(detection.categories[0].score, 2)})"
         text_position = (bbox.origin_x + MARGIN, bbox.origin_y + MARGIN)
         cv2.putText(image, label, text_position, cv2.FONT_HERSHEY_PLAIN,
