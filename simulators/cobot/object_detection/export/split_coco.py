@@ -2,7 +2,7 @@ import json
 import random
 
 
-def split_coco_data(json_file, train_file, val_file, split_ratio=0.8):
+def split_coco_data(json_file, train_file, val_file, split_ratio=0.9):
     with open(json_file, 'r') as file:
         data = json.load(file)
 
