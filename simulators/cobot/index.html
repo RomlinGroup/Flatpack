@@ -291,7 +291,7 @@
 
                 offscreenCtx.drawImage(forearmRenderer.domElement, 0, 0, forearmRenderer.domElement.width, forearmRenderer.domElement.height, 0, 0, targetWidth, targetHeight);
 
-                const compressionQuality = 0.5;
+                const compressionQuality = 0.25;
 
                 forearmRenderer.domElement.toBlob(blob => {
                     resolve(blob);
@@ -798,10 +798,10 @@
         camera.updateProjectionMatrix();
         renderer.setSize(window.innerWidth, window.innerHeight);
 
-        const forearmAspect = 256 / 256;
+        const forearmAspect = 512 / 512;
         forearmCamera.aspect = forearmAspect;
         forearmCamera.updateProjectionMatrix();
-        forearmRenderer.setSize(256 * window.devicePixelRatio, 256 * window.devicePixelRatio);
+        forearmRenderer.setSize(512 * window.devicePixelRatio, 512 * window.devicePixelRatio);
     }
 
     let resizeTimer;
