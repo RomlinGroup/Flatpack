@@ -291,7 +291,7 @@
 
                 offscreenCtx.drawImage(forearmRenderer.domElement, 0, 0, forearmRenderer.domElement.width, forearmRenderer.domElement.height, 0, 0, targetWidth, targetHeight);
 
-                const compressionQuality = 0.25;
+                const compressionQuality = 0.5;
 
                 forearmRenderer.domElement.toBlob(blob => {
                     resolve(blob);
