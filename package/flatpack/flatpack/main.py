@@ -51,11 +51,6 @@ midas_transforms = None
 
 mp_detector = None
 
-MARGIN = 40
-FONT_SIZE = 2
-FONT_THICKNESS = 2
-TEXT_COLOR = (255, 255, 255)
-
 
 class SessionManager:
     def __enter__(self):
@@ -625,14 +620,14 @@ def fpk_process_depth_map_np(image_np: np.ndarray, model_type: str = "MiDaS_smal
         start_point = (int(bbox.origin_x), int(bbox.origin_y))
         end_point = (int(bbox.origin_x + bbox.width), int(bbox.origin_y + bbox.height))
 
-        cv2.rectangle(annotated_image, start_point, end_point, (255, 0, 0), 2)
+        cv2.rectangle(annotated_image, start_point, end_point, (255, 255, 255), 2)
 
         bbox_depth = depth_map[start_point[1]:end_point[1], start_point[0]:end_point[0]]
         avg_depth = np.mean(bbox_depth)
 
         label = f"{detection.categories[0].category_name} (Depth: {avg_depth:.2f})"
         cv2.putText(annotated_image, label, (start_point[0], start_point[1] - 10),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
+                    cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
 
     return annotated_image
 
