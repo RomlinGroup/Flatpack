@@ -52,7 +52,7 @@ midas_transforms = None
 mp_detector = None
 
 MARGIN = 20
-FONT_SIZE = 1
+FONT_SIZE = 2
 FONT_THICKNESS = 1
 TEXT_COLOR = (255, 255, 255)
 
@@ -581,7 +581,7 @@ def fpk_visualize(image, detection_result) -> np.ndarray:
         start_point = (bbox.origin_x, bbox.origin_y)
         end_point = (bbox.origin_x + bbox.width, bbox.origin_y + bbox.height)
 
-        cv2.rectangle(image, start_point, end_point, TEXT_COLOR, 1)
+        cv2.rectangle(image, start_point, end_point, TEXT_COLOR, 2)
         label = f"{detection.categories[0].category_name} ({round(detection.categories[0].score, 2)})"
         text_position = (bbox.origin_x + MARGIN, bbox.origin_y + MARGIN)
         cv2.putText(image, label, text_position, cv2.FONT_HERSHEY_PLAIN,
