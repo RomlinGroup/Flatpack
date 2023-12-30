@@ -603,9 +603,7 @@ def fpk_process_depth_map_np(image_np: np.ndarray, model_type: str = "MiDaS_smal
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     midas_model.to(device)
     midas_model.eval()
-
     input_batch = midas_transforms(image_np).to(device)
-
     with torch.no_grad():
         prediction = midas_model(input_batch)
         prediction = torch.nn.functional.interpolate(
@@ -614,14 +612,23 @@ def fpk_process_depth_map_np(image_np: np.ndarray, model_type: str = "MiDaS_smal
             mode="bicubic",
             align_corners=False,
         ).squeeze()
+    depth_map = prediction.cpu().numpy()
 
-    depth_normalized = prediction.cpu().numpy()
-    depth_normalized = (depth_normalized - depth_normalized.min()) / (depth_normalized.max() - depth_normalized.min())
-    depth_colored = cv2.applyColorMap((depth_normalized * 255).astype(np.uint8), cv2.COLORMAP_JET)
+    annotated_image = image_np.copy()
+    for detection in detection_result.detections:
+        bbox = detection.bounding_box
+        start_point = (int(bbox.origin_x), int(bbox.origin_y))
+        end_point = (int(bbox.origin_x + bbox.width), int(bbox.origin_y + bbox.height))
+        cv2.rectangle(annotated_image, start_point, end_point, (255, 0, 0), 2)
 
-    annotated_depth_map = fpk_visualize(depth_colored, detection_result)
+        bbox_depth = depth_map[start_point[1]:end_point[1], start_point[0]:end_point[0]]
+        avg_depth = np.mean(bbox_depth)
 
-    return annotated_depth_map
+        label = f"{detection.categories[0].category_name} (Depth: {avg_depth:.2f})"
+        cv2.putText(annotated_image, label, (start_point[0], start_point[1] - 10),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
+
+    return annotated_image
 
 
 def fpk_save_image_to_temp_file(image_np):
