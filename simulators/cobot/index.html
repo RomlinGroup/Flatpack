@@ -66,8 +66,8 @@
 
         #forearmView {
             position: relative;
-            width: 320px;
-            height: 240px;
+            width: 256px;
+            height: 256px;
             border: 1px solid #fff;
             display: none;
         }
@@ -83,8 +83,8 @@
 
         #forearmViewObjectDetection {
             position: relative;
-            width: 320px;
-            height: 240px;
+            width: 256px;
+            height: 256px;
             background: #000;
             border: 1px solid #fff;
             overflow: hidden;
@@ -100,8 +100,8 @@
 
         #detectionResults {
             position: relative;
-            width: 320px;
-            height: 240px;
+            width: 256px;
+            height: 256px;
             background: #000;
             border: 1px solid #fff;
             margin-top: 10px;
@@ -282,14 +282,18 @@
                 const offscreenCanvas = document.createElement('canvas');
                 const offscreenCtx = offscreenCanvas.getContext('2d');
 
-                offscreenCanvas.width = 320;
-                offscreenCanvas.height = 240;
+                const targetWidth = 256;
+                const aspectRatio = forearmRenderer.domElement.width / forearmRenderer.domElement.height;
+                const targetHeight = targetWidth / aspectRatio;
 
-                offscreenCtx.drawImage(forearmRenderer.domElement, 0, 0, 640, 480, 0, 0, 320, 240);
+                offscreenCanvas.width = targetWidth;
+                offscreenCanvas.height = targetHeight;
 
-                const compressionQuality = 0.5;
+                offscreenCtx.drawImage(forearmRenderer.domElement, 0, 0, forearmRenderer.domElement.width, forearmRenderer.domElement.height, 0, 0, targetWidth, targetHeight);
 
-                offscreenCanvas.toBlob(blob => {
+                const compressionQuality = 0.25;
+
+                forearmRenderer.domElement.toBlob(blob => {
                     resolve(blob);
                 }, 'image/jpeg', compressionQuality);
             });
@@ -724,11 +728,12 @@
 
         animate();
         processAndDisplayDepthMap();
+
     }
 
     function initForearmCamera() {
-        let width = 640;
-        let height = 480;
+        let width = 512;
+        let height = 512;
         const aspect = width / height;
         const fov = 60;
         forearmCamera = new THREE.PerspectiveCamera(fov, aspect, 0.1, 1000);
@@ -742,16 +747,16 @@
         forearmRenderer.shadowMap.enabled = true;
         forearmRenderer.shadowMap.type = THREE.PCFSoftShadowMap;
         forearmRenderer.setClearColor(0x000000);
-        document.getElementById('forearmViewObjectDetection').style.width = `320px`;
-        document.getElementById('forearmViewObjectDetection').style.height = `240px`;
+        document.getElementById('forearmViewObjectDetection').style.width = `256px`;
+        document.getElementById('forearmViewObjectDetection').style.height = `256px`;
         document.getElementById('forearmView').appendChild(forearmRenderer.domElement);
     }
 
 
     function setupScene() {
         scene = new THREE.Scene();
-        const gridSize = 10;
-        const gridDivisions = 10;
+        const gridSize = 0;
+        const gridDivisions = 0;
         const gridHelper = new THREE.GridHelper(gridSize, gridDivisions);
         scene.add(gridHelper);
     }
@@ -793,10 +798,10 @@
         camera.updateProjectionMatrix();
         renderer.setSize(window.innerWidth, window.innerHeight);
 
-        const forearmAspect = 640 / 480;
+        const forearmAspect = 256 / 256;
         forearmCamera.aspect = forearmAspect;
         forearmCamera.updateProjectionMatrix();
-        forearmRenderer.setSize(640 * window.devicePixelRatio, 480 * window.devicePixelRatio);
+        forearmRenderer.setSize(256 * window.devicePixelRatio, 256 * window.devicePixelRatio);
     }
 
     let resizeTimer;
