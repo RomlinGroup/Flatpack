@@ -612,7 +612,7 @@ def fpk_process_depth_map_np(image_np: np.ndarray, model_type: str = "MiDaS_smal
             prediction.unsqueeze(1),
             size=image_np.shape[:2],
             mode="bicubic",
-            align_corners=True,
+            align_corners=False,
         ).squeeze()
 
     depth_normalized = prediction.cpu().numpy()
@@ -625,7 +625,7 @@ def fpk_process_depth_map_np(image_np: np.ndarray, model_type: str = "MiDaS_smal
 
 
 def fpk_save_image_to_temp_file(image_np):
-    _, temp_file_path = tempfile.mkstemp(suffix=".png")
+    _, temp_file_path = tempfile.mkstemp(suffix=".jpg")
     cv2.imwrite(temp_file_path, image_np)
     return temp_file_path
 
