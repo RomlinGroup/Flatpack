@@ -612,7 +612,7 @@ def fpk_process_depth_map_np(image_np: np.ndarray, model_type: str = "MiDaS_smal
     depth_normalized = (depth_map - depth_map.min()) / (depth_map.max() - depth_map.min())
     depth_colored = cv2.applyColorMap((depth_normalized * 255).astype(np.uint8), cv2.COLORMAP_JET)
 
-    alpha = 0.25
+    alpha = 0.5
     annotated_image = cv2.addWeighted(image_np, alpha, depth_colored, 1 - alpha, 0)
 
     for detection in detection_result.detections:
