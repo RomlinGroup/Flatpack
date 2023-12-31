@@ -1,6 +1,7 @@
 from cryptography.fernet import Fernet
+from datetime import datetime
 from fastapi import FastAPI, File, UploadFile
-from fastapi.responses import StreamingResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from mediapipe.tasks import python as mp_python
 from mediapipe.tasks.python import vision as mp_vision
@@ -556,18 +557,27 @@ async def process(prompt: str, file: UploadFile = File(None)):
 
 @app.post("/process_depth_map/")
 async def process_depth_map(file: UploadFile = File(...), model_type: str = "MiDaS_small"):
-    contents = await file.read()
-    image = Image.open(io.BytesIO(contents))
-    image_np = np.array(image.convert("RGB"))
+    if model_type not in ["MiDaS_small", "DPT_Hybrid", "DPT_Large"]:
+        return JSONResponse(status_code=400, content={"message": "Invalid model type"})
 
-    depth_map_with_boxes = fpk_process_depth_map_np(image_np, model_type)
+    try:
+        contents = await file.read()
+        image = Image.open(io.BytesIO(contents))
+        image_np = np.array(image.convert("RGB"))
 
-    resized_img = cv2.resize(depth_map_with_boxes, (256, 256))
+        depth_map_with_boxes = fpk_process_depth_map_np(image_np, model_type)
 
-    jpeg_quality = 50
-    _, encoded_img = cv2.imencode('.jpg', resized_img, [cv2.IMWRITE_JPEG_QUALITY, jpeg_quality])
+        resized_img = cv2.resize(depth_map_with_boxes, (256, 256))
 
-    return StreamingResponse(io.BytesIO(encoded_img.tobytes()), media_type="image/jpeg")
+        jpeg_quality = 50
+        _, encoded_img = cv2.imencode('.jpg', resized_img, [cv2.IMWRITE_JPEG_QUALITY, jpeg_quality])
+
+        logger.info(f"Depth map request processed at {datetime.now()} for model_type {model_type}")
+
+        return StreamingResponse(io.BytesIO(encoded_img.tobytes()), media_type="image/jpeg")
+    except Exception as e:
+        logger.error(f"Error processing depth map: {e}")
+        return JSONResponse(status_code=500, content={"message": "Internal server error"})
 
 
 def fpk_process_depth_map_np(image_np: np.ndarray, model_type: str = "MiDaS_small") -> np.ndarray:
