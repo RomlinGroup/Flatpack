@@ -66,8 +66,8 @@
 
         #forearmView {
             position: relative;
-            width: 256px;
-            height: 256px;
+            width: 128px;
+            height: 128px;
             border: 1px solid #fff;
             display: none;
         }
@@ -83,8 +83,8 @@
 
         #forearmViewObjectDetection {
             position: relative;
-            width: 256px;
-            height: 256px;
+            width: 128px;
+            height: 128px;
             background: #000;
             border: 1px solid #fff;
             overflow: hidden;
@@ -100,8 +100,8 @@
 
         #detectionResults {
             position: relative;
-            width: 256px;
-            height: 256px;
+            width: 128px;
+            height: 128px;
             background: #000;
             border: 1px solid #fff;
             margin-top: 10px;
@@ -209,9 +209,9 @@
         #overviewMap {
             position: fixed;
             top: 10px;
-            right: 276px;
-            width: 256px;
-            height: 256px;
+            right: 10px;
+            width: 128px;
+            height: 128px;
             background: #fff;
             border: 1px solid #fff;
             overflow: hidden;
@@ -757,8 +757,8 @@
         forearmRenderer.shadowMap.enabled = true;
         forearmRenderer.shadowMap.type = THREE.PCFSoftShadowMap;
         forearmRenderer.setClearColor(0x000000);
-        document.getElementById('forearmViewObjectDetection').style.width = `256px`;
-        document.getElementById('forearmViewObjectDetection').style.height = `256px`;
+        document.getElementById('forearmViewObjectDetection').style.width = `128px`;
+        document.getElementById('forearmViewObjectDetection').style.height = `128px`;
         document.getElementById('forearmView').appendChild(forearmRenderer.domElement);
     }
 

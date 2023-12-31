@@ -611,9 +611,9 @@ def fpk_process_depth_map_np(image_np: np.ndarray, model_type: str = "MiDaS_smal
 
         bbox_depth = depth_map[start_point[1]:end_point[1], start_point[0]:end_point[0]]
         avg_depth = np.mean(bbox_depth)
-        label = f"{detection.categories[0].category_name} (Depth: {avg_depth:.2f})"
+        label = f"{detection.categories[0].category_name} ({avg_depth:.2f})"
         cv2.putText(annotated_image, label, (start_point[0], start_point[1] - 10),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.75, (255, 255, 255), 2)
+                    cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
 
     return annotated_image
 
