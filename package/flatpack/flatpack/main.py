@@ -549,8 +549,7 @@ async def startup_event():
 async def process(prompt: str, file: UploadFile = File(None)):
     if file:
         contents = await file.read()
-        image = Image.open(io.BytesIO(contents))
-        image_np = np.array(image)
+        image_np = open_and_convert_image(contents)
         response = fpk_generate_text_with_image(prompt, image_np)
     else:
         response = fpk_generate_text(prompt)
@@ -559,8 +558,8 @@ async def process(prompt: str, file: UploadFile = File(None)):
 
 def open_and_convert_image(file_content):
     image_np = np.frombuffer(file_content, np.uint8)
-    image = cv2.imdecode(image_np, cv2.IMREAD_COLOR)  # Reads in BGR format
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)  # Convert to RGB format
+    image = cv2.imdecode(image_np, cv2.IMREAD_COLOR)
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     return image
 
 
