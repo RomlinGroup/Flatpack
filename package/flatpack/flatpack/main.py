@@ -39,7 +39,6 @@ GITHUB_REPO_URL = "https://api.github.com/repos/romlingroup/flatpack-ai"
 BASE_URL = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse"
 LOGGING_ENDPOINT = "https://fpk.ai/api/index.php"
 
-logger = logging.getLogger(__name__)
 log_queue = []
 
 config = {
@@ -97,7 +96,6 @@ def fpk_set_api_key(api_key: str):
     with open(CONFIG_FILE_PATH, "w") as config_file:
         toml.dump(config, config_file)
     fpk_set_secure_file_permissions(CONFIG_FILE_PATH)
-    logger.info("API key set successfully!")
 
 
 def fpk_get_api_key() -> Optional[str]:
@@ -324,7 +322,6 @@ def fpk_log_to_api(message: str, session: httpx.Client, api_key: Optional[str] =
     if not api_key:
         api_key = config["api_key"]
         if not api_key:
-            # logger.warning("API key not set.")
             print("❌ API key not set.")
             return
 
@@ -343,7 +340,7 @@ def fpk_log_to_api(message: str, session: httpx.Client, api_key: Optional[str] =
     try:
         response = session.post(LOGGING_ENDPOINT, params=params, json=data, headers=headers, timeout=10)
     except httpx.RequestError as e:
-        logger.error(f"Failed to send request: {e}")
+        print(f"Failed to send request: {e}")
 
 
 def fpk_process_output(output, session, last_installed_flatpack):
@@ -583,7 +580,7 @@ async def process_depth_map(file: UploadFile = File(...), model_type: str = "MiD
 
         return StreamingResponse(io.BytesIO(encoded_img.tobytes()), media_type="image/jpeg")
     except Exception as e:
-        logger.error(f"Error processing depth map: {e}")
+        print(f"Error processing depth map: {e}")
         return JSONResponse(status_code=500, content={"message": "Internal server error"})
 
 
