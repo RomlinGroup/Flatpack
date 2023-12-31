@@ -7,7 +7,6 @@ from mediapipe.tasks import python as mp_python
 from mediapipe.tasks.python import vision as mp_vision
 from .parsers import parse_toml_to_venv_script
 from pathlib import Path
-from PIL import Image
 from starlette.responses import PlainTextResponse
 from transformers import AutoProcessor, AutoModelForCausalLM, GPT2LMHeadModel, GPT2Tokenizer, set_seed
 from typing import List, Optional
@@ -558,6 +557,13 @@ async def process(prompt: str, file: UploadFile = File(None)):
     return {"response": response}
 
 
+def open_and_convert_image(file_content):
+    image_np = np.frombuffer(file_content, np.uint8)
+    image = cv2.imdecode(image_np, cv2.IMREAD_COLOR)  # Reads in BGR format
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)  # Convert to RGB format
+    return image
+
+
 @app.post("/process_depth_map/")
 async def process_depth_map(file: UploadFile = File(...), model_type: str = "MiDaS_small"):
     if model_type not in ["MiDaS_small", "DPT_Hybrid", "DPT_Large"]:
@@ -565,8 +571,7 @@ async def process_depth_map(file: UploadFile = File(...), model_type: str = "MiD
 
     try:
         contents = await file.read()
-        image = Image.open(io.BytesIO(contents))
-        image_np = np.array(image.convert("RGB"))
+        image_np = open_and_convert_image(contents)
 
         depth_map_with_boxes = fpk_process_depth_map_np(image_np, model_type)
 
