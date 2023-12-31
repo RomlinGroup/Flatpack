@@ -572,7 +572,7 @@ async def process_depth_map(file: UploadFile = File(...), model_type: str = "MiD
         jpeg_quality = 50
         _, encoded_img = cv2.imencode('.jpg', resized_img, [cv2.IMWRITE_JPEG_QUALITY, jpeg_quality])
 
-        logger.info(f"Depth map request processed at {datetime.now()} for model_type {model_type}")
+        print(f"Depth map request processed at {datetime.now()} for model_type {model_type}")
 
         return StreamingResponse(io.BytesIO(encoded_img.tobytes()), media_type="image/jpeg")
     except Exception as e:
