@@ -603,7 +603,8 @@ def fpk_process_depth_map_np(image_np: np.ndarray, model_type: str = "MiDaS_smal
 
     midas_model.eval()
 
-    input_batch = midas_transforms(image_np).to(device)
+    # input_batch = midas_transforms(image_np).to(device)
+    input_batch = midas_transforms(image_np)
 
     with torch.no_grad():
         prediction = midas_model(input_batch)
