@@ -15,6 +15,7 @@ import argparse
 import cv2
 import httpx
 import io
+import json
 import logging
 import mediapipe as mp
 import ngrok
@@ -559,7 +560,7 @@ def open_and_convert_image(file_content):
 
 
 @app.post("/process_depth_map/")
-async def process_depth_map(file: UploadFile = File(...), model_type: str = "MiDaS_small"):
+async def process_depth_map(file: UploadFile = File(...), pose_data: str = Form(...), model_type: str = "MiDaS_small"):
     if model_type not in ["MiDaS_small", "DPT_Hybrid", "DPT_Large"]:
         return JSONResponse(status_code=400, content={"message": "Invalid model type"})
 
@@ -567,10 +568,12 @@ async def process_depth_map(file: UploadFile = File(...), model_type: str = "MiD
         contents = await file.read()
         image_np = open_and_convert_image(contents)
 
+        pose_data = json.loads(pose_data)
+        print(f"Received pose data: {pose_data}")
+
         depth_map_with_boxes = fpk_process_depth_map_np(image_np, model_type)
 
         resized_img = cv2.resize(depth_map_with_boxes, (256, 256))
-
         jpeg_quality = 50
         _, encoded_img = cv2.imencode('.jpg', resized_img, [cv2.IMWRITE_JPEG_QUALITY, jpeg_quality])
 
@@ -608,6 +611,7 @@ def fpk_process_depth_map_np(image_np: np.ndarray, model_type: str = "MiDaS_smal
             mode="bicubic",
             align_corners=False,
         ).squeeze()
+
     depth_map = prediction.cpu().numpy()
 
     depth_normalized = (depth_map - depth_map.min()) / (depth_map.max() - depth_map.min())
