@@ -1,6 +1,6 @@
 from cryptography.fernet import Fernet
 from datetime import datetime
-from fastapi import FastAPI, File, UploadFile, Query
+from fastapi import FastAPI, File, Form, UploadFile
 from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from mediapipe.tasks import python as mp_python
@@ -560,8 +560,8 @@ def open_and_convert_image(file_content):
 
 
 @app.post("/process_depth_map/")
-async def process_depth_map(file: UploadFile = File(...), pose_data: Optional[str] = Query(None),
-                            model_type: str = "MiDaS_small"):
+async def process_depth_map(file: UploadFile = File(...), pose_data: str = Form(...),
+                            model_type: str = Form(default="MiDaS_small")):
     print(f"Received model type: {model_type}")
     if model_type not in ["MiDaS_small", "DPT_Hybrid", "DPT_Large"]:
         return JSONResponse(status_code=400, content={"message": "Invalid model type"})
@@ -570,13 +570,10 @@ async def process_depth_map(file: UploadFile = File(...), pose_data: Optional[st
         contents = await file.read()
         image_np = open_and_convert_image(contents)
 
-        # Debugging
         if pose_data:
             print(f"Received pose data: {pose_data}")
             pose_data = json.loads(pose_data)
             print(f"Parsed pose data: {pose_data}")
-        else:
-            print("No pose data received")
 
         depth_map_with_boxes = fpk_process_depth_map_np(image_np, model_type)
 
