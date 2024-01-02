@@ -560,7 +560,7 @@ def open_and_convert_image(file_content):
 
 
 @app.post("/process_depth_map/")
-async def process_depth_map(file: UploadFile = File(...), pose_data: str = Query(...),
+async def process_depth_map(file: UploadFile = File(...), pose_data: Optional[str] = Query(None),
                             model_type: str = "MiDaS_small"):
     print(f"Received model type: {model_type}")
     if model_type not in ["MiDaS_small", "DPT_Hybrid", "DPT_Large"]:
@@ -571,10 +571,12 @@ async def process_depth_map(file: UploadFile = File(...), pose_data: str = Query
         image_np = open_and_convert_image(contents)
 
         # Debugging
-        print(f"Received pose data: {pose_data}")
-
-        pose_data = json.loads(pose_data)
-        print(f"Parsed pose data: {pose_data}")
+        if pose_data:
+            print(f"Received pose data: {pose_data}")
+            pose_data = json.loads(pose_data)
+            print(f"Parsed pose data: {pose_data}")
+        else:
+            print("No pose data received")
 
         depth_map_with_boxes = fpk_process_depth_map_np(image_np, model_type)
 
