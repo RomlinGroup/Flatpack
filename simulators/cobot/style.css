@@ -1,0 +1,163 @@
+body {
+    margin: 0;
+}
+
+canvas {
+    display: block;
+    border: 0px;
+}
+
+#depthMapButton {
+    position: fixed;
+    top: 118px;
+    left: 10px;
+    background: #5865f2;
+    border-radius: 0px;
+    border: none;
+    font-family: Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.5em;
+    cursor: pointer;
+    color: #fff;
+    width: 100px;
+    padding: 10px 0;
+}
+
+#depthMapButton:disabled {
+    background: #a0a0a0;
+    color: #666;
+    cursor: not-allowed;
+}
+
+#detectionResults {
+    position: relative;
+    width: 128px;
+    height: 128px;
+    background: #000;
+    border: 1px solid #666;
+    margin-top: 10px;
+    overflow: hidden;
+}
+
+#forearmView {
+    position: relative;
+    width: 128px;
+    height: 128px;
+    border: 1px solid #fff;
+    display: none;
+}
+
+#forearmView canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    max-width: 100%;
+    max-height: 100%;
+    transition: opacity 0.2s ease-in-out;
+}
+
+#forearmViewObjectDetection {
+    position: relative;
+    width: 128px;
+    height: 128px;
+    background: #000;
+    border: 1px solid #666;
+    overflow: hidden;
+}
+
+#forearmViewObjectDetection canvas {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    border: none;
+    outline: none;
+}
+
+#forearmViewObjectDetection img {
+    width: 100%;
+    height: auto;
+}
+
+#forearmViewWrapper {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+}
+
+#generateButton {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    background: #5865f2;
+    border-radius: 0px;
+    border: none;
+    font-family: Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.5em;
+    cursor: pointer;
+    color: #fff;
+    width: 100px;
+    padding: 10px 0;
+}
+
+#generateButton:disabled {
+    background: #a0a0a0;
+    color: #666;
+    cursor: not-allowed;
+}
+
+#keyGuide {
+    position: fixed;
+    bottom: 10px;
+    right: 10px;
+    padding: 10px;
+    background: rgba(0, 0, 0, 1);
+    border-radius: 0px;
+    font-family: Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.5em;
+    color: #ffffff;
+}
+
+#overviewMap {
+    position: fixed;
+    top: 10px;
+    right: 150px;
+    width: 268px;
+    height: 268px;
+    background: #000;
+    border: 1px solid #666;
+    overflow: hidden;
+}
+
+#recordButton {
+    position: fixed;
+    top: 64px;
+    left: 10px;
+    background: #5865f2;
+    border-radius: 0px;
+    border: none;
+    font-family: Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.5em;
+    cursor: pointer;
+    color: #fff;
+    width: 100px;
+    padding: 10px 0;
+}
+
+#robotDirectionDisplay {
+    font-family: Arial, sans-serif;
+    position: absolute;
+    color: #fff;
+    left: 10px;
+    bottom: 10px;
+}
+
+#saveImageButton {
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
+}
