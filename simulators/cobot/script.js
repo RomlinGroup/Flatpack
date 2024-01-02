@@ -298,7 +298,7 @@ function initRobot(type) {
     }
 
     animate();
-    processAndDisplayDepthMap();
+    //processAndDisplayDepthMap();
 }
 
 function onWindowResize() {
