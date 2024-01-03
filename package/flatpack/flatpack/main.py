@@ -3,6 +3,7 @@ from datetime import datetime
 from fastapi import FastAPI, File, Form, UploadFile
 from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
+from io import BytesIO
 from mediapipe.tasks import python as mp_python
 from mediapipe.tasks.python import vision as mp_vision
 from .parsers import parse_toml_to_venv_script
@@ -561,18 +562,6 @@ def open_and_convert_image(file_content):
 
 
 def depth_to_point_cloud(depth_map, intrinsics, rotation, translation):
-    """
-    Convert a depth map to a 3D point cloud.
-
-    Args:
-        depth_map (np.ndarray): The depth map.
-        intrinsics (np.ndarray): Camera intrinsic parameters.
-        rotation (np.ndarray): Rotation matrix or quaternion.
-        translation (np.ndarray): Translation vector.
-
-    Returns:
-        np.ndarray: A 3D point cloud.
-    """
     height, width = depth_map.shape
     x, y = np.meshgrid(np.arange(width), np.arange(height))
 
@@ -581,10 +570,44 @@ def depth_to_point_cloud(depth_map, intrinsics, rotation, translation):
     y = (y.flatten() - intrinsics[1, 2]) / intrinsics[1, 1]
     points = np.vstack((x * z, y * z, z)).T
 
-    rotation_matrix = R.from_quat(rotation).as_matrix()
+    rotation_matrix = R.from_quat(rotation).as_matrix() if rotation.shape == (4,) else R.from_euler('xyz',
+                                                                                                    rotation).as_matrix()
     points = points @ rotation_matrix.T + translation
 
     return points
+
+
+def create_point_cloud_image(point_cloud):
+    max_distance = np.max(point_cloud[:, 2])
+    normalized = point_cloud / max_distance
+
+    image = np.zeros((512, 512, 3), dtype=np.uint8)
+    for point in normalized:
+        x, y = int(256 * (point[0] + 1)), int(256 * (point[1] + 1))
+        if 0 <= x < 512 and 0 <= y < 512:
+            image[y, x] = (255, 255, 255)
+
+    return image
+
+
+@app.post("/process_point_cloud/")
+async def process_point_cloud(file: UploadFile = File(...), pose_data: str = Form(...)):
+    try:
+        depth_map_contents = await file.read()
+        depth_map = np.frombuffer(depth_map_contents, np.uint8)
+
+        pose_data_dict = json.loads(pose_data)
+        rotation = np.array(pose_data_dict["rotation"])
+        translation = np.array(pose_data_dict["translation"])
+        intrinsics = np.array(pose_data_dict["intrinsics"])
+
+        point_cloud = depth_to_point_cloud(depth_map, intrinsics, rotation, translation)
+        point_cloud_image = create_point_cloud_image(point_cloud)
+
+        _, jpeg_image = cv2.imencode('.jpg', point_cloud_image)
+        return StreamingResponse(BytesIO(jpeg_image.tobytes()), media_type="image/jpeg")
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"message": str(e)})
 
 
 @app.post("/process_depth_map/")
