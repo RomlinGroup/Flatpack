@@ -44,7 +44,8 @@ original MIT-licensed component when distributed
 separately ([JLA 2023](https://joinup.ec.europa.eu/licence/compatibility-check/MIT/Apache-2.0)).
 
 *Check out
-the [JLA - Compatibility Checker](https://joinup.ec.europa.eu/collection/eupl/solution/joinup-licensing-assistant/jla-compatibility-checker) (European Commission 2023).*
+the [JLA - Compatibility Checker](https://joinup.ec.europa.eu/collection/eupl/solution/joinup-licensing-assistant/jla-compatibility-checker) (
+European Commission 2023).*
 
 - **[cryptography](https://pypi.org/project/cryptography/)**\
   Apache-2.0 OR BSD-3-Clause ([LICENSE](https://github.com/pyca/cryptography/blob/main/LICENSE.APACHE))
@@ -61,8 +62,8 @@ the [JLA - Compatibility Checker](https://joinup.ec.europa.eu/collection/eupl/so
 - **[ngrok](https://pypi.org/project/ngrok/)**\
   Apache-2.0 OR MIT ([LICENSE](https://github.com/ngrok/ngrok-python/blob/main/LICENSE-APACHE))
 
-- **[SciPy](https://pypi.org/project/SciPy/)**\
-  BSD-3-Clause ([LICENSE](https://github.com/scipy/scipy/blob/main/LICENSE.txt))
+- **[open3d](https://pypi.org/project/open3d/)**\
+  MIT ([LICENSE](https://github.com/isl-org/Open3D/blob/main/LICENSE))
 
 - **[timm](https://pypi.org/project/timm/)**\
   Apache-2.0 ([LICENSE](https://github.com/huggingface/pytorch-image-models/blob/main/LICENSE))

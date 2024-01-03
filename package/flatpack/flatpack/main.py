@@ -8,7 +8,6 @@ from mediapipe.tasks import python as mp_python
 from mediapipe.tasks.python import vision as mp_vision
 from .parsers import parse_toml_to_venv_script
 from pathlib import Path
-from scipy.spatial.transform import Rotation as R
 from starlette.responses import PlainTextResponse
 from transformers import AutoProcessor, AutoModelForCausalLM, GPT2LMHeadModel, GPT2Tokenizer, set_seed
 from typing import List, Optional
@@ -19,9 +18,11 @@ import httpx
 import io
 import json
 import logging
+import math
 import mediapipe as mp
 import ngrok
 import numpy as np
+import open3d as o3d
 import os
 import random
 import re
@@ -561,78 +562,43 @@ def open_and_convert_image(file_content):
     return image
 
 
-def depth_to_point_cloud(depth_map, intrinsics, rotation, translation):
-    height, width = depth_map.shape
-    x, y = np.meshgrid(np.arange(width), np.arange(height))
+def create_point_cloud_image(depth_map):
+    fov_degrees = 60
+    width = 512
+    height = 512
 
-    z = depth_map.flatten()
-    x = (x.flatten() - intrinsics[0, 2]) / intrinsics[0, 0]
-    y = (y.flatten() - intrinsics[1, 2]) / intrinsics[1, 1]
-    points = np.vstack((x * z, y * z, z)).T
+    fov_radians = fov_degrees * (math.pi / 180)
 
-    rotation_matrix = R.from_quat(rotation).as_matrix() if rotation.shape == (4,) else R.from_euler('xyz',
-                                                                                                    rotation).as_matrix()
-    points = points @ rotation_matrix.T + translation
+    fx = fy = width / (2 * math.tan(fov_radians / 2))
+    cx = width / 2
+    cy = height / 2
 
-    return points
+    depth_o3d = o3d.geometry.Image(depth_map.astype(np.float32))
 
+    intrinsic = o3d.camera.PinholeCameraIntrinsic(width, height, fx, fy, cx, cy)
+    pcd = o3d.geometry.PointCloud.create_from_depth_image(depth_o3d, intrinsic)
 
-def create_point_cloud_image(point_cloud):
-    max_distance = np.max(point_cloud[:, 2])
-    normalized = point_cloud / max_distance
+    vis = o3d.visualization.Visualizer()
+    vis.create_window(visible=False)
+    vis.add_geometry(pcd)
 
-    image = np.zeros((512, 512, 3), dtype=np.uint8)
-    for point in normalized:
-        x, y = int(256 * (point[0] + 1)), int(256 * (point[1] + 1))
-        if 0 <= x < 512 and 0 <= y < 512:
-            image[y, x] = (255, 255, 255)
+    vis.poll_events()
+    vis.update_renderer()
+    image = vis.capture_screen_float_buffer(False)
 
-    return image
+    np_image = np.asarray(image)
+    np_image = (np_image * 255).astype(np.uint8)
+    np_image = cv2.cvtColor(np_image, cv2.COLOR_RGB2BGR)
+
+    vis.destroy_window()
+
+    return np_image
 
 
 @app.post("/process_point_cloud/")
 async def process_point_cloud(file: UploadFile = File(...), pose_data: str = Form(...),
-                              model_type: str = Form(default="MiDaS_small")):
-    try:
-        print("Received point cloud processing request")
-
-        contents = await file.read()
-        image_np = open_and_convert_image(contents)
-        print(f"Image for depth map generation received. Size: {image_np.shape}")
-
-        if model_type not in ["MiDaS_small", "DPT_Hybrid", "DPT_Large"]:
-            return JSONResponse(status_code=400, content={"message": "Invalid model type"})
-
-        depth_map = fpk_process_depth_map_np(image_np, model_type)
-        print("Depth map generated")
-
-        pose_data_dict = json.loads(pose_data)
-        print(f"Pose data: {pose_data_dict}")
-
-        rotation = np.array(pose_data_dict["rotation"])
-        translation = np.array(pose_data_dict["translation"])
-        intrinsics = np.array(pose_data_dict["intrinsics"])
-        print(f"Rotation: {rotation}, Translation: {translation}, Intrinsics: {intrinsics}")
-
-        # Convert depth map to point cloud
-        point_cloud = depth_to_point_cloud(depth_map, intrinsics, rotation, translation)
-        print("Converted to point cloud")
-
-        point_cloud_image = create_point_cloud_image(point_cloud)
-        print("Created point cloud image")
-
-        _, jpeg_image = cv2.imencode('.jpg', point_cloud_image)
-        print("Encoded point cloud image to JPEG")
-
-        return StreamingResponse(BytesIO(jpeg_image.tobytes()), media_type="image/jpeg")
-    except Exception as e:
-        print(f"Error processing point cloud: {e}")
-        return JSONResponse(status_code=500, content={"message": str(e)})
-
-
-@app.post("/process_depth_map/")
-async def process_depth_map(file: UploadFile = File(...), pose_data: str = Form(...),
-                            model_type: str = Form(default="MiDaS_small")):
+                              model_type: str = Form(default="MiDaS_small"),
+                              colormap: int = Form(default=cv2.COLORMAP_BONE)):
     print(f"Received model type: {model_type}")
     if model_type not in ["MiDaS_small", "DPT_Hybrid", "DPT_Large"]:
         return JSONResponse(status_code=400, content={"message": "Invalid model type"})
@@ -646,7 +612,39 @@ async def process_depth_map(file: UploadFile = File(...), pose_data: str = Form(
             pose_data = json.loads(pose_data)
             print(f"Parsed pose data: {pose_data}")
 
-        depth_map_with_boxes = fpk_process_depth_map_np(image_np, model_type)
+        depth_map_with_boxes = fpk_process_depth_map_np(image_np, model_type, colormap)
+        point_cloud_image = create_point_cloud_image(depth_map_with_boxes)
+
+        resized_img = cv2.resize(point_cloud_image, (256, 256))
+        jpeg_quality = 50
+        _, encoded_img = cv2.imencode('.jpg', resized_img, [cv2.IMWRITE_JPEG_QUALITY, jpeg_quality])
+
+        print(f"Depth map request processed at {datetime.now()} for model_type {model_type}")
+
+        return StreamingResponse(io.BytesIO(encoded_img.tobytes()), media_type="image/jpeg")
+    except Exception as e:
+        print(f"Error processing depth map: {e}")
+        return JSONResponse(status_code=500, content={"message": "Internal server error"})
+
+
+@app.post("/process_depth_map/")
+async def process_depth_map(file: UploadFile = File(...), pose_data: str = Form(...),
+                            model_type: str = Form(default="MiDaS_small"),
+                            colormap: int = Form(default=cv2.COLORMAP_JET)):
+    print(f"Received model type: {model_type}")
+    if model_type not in ["MiDaS_small", "DPT_Hybrid", "DPT_Large"]:
+        return JSONResponse(status_code=400, content={"message": "Invalid model type"})
+
+    try:
+        contents = await file.read()
+        image_np = open_and_convert_image(contents)
+
+        if pose_data:
+            print(f"Received pose data: {pose_data}")
+            pose_data = json.loads(pose_data)
+            print(f"Parsed pose data: {pose_data}")
+
+        depth_map_with_boxes = fpk_process_depth_map_np(image_np, model_type, colormap)
 
         resized_img = cv2.resize(depth_map_with_boxes, (256, 256))
         jpeg_quality = 50
@@ -660,7 +658,8 @@ async def process_depth_map(file: UploadFile = File(...), pose_data: str = Form(
         return JSONResponse(status_code=500, content={"message": "Internal server error"})
 
 
-def fpk_process_depth_map_np(image_np: np.ndarray, model_type: str = "MiDaS_small") -> np.ndarray:
+def fpk_process_depth_map_np(image_np: np.ndarray, model_type: str = "MiDaS_small",
+                             colormap_type: int = cv2.COLORMAP_JET) -> np.ndarray:
     global midas_model, midas_transforms, mp_detector
 
     if image_np.shape[2] == 3:
@@ -690,7 +689,7 @@ def fpk_process_depth_map_np(image_np: np.ndarray, model_type: str = "MiDaS_smal
     depth_map = prediction.cpu().numpy()
 
     depth_normalized = (depth_map - depth_map.min()) / (depth_map.max() - depth_map.min())
-    depth_colored = cv2.applyColorMap((depth_normalized * 255).astype(np.uint8), cv2.COLORMAP_JET)
+    depth_colored = cv2.applyColorMap((depth_normalized * 255).astype(np.uint8), colormap_type)
 
     alpha = 0
     annotated_image = cv2.addWeighted(image_np, alpha, depth_colored, 1 - alpha, 0)
