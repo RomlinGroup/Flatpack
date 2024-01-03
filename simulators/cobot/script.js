@@ -66,13 +66,13 @@ function addLighting() {
 }
 
 function addPhysicsObject(type, size = {
-    x: 0.5,
-    y: 0.5,
-    z: 0.5
+    x: 1,
+    y: 1,
+    z: 1
 }, position = {
     x: 0,
-    y: 0.25,
-    z: 1.25
+    y: 0,
+    z: 0
 }) {
     let geometry;
     let meshMaterial = new THREE.MeshNormalMaterial();
@@ -124,7 +124,7 @@ function addRobotArm() {
     upperArm.position.y = 0.5;
     shoulder.add(upperArm);
     pairMeshWithPhysicsBody(upperArm, {
-        mass: 0, friction: 0.4, restitution: 0.6, isKinematic: true
+        mass: 0, friction: 1.0, restitution: 0, isKinematic: true
     });
 
     // Elbow of the robot
@@ -132,7 +132,7 @@ function addRobotArm() {
     elbow = new THREE.Mesh(elbowGeometry, robotMaterial);
     elbow.position.y = 0.6;
     elbow.rotation.z = Math.PI / 2;
-    elbow.rotation.x = THREE.MathUtils.degToRad(45);
+    elbow.rotation.x = THREE.MathUtils.degToRad(40);
     elbow.castShadow = true;
     elbow.receiveShadow = true;
     upperArm.add(elbow);
@@ -143,7 +143,7 @@ function addRobotArm() {
     forearm.position.set(0, 0, 0.4);
     elbow.add(forearm);
     pairMeshWithPhysicsBody(forearm, {
-        mass: 0, friction: 0.4, restitution: 0.6, isKinematic: true
+        mass: 0, friction: 1.0, restitution: 0, isKinematic: true
     });
 
     // Pincer base and claws of the robot
@@ -152,7 +152,7 @@ function addRobotArm() {
     forearm.add(pincerBase);
     pincerBase.position.set(0, 0, 0.36);
     pairMeshWithPhysicsBody(pincerBase, {
-        mass: 0, friction: 0.4, restitution: 0.6, isKinematic: true
+        mass: 0, friction: 1.0, restitution: 0, isKinematic: true
     });
 
     const pincerClawGeometry = new THREE.BoxGeometry(0.2, 0.05, 0.1);
@@ -162,11 +162,13 @@ function addRobotArm() {
     pincerClaw2.position.set(0, -0.175, 0.075);
     pincerBase.add(pincerClaw1);
     pincerBase.add(pincerClaw2);
+
     pairMeshWithPhysicsBody(pincerClaw1, {
-        mass: 0, friction: 0.4, restitution: 0.6, isKinematic: true
+        mass: 0, friction: 1.0, restitution: 0, isKinematic: true
     });
+
     pairMeshWithPhysicsBody(pincerClaw2, {
-        mass: 0, friction: 0.4, restitution: 0.6, isKinematic: true
+        mass: 0, friction: 1.0, restitution: 0, isKinematic: true
     });
 }
 
@@ -337,42 +339,42 @@ function initRobot(type) {
             });
 
             addPhysicsObject('box', {
-                x: 0.2,
-                y: 0.2,
-                z: 0.2
+                x: 0.4,
+                y: 0.4,
+                z: 0.4
             }, {
                 x: 1,
-                y: 0.1,
+                y: 0.2,
                 z: -1
             });
 
             addPhysicsObject('box', {
-                x: 0.2,
-                y: 0.2,
-                z: 0.2
+                x: 0.4,
+                y: 0.4,
+                z: 0.4
             }, {
                 x: -1,
-                y: 0.1,
+                y: 0.2,
                 z: 1
             });
 
             addPhysicsObject('box', {
-                x: 0.2,
-                y: 0.2,
-                z: 0.2
+                x: 0.4,
+                y: 0.4,
+                z: 0.4
             }, {
                 x: 1,
-                y: 0.1,
+                y: 0.2,
                 z: 1
             });
 
             addPhysicsObject('box', {
-                x: 0.2,
-                y: 0.2,
-                z: 0.2
+                x: 0.4,
+                y: 0.4,
+                z: 0.4
             }, {
                 x: -1,
-                y: 0.1,
+                y: 0.2,
                 z: -1
             });
 
