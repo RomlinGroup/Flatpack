@@ -591,22 +591,42 @@ def create_point_cloud_image(point_cloud):
 
 
 @app.post("/process_point_cloud/")
-async def process_point_cloud(file: UploadFile = File(...), pose_data: str = Form(...)):
+async def process_point_cloud(file: UploadFile = File(...), pose_data: str = Form(...),
+                              model_type: str = Form(default="MiDaS_small")):
     try:
-        depth_map_contents = await file.read()
-        depth_map = np.frombuffer(depth_map_contents, np.uint8)
+        print("Received point cloud processing request")
+
+        contents = await file.read()
+        image_np = open_and_convert_image(contents)
+        print(f"Image for depth map generation received. Size: {image_np.shape}")
+
+        if model_type not in ["MiDaS_small", "DPT_Hybrid", "DPT_Large"]:
+            return JSONResponse(status_code=400, content={"message": "Invalid model type"})
+
+        depth_map = fpk_process_depth_map_np(image_np, model_type)
+        print("Depth map generated")
 
         pose_data_dict = json.loads(pose_data)
+        print(f"Pose data: {pose_data_dict}")
+
         rotation = np.array(pose_data_dict["rotation"])
         translation = np.array(pose_data_dict["translation"])
         intrinsics = np.array(pose_data_dict["intrinsics"])
+        print(f"Rotation: {rotation}, Translation: {translation}, Intrinsics: {intrinsics}")
 
+        # Convert depth map to point cloud
         point_cloud = depth_to_point_cloud(depth_map, intrinsics, rotation, translation)
+        print("Converted to point cloud")
+
         point_cloud_image = create_point_cloud_image(point_cloud)
+        print("Created point cloud image")
 
         _, jpeg_image = cv2.imencode('.jpg', point_cloud_image)
+        print("Encoded point cloud image to JPEG")
+
         return StreamingResponse(BytesIO(jpeg_image.tobytes()), media_type="image/jpeg")
     except Exception as e:
+        print(f"Error processing point cloud: {e}")
         return JSONResponse(status_code=500, content={"message": str(e)})
 
 
