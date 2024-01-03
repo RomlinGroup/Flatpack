@@ -13,6 +13,7 @@ class RobotController {
         this.isRecordingVideo = false;
         this.isShoulderMoving = false;
         this.isShoulderRotating = false;
+        this.lastBaseAngle = 0;
         this.lastRecordedCommand = null;
         this.lastRecordedValue = null;
         this.maxElbowRotation = 45;
@@ -20,7 +21,9 @@ class RobotController {
         this.minElbowRotation = -90;
         this.minShoulderRotation = 0;
         this.movementStep = 0;
+        this.poseData = null;
         this.recordedCommands = [];
+        this.scanStepCounter = 0;
         this.shoulderTargetRotationX = 0;
         this.targetBaseRotation = 0;
         this.targetElbowRotation = 0;
@@ -139,7 +142,49 @@ class RobotController {
     onMovementDetected() {
         const imageDataUrl = captureImage();
         updateForearmViewObjectDetection(imageDataUrl);
-        processAndDisplayDepthMap();
+        //processAndDisplayDepthMap();
+
+        const baseRotation = base.rotation.y;
+        const shoulderRotation = shoulder.rotation.x;
+        const elbowRotation = elbow.rotation.x;
+
+        const cameraWorldPosition = new THREE.Vector3();
+        const cameraWorldQuaternion = new THREE.Quaternion();
+        forearmCamera.getWorldPosition(cameraWorldPosition);
+        forearmCamera.getWorldQuaternion(cameraWorldQuaternion);
+
+        this.poseData = {
+            baseRotation: this.radiansToDegrees(baseRotation),
+            shoulderRotation: this.radiansToDegrees(shoulderRotation),
+            elbowRotation: this.radiansToDegrees(elbowRotation),
+            cameraWorldPosition: cameraWorldPosition.toArray(),
+            cameraWorldQuaternion: cameraWorldQuaternion.toArray()
+        };
+    }
+
+    performScanStep() {
+        if (!this.scanActive) return;
+
+        const rotationIncrementDegrees = 10;
+
+        const nextBaseAngle = (this.scanStepCounter * rotationIncrementDegrees) % 360;
+
+        let angleDifference = nextBaseAngle - this.lastBaseAngle;
+
+        if (angleDifference > 180) {
+            angleDifference -= 360;
+        } else if (angleDifference < -180) {
+            angleDifference += 360;
+        }
+
+        this.rotateBase(THREE.MathUtils.degToRad(angleDifference));
+
+        this.onMovementDetected();
+
+        this.lastBaseAngle = nextBaseAngle;
+        this.scanStepCounter++;
+
+        setTimeout(() => this.performScanStep(), 100);
     }
 
     radiansToDegrees(radians) {
@@ -173,6 +218,12 @@ class RobotController {
         }
 
         this.updateDirectionDisplay(base.rotation.y);
+    }
+
+    startEnvironmentalScan() {
+        this.scanActive = true;
+        this.baseScanAngle = 0;
+        this.performScanStep();
     }
 
     startRecording() {
@@ -259,7 +310,8 @@ class RobotController {
     }
 
     updateDirectionDisplay(rotation) {
-        const degrees = THREE.Math.radToDeg(rotation);
+        let degrees = THREE.Math.radToDeg(rotation);
+        degrees = ((degrees + 180) % 360) - 180;
         document.getElementById('directionValue').innerText = degrees.toFixed(2);
     }
 }

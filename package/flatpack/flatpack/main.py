@@ -7,6 +7,7 @@ from mediapipe.tasks import python as mp_python
 from mediapipe.tasks.python import vision as mp_vision
 from .parsers import parse_toml_to_venv_script
 from pathlib import Path
+from scipy.spatial.transform import Rotation as R
 from starlette.responses import PlainTextResponse
 from transformers import AutoProcessor, AutoModelForCausalLM, GPT2LMHeadModel, GPT2Tokenizer, set_seed
 from typing import List, Optional
@@ -557,6 +558,33 @@ def open_and_convert_image(file_content):
     image = cv2.imdecode(image_np, cv2.IMREAD_COLOR)
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     return image
+
+
+def depth_to_point_cloud(depth_map, intrinsics, rotation, translation):
+    """
+    Convert a depth map to a 3D point cloud.
+
+    Args:
+        depth_map (np.ndarray): The depth map.
+        intrinsics (np.ndarray): Camera intrinsic parameters.
+        rotation (np.ndarray): Rotation matrix or quaternion.
+        translation (np.ndarray): Translation vector.
+
+    Returns:
+        np.ndarray: A 3D point cloud.
+    """
+    height, width = depth_map.shape
+    x, y = np.meshgrid(np.arange(width), np.arange(height))
+
+    z = depth_map.flatten()
+    x = (x.flatten() - intrinsics[0, 2]) / intrinsics[0, 0]
+    y = (y.flatten() - intrinsics[1, 2]) / intrinsics[1, 1]
+    points = np.vstack((x * z, y * z, z)).T
+
+    rotation_matrix = R.from_quat(rotation).as_matrix()
+    points = points @ rotation_matrix.T + translation
+
+    return points
 
 
 @app.post("/process_depth_map/")

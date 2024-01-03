@@ -1,5 +1,6 @@
 const img = document.getElementById('img');
 const robot = new RobotController();
+let isProcessingDepthMap = false;
 
 function addFloor() {
     const backgroundGeometry = new THREE.PlaneGeometry(10, 10);
@@ -29,7 +30,8 @@ function addFloor() {
 
     var floorShape = new CANNON.Plane();
     var floorBody = new CANNON.Body({
-        mass: 0
+        mass: 0,
+        type: CANNON.Body.KINEMATIC
     });
     floorBody.addShape(floorShape);
     floorBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0);
@@ -92,10 +94,10 @@ function addPhysicsObject(type, size = {
     scene.add(mesh);
 
     pairMeshWithPhysicsBody(mesh, {
-        mass: 10,
-        friction: 0.4,
-        restitution: 0.6,
-        isKinematic: false
+        mass: 0,
+        friction: 1.0,
+        restitution: 0,
+        isKinematic: true
     });
 }
 
@@ -192,30 +194,14 @@ function animate() {
     }
 
     robot.update();
+
     //cannonDebugRenderer.update();
+
     renderer.render(scene, camera);
 
     if (forearmCameraIsActive) {
         updateForearmCamera();
         forearmRenderer.render(scene, forearmCamera);
-    }
-}
-
-function automatedMovements() {
-    switch (this.movementStep) {
-        case 0:
-            this.rotateBase(1);
-            this.onMovementDetected();
-            this.fullCycleCount += demoSpeed;
-            if (this.fullCycleCount >= 2 * Math.PI) {
-                this.fullCycleCount = 0;
-                this.movementStep++;
-            }
-            break;
-
-        default:
-            this.movementStep = 0;
-            break;
     }
 }
 
@@ -240,6 +226,40 @@ function handleRecordButton() {
 function handleResize() {
     clearTimeout(resizeTimer);
     resizeTimer = setTimeout(onWindowResize, 250);
+}
+
+function heartbeat() {
+    const formatTimestamp = (date) => {
+        const pad = (num) => (num < 10 ? '0' + num : num);
+        return date.getFullYear() + '-' +
+            pad(date.getMonth() + 1) + '-' +
+            pad(date.getDate()) + ' ' +
+            pad(date.getHours()) + ':' +
+            pad(date.getMinutes()) + ':' +
+            pad(date.getSeconds());
+    };
+
+    const timestamp = formatTimestamp(new Date());
+    //console.log(`[${timestamp}] Heartbeat triggered.`);
+
+    if (!isProcessingDepthMap) {
+        //console.log(`[${timestamp}] Starting to process depth map.`);
+        isProcessingDepthMap = true;
+
+        processAndDisplayDepthMap(robot.poseData)
+            .then(() => {
+                isProcessingDepthMap = false;
+                const doneTimestamp = formatTimestamp(new Date());
+                console.log(`[${doneTimestamp}] Finished processing depth map.`);
+            })
+            .catch((error) => {
+                isProcessingDepthMap = false;
+                const errorTimestamp = formatTimestamp(new Date());
+                //console.error(`[${errorTimestamp}] Error processing depth map:`, error);
+            });
+    } else {
+        //console.log(`[${timestamp}] Previous depth map processing is still running.`);
+    }
 }
 
 function initForearmCamera() {
@@ -273,8 +293,6 @@ function initRobot(type) {
     setupCamera();
     setupRenderer();
 
-    let cannonDebugRenderer = new THREE.CannonDebugRenderer(scene, world);
-
     switch (type) {
         case 'cobot':
 
@@ -285,7 +303,77 @@ function initRobot(type) {
             }, {
                 x: 0,
                 y: 0.2,
-                z: 1.20
+                z: 1
+            });
+
+            addPhysicsObject('box', {
+                x: 0.4,
+                y: 0.4,
+                z: 0.4
+            }, {
+                x: 0,
+                y: 0.2,
+                z: -1
+            });
+
+            addPhysicsObject('box', {
+                x: 0.4,
+                y: 0.4,
+                z: 0.4
+            }, {
+                x: -1,
+                y: 0.2,
+                z: 0
+            });
+
+            addPhysicsObject('box', {
+                x: 0.4,
+                y: 0.4,
+                z: 0.4
+            }, {
+                x: 1,
+                y: 0.2,
+                z: 0
+            });
+
+            addPhysicsObject('box', {
+                x: 0.2,
+                y: 0.2,
+                z: 0.2
+            }, {
+                x: 1,
+                y: 0.1,
+                z: -1
+            });
+
+            addPhysicsObject('box', {
+                x: 0.2,
+                y: 0.2,
+                z: 0.2
+            }, {
+                x: -1,
+                y: 0.1,
+                z: 1
+            });
+
+            addPhysicsObject('box', {
+                x: 0.2,
+                y: 0.2,
+                z: 0.2
+            }, {
+                x: 1,
+                y: 0.1,
+                z: 1
+            });
+
+            addPhysicsObject('box', {
+                x: 0.2,
+                y: 0.2,
+                z: 0.2
+            }, {
+                x: -1,
+                y: 0.1,
+                z: -1
             });
 
             addRobotArm();
@@ -294,11 +382,13 @@ function initRobot(type) {
 
             const initialImage = captureImage();
             updateForearmViewObjectDetection(initialImage);
+
+            robot.onMovementDetected();
             break;
     }
 
     animate();
-    //processAndDisplayDepthMap();
+    //processAndDisplayDepthMap(robot.poseData);
 }
 
 function onWindowResize() {
@@ -327,13 +417,15 @@ function pairMeshWithPhysicsBody(mesh, options = {}) {
     }
 
     const body = new CANNON.Body({
-        mass: isKinematic ? 0 : mass,
+        mass: options.mass || 1,
         material: new CANNON.Material({
-            friction: options.friction || 0.3,
-            restitution: options.restitution || 0.5,
+            friction: options.friction || 0.5,
+            restitution: options.restitution || 0.3,
         }),
+        linearDamping: 0.9,
+        angularDamping: 0.9,
         shape: shape,
-        type: isKinematic ? CANNON.Body.KINEMATIC : CANNON.Body.DYNAMIC
+        type: options.isKinematic ? CANNON.Body.KINEMATIC : CANNON.Body.DYNAMIC
     });
 
     body.position.set(mesh.position.x, mesh.position.y, mesh.position.z);
@@ -402,7 +494,7 @@ async function runPrediction() {
     } catch (error) {
         console.error('Error during prediction:', error.message);
         if (error.message.includes('Failed to fetch')) {
-            console.log('Network error: Server is unreachable or URL is incorrect.');
+            //console.log('Network error: Server is unreachable or URL is incorrect.');
         } else if (error.message.includes('Server URL is not set')) {
             console.log('Configuration error: Please set the server URL.');
         } else {
@@ -445,7 +537,7 @@ function setupCamera(
     nearClippingPlane = 0.1,
     farClippingPlane = 1000,
     initialPosition = {
-        x: 2,
+        x: 2.5,
         y: 1,
         z: 0
     },
@@ -485,11 +577,10 @@ function setupScene() {
     const gridColor = 0x00ff00;
     const centerLineColor = 0xff0000;
     const gridHelper = new THREE.GridHelper(gridSize, gridDivisions, gridColor, centerLineColor);
-    //scene.add(gridHelper);
+    scene.add(gridHelper);
 }
 
 document.getElementById('generateButton').addEventListener('click', runPrediction);
-document.getElementById('depthMapButton').addEventListener('click', processAndDisplayDepthMap);
 document.getElementById('recordButton').addEventListener('click', handleRecordButton);
 document.getElementById('saveImageButton').addEventListener('click', saveImage);
 
@@ -523,4 +614,16 @@ function onDocumentKeyDown(event) {
     }
 }
 
+const heartbeatInterval = 1000;
+
+let intervalId;
+
+if (intervalId) {
+    clearInterval(intervalId);
+}
+
+intervalId = setInterval(heartbeat, heartbeatInterval);
+
 initRobot('cobot');
+
+robot.startEnvironmentalScan();

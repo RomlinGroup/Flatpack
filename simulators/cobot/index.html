@@ -11,7 +11,7 @@
 </head>
 
 <body>
-<div id="robotDirectionDisplay">Direction: <span id="directionValue">0</span>°</div>
+<div id="robotDirectionDisplay"><span id="directionValue">0</span>°</div>
 
 <div id="overviewMap"></div>
 
@@ -34,7 +34,6 @@
 
 <button id="recordButton">Record</button>
 <button id="generateButton">Generate</button>
-<button id="depthMapButton">Depth map</button>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
@@ -114,22 +113,24 @@
         });
     }
 
-    async function processAndDisplayDepthMap() {
-        try {
-            const depthMapButton = document.getElementById('depthMapButton');
-            depthMapButton.disabled = true;
+    async function processAndDisplayDepthMap(poseData) {
+        if (!poseData) {
+            return;
+        }
 
+        try {
             const currentImageBlob = await captureImageBlob();
             if (!currentImageBlob) {
                 throw new Error('No image blob captured.');
             }
 
-            const depthMapUrl = await uploadImageAndGetDepthMapUrl(currentImageBlob);
+            const depthMapUrl = await uploadImageAndGetDepthMapUrl(currentImageBlob, poseData);
             displayDepthMap(depthMapUrl);
+
+            //console.log('Depth map processed and displayed.');
+
         } catch (error) {
-            console.error('Error processing depth map:', error);
-        } finally {
-            depthMapButton.disabled = false;
+            //console.error('Error processing depth map:', error);
         }
     }
 
@@ -153,26 +154,45 @@
         });
     }
 
-    async function uploadImageAndGetDepthMapUrl(imageBlob) {
+    async function uploadImageAndGetDepthMapUrl(imageBlob, poseData) {
         if (!SERVER_URL) {
+            console.error("Configuration error: Server URL is not set.");
             throw new Error("Configuration error: Server URL is not set.");
         }
 
         let formData = new FormData();
         formData.append("file", imageBlob, "image.jpg");
+        formData.append("pose_data", JSON.stringify(poseData));
 
-        const url = SERVER_URL + "/process_depth_map/";
-        const response = await fetch(url, {
-            method: 'POST',
-            body: formData
-        });
-
-        if (!response.ok) {
-            throw new Error(`Server response error: status ${response.status}`);
+        for (let [key, value] of formData.entries()) {
+            //console.log(key, value);
         }
 
-        const depthMapBlob = await response.blob();
-        return URL.createObjectURL(depthMapBlob);
+        const url = SERVER_URL + "/process_depth_map/";
+        //console.log(`Request URL: ${url}`);
+
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                body: formData
+            });
+
+            //console.log(`Response status: ${response.status}`);
+
+            if (!response.ok) {
+                //console.error(`Server response error: status ${response.status}`);
+                const responseText = await response.text();
+                //console.error(`Response text: ${responseText}`);
+                throw new Error(`Server response error: status ${response.status}`);
+            }
+
+            const depthMapBlob = await response.blob();
+            return URL.createObjectURL(depthMapBlob);
+        } catch (error) {
+            //console.error('Error in uploading image:', error);
+            //console.error(`Error details: ${error.message}`);
+            throw error;
+        }
     }
 
     const demoSpeed = 0.1;

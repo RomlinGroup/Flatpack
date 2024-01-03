@@ -61,6 +61,9 @@ the [JLA - Compatibility Checker](https://joinup.ec.europa.eu/collection/eupl/so
 - **[ngrok](https://pypi.org/project/ngrok/)**\
   Apache-2.0 OR MIT ([LICENSE](https://github.com/ngrok/ngrok-python/blob/main/LICENSE-APACHE))
 
+- **[SciPy](https://pypi.org/project/SciPy/)**\
+  BSD-3-Clause ([LICENSE](https://github.com/scipy/scipy/blob/main/LICENSE.txt))
+
 - **[timm](https://pypi.org/project/timm/)**\
   Apache-2.0 ([LICENSE](https://github.com/huggingface/pytorch-image-models/blob/main/LICENSE))
 
