@@ -591,32 +591,14 @@ async def process_depth_map(file: UploadFile = File(...), pose_data: str = Form(
                             model_type: str = Form(default="MiDaS_small"),
                             colormap: int = Form(default=cv2.COLORMAP_JET)):
     print(f"Received model type: {model_type}")
+
     if model_type not in ["MiDaS_small", "DPT_Hybrid", "DPT_Large"]:
         return JSONResponse(status_code=400, content={"message": "Invalid model type"})
 
     try:
         contents = await file.read()
         image_np = open_and_convert_image(contents)
-
-        if pose_data:
-            print(f"Received pose data: {pose_data}")
-            camera_position, camera_quaternion = parse_pose_data(pose_data)
-
-            transformation_matrix = create_transformation_matrix(camera_position, camera_quaternion)
-
-            width, height = 512, 512
-            fov_degrees = 60
-            fov_radians = math.radians(fov_degrees)
-            focal_length = width / (2 * math.tan(fov_radians / 2))
-            cx, cy = width / 2, height / 2
-
-            intrinsic_matrix = np.array([
-                [focal_length, 0, cx],
-                [0, focal_length, cy],
-                [0, 0, 1]
-            ])
-
-        depth_map_with_boxes = fpk_process_depth_map_np(image_np, model_type, colormap)
+        depth_map_with_boxes = fpk_process_depth_map_np(image_np, pose_data, model_type, colormap)
 
         resized_img = cv2.resize(depth_map_with_boxes, (256, 256))
         jpeg_quality = 50
@@ -630,7 +612,7 @@ async def process_depth_map(file: UploadFile = File(...), pose_data: str = Form(
         return JSONResponse(status_code=500, content={"message": "Internal server error"})
 
 
-def fpk_process_depth_map_np(image_np: np.ndarray, model_type: str = "MiDaS_small",
+def fpk_process_depth_map_np(image_np: np.ndarray, pose_data: str, model_type: str = "MiDaS_small",
                              colormap_type: int = cv2.COLORMAP_JET) -> np.ndarray:
     global midas_model, midas_transforms, mp_detector
 
@@ -663,6 +645,24 @@ def fpk_process_depth_map_np(image_np: np.ndarray, model_type: str = "MiDaS_smal
     depth_normalized = (depth_map - depth_map.min()) / (depth_map.max() - depth_map.min())
     depth_colored = cv2.applyColorMap((depth_normalized * 255).astype(np.uint8), colormap_type)
 
+    if pose_data:
+        print(f"Received pose data: {pose_data}")
+        camera_position, camera_quaternion = parse_pose_data(pose_data)
+
+        transformation_matrix = create_transformation_matrix(camera_position, camera_quaternion)
+
+        width, height = 512, 512
+        fov_degrees = 60
+        fov_radians = math.radians(fov_degrees)
+        focal_length = width / (2 * math.tan(fov_radians / 2))
+        cx, cy = width / 2, height / 2
+
+        intrinsic_matrix = np.array([
+            [focal_length, 0, cx],
+            [0, focal_length, cy],
+            [0, 0, 1]
+        ])
+
     alpha = 0
     annotated_image = cv2.addWeighted(image_np, alpha, depth_colored, 1 - alpha, 0)
 
@@ -670,6 +670,13 @@ def fpk_process_depth_map_np(image_np: np.ndarray, model_type: str = "MiDaS_smal
         bbox = detection.bounding_box
         start_point = (int(bbox.origin_x), int(bbox.origin_y))
         end_point = (int(bbox.origin_x + bbox.width), int(bbox.origin_y + bbox.height))
+
+        center_x = int(bbox.origin_x + bbox.width / 2)
+        center_y = int(bbox.origin_y + bbox.height / 2)
+        depth_value = depth_map[center_y, center_x]
+
+        world_coordinates = depth_to_world_coordinates(depth_value, transformation_matrix, intrinsic_matrix,
+                                                       (center_x, center_y))
 
         cv2.rectangle(annotated_image, start_point, end_point, (255, 255, 255), 2)
 
