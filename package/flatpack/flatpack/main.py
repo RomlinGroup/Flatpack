@@ -563,67 +563,71 @@ def open_and_convert_image(file_content):
 
 
 def create_point_cloud_image(depth_map):
-    fov_degrees = 60
-    width = 512
-    height = 512
+    try:
+        if depth_map.dtype != np.float32:
+            depth_map = depth_map.astype(np.float32)
 
-    fov_radians = fov_degrees * (math.pi / 180)
+        if len(depth_map.shape) > 2 and depth_map.shape[2] > 1:
+            depth_map = cv2.cvtColor(depth_map, cv2.COLOR_BGR2GRAY)
 
-    fx = fy = width / (2 * math.tan(fov_radians / 2))
-    cx = width / 2
-    cy = height / 2
+        depth_map = cv2.bilateralFilter(depth_map, d=5, sigmaColor=75, sigmaSpace=75)
 
-    depth_o3d = o3d.geometry.Image(depth_map.astype(np.float32))
+        fov_degrees = 60
+        width, height = depth_map.shape[1], depth_map.shape[0]
+        fov_radians = fov_degrees * (math.pi / 180)
+        fx = fy = width / (2 * math.tan(fov_radians / 2))
+        cx = width / 2
+        cy = height / 2
 
-    intrinsic = o3d.camera.PinholeCameraIntrinsic(width, height, fx, fy, cx, cy)
-    pcd = o3d.geometry.PointCloud.create_from_depth_image(depth_o3d, intrinsic)
+        depth_o3d = o3d.geometry.Image(depth_map)
+        intrinsic = o3d.camera.PinholeCameraIntrinsic(width, height, fx, fy, cx, cy)
+        pcd = o3d.geometry.PointCloud.create_from_depth_image(depth_o3d, intrinsic)
 
-    vis = o3d.visualization.Visualizer()
-    vis.create_window(visible=False)
-    vis.add_geometry(pcd)
+        pcd_points = np.asarray(pcd.points)
 
-    vis.poll_events()
-    vis.update_renderer()
-    image = vis.capture_screen_float_buffer(False)
+        pcd_points[:, 0] -= np.min(pcd_points[:, 0])
+        pcd_points[:, 1] -= np.min(pcd_points[:, 1])
+        max_x, max_y = np.max(pcd_points[:, 0]), np.max(pcd_points[:, 1])
+        pcd_points[:, 0] *= (width / max_x)
+        pcd_points[:, 1] *= (height / max_y)
+        pcd_points = pcd_points.astype(np.int32)
 
-    np_image = np.asarray(image)
-    np_image = (np_image * 255).astype(np.uint8)
-    np_image = cv2.cvtColor(np_image, cv2.COLOR_RGB2BGR)
+        point_cloud_image = np.zeros((height, width, 3), dtype=np.uint8)
 
-    vis.destroy_window()
+        for x, y, _ in pcd_points:
+            if 0 <= x < width and 0 <= y < height:
+                color = (255, 255, 255)
+                point_cloud_image[y, x] = color
 
-    return np_image
+        return point_cloud_image
+    except Exception as e:
+        print(f"Error in create_point_cloud_image: {e}")
+        return None
 
 
 @app.post("/process_point_cloud/")
-async def process_point_cloud(file: UploadFile = File(...), pose_data: str = Form(...),
-                              model_type: str = Form(default="MiDaS_small"),
-                              colormap: int = Form(default=cv2.COLORMAP_BONE)):
-    print(f"Received model type: {model_type}")
-    if model_type not in ["MiDaS_small", "DPT_Hybrid", "DPT_Large"]:
-        return JSONResponse(status_code=400, content={"message": "Invalid model type"})
-
+async def process_point_cloud(file: UploadFile = File(...)):
     try:
         contents = await file.read()
         image_np = open_and_convert_image(contents)
 
-        if pose_data:
-            print(f"Received pose data: {pose_data}")
-            pose_data = json.loads(pose_data)
-            print(f"Parsed pose data: {pose_data}")
+        if len(image_np.shape) == 3 and image_np.shape[2] == 3:
+            depth_map = cv2.cvtColor(image_np, cv2.COLOR_BGR2GRAY)
+        else:
+            depth_map = image_np
 
-        depth_map_with_boxes = fpk_process_depth_map_np(image_np, model_type, colormap)
-        point_cloud_image = create_point_cloud_image(depth_map_with_boxes)
+        point_cloud_image = create_point_cloud_image(depth_map)
 
-        resized_img = cv2.resize(point_cloud_image, (256, 256))
-        jpeg_quality = 50
-        _, encoded_img = cv2.imencode('.jpg', resized_img, [cv2.IMWRITE_JPEG_QUALITY, jpeg_quality])
-
-        print(f"Depth map request processed at {datetime.now()} for model_type {model_type}")
+        if point_cloud_image is not None and point_cloud_image.shape[0] > 0 and point_cloud_image.shape[1] > 0:
+            resized_img = cv2.resize(point_cloud_image, (256, 256))
+            jpeg_quality = 50
+            _, encoded_img = cv2.imencode('.jpg', resized_img, [cv2.IMWRITE_JPEG_QUALITY, jpeg_quality])
+        else:
+            raise ValueError("Point cloud image is None or has invalid dimensions.")
 
         return StreamingResponse(io.BytesIO(encoded_img.tobytes()), media_type="image/jpeg")
     except Exception as e:
-        print(f"Error processing depth map: {e}")
+        print(f"Error processing point cloud: {e}")
         return JSONResponse(status_code=500, content={"message": "Internal server error"})
 
 
