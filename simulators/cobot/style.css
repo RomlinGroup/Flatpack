@@ -121,17 +121,6 @@ canvas {
     color: #ffffff;
 }
 
-#overviewMap {
-    position: fixed;
-    top: 10px;
-    right: 150px;
-    width: 268px;
-    height: 268px;
-    background: #000;
-    border: 1px solid #666;
-    overflow: hidden;
-}
-
 #recordButton {
     position: fixed;
     top: 64px;

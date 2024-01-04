@@ -13,8 +13,6 @@
 <body>
 <div id="robotDirectionDisplay"><span id="directionValue">0</span>°</div>
 
-<div id="overviewMap"></div>
-
 <div id="forearmViewWrapper">
     <div id="forearmView"></div>
 
@@ -102,11 +100,6 @@
         detectionResultsDiv.innerHTML = '<img src="' + depthMapUrl + '" alt="Depth Map" style="width:100%;height:auto;">';
     }
 
-    function displayPointCloud(pointCloudUrl) {
-        const pointCloudDiv = document.getElementById('overviewMap');
-        pointCloudDiv.innerHTML = '<img src="' + pointCloudUrl + '" alt="Point Cloud" style="width:100%;height:auto;">';
-    }
-
     function preloadImage(src) {
         return new Promise((resolve, reject) => {
             const img = new Image();
@@ -131,9 +124,6 @@
 
             const depthMapUrl = await uploadImageAndGetDepthMapUrl(currentImageBlob, poseData);
             displayDepthMap(depthMapUrl);
-
-            const pointCloudUrl = await uploadImageAndGetPointCloudUrl(currentImageBlob, poseData);
-            displayPointCloud(pointCloudUrl);
 
             //console.log('Depth map processed and displayed.');
 
@@ -185,7 +175,7 @@
                 body: formData
             });
 
-            //console.log(`Response status: ${response.status}`);
+            console.log(response);
 
             if (!response.ok) {
                 //console.error(`Server response error: status ${response.status}`);

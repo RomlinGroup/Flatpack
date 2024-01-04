@@ -252,7 +252,7 @@ function heartbeat() {
             .then(() => {
                 isProcessingDepthMap = false;
                 const doneTimestamp = formatTimestamp(new Date());
-                console.log(`[${doneTimestamp}] Finished processing depth map.`);
+                //console.log(`[${doneTimestamp}] Finished processing depth map.`);
             })
             .catch((error) => {
                 isProcessingDepthMap = false;
@@ -628,4 +628,4 @@ intervalId = setInterval(heartbeat, heartbeatInterval);
 
 initRobot('cobot');
 
-robot.startEnvironmentalScan();
+//robot.startEnvironmentalScan();
