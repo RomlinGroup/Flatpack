@@ -562,6 +562,30 @@ def open_and_convert_image(file_content):
     return image
 
 
+def parse_pose_data(pose_data_str):
+    pose_data = json.loads(pose_data_str)
+    camera_position = pose_data['cameraWorldPosition']
+    camera_quaternion = pose_data['cameraWorldQuaternion']
+    return np.array(camera_position), np.array(camera_quaternion)
+
+
+def create_transformation_matrix(position, quaternion):
+    rotation_matrix = o3d.geometry.get_rotation_matrix_from_quaternion(quaternion)
+    transformation_matrix = np.eye(4)
+    transformation_matrix[:3, :3] = rotation_matrix
+    transformation_matrix[:3, 3] = position
+    return transformation_matrix
+
+
+def depth_to_world_coordinates(depth_value, transformation_matrix, intrinsic_matrix, pixel_coordinates):
+    x, y = pixel_coordinates
+    z = depth_value
+    point_camera = np.dot(np.linalg.inv(intrinsic_matrix), np.array([x * z, y * z, z]))
+
+    point_world = np.dot(transformation_matrix, np.array([point_camera[0], point_camera[1], point_camera[2], 1]))
+    return point_world[:3]
+
+
 @app.post("/process_depth_map/")
 async def process_depth_map(file: UploadFile = File(...), pose_data: str = Form(...),
                             model_type: str = Form(default="MiDaS_small"),
@@ -576,8 +600,21 @@ async def process_depth_map(file: UploadFile = File(...), pose_data: str = Form(
 
         if pose_data:
             print(f"Received pose data: {pose_data}")
-            pose_data = json.loads(pose_data)
-            print(f"Parsed pose data: {pose_data}")
+            camera_position, camera_quaternion = parse_pose_data(pose_data)
+
+            transformation_matrix = create_transformation_matrix(camera_position, camera_quaternion)
+
+            width, height = 512, 512
+            fov_degrees = 60
+            fov_radians = math.radians(fov_degrees)
+            focal_length = width / (2 * math.tan(fov_radians / 2))
+            cx, cy = width / 2, height / 2
+
+            intrinsic_matrix = np.array([
+                [focal_length, 0, cx],
+                [0, focal_length, cy],
+                [0, 0, 1]
+            ])
 
         depth_map_with_boxes = fpk_process_depth_map_np(image_np, model_type, colormap)
 
