@@ -598,12 +598,15 @@ async def process_depth_map(file: UploadFile = File(...), pose_data: str = Form(
     try:
         contents = await file.read()
         image_np = open_and_convert_image(contents)
-        depth_map_with_boxes, world_coordinates = fpk_process_depth_map_np(image_np, pose_data, model_type, colormap)
+        depth_map_with_boxes, object_coordinates = fpk_process_depth_map_np(image_np, pose_data, model_type, colormap)
 
         if depth_map_with_boxes is None:
             raise ValueError("Depth map processing failed.")
 
-        world_coordinates_list = world_coordinates.tolist()
+        camera_coordinates, _ = parse_pose_data(pose_data)
+        camera_coordinates_list = camera_coordinates.tolist()
+
+        object_coordinates_list = object_coordinates.tolist()
 
         resized_img = cv2.resize(depth_map_with_boxes, (256, 256))
         jpeg_quality = 50
@@ -613,7 +616,8 @@ async def process_depth_map(file: UploadFile = File(...), pose_data: str = Form(
 
         response_data = {
             "image": encoded_img_base64,
-            "world_coordinates": world_coordinates_list
+            "camera_coordinates": camera_coordinates_list,
+            "object_coordinates": object_coordinates_list
         }
 
         print(f"Depth map request processed at {datetime.now()} for model_type {model_type}")
@@ -678,7 +682,7 @@ def fpk_process_depth_map_np(image_np: np.ndarray, pose_data: str, model_type: s
     alpha = 0
     annotated_image = cv2.addWeighted(image_np, alpha, depth_colored, 1 - alpha, 0)
 
-    world_coordinates = np.array([])
+    object_coordinates = np.array([])
 
     for detection in detection_result.detections:
         bbox = detection.bounding_box
@@ -689,8 +693,8 @@ def fpk_process_depth_map_np(image_np: np.ndarray, pose_data: str, model_type: s
         center_y = int(bbox.origin_y + bbox.height / 2)
         depth_value = depth_map[center_y, center_x]
 
-        world_coordinates = depth_to_world_coordinates(depth_value, transformation_matrix, intrinsic_matrix,
-                                                       (center_x, center_y))
+        object_coordinates = depth_to_world_coordinates(depth_value, transformation_matrix, intrinsic_matrix,
+                                                        (center_x, center_y))
 
         cv2.rectangle(annotated_image, start_point, end_point, (255, 255, 255), 2)
 
@@ -700,7 +704,7 @@ def fpk_process_depth_map_np(image_np: np.ndarray, pose_data: str, model_type: s
         cv2.putText(annotated_image, label, (start_point[0], start_point[1] - 10),
                     cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
 
-    return annotated_image, world_coordinates
+    return annotated_image, object_coordinates
 
 
 def fpk_save_image_to_temp_file(image_np):
