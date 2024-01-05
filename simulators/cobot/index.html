@@ -175,7 +175,7 @@
                 body: formData
             });
 
-            console.log(response);
+            //console.log(response);
 
             if (!response.ok) {
                 //console.error(`Server response error: status ${response.status}`);
@@ -184,57 +184,23 @@
                 throw new Error(`Server response error: status ${response.status}`);
             }
 
-            const depthMapBlob = await response.blob();
-            return URL.createObjectURL(depthMapBlob);
+            const responseData = await response.json();
+
+            const image = responseData.image;
+            const imageBlob = await (await fetch(`data:image/jpeg;base64,${image}`)).blob();
+
+            const worldCoordinates = responseData.world_coordinates;
+
+            for (let i = 0; i < worldCoordinates.length; i += 3) {
+                let objectX = worldCoordinates[i];
+                let objectY = worldCoordinates[i + 1];
+                let objectZ = worldCoordinates[i + 2];
+            }
+
+            return URL.createObjectURL(imageBlob);
         } catch (error) {
             //console.error('Error in uploading image:', error);
             //console.error(`Error details: ${error.message}`);
-            throw error;
-        }
-    }
-
-    async function uploadImageAndGetPointCloudUrl(imageBlob, poseData) {
-        if (!SERVER_URL) {
-            console.error("Configuration error: Server URL is not set.");
-            throw new Error("Configuration error: Server URL is not set.");
-        }
-
-        let formData = new FormData();
-        formData.append("file", imageBlob, "image.jpg");
-        formData.append("pose_data", JSON.stringify(poseData));
-
-        for (let [key, value] of formData.entries()) {
-            // Uncomment for debugging
-            // console.log(key, value);
-        }
-
-        const url = SERVER_URL + "/process_point_cloud/";
-        // Uncomment for debugging
-        // console.log(`Request URL: ${url}`);
-
-        try {
-            const response = await fetch(url, {
-                method: 'POST',
-                body: formData
-            });
-
-            // Uncomment for debugging
-            // console.log(`Response status: ${response.status}`);
-
-            if (!response.ok) {
-                const responseText = await response.text();
-                // Uncomment for debugging
-                // console.error(`Server response error: status ${response.status}`);
-                // console.error(`Response text: ${responseText}`);
-                throw new Error(`Server response error: status ${response.status}`);
-            }
-
-            const pointCloudBlob = await response.blob();
-            return URL.createObjectURL(pointCloudBlob);
-        } catch (error) {
-            // Uncomment for debugging
-            // console.error('Error in uploading image:', error);
-            // console.error(`Error details: ${error.message}`);
             throw error;
         }
     }

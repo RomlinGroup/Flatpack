@@ -13,6 +13,7 @@ from transformers import AutoProcessor, AutoModelForCausalLM, GPT2LMHeadModel, G
 from typing import List, Optional
 
 import argparse
+import base64
 import cv2
 import httpx
 import io
@@ -51,7 +52,6 @@ config = {
 
 midas_model = None
 midas_transforms = None
-
 mp_detector = None
 
 
@@ -598,15 +598,27 @@ async def process_depth_map(file: UploadFile = File(...), pose_data: str = Form(
     try:
         contents = await file.read()
         image_np = open_and_convert_image(contents)
-        depth_map_with_boxes = fpk_process_depth_map_np(image_np, pose_data, model_type, colormap)
+        depth_map_with_boxes, world_coordinates = fpk_process_depth_map_np(image_np, pose_data, model_type, colormap)
+
+        if depth_map_with_boxes is None:
+            raise ValueError("Depth map processing failed.")
+
+        world_coordinates_list = world_coordinates.tolist()
 
         resized_img = cv2.resize(depth_map_with_boxes, (256, 256))
         jpeg_quality = 50
         _, encoded_img = cv2.imencode('.jpg', resized_img, [cv2.IMWRITE_JPEG_QUALITY, jpeg_quality])
 
+        encoded_img_base64 = base64.b64encode(encoded_img.tobytes()).decode('utf-8')
+
+        response_data = {
+            "image": encoded_img_base64,
+            "world_coordinates": world_coordinates_list
+        }
+
         print(f"Depth map request processed at {datetime.now()} for model_type {model_type}")
 
-        return StreamingResponse(io.BytesIO(encoded_img.tobytes()), media_type="image/jpeg")
+        return JSONResponse(status_code=200, content=response_data)
     except Exception as e:
         print(f"Error processing depth map: {e}")
         return JSONResponse(status_code=500, content={"message": "Internal server error"})
@@ -666,6 +678,8 @@ def fpk_process_depth_map_np(image_np: np.ndarray, pose_data: str, model_type: s
     alpha = 0
     annotated_image = cv2.addWeighted(image_np, alpha, depth_colored, 1 - alpha, 0)
 
+    world_coordinates = np.array([])
+
     for detection in detection_result.detections:
         bbox = detection.bounding_box
         start_point = (int(bbox.origin_x), int(bbox.origin_y))
@@ -686,7 +700,7 @@ def fpk_process_depth_map_np(image_np: np.ndarray, pose_data: str, model_type: s
         cv2.putText(annotated_image, label, (start_point[0], start_point[1] - 10),
                     cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
 
-    return annotated_image
+    return annotated_image, world_coordinates
 
 
 def fpk_save_image_to_temp_file(image_np):

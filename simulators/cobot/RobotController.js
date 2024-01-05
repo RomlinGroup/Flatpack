@@ -160,6 +160,12 @@ class RobotController {
             cameraWorldPosition: cameraWorldPosition.toArray(),
             cameraWorldQuaternion: cameraWorldQuaternion.toArray()
         };
+
+        const cameraPosition = forearmCamera.position;
+        console.log('Camera X:', cameraPosition.x);
+        console.log('Camera Y:', cameraPosition.y);
+        console.log('Camera Z:', cameraPosition.z);
+
     }
 
     performScanStep() {
