@@ -231,37 +231,30 @@ function handleResize() {
 }
 
 function heartbeat() {
-    const formatTimestamp = (date) => {
-        const pad = (num) => (num < 10 ? '0' + num : num);
-        return date.getFullYear() + '-' +
-            pad(date.getMonth() + 1) + '-' +
-            pad(date.getDate()) + ' ' +
-            pad(date.getHours()) + ':' +
-            pad(date.getMinutes()) + ':' +
-            pad(date.getSeconds());
-    };
-
-    const timestamp = formatTimestamp(new Date());
-    //console.log(`[${timestamp}] Heartbeat triggered.`);
 
     if (!isProcessingDepthMap) {
-        //console.log(`[${timestamp}] Starting to process depth map.`);
+        //console.log('Starting to process depth map.');
         isProcessingDepthMap = true;
 
         processAndDisplayDepthMap(robot.poseData)
             .then(() => {
                 isProcessingDepthMap = false;
-                const doneTimestamp = formatTimestamp(new Date());
-                //console.log(`[${doneTimestamp}] Finished processing depth map.`);
             })
             .catch((error) => {
                 isProcessingDepthMap = false;
-                const errorTimestamp = formatTimestamp(new Date());
-                //console.error(`[${errorTimestamp}] Error processing depth map:`, error);
             });
     } else {
-        //console.log(`[${timestamp}] Previous depth map processing is still running.`);
+        //console.log('Previous depth map processing is still running.');
     }
+
+    if (cameraCoordinates) {
+        console.log('cameraCoordinates', cameraCoordinates);
+    }
+
+    if (objectCoordinates) {
+        console.log('objectCoordinates', objectCoordinates);
+    }
+
 }
 
 function initForearmCamera() {

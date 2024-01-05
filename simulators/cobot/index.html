@@ -44,6 +44,7 @@
     let base;
     let boxBody;
     let camera;
+    let cameraCoordinates;
     let controls;
     let elbow;
     let forearm;
@@ -52,6 +53,7 @@
     let forearmRenderer;
     let fullCycleCount = 0;
     let movementStep = 0;
+    let objectCoordinates;
     let pincerBase;
     let pincerClaw1;
     let pincerClaw2;
@@ -189,12 +191,15 @@
             const image = responseData.image;
             const imageBlob = await (await fetch(`data:image/jpeg;base64,${image}`)).blob();
 
-            const worldCoordinates = responseData.world_coordinates;
+            if (responseData.camera_coordinates.length != 0 && responseData.object_coordinates.length != 0) {
+                cameraCoordinates = responseData.camera_coordinates;
+                objectCoordinates = responseData.object_coordinates;
 
-            for (let i = 0; i < worldCoordinates.length; i += 3) {
-                let objectX = worldCoordinates[i];
-                let objectY = worldCoordinates[i + 1];
-                let objectZ = worldCoordinates[i + 2];
+                for (let i = 0; i < objectCoordinates.length; i += 3) {
+                    let objectX = objectCoordinates[i];
+                    let objectY = objectCoordinates[i + 1];
+                    let objectZ = objectCoordinates[i + 2];
+                }
             }
 
             return URL.createObjectURL(imageBlob);
