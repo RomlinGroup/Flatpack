@@ -1,9 +1,9 @@
 from cryptography.fernet import Fernet
 from fastapi import FastAPI
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from .parsers import parse_toml_to_venv_script
 from pathlib import Path
-from starlette.responses import PlainTextResponse
 from typing import List, Optional
 
 import argparse
@@ -443,7 +443,7 @@ app.add_middleware(
 
 @app.get("/test")
 async def test_endpoint():
-    return PlainTextResponse("Hello World")
+    return JSONResponse(content={"message": "Hello, World!"})
 
 
 def main():
