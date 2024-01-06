@@ -56,26 +56,11 @@ European Commission 2023).*
 - **[httpx](https://pypi.org/project/httpx/)**\
   BSD-3-Clause ([LICENSE](https://github.com/encode/httpx/blob/master/LICENSE.md))
 
-- **[mediapipe](https://pypi.org/project/mediapipe/)**\
-  Apache-2.0 ([LICENSE](https://github.com/google/mediapipe/blob/master/LICENSE))
-
 - **[ngrok](https://pypi.org/project/ngrok/)**\
   Apache-2.0 OR MIT ([LICENSE](https://github.com/ngrok/ngrok-python/blob/main/LICENSE-APACHE))
 
-- **[open3d](https://pypi.org/project/open3d/)**\
-  MIT ([LICENSE](https://github.com/isl-org/Open3D/blob/main/LICENSE))
-
-- **[timm](https://pypi.org/project/timm/)**\
-  Apache-2.0 ([LICENSE](https://github.com/huggingface/pytorch-image-models/blob/main/LICENSE))
-
 - **[toml](https://pypi.org/project/toml/)**\
   MIT ([LICENSE](https://github.com/uiri/toml/blob/master/LICENSE))
-
-- **[torch](https://pypi.org/project/torch/)**\
-  BSD-3-Clause ([LICENSE](https://github.com/pytorch/pytorch/blob/main/LICENSE))
-
-- **[transformers](https://pypi.org/project/transformers/)**\
-  Apache-2.0 ([LICENSE](https://github.com/huggingface/transformers/blob/main/LICENSE))
 
 - **[uvicorn](https://pypi.org/project/uvicorn/)**\
   BSD-3-Clause ([LICENSE](https://github.com/encode/uvicorn/blob/master/LICENSE.md))

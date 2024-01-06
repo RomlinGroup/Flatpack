@@ -1,41 +1,22 @@
 from cryptography.fernet import Fernet
-from datetime import datetime
 from fastapi import FastAPI, File, Form, UploadFile
-from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
-from io import BytesIO
-from mediapipe.tasks import python as mp_python
-from mediapipe.tasks.python import vision as mp_vision
 from .parsers import parse_toml_to_venv_script
 from pathlib import Path
 from starlette.responses import PlainTextResponse
-from transformers import AutoProcessor, AutoModelForCausalLM, GPT2LMHeadModel, GPT2Tokenizer, set_seed
 from typing import List, Optional
 
 import argparse
-import base64
-import cv2
 import httpx
-import io
-import json
-import logging
-import math
-import mediapipe as mp
 import ngrok
-import numpy as np
-import open3d as o3d
 import os
-import random
 import re
 import select
 import shlex
 import stat
 import subprocess
 import sys
-import tempfile
-import time
 import toml
-import torch
 import uvicorn
 
 CONFIG_FILE_PATH = os.path.join(os.path.expanduser("~"), ".fpk_config.toml")
@@ -449,45 +430,6 @@ def fpk_valid_directory_name(name: str) -> bool:
     return re.match(r'^[\w-]+$', name) is not None
 
 
-def fpk_generate_text(prompt, seed=None, max_length=512, temperature=0.7, top_k=50, top_p=0.95):
-    """Generate text using GPT-2 with optional random seed and text generation parameters."""
-    if seed is None:
-        seed = random.randint(0, 10000)
-
-    set_seed(seed)
-
-    tokenizer = GPT2Tokenizer.from_pretrained("romlingroup/gpt2-cobot")
-    model = GPT2LMHeadModel.from_pretrained("romlingroup/gpt2-cobot")
-
-    inputs = tokenizer.encode(prompt, return_tensors="pt", truncation=True, max_length=512)
-    outputs = model.generate(
-        inputs,
-        max_length=max_length,
-        num_return_sequences=1,
-        temperature=temperature,
-        top_k=top_k,
-        top_p=top_p
-    )
-    response = tokenizer.decode(outputs[0], skip_special_tokens=True)
-
-    return response
-
-
-def fpk_generate_text_with_image(prompt, image_np):
-    try:
-        model_name = "microsoft/git-base-coco"
-        processor = AutoProcessor.from_pretrained(model_name)
-        model = AutoModelForCausalLM.from_pretrained(model_name)
-
-        pixel_values = processor(images=image_np, return_tensors="pt").pixel_values
-        generated_ids = model.generate(pixel_values=pixel_values, max_length=50)
-        generated_caption = processor.batch_decode(generated_ids, skip_special_tokens=True)[0]
-
-        return generated_caption
-    except Exception as e:
-        print(f"Error in fpk_generate_text_with_image: {e}")
-
-
 app = FastAPI()
 
 app.add_middleware(
@@ -497,230 +439,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-
-def fpk_create_detector(model_path, threshold=0.5):
-    VisionRunningMode = mp.tasks.vision.RunningMode
-
-    base_options = mp_python.BaseOptions(
-        model_asset_path=model_path
-    )
-
-    options = mp_vision.ObjectDetectorOptions(
-        base_options=base_options,
-        running_mode=VisionRunningMode.IMAGE,
-        score_threshold=threshold
-    )
-
-    return mp_vision.ObjectDetector.create_from_options(options)
-
-
-@app.on_event("startup")
-async def startup_event():
-    global midas_model, midas_transforms, mp_detector
-
-    midas_model = torch.hub.load("intel-isl/MiDaS", "MiDaS_small", trust_repo=True)
-
-    # device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
-    # midas_model.to(device)
-
-    midas_model.eval()
-
-    midas_transforms_module = torch.hub.load("intel-isl/MiDaS", "transforms", trust_repo=True)
-    midas_transforms = midas_transforms_module.dpt_transform
-
-    model_url = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/simulators/cobot/object_detection/model.tflite"
-    model_path = "/tmp/model.tflite"
-
-    if not os.path.exists(model_path):
-        async with httpx.AsyncClient() as client:
-            response = await client.get(model_url)
-            response.raise_for_status()
-            with open(model_path, "wb") as file:
-                file.write(response.content)
-
-        print("Model downloaded successfully.")
-
-    mp_detector = fpk_create_detector(model_path)
-
-
-@app.post("/process/")
-async def process(prompt: str, file: UploadFile = File(None)):
-    if file:
-        contents = await file.read()
-        image_np = open_and_convert_image(contents)
-        response = fpk_generate_text_with_image(prompt, image_np)
-    else:
-        response = fpk_generate_text(prompt)
-    return {"response": response}
-
-
-def open_and_convert_image(file_content):
-    image_np = np.frombuffer(file_content, np.uint8)
-    image = cv2.imdecode(image_np, cv2.IMREAD_COLOR)
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    return image
-
-
-def parse_pose_data(pose_data_str):
-    pose_data = json.loads(pose_data_str)
-    camera_position = pose_data['cameraWorldPosition']
-    camera_quaternion = pose_data['cameraWorldQuaternion']
-    return np.array(camera_position), np.array(camera_quaternion)
-
-
-def create_transformation_matrix(position, quaternion):
-    rotation_matrix = o3d.geometry.get_rotation_matrix_from_quaternion(quaternion)
-    transformation_matrix = np.eye(4)
-    transformation_matrix[:3, :3] = rotation_matrix
-    transformation_matrix[:3, 3] = position
-    return transformation_matrix
-
-
-def depth_to_world_coordinates(depth_value, transformation_matrix, intrinsic_matrix, pixel_coordinates):
-    x, y = pixel_coordinates
-    z = depth_value
-    point_camera = np.dot(np.linalg.inv(intrinsic_matrix), np.array([x * z, y * z, z]))
-
-    point_world = np.dot(transformation_matrix, np.array([point_camera[0], point_camera[1], point_camera[2], 1]))
-    return point_world[:3]
-
-
-@app.post("/process_depth_map/")
-async def process_depth_map(file: UploadFile = File(...), pose_data: str = Form(...),
-                            model_type: str = Form(default="MiDaS_small"),
-                            colormap: int = Form(default=cv2.COLORMAP_JET)):
-    print(f"Received model type: {model_type}")
-
-    if model_type not in ["MiDaS_small", "DPT_Hybrid", "DPT_Large"]:
-        return JSONResponse(status_code=400, content={"message": "Invalid model type"})
-
-    try:
-        contents = await file.read()
-        image_np = open_and_convert_image(contents)
-        depth_map_with_boxes, object_coordinates = fpk_process_depth_map_np(image_np, pose_data, model_type, colormap)
-
-        if depth_map_with_boxes is None:
-            raise ValueError("Depth map processing failed.")
-
-        camera_coordinates, _ = parse_pose_data(pose_data)
-        camera_coordinates_list = camera_coordinates.tolist()
-
-        object_coordinates_list = object_coordinates.tolist()
-
-        resized_img = cv2.resize(depth_map_with_boxes, (256, 256))
-        jpeg_quality = 50
-        _, encoded_img = cv2.imencode('.jpg', resized_img, [cv2.IMWRITE_JPEG_QUALITY, jpeg_quality])
-
-        encoded_img_base64 = base64.b64encode(encoded_img.tobytes()).decode('utf-8')
-
-        response_data = {
-            "image": encoded_img_base64,
-            "camera_coordinates": camera_coordinates_list,
-            "object_coordinates": object_coordinates_list
-        }
-
-        print(f"Depth map request processed at {datetime.now()} for model_type {model_type}")
-
-        return JSONResponse(status_code=200, content=response_data)
-    except Exception as e:
-        print(f"Error processing depth map: {e}")
-        return JSONResponse(status_code=500, content={"message": "Internal server error"})
-
-
-def fpk_process_depth_map_np(image_np: np.ndarray, pose_data: str, model_type: str = "MiDaS_small",
-                             colormap_type: int = cv2.COLORMAP_JET) -> np.ndarray:
-    global midas_model, midas_transforms, mp_detector
-
-    if image_np.shape[2] == 3:
-        image_bgr = cv2.cvtColor(image_np, cv2.COLOR_RGB2BGR)
-    else:
-        image_bgr = image_np
-
-    detection_result = fpk_load_and_detect(mp_detector, image_bgr)
-
-    # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    # midas_model.to(device)
-
-    midas_model.eval()
-
-    # input_batch = midas_transforms(image_np).to(device)
-    input_batch = midas_transforms(image_np)
-
-    with torch.no_grad():
-        prediction = midas_model(input_batch)
-        prediction = torch.nn.functional.interpolate(
-            prediction.unsqueeze(1),
-            size=image_np.shape[:2],
-            mode="bicubic",
-            align_corners=False,
-        ).squeeze()
-
-    depth_map = prediction.cpu().numpy()
-
-    depth_normalized = (depth_map - depth_map.min()) / (depth_map.max() - depth_map.min())
-    depth_colored = cv2.applyColorMap((depth_normalized * 255).astype(np.uint8), colormap_type)
-
-    if pose_data:
-        print(f"Received pose data: {pose_data}")
-        camera_position, camera_quaternion = parse_pose_data(pose_data)
-
-        transformation_matrix = create_transformation_matrix(camera_position, camera_quaternion)
-
-        width, height = 512, 512
-        fov_degrees = 60
-        fov_radians = math.radians(fov_degrees)
-        focal_length = width / (2 * math.tan(fov_radians / 2))
-        cx, cy = width / 2, height / 2
-
-        intrinsic_matrix = np.array([
-            [focal_length, 0, cx],
-            [0, focal_length, cy],
-            [0, 0, 1]
-        ])
-
-    alpha = 0
-    annotated_image = cv2.addWeighted(image_np, alpha, depth_colored, 1 - alpha, 0)
-
-    object_coordinates = np.array([])
-
-    for detection in detection_result.detections:
-        bbox = detection.bounding_box
-        start_point = (int(bbox.origin_x), int(bbox.origin_y))
-        end_point = (int(bbox.origin_x + bbox.width), int(bbox.origin_y + bbox.height))
-
-        center_x = int(bbox.origin_x + bbox.width / 2)
-        center_y = int(bbox.origin_y + bbox.height / 2)
-        depth_value = depth_map[center_y, center_x]
-
-        object_coordinates = depth_to_world_coordinates(depth_value, transformation_matrix, intrinsic_matrix,
-                                                        (center_x, center_y))
-
-        cv2.rectangle(annotated_image, start_point, end_point, (255, 255, 255), 2)
-
-        bbox_depth = depth_map[start_point[1]:end_point[1], start_point[0]:end_point[0]]
-        avg_depth = np.mean(bbox_depth)
-        label = f"{detection.categories[0].category_name} ({avg_depth:.2f})"
-        cv2.putText(annotated_image, label, (start_point[0], start_point[1] - 10),
-                    cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
-
-    return annotated_image, object_coordinates
-
-
-def fpk_save_image_to_temp_file(image_np):
-    _, temp_file_path = tempfile.mkstemp(suffix=".jpg")
-    cv2.imwrite(temp_file_path, image_np)
-    return temp_file_path
-
-
-def fpk_load_and_detect(detector, image_np):
-    temp_file_path = fpk_save_image_to_temp_file(image_np)
-    try:
-        image = mp.Image.create_from_file(temp_file_path)
-        detection_result = detector.detect(image)
-    finally:
-        os.remove(temp_file_path)
-    return detection_result
 
 
 @app.get("/test")
