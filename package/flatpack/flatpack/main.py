@@ -441,6 +441,11 @@ app.add_middleware(
 )
 
 
+@app.get("/")
+async def landing_page():
+    return JSONResponse(content={"message": "flatpack.ai"})
+
+
 @app.get("/test")
 async def test_endpoint():
     return JSONResponse(content={"message": "Hello, World!"})
