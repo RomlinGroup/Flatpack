@@ -14,7 +14,6 @@ Ahoy, brave explorer!
 
 | Name                                                                                                      | Type     | FPK |
 |:----------------------------------------------------------------------------------------------------------|:---------|:----|
-| [gpt2-cobot](https://github.com/romlingroup/flatpack-ai/tree/main/warehouse/gpt2-cobot)                   | Flatpack | No  |
 | [llama2-scratch](https://github.com/romlingroup/flatpack-ai/tree/main/warehouse/llama2-scratch)           | Flatpack | No  |
 | [llama-cpp-python](https://github.com/romlingroup/flatpack-ai/tree/main/warehouse/llama-cpp-python)       | Flatpack | No  |
 | [nanogpt-scratch](https://github.com/romlingroup/flatpack-ai/tree/main/warehouse/nanogpt-scratch)         | Flatpack | No  |
