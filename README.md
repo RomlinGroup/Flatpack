@@ -26,7 +26,7 @@ This fusion of AI with the physical world accelerates scientific progress, enhan
 
 ## Navformer
 
-To operate effectively and safely in the physical world, avoiding stumbling over edges or walking into walls is essential. Navigation plays a crucial role in this aspect. Therefore, we are actively working on developing [Navformer](https://navformer.com) behind the scenes. However, since there is potential misuse, we are still undecided on whether we should release its code and models as open source.
+Robots need to avoid obstacles while navigating. We are creating [Navformer](https://www.navformer.com), a navigation system powered by AI and micro-LLMs. We are still determining whether to release it as open source due to potential misuse.
 
 ## flatpack 3.X.X (Aglaonice)
 
