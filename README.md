@@ -28,6 +28,11 @@ This fusion of AI with the physical world accelerates scientific progress, enhan
 
 Robots need to avoid obstacles while navigating. We are creating [Navformer](https://www.navformer.com), a navigation system powered by AI and micro-LLMs. We are still determining whether to release it as open source due to potential misuse.
 
+* **CPU only:** Optimised for CPU usage, ensuring compatibility and efficiency across various edge computing devices without requiring specialised hardware.
+* **Monocular navigation:** Utilises a single-lens system for spatial awareness, providing a compact and cost-effective solution for 3D environment mapping.
+* **Real-time inference:** Capable of processing and reacting to environmental data in real-time, crucial for dynamic and unpredictable settings.
+* **Transformer-based:** Incorporates the latest in transformer neural network technology, enabling interpretation of complex spatial data and superior understanding.
+
 ## flatpack 3.X.X (Aglaonice)
 
 *Aglaonice, an ancient Greek astronomer from the 2nd or 1st century BC, was celebrated for her precise lunar eclipse predictions. Her mastery inspired the Greek proverb: "As the moon obeys Aglaonice," signifying unwavering certainty.*
