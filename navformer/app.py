@@ -2,13 +2,11 @@ import os
 import time
 import torch
 
-# Attempt to import tiktoken, providing specific guidance if the import fails.
 try:
     import tiktoken
 except ImportError:
     raise ImportError("Please ensure the 'tiktoken' library is installed by running `pip install tiktoken`.")
 
-# Attempt to import the GPTConfig and GPT classes from nanoGPT.model, providing guidance for different errors.
 try:
     from nanoGPT.model import GPTConfig, GPT
 except ImportError as e:
