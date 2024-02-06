@@ -2,6 +2,10 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "properties": {
+    "command": {
+      "type": "string",
+      "description": "The command that triggers the action."
+    },
     "action": {
       "type": "string",
       "enum": [
@@ -23,6 +27,7 @@
     }
   },
   "required": [
+    "command",
     "action"
   ]
 }
