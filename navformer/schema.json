@@ -15,7 +15,7 @@
       "type": "string"
     },
     "effect": {
-      "type": "float",
+      "type": "number",
       "minimum": 0,
       "maximum": 1,
       "description": "Represents the impact or intensity of the action as a percentage."
