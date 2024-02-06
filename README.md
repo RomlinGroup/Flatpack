@@ -26,7 +26,7 @@ This fusion of AI with the physical world accelerates scientific progress, enhan
 
 ## Navformer
 
-<div align="center">
+<div align="center" style="margin-bottom: 20px;">
   <img src="https://romlin.com/wp-content/uploads/2024/02/navformer_symbols.svg" width="300" height="auto" alt="Navformer">
 </div>
 
