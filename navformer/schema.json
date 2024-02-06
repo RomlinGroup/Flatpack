@@ -12,7 +12,8 @@
       ]
     },
     "target": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^[a-z]+(_[a-z]+)*$"
     },
     "effect": {
       "type": "number",
