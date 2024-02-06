@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "action": {
+      "type": "string",
+      "enum": [
+        "move",
+        "stop",
+        "grab",
+        "drop"
+      ]
+    },
+    "target": {
+      "type": "string"
+    },
+    "effect": {
+      "type": "float",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "Represents the impact or intensity of the action as a percentage."
+    }
+  },
+  "required": [
+    "action"
+  ]
+}

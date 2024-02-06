@@ -26,6 +26,10 @@ This fusion of AI with the physical world accelerates scientific progress, enhan
 
 ## Navformer
 
+<div align="center">
+  <img src="https://romlin.com/wp-content/uploads/2024/02/navformer_symbols.svg" width="300" height="auto" alt="Navformer">
+</div>
+
 Robots need to avoid obstacles while navigating. We are creating [Navformer](https://www.navformer.com), a navigation system powered by AI and micro-LLMs. We are still determining whether to release it as open source due to potential misuse.
 
 * **CPU only:** Optimised for CPU usage, ensuring compatibility and efficiency across various edge computing devices without requiring specialised hardware.
