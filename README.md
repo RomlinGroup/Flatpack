@@ -24,19 +24,6 @@ This fusion of AI with the physical world accelerates scientific progress, enhan
 
 > **flatpack.ai:** "Picture merging the Swedish ingenuity of flatpacks (hence our name) and ready-to-assemble furniture with the imaginative appeal of certain Danish snap-together toy bricks. Our method of developing micro-LLMs is designed to be intelligently integrated into the physical world." (Henric Romlin 2023)
 
-## Navformer
-
-<p align="center">
-  <img src="https://romlin.com/wp-content/uploads/2024/02/navformer_symbols.svg" width="200" alt="Navformer">
-</p>
-
-Robots need to avoid obstacles while navigating. We are creating [Navformer](https://www.navformer.com), a navigation system powered by AI and micro-LLMs. We are still determining whether to release it as open source due to potential misuse.
-
-* **CPU only:** Optimised for CPU usage, ensuring compatibility and efficiency across various edge computing devices without requiring specialised hardware.
-* **Monocular navigation:** Utilises a single-lens system for spatial awareness, providing a compact and cost-effective solution for 3D environment mapping.
-* **Real-time inference:** Capable of processing and reacting to environmental data in real-time, crucial for dynamic and unpredictable settings.
-* **Transformer-based:** Incorporates the latest in transformer neural network technology, enabling interpretation of complex spatial data and superior understanding.
-
 ## flatpack 3.X.X (Aglaonice)
 
 *Aglaonice, an ancient Greek astronomer from the 2nd or 1st century BC, was celebrated for her precise lunar eclipse predictions. Her mastery inspired the Greek proverb: "As the moon obeys Aglaonice," signifying unwavering certainty.*
@@ -154,6 +141,19 @@ Overall, micro-LLMs represent a logical step in the evolution of language models
 > **Raspberry Pi Foundation:** "The Raspberry Pi Foundation is a UK-based charity with the mission to enable young people to realise their full potential through the power of computing and digital technologies." ([Raspberry Pi Foundation 2023](https://www.raspberrypi.org/about/))
 
 > **Standardisation:** "Without standards, there can be no improvement." (Taiichi Ohno)
+
+## Navformer
+
+<p align="center">
+  <img src="https://romlin.com/wp-content/uploads/2024/02/navformer_symbols.svg" width="200" alt="Navformer">
+</p>
+
+Robots need to avoid obstacles while navigating. We are creating [Navformer](https://www.navformer.com), a navigation system powered by AI and micro-LLMs. We are still determining whether to release it as open source due to potential misuse.
+
+* **CPU only:** Optimised for CPU usage, ensuring compatibility and efficiency across various edge computing devices without requiring specialised hardware.
+* **Monocular navigation:** Utilises a single-lens system for spatial awareness, providing a compact and cost-effective solution for 3D environment mapping.
+* **Real-time inference:** Capable of processing and reacting to environmental data in real-time, crucial for dynamic and unpredictable settings.
+* **Transformer-based:** Incorporates the latest in transformer neural network technology, enabling interpretation of complex spatial data and superior understanding.
 
 ## License
 
