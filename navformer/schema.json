@@ -35,7 +35,8 @@
         },
         "required": [
           "action"
-        ]
+        ],
+        "additionalProperties": false
       },
       "description": "A list of actions to be triggered by the command."
     }
@@ -43,5 +44,6 @@
   "required": [
     "command",
     "actions"
-  ]
+  ],
+  "additionalProperties": false
 }
