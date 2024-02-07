@@ -4,30 +4,43 @@
   "properties": {
     "command": {
       "type": "string",
-      "description": "The command that triggers the action."
+      "description": "The command that triggers the actions."
     },
-    "action": {
-      "type": "string",
-      "enum": [
-        "move",
-        "stop",
-        "grab",
-        "drop"
-      ]
-    },
-    "target": {
-      "type": "string",
-      "pattern": "^[a-z]+(_[a-z]+)*$"
-    },
-    "effect": {
-      "type": "number",
-      "minimum": 0,
-      "maximum": 1,
-      "description": "Represents the impact or intensity of the action as a percentage."
+    "actions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "move",
+              "stop",
+              "grab",
+              "drop"
+            ]
+          },
+          "target": {
+            "type": "string",
+            "pattern": "^[a-z]+(_[a-z]+)*$",
+            "description": "An optional target for the action."
+          },
+          "effect": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "description": "Represents the impact or intensity of the action as a percentage, optional."
+          }
+        },
+        "required": [
+          "action"
+        ]
+      },
+      "description": "A list of actions to be triggered by the command."
     }
   },
   "required": [
     "command",
-    "action"
+    "actions"
   ]
 }
