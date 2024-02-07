@@ -4,7 +4,8 @@
   "properties": {
     "command": {
       "type": "string",
-      "description": "The command that triggers the actions."
+      "description": "The command that triggers the actions.",
+      "pattern": ".*[.?]$"
     },
     "actions": {
       "type": "array",
