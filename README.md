@@ -1,6 +1,6 @@
-<div align="center">
+<p align="center">
   <img src="https://romlin.com/wp-content/uploads/2023/05/flatpack_ai_logo.svg" width="100" height="100" alt="flatpack.ai">
-</div>
+</p>
 
 # flatpack.ai
 
