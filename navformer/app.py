@@ -19,7 +19,7 @@ except ImportError as e:
 compile_model = True
 device = 'cpu'
 dtype = 'bfloat16'
-max_new_tokens = 50
+max_new_tokens = 128
 temperature = 0.8
 top_k = 5
 
@@ -82,13 +82,18 @@ def respond(input_text, max_new_tokens, temperature, top_k):
 
 # Main execution block
 if __name__ == "__main__":
-    user_input = "Turn right by 90 degrees."
-    start = '<command> ' + user_input + '<endOfText>'
-    full_input = start
+    while True:  # Start an infinite loop
+        user_input = input("Enter your command (or type 'exit' to quit): ")
+        if user_input.lower() == 'exit':  # Check if the user wants to exit
+            print("Exiting...")
+            break  # Exit the loop and end the program
 
-    response = respond(full_input, max_new_tokens, temperature, top_k)
+        start = '<command> ' + user_input + '<endOfText>'
+        full_input = start
 
-    response_parts = response.split('<command>')
-    first_response = '<command>' + response_parts[1] if len(response_parts) > 1 else response
+        response = respond(full_input, max_new_tokens, temperature, top_k)
 
-    print(first_response)
+        response_parts = response.split('<command>')
+        first_response = '<command>' + response_parts[1] if len(response_parts) > 1 else response
+
+        print(first_response)
