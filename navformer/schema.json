@@ -4,8 +4,7 @@
   "properties": {
     "command": {
       "type": "string",
-      "description": "The command that triggers the actions.",
-      "pattern": ".*[.?]$"
+      "description": "Triggers specified actions."
     },
     "actions": {
       "type": "array",
@@ -19,26 +18,32 @@
               "stop",
               "grab",
               "drop"
-            ]
+            ],
+            "description": "Specifies the action type."
+          },
+          "intent": {
+            "type": "string",
+            "description": "Defines the action's purpose, such as 'to_relocate'."
           },
           "target": {
             "type": "string",
             "pattern": "^[a-z]+(_[a-z]+)*$",
-            "description": "An optional target for the action."
+            "description": "Identifies the action's target, if applicable."
           },
           "effect": {
             "type": "number",
             "minimum": 0,
             "maximum": 1,
-            "description": "Represents the impact or intensity of the action as a percentage, optional."
+            "description": "Quantifies the action's impact on a scale of 0 to 1, if applicable."
           }
         },
         "required": [
-          "action"
+          "action",
+          "intent"
         ],
         "additionalProperties": false
       },
-      "description": "A list of actions to be triggered by the command."
+      "description": "Enumerates actions to be executed."
     }
   },
   "required": [
