@@ -23,6 +23,7 @@
           },
           "intent": {
             "type": "string",
+            "pattern": "^[a-z]+(_[a-z]+)*$",
             "description": "Defines the action's purpose, such as 'to_relocate'."
           },
           "target": {
