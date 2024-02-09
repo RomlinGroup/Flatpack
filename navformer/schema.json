@@ -14,10 +14,11 @@
           "action": {
             "type": "string",
             "enum": [
-              "move",
-              "stop",
-              "grab",
-              "drop"
+              "NAVIGATE",
+              "HALT",
+              "RETRIEVE",
+              "DEPOSIT",
+              "INTERACT"
             ],
             "description": "Specifies the action type."
           },
