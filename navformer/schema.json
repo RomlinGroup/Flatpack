@@ -37,6 +37,13 @@
             "minimum": 0,
             "maximum": 1,
             "description": "Quantifies the action's impact on a scale of 0 to 1, if applicable."
+          },
+          "value": {
+            "type": [
+              "number",
+              "string"
+            ],
+            "description": "Specifies the input value or setting for the action, if applicable."
           }
         },
         "required": [
