@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://romlin.com/wp-content/uploads/2023/05/flatpack_ai_logo.svg" width="100" height="100" alt="flatpack.ai">
+  <img src="https://romlin.com/wp-content/uploads/2023/05/flatpack_ai_logo.svg" width="80" height="80" alt="flatpack.ai">
 </p>
 
 # flatpack.ai
@@ -145,7 +145,7 @@ Overall, micro-LLMs represent a logical step in the evolution of language models
 ## Navformer
 
 <p align="center">
-  <img src="https://romlin.com/wp-content/uploads/2024/02/navformer_actions.svg" width="200" alt="Navformer">
+  <img src="https://romlin.com/wp-content/uploads/2024/02/navformer_actions.svg" width="160" alt="Navformer">
 </p>
 
 Robots need to avoid obstacles while navigating. We are creating [Navformer](https://www.navformer.com), a navigation system powered by AI and micro-LLMs. We are still determining whether to release it as open source due to potential misuse.
