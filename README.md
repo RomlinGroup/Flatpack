@@ -16,7 +16,7 @@ flatpack.ai aims to be the go-to platform for AI experimentation and innovation,
 
 ## Elevator pitch
 
-We are developing a first-of-its-kind decentralised and open-source platform that utilises AI and micro-LLMs (language models ranging from 100 million to 10 billion parameters) to simplify the complexity and cost of edge computing, hyperautomation and model compression. In the not-so-distant future, it will be possible to create edge computing devices, electronic components and robots using standardised flatpacks (FPKs) - the game cartridges in the age of AI.
+flatpack.ai is a first-of-its-kind decentralised and open-source platform that utilises AI and micro-LLMs (language models ranging from 100 million to 10 billion parameters) to simplify the complexity and cost of edge computing, hyperautomation and model compression. In the not-so-distant future, it will be possible to create edge computing devices, electronic components and robots using standardised flatpacks (FPKs) - the game cartridges in the age of AI.
 
 When we were children, we imagined our toys could come to life. This dream is becoming a reality with the advancement of AI and micro-LLMs. These technological wonders have the potential to transform the ordinary into something extraordinary, making our real-world environment as captivating as any metaverse or virtual reality.
 
