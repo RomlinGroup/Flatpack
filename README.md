@@ -114,13 +114,11 @@ Once completed, it will be a mandatory component in all flatpacks.
 
 ## Micro-LLMs 🤏
 
-[Micro-LLMs](https://github.com/karpathy/llama2.c#contributing) (credit to Andrej Karpathy)\*, or scaled-down language models with around 100 million to 10 billion parameters, offer a compelling solution to the deployment and scalability challenges associated with traditional [large language models (LLMs)](https://en.wikipedia.org/wiki/Large_language_model). Their smaller size allows for rapid pre-training and fine-tuning, enabling organizations to adapt quickly to market changes or specific requirements.
+[Micro-LLMs](https://github.com/karpathy/llama2.c#contributing) (credit to Andrej Karpathy), or scaled-down language models with around 100 million to 10 billion parameters, offer a compelling solution to the deployment and scalability challenges associated with traditional [large language models (LLMs)](https://en.wikipedia.org/wiki/Large_language_model). Their smaller size allows for rapid pre-training and fine-tuning, enabling organizations to adapt quickly to market changes or specific requirements.
 
 Micro-LLMs can be deployed in edge-adjacent environments like laptops, microprocessors, or smartphones, benefiting from [edge computing](https://en.wikipedia.org/wiki/Edge_computing) (computation and storage closer to data sources) to facilitate low-latency and privacy-conscious applications. These characteristics make micro-LLMs broadly accessible, energy-efficient, and specialized, even to smaller teams or individual developers.
 
 Overall, micro-LLMs represent a logical step in the evolution of language models, effectively merging the capabilities of LLMs with the practical needs of real-world applications.
-
-\* We recognize that "micro-LLMs" are oxymoronic, combining "micro" and "large". However, the term aptly captures the essence of these scaled-down but still powerful versions of large language models.
 
 ## Inspiration (no affiliation) ⭐
 
