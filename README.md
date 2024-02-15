@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://romlin.com/wp-content/uploads/2023/05/flatpack_ai_logo.svg" width="160" height="160" alt="flatpack">
+  <img src="https://romlin.com/wp-content/uploads/2023/05/flatpack_ai_logo.svg" width="120" height="120" alt="flatpack">
 </p>
 
 # flatpack
