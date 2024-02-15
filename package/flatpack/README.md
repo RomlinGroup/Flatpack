@@ -1,13 +1,13 @@
-# flatpack
+# Flatpack
 
-**NOTE:** flatpack is currently experimental. Please refrain from using it in production environments.
+**NOTE:** Flatpack is currently experimental. Please refrain from using it in production environments.
 
 ## Ready-to-assemble AI
 
-flatpack aims to be the go-to platform for AI experimentation and innovation, from educational settings to the
+Flatpack aims to be the go-to platform for AI experimentation and innovation, from educational settings to the
 highest echelons of industry and research.
 
-## flatpack 3.X.X (Aglaonice)
+## Flatpack 3.X.X (Aglaonice)
 
 *Aglaonice, an ancient Greek astronomer from the 2nd or 1st century BC, was celebrated for her precise lunar eclipse
 predictions. Her mastery inspired the Greek proverb: "As the moon obeys Aglaonice," signifying unwavering certainty.*

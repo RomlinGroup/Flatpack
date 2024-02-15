@@ -4,11 +4,11 @@
 
 > :warning: **DISCLAIMER:** This repository contains our research. Verify the information and do your own research (DYOR). We assume no responsibility for accuracy or completeness.
 
-`nanogpt-scratch` offers a flatpack adaptation of [nanoGPT](https://github.com/karpathy/nanoGPT) by Andrej Karpathy, licensed under the [MIT License](https://github.com/karpathy/nanoGPT/blob/master/LICENSE).
+`nanogpt-scratch` offers a Flatpack adaptation of [nanoGPT](https://github.com/karpathy/nanoGPT) by Andrej Karpathy, licensed under the [MIT License](https://github.com/karpathy/nanoGPT/blob/master/LICENSE).
 
 We have no official affiliation or association with Andrej Karpathy, nor are we endorsed or authorised by him. For the official Andrej Karpathy website, please visit [https://karpathy.ai](https://karpathy.ai).
 
-flatpack is experimental; please avoid using it for production.
+Flatpack is experimental; please avoid using it for production.
 
 ## train.sh (scratch)
 
