@@ -1,10 +1,10 @@
 <p align="center">
-  <img src="https://romlin.com/wp-content/uploads/2023/05/flatpack_ai_logo.svg" width="160" height="160" alt="flatpack.ai">
+  <img src="https://romlin.com/wp-content/uploads/2023/05/flatpack_ai_logo.svg" width="160" height="160" alt="flatpack">
 </p>
 
-# flatpack.ai
+# flatpack
 
-[![pip install flatpack](https://img.shields.io/badge/pip%20install-flatpack-5865f2)](https://pypi.org/project/flatpack/) [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/romlingroup/flatpack-ai/blob/main/notebooks/flatpack_ai_playground.ipynb)
+[![pip install flatpack](https://img.shields.io/badge/pip%20install-flatpack-5865f2)](https://pypi.org/project/flatpack/) [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/romlingroup/flatpack-ai/blob/main/notebooks/flatpack_playground.ipynb)
 
 > :warning: **DISCLAIMER:** This repository contains our research. Verify the information and do your own research (DYOR). We assume no responsibility for accuracy or completeness.
 
@@ -12,17 +12,17 @@
 
 ## Ready-to-assemble AI
 
-flatpack.ai aims to be the go-to platform for AI experimentation and innovation, from educational settings to the highest echelons of industry and research.
+flatpack aims to be the go-to platform for AI experimentation and innovation, from educational settings to the highest echelons of industry and research.
 
 ## Elevator pitch
 
-flatpack.ai is a first-of-its-kind decentralised and open-source platform that utilises AI and micro-LLMs (language models ranging from 100 million to 10 billion parameters) to simplify the complexity and cost of edge computing, hyperautomation and model compression. In the not-so-distant future, it will be possible to create edge computing devices, electronic components and robots using standardised flatpacks (FPKs) - the game cartridges in the age of AI.
+flatpack is a first-of-its-kind decentralised and open-source platform that utilises AI and micro-LLMs (language models ranging from 100 million to 10 billion parameters) to simplify the complexity and cost of edge computing, hyperautomation and model compression. In the not-so-distant future, it will be possible to create edge computing devices, electronic components and robots using standardised flatpacks (FPKs) - the game cartridges in the age of AI.
 
 When we were children, we imagined our toys could come to life. This dream is becoming a reality with the advancement of AI and micro-LLMs. These technological wonders have the potential to transform the ordinary into something extraordinary, making our real-world environment as captivating as any metaverse or virtual reality.
 
 This fusion of AI with the physical world accelerates scientific progress, enhances life quality, and opens vast business opportunities. By imbuing our surroundings with intelligence, we unlock limitless potential for connection, creativity, and growth, heralding a new frontier of human accomplishment.
 
-> **flatpack.ai:** "Picture merging the Swedish ingenuity of flatpacks (hence our name) and ready-to-assemble furniture with the imaginative appeal of certain Danish snap-together toy bricks. Our method of developing micro-LLMs is designed to be intelligently integrated into the physical world." (Henric Romlin 2023)
+> **flatpack:** "Picture merging the Swedish ingenuity of flatpacks (hence our name) and ready-to-assemble furniture with the imaginative appeal of certain Danish snap-together toy bricks. Our method of developing micro-LLMs is designed to be intelligently integrated into the physical world." (Henric Romlin 2023)
 
 ## flatpack 3.X.X (Aglaonice)
 
@@ -159,4 +159,4 @@ This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENS
 
 ## Friendly notice ❤️
 
-The [logo or symbol](https://romlin.com/wp-content/uploads/2023/05/flatpack_ai_logo.svg) associated with flatpack.ai is a registered trademark of [Romlin Group AB](https://romlin.com) and is protected by copyright. Please note that the logo is NOT covered by the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) that applies to the source code in this repository. If you want to use the logo for anything besides GitHub shenanigans, please ask for permission first. Thanks a million for being super awesome and respectful!
+The [logo or symbol](https://romlin.com/wp-content/uploads/2023/05/flatpack_ai_logo.svg) associated with flatpack is a registered trademark of [Romlin Group AB](https://romlin.com) and is protected by copyright. Please note that the logo is NOT covered by the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) that applies to the source code in this repository. If you want to use the logo for anything besides GitHub shenanigans, please ask for permission first. Thanks a million for being super awesome and respectful!

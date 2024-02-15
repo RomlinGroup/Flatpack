@@ -1,10 +1,10 @@
-# flatpack.ai
+# flatpack
 
-**NOTE:** flatpack.ai is currently experimental. Please refrain from using it in production environments.
+**NOTE:** flatpack is currently experimental. Please refrain from using it in production environments.
 
 ## Ready-to-assemble AI
 
-flatpack.ai aims to be the go-to platform for AI experimentation and innovation, from educational settings to the
+flatpack aims to be the go-to platform for AI experimentation and innovation, from educational settings to the
 highest echelons of industry and research.
 
 ## flatpack 3.X.X (Aglaonice)

@@ -443,7 +443,7 @@ app.add_middleware(
 
 @app.get("/")
 async def landing_page():
-    return JSONResponse(content={"message": "flatpack.ai"})
+    return JSONResponse(content={"message": "flatpack"})
 
 
 @app.get("/test")
@@ -454,7 +454,7 @@ async def test_endpoint():
 def main():
     try:
         with SessionManager() as session:
-            parser = argparse.ArgumentParser(description='flatpack.ai command line interface')
+            parser = argparse.ArgumentParser(description='flatpack command line interface')
             parser.add_argument('command', help='Command to run')
             parser.add_argument('input', nargs='?', default=None, help='Input for the callback')
             parser.add_argument('--verbose', action='store_true', help='Display detailed outputs for debugging.')
