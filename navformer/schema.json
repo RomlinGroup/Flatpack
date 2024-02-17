@@ -33,7 +33,7 @@
             ],
             "description": "Identifies the action's target, if applicable."
           },
-          "effect": {
+          "sensitivity": {
             "type": "number",
             "minimum": 0,
             "maximum": 1,
