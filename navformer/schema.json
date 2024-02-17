@@ -43,7 +43,6 @@
               "number",
               "string"
             ],
-            "pattern": "^[a-z0-9]+(_[a-z0-9]+)*$",
             "description": "Specifies the input value or setting for the action, if applicable."
           }
         },
