@@ -33,11 +33,11 @@
             ],
             "description": "Identifies the action's target, if applicable."
           },
-          "sensitivity": {
+          "speed": {
             "type": "number",
             "minimum": 0,
             "maximum": 1,
-            "description": "Sets action sensitivity on a 0 (minimum) to 1 (maximum) scale, if applicable."
+            "description": "Sets action speed on a 0 (minimum) to 1 (maximum) scale, if applicable."
           },
           "value": {
             "type": [
