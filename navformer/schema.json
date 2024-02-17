@@ -37,7 +37,7 @@
             "type": "number",
             "minimum": 0,
             "maximum": 1,
-            "description": "Quantifies the action's impact on a scale of 0 to 1, if applicable."
+            "description": "Sets action sensitivity on a 0 (minimum) to 1 (maximum) scale, if applicable."
           },
           "value": {
             "type": [
