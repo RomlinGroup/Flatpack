@@ -27,7 +27,10 @@
             "description": "Defines the action's purpose, such as 'to_relocate'."
           },
           "target": {
-            "type": ["string", "null"],
+            "type": [
+              "string",
+              "null"
+            ],
             "description": "Identifies the action's target, if applicable."
           },
           "effect": {
@@ -38,6 +41,7 @@
           },
           "value": {
             "type": [
+              "array",
               "number",
               "string"
             ],
