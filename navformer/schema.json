@@ -24,12 +24,10 @@
           },
           "intent": {
             "type": "string",
-            "pattern": "^[a-z]+(_[a-z]+)*$",
             "description": "Defines the action's purpose, such as 'to_relocate'."
           },
           "target": {
             "type": "string",
-            "pattern": "^[a-z]+(_[a-z]+)*$",
             "description": "Identifies the action's target, if applicable."
           },
           "effect": {
