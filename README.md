@@ -16,15 +16,15 @@ Flatpack aims to be the go-to platform for AI experimentation and innovation, fr
 
 ## Elevator pitch
 
-Flatpack is a first-of-its-kind decentralised and open-source platform that utilises AI and micro-LLMs (language models ranging from 100 million to 10 billion parameters) to simplify the complexity and cost of edge computing, hyperautomation and model compression.
+Flatpack is a first-of-its-kind decentralised and open-source platform that utilises AI and micro language models (ranging from 100 million to 10 billion parameters) to simplify the complexity and cost of edge computing, hyperautomation and model compression.
 
 In the not-so-distant future, it will be possible to create edge computing devices, electronic components and robots using standardised flatpacks (FPKs) - the floppy disks or game cartridges in the age of AI.
 
-When we were children, we imagined our toys could come to life. This dream is becoming a reality with the advancement of AI and micro-LLMs. These technological wonders have the potential to transform the ordinary into something extraordinary, making our real-world environment as captivating as any metaverse or virtual reality.
+When we were children, we imagined our toys could come to life. This dream is becoming a reality with the advancement of AI and micro language models. These technological wonders have the potential to transform the ordinary into something extraordinary, making our real-world environment as captivating as any metaverse or virtual reality.
 
 This fusion of AI with the physical world accelerates scientific progress, enhances life quality, and opens vast business opportunities. By imbuing our surroundings with intelligence, we unlock limitless potential for connection, creativity, and growth, heralding a new frontier of human accomplishment.
 
-> **Flatpack:** "Picture merging the Swedish ingenuity of flatpacks (hence our name) and ready-to-assemble furniture with the imaginative appeal of certain Danish snap-together toy bricks. Our method of developing micro-LLMs is designed to be intelligently integrated into the physical world." (Henric Romlin 2023)
+> **Flatpack:** "Picture merging the Swedish ingenuity of flatpacks (hence our name) and ready-to-assemble furniture with the imaginative appeal of certain Danish snap-together toy bricks. Our method of developing micro language models is designed to be intelligently integrated into the physical world." (Henric Romlin 2023)
 
 ## Flatpack 3.X.X (Aglaonice)
 
@@ -114,13 +114,13 @@ Markdown is ideal for documenting datasets as it is lightweight and easy to arch
 
 Once completed, it will be a mandatory component in all flatpacks.
 
-## Micro-LLMs 🤏
+## Micro language models 🤏
 
-[Micro-LLMs](https://github.com/karpathy/llama2.c#contributing) (credit to Andrej Karpathy), or scaled-down language models with around 100 million to 10 billion parameters, offer a compelling solution to the deployment and scalability challenges associated with traditional [large language models (LLMs)](https://en.wikipedia.org/wiki/Large_language_model). Their smaller size allows for rapid pre-training and fine-tuning, enabling organizations to adapt quickly to market changes or specific requirements.
+Micro language models with around 100 million to 10 billion parameters, offer a compelling solution to the deployment and scalability challenges associated with traditional [large language models (LLMs)](https://en.wikipedia.org/wiki/Large_language_model). Their smaller size allows for rapid pre-training and fine-tuning, enabling organizations to adapt quickly to market changes or specific requirements.
 
-Micro-LLMs can be deployed in edge-adjacent environments like laptops, microprocessors, or smartphones, benefiting from [edge computing](https://en.wikipedia.org/wiki/Edge_computing) (computation and storage closer to data sources) to facilitate low-latency and privacy-conscious applications. These characteristics make micro-LLMs broadly accessible, energy-efficient, and specialized, even to smaller teams or individual developers.
+Micro language models can be deployed in edge-adjacent environments like laptops, microprocessors, or smartphones, benefiting from [edge computing](https://en.wikipedia.org/wiki/Edge_computing) (computation and storage closer to data sources) to facilitate low-latency and privacy-conscious applications. These characteristics make micro language models broadly accessible, energy-efficient, and specialized, even to smaller teams or individual developers.
 
-Overall, micro-LLMs represent a logical step in the evolution of language models, effectively merging the capabilities of LLMs with the practical needs of real-world applications.
+Overall, micro language models represent a logical step in the evolution of language models, effectively merging the capabilities of LLMs with the practical needs of real-world applications.
 
 ## Inspiration (no affiliation) ⭐
 
@@ -144,7 +144,7 @@ Overall, micro-LLMs represent a logical step in the evolution of language models
 
 ## Navformer
 
-Robots need to avoid obstacles while navigating. We are creating [Navformer](http://navformer.com), a navigation system powered by AI and micro-LLMs. We are still determining whether to release it as open source due to potential misuse.
+Robots need to avoid obstacles while navigating. We are creating [Navformer](http://navformer.com), a navigation system powered by AI and micro language models. We are still determining whether to release it as open source due to potential misuse.
 
 * **CPU only:** Optimised for CPU usage, ensuring compatibility and efficiency across various edge computing devices without requiring specialised hardware.
 * **CPU only:** Optimised for CPU usage, ensuring compatibility and efficiency across various edge computing devices without requiring specialised hardware.
