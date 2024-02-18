@@ -16,7 +16,7 @@ Flatpack aims to be the go-to platform for AI experimentation and innovation, fr
 
 ## Elevator pitch
 
-Flatpack is a first-of-its-kind decentralised and open-source platform that utilises AI and micro language models (ranging from 100 million to 10 billion parameters) to simplify the complexity and cost of edge computing, hyperautomation and model compression.
+Flatpack is a first-of-its-kind decentralised and open-source platform that utilises AI and micro language models (ranging from 10 million to 10 billion parameters) to simplify the complexity and cost of edge computing, hyperautomation and model compression.
 
 In the not-so-distant future, it will be possible to create edge computing devices, electronic components and robots using standardised flatpacks (FPKs) - the floppy disks or game cartridges in the age of AI.
 
