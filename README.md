@@ -16,7 +16,7 @@ Flatpack aims to be the go-to platform for AI experimentation and innovation, fr
 
 ## Elevator pitch
 
-Flatpack is a first-of-its-kind decentralised and open-source platform that utilises AI and micro language models (ranging from 100 million to 10 billion parameters) to simplify the complexity and cost of edge computing, hyperautomation and model compression.
+Flatpack is a first-of-its-kind decentralised and open-source platform that utilises AI and micro language models (ranging from 10 million to 10 billion parameters) to simplify the complexity and cost of edge computing, hyperautomation and model compression.
 
 In the not-so-distant future, it will be possible to create edge computing devices, electronic components and robots using standardised flatpacks (FPKs) - the floppy disks or game cartridges in the age of AI.
 
@@ -116,7 +116,7 @@ Once completed, it will be a mandatory component in all flatpacks.
 
 ## Micro language models 🤏
 
-[Micro language models](http://microlanguagemodels.com) with around 100 million to 10 billion parameters, offer a compelling solution to the deployment and scalability challenges associated with traditional [large language models (LLMs)](https://en.wikipedia.org/wiki/Large_language_model). Their smaller size allows for rapid pre-training and fine-tuning, enabling organizations to adapt quickly to market changes or specific requirements. Micro language models can be deployed in edge-adjacent environments like laptops, microprocessors, or smartphones, benefiting from [edge computing](https://en.wikipedia.org/wiki/Edge_computing) (computation and storage closer to data sources) to facilitate low-latency and privacy-conscious applications. These characteristics make micro language models broadly accessible, energy-efficient, and specialized, even to smaller teams or individual developers.
+[Micro language models](http://microlanguagemodels.com) with around 10 million to 10 billion parameters, offer a compelling solution to the deployment and scalability challenges associated with traditional [large language models (LLMs)](https://en.wikipedia.org/wiki/Large_language_model). Their smaller size allows for rapid pre-training and fine-tuning, enabling organizations to adapt quickly to market changes or specific requirements. Micro language models can be deployed in edge-adjacent environments like laptops, microprocessors, or smartphones, benefiting from [edge computing](https://en.wikipedia.org/wiki/Edge_computing) (computation and storage closer to data sources) to facilitate low-latency and privacy-conscious applications. These characteristics make micro language models broadly accessible, energy-efficient, and specialized, even to smaller teams or individual developers.
 
 Overall, micro language models represent a logical step in the evolution of language models, effectively merging the capabilities of LLMs with the practical needs of real-world applications.
 
@@ -131,8 +131,6 @@ Overall, micro language models represent a logical step in the evolution of lang
 > **Game Boy:** "Perhaps the most important and best known handheld system of all time, the Game Boy featured an 8bit processor and tiny monochrome display – both rather outdated at the time. However, designer Gunpei Yokoi felt the trade-off between performance and battery life was worthwhile - and he was right." ([The Guardian 2017](https://www.theguardian.com/technology/gallery/2017/may/12/influential-handheld-games-consoles))
 
 > **Insects:** "Insects represent more than half of the world's biodiversity and are considered to be the most evolutionarily successful group of organisms on earth." ([University of Bergen 2015](https://www.uib.no/en/news/90507/secret-success-insects))
-
-> **Micro-LLMs:** "Basically I think there will be a lot of interest in training or finetuning custom micro-LLMs (think ~100M - ~1B params, but let's say up to ~10B params) across a large diversity of applications, and deploying them in edge-adjacent environments (think MCUs, phones, web browsers, laptops, etc.)." ([Andrej Karpathy 2023](https://github.com/karpathy/llama2.c#contributing))
 
 > **ONNX:** "Many people are working on great tools, but developers are often locked in to one framework or ecosystem. ONNX is the first step in enabling more of these tools to work together by allowing them to share models." ([ONNX 2023](https://onnx.ai/about.html))
 

@@ -19,7 +19,7 @@ except ImportError as e:
 compile_model = True
 device = 'cpu'
 dtype = 'bfloat16'
-max_new_tokens = 128
+max_new_tokens = 512
 temperature = 0.8
 top_k = 5
 

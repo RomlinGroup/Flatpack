@@ -16,6 +16,7 @@ __pycache__/
 /client/pyenv.sh
 /client/target
 /navformer/nanoGPT
+/navformer/nanoGPT_mlx
 /navformer/navformer.pt
 /package/flatpack/build
 /package/flatpack/dist
