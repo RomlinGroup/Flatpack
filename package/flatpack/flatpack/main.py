@@ -21,8 +21,8 @@ import uvicorn
 
 CONFIG_FILE_PATH = os.path.join(os.path.expanduser("~"), ".fpk_config.toml")
 LOGGING_BATCH_SIZE = 10
-GITHUB_REPO_URL = "https://api.github.com/repos/romlingroup/flatpack-ai"
-BASE_URL = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse"
+GITHUB_REPO_URL = "https://api.github.com/repos/romlingroup/flatpack"
+BASE_URL = "https://raw.githubusercontent.com/romlingroup/flatpack/main/warehouse"
 LOGGING_ENDPOINT = "https://fpk.ai/api/index.php"
 
 log_queue = []
