@@ -5,11 +5,11 @@ with open("README.md", "r") as f:
 
 setup(
     name="flatpack",
-    version="3.1.248",
+    version="3.1.250",
     license="Apache Software License (Apache-2.0)",
     packages=find_packages(),
     install_requires=[
-        "cryptography==42.0.2",
+        "cryptography==42.0.3",
         "fastapi==0.109.2",
         "httpx==0.26.0",
         "ngrok==1.0.0",

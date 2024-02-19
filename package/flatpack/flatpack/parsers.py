@@ -34,15 +34,23 @@ fi
 
     script = ["#!/bin/bash"]
 
-    # Check if running in Google Colab
+    # Check if running in Google Colab and whether it's a GPU or CPU environment
     colab_check = """
-if [[ "${COLAB_GPU}" == "1" ]]; then
-  echo "Running in Google Colab environment"
-  IS_COLAB=1
-else
-  echo "Not running in Google Colab environment"
-  IS_COLAB=0
-fi
+    if [[ -n "${COLAB_GPU}" && "${COLAB_GPU}" == "1" ]]; then
+      if command -v nvidia-smi &> /dev/null; then
+        echo "Running in Google Colab with GPU"
+        IS_COLAB=1
+        DEVICE="cuda"
+      else
+        echo "Running in Google Colab with CPU only"
+        IS_COLAB=1
+        DEVICE="cpu"
+      fi
+    else
+      echo "Not running in Google Colab environment"
+      IS_COLAB=0
+      # You may set DEVICE based on other conditions outside this snippet
+    fi
     """.strip()
     script.append(colab_check)
 

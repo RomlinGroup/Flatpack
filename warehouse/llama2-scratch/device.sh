@@ -14,11 +14,17 @@ DEFAULT_PATH="/home/$(whoami)"
 # Environment detection
 IS_COLAB="${COLAB_GPU:-0}"
 OS=$(uname)
+
 if [[ "${IS_COLAB}" == "1" ]]; then
-  echo "🌀 Detected Colab environment"
+  if command -v nvidia-smi &> /dev/null; then
+    echo "🌀 Detected Colab GPU environment"
+    DEVICE="cuda"
+  else
+    echo "🌀 Detected Colab CPU environment"
+    DEVICE="cpu"
+  fi
   export VENV_PYTHON="python"
   WORK_DIR="/content/$FLATPACK_NAME/$REPO_NAME"
-  DEVICE="cuda"
 elif [ "$OS" = "Darwin" ]; then
   echo "🍎 Detected macOS environment"
   export VENV_PYTHON="${SCRIPT_DIR}/bin/python"
@@ -35,7 +41,8 @@ elif [ "$OS" = "Linux" ]; then
   DEVICE="cpu"
 else
   echo "❓ Detected other OS environment"
-  # The same settings as non-Ubuntu Linux, so no changes here.
+  # Assume CPU for other environments as a fallback
+  DEVICE="cpu"
 fi
 
 # Echo the determined working directory and device
