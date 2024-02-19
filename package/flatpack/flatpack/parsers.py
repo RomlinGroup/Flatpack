@@ -36,7 +36,8 @@ fi
 
     # Check if running in Google Colab and whether it's a GPU or CPU environment
     colab_check = """
-    if [[ -n "${COLAB_GPU}" && "${COLAB_GPU}" == "1" ]]; then
+    if [[ -d "/content" ]]; then
+      # Detected Google Colab environment
       if command -v nvidia-smi &> /dev/null; then
         echo "Running in Google Colab with GPU"
         IS_COLAB=1
@@ -46,10 +47,11 @@ fi
         IS_COLAB=1
         DEVICE="cpu"
       fi
+      export VENV_PYTHON="/usr/bin/python3"
     else
       echo "Not running in Google Colab environment"
       IS_COLAB=0
-      # You may set DEVICE based on other conditions outside this snippet
+      # Placeholder for setting DEVICE based on other conditions if needed
     fi
     """.strip()
     script.append(colab_check)

@@ -46,18 +46,25 @@ class SessionManager:
 
 
 def fpk_get_encryption_key():
-    # Fetch the encryption key from an environment variable
-    return os.environ.get("FPK_ENCRYPTION_KEY")
+    key = os.environ.get("FPK_ENCRYPTION_KEY")
+    if key is not None:
+        return key.encode()
+    return None
 
 
 def fpk_encrypt_data(data, key):
     fernet = Fernet(key)
-    return fernet.encrypt(data.encode())
+    if isinstance(data, str):
+        data = data.encode()
+    return fernet.encrypt(data)
 
 
 def fpk_decrypt_data(data, key):
     fernet = Fernet(key)
-    return fernet.decrypt(data).decode()
+    if isinstance(data, str):
+        data = data.encode()
+    decrypted = fernet.decrypt(data)
+    return decrypted.decode()
 
 
 def fpk_set_secure_file_permissions(file_path):
@@ -73,11 +80,9 @@ def fpk_set_api_key(api_key: str):
     encryption_key = fpk_get_encryption_key()
     if not encryption_key:
         raise FPKEncryptionKeyError("❌ Encryption key not set.")
-
     encrypted_api_key = fpk_encrypt_data(api_key, encryption_key)
+    config["api_key"] = encrypted_api_key.decode()
 
-    # Save the encrypted API key to the config file
-    config["api_key"] = encrypted_api_key
     with open(CONFIG_FILE_PATH, "w") as config_file:
         toml.dump(config, config_file)
     fpk_set_secure_file_permissions(CONFIG_FILE_PATH)
@@ -90,8 +95,12 @@ def fpk_get_api_key() -> Optional[str]:
 
     with open(CONFIG_FILE_PATH, "r") as config_file:
         loaded_config = toml.load(config_file)
-        encrypted_api_key = loaded_config.get("api_key")
-        return fpk_decrypt_data(encrypted_api_key, encryption_key) if encrypted_api_key else None
+        encrypted_api_key_str = loaded_config.get("api_key")
+        if encrypted_api_key_str:
+            encrypted_api_key_bytes = encrypted_api_key_str.encode()
+            return fpk_decrypt_data(encrypted_api_key_bytes, encryption_key)
+        else:
+            return None
 
 
 def fpk_cache_last_flatpack(directory_name: str):
