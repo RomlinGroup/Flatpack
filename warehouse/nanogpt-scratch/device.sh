@@ -27,6 +27,7 @@ if [[ -d "/content" ]]; then
 elif [ "$OS" = "Darwin" ]; then
   echo "🍎 Detected macOS environment"
   export VENV_PYTHON="${SCRIPT_DIR}/bin/python"
+  DEFAULT_PATH="~"
   WORK_DIR="$DEFAULT_PATH/$FLATPACK_NAME/$REPO_NAME"
   DEVICE="mps"
 elif [ "$OS" = "Linux" ]; then
