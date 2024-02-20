@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Get the directory where the script is located
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+export SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 echo -e "🚀 train.sh is running in: $SCRIPT_DIR\n"
 
