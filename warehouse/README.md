@@ -12,12 +12,12 @@ Flatpack is experimental; please avoid using it for production.
 
 Ahoy, brave explorer!
 
-| Name                                                                                                      | Type     | FPK |
-|:----------------------------------------------------------------------------------------------------------|:---------|:----|
-| [llama2-scratch](https://github.com/romlingroup/flatpack-ai/tree/main/warehouse/llama2-scratch)           | Flatpack | No  |
-| [llama-cpp-python](https://github.com/romlingroup/flatpack-ai/tree/main/warehouse/llama-cpp-python)       | Flatpack | No  |
-| [nanogpt-scratch](https://github.com/romlingroup/flatpack-ai/tree/main/warehouse/nanogpt-scratch)         | Flatpack | No  |
-| [rwkv-infctx-trainer](https://github.com/romlingroup/flatpack-ai/tree/main/warehouse/rwkv-infctx-trainer) | Flatpack | No  |
+| Name                                                                                                      | Type     | Requires |
+|:----------------------------------------------------------------------------------------------------------|:---------|:---------|
+| [llama2-scratch](https://github.com/romlingroup/flatpack-ai/tree/main/warehouse/llama2-scratch)           | Flatpack | GPU      |
+| [llama-cpp-python](https://github.com/romlingroup/flatpack-ai/tree/main/warehouse/llama-cpp-python)       | Flatpack | GPU      |
+| [nanogpt-scratch](https://github.com/romlingroup/flatpack-ai/tree/main/warehouse/nanogpt-scratch)         | Flatpack | GPU      |
+| [rwkv-infctx-trainer](https://github.com/romlingroup/flatpack-ai/tree/main/warehouse/rwkv-infctx-trainer) | Flatpack | GPU      |
 
 ## Friendly notice ❤️
 
