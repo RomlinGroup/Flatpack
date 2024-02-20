@@ -1,6 +1,6 @@
 #!/bin/bash
 set -e
-set -x  # Print each command before executing it for debugging purposes
+set -x
 
 # Check for necessary tools
 if ! command -v git &> /dev/null; then
@@ -31,11 +31,11 @@ fi
 # Prepare the build directory
 if [ -d "build" ]; then
     echo "Build directory already exists. Cleaning up."
-    rm -rf build  # Consider prompting for confirmation before removing
+    rm -rf build
 fi
 mkdir build
 cd build
 
 # Configure and compile
 cmake .. -DCMAKE_APPLE_SILICON_PROCESSOR=arm64
-make -j  # Utilize all available processors for the build
+make -j

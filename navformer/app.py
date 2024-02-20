@@ -29,6 +29,7 @@ torch.backends.cudnn.allow_tf32 = True
 
 # Determining device type based on the 'device' variable
 device_type = 'cuda' if 'cuda' in device else 'cpu'
+
 # Mapping dtype strings to torch.dtype objects
 ptdtype = {'float32': torch.float32, 'bfloat16': torch.bfloat16, 'float16': torch.float16}[dtype]
 
@@ -82,11 +83,11 @@ def respond(input_text, max_new_tokens, temperature, top_k):
 
 # Main execution block
 if __name__ == "__main__":
-    while True:  # Start an infinite loop
+    while True:
         user_input = input("Enter your command (or type 'exit' to quit): ")
-        if user_input.lower() == 'exit':  # Check if the user wants to exit
+        if user_input.lower() == 'exit':
             print("Exiting...")
-            break  # Exit the loop and end the program
+            break
 
         start = '<command> ' + user_input + '<endOfText>'
         full_input = start

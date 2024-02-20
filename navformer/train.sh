@@ -6,11 +6,9 @@ original_dir=$(pwd)
 
 # Check if the nanoGPT directory exists
 if [ -d "nanoGPT" ]; then
-    # If it exists, cd into it
     cd nanoGPT
 else
-    # If it doesn't exist, run setup.sh
-    # Ensure setup.sh is executable or add chmod +x setup.sh before running it
+    chmod +x setup.sh
     ./setup.sh
 fi
 
