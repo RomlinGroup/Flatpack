@@ -14,5 +14,8 @@ echo "Cloning the nanoChatGPT repository..."
 git clone https://github.com/romlingroup/nanoChatGPT
 
 rm -r nanoChatGPT/data/Chat
+mkdir nanoChatGPT/data/custom
+
+wget -O dataset.txt https://raw.githubusercontent.com/karpathy/char-rnn/master/data/tinyshakespeare/input.txt
 
 echo "Setup completed successfully."
