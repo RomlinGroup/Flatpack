@@ -47,7 +47,6 @@ fi
         IS_COLAB=1
         DEVICE="cpu"
       fi
-      export VENV_PYTHON="/usr/bin/python3"
     else
       echo "Not running in Google Colab environment"
       IS_COLAB=0

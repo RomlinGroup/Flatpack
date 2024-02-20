@@ -12,6 +12,9 @@ highest echelons of industry and research.
 *Aglaonice, an ancient Greek astronomer from the 2nd or 1st century BC, was celebrated for her precise lunar eclipse
 predictions. Her mastery inspired the Greek proverb: "As the moon obeys Aglaonice," signifying unwavering certainty.*
 
+`3.1.0` (2023-12-11)\
+*Introduced a local web interface for a better user experience.*
+
 `3.0.0` (2023-10-20)\
 *Moved to a predictable and structured release strategy.*
 
@@ -43,9 +46,7 @@ MIT (INBOUND) is compatible with Apache-2.0 (OUTBOUND) for combined works but do
 original MIT-licensed component when distributed
 separately ([JLA 2023](https://joinup.ec.europa.eu/licence/compatibility-check/MIT/Apache-2.0)).
 
-*Check out
-the [JLA - Compatibility Checker](https://joinup.ec.europa.eu/collection/eupl/solution/joinup-licensing-assistant/jla-compatibility-checker) (
-European Commission 2023).*
+*Check out the [JLA - Compatibility Checker](https://joinup.ec.europa.eu/collection/eupl/solution/joinup-licensing-assistant/jla-compatibility-checker) (European Commission 2023).*
 
 - **[cryptography](https://pypi.org/project/cryptography/)**\
   Apache-2.0 OR BSD-3-Clause ([LICENSE](https://github.com/pyca/cryptography/blob/main/LICENSE.APACHE))
