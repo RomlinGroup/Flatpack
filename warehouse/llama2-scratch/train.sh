@@ -15,6 +15,14 @@ source "$SCRIPT_DIR/device.sh" || {
   exit 1
 }
 
+# Use "cuda" for GPU requirement, "cpu" for CPU requirement
+REQUIRED_DEVICE="cuda"
+
+if [ "$DEVICE" != "$REQUIRED_DEVICE" ]; then
+  echo "⚠️ Error: This script requires a $REQUIRED_DEVICE device." >&2
+  exit 1
+fi
+
 # === BEGIN USER CUSTOMIZATION ===
 cp train.py train.py.backup
 sed -i 's/batch_size = 128/batch_size = 64/' train.py
