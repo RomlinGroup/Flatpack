@@ -27,7 +27,7 @@ if [[ -d "/content" ]]; then
 elif [ "$OS" = "Darwin" ]; then
   echo "🍎 Detected macOS environment"
   export VENV_PYTHON="${SCRIPT_DIR}/bin/python"
-  WORK_DIR="$DEFAULT_PATH/$REPO_NAME"
+  WORK_DIR="$DEFAULT_PATH/$FLATPACK_NAME/$REPO_NAME"
   DEVICE="mps"
 elif [ "$OS" = "Linux" ]; then
   # Check for Python version and adjust VENV_PYTHON accordingly
