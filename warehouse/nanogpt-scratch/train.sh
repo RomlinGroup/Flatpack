@@ -11,7 +11,7 @@ export FLATPACK_NAME=nanogpt-scratch
 # === END USER CUSTOMIZATION ===
 
 source "$SCRIPT_DIR/device.sh" || {
-  echo "⚠️ Error: Failed to source device.sh" >&2
+  echo "😱 Error: Failed to source device.sh" >&2
   exit 1
 }
 
@@ -19,7 +19,7 @@ source "$SCRIPT_DIR/device.sh" || {
 REQUIRED_DEVICE="cuda"
 
 if [ "$DEVICE" != "$REQUIRED_DEVICE" ]; then
-  echo "⚠️ Error: This script requires a $REQUIRED_DEVICE device." >&2
+  echo "😱 Error: This script requires a $REQUIRED_DEVICE device." >&2
   exit 1
 fi
 
