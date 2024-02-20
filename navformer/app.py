@@ -8,7 +8,7 @@ except ImportError:
     raise ImportError("Please ensure the 'tiktoken' library is installed by running `pip install tiktoken`.")
 
 try:
-    from nanoGPT.model import GPTConfig, GPT
+    from nanoChatGPT.model import GPTConfig, GPT
 except ImportError as e:
     if str(e) == "No module named 'nanoGPT'":
         raise ImportError("The 'nanoGPT' repository is not found.")

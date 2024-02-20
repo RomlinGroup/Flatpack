@@ -9,8 +9,10 @@ pip install -r requirements.txt
 echo "Installing pre-release versions of torch, torchvision, and torchaudio..."
 pip install --pre torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/nightly/cpu
 
-# Clone the nanoGPT repository
-echo "Cloning the nanoGPT repository..."
-git clone https://github.com/romlingroup/nanoGPT
+# Clone the nanoChatGPT repository
+echo "Cloning the nanoChatGPT repository..."
+git clone https://github.com/romlingroup/nanoChatGPT
+
+rm -r nanoChatGPT/data/Chat
 
 echo "Setup completed successfully."
