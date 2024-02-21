@@ -5,7 +5,7 @@ import subprocess
 
 from jsonschema import validate, ValidationError, SchemaError
 
-# Define your JSON schema
+# JSON schema
 schema = {
     "$schema": "http://json-schema.org/draft-07/schema#",
     "type": "object",
