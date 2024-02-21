@@ -236,8 +236,6 @@ def find_and_print_valid_json_objects(content):
             print("🟢 Given JSON data is valid.")
             # Save the valid JSON object
             save_valid_json(json_data, valid_json_file_path)
-        else:
-            print("🔴 Given JSON data is invalid or the schema is invalid.")
 
 
 # Define a file path where you want to save the valid JSON objects
