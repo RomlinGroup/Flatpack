@@ -140,7 +140,7 @@ Overall, micro language models represent a logical step in the evolution of lang
 
 ## Navformer
 
-Robots require the ability to avoid obstacles while navigating and execute actions based on commands. To address this need, we are developing [Navformer](http://navformer.com), an advanced navigation system powered by AI. Navformer is equipped with micro language models specifically designed for this purpose, allowing it to execute commands with great efficiency. This technology will be included as a standard component in Flatpack.
+We are developing [Navformer](http://navformer.com), an AI-powered navigation system for robots that avoids obstacles and executes commands efficiently. It will be a standard component in Flatpack.
 
 * **CPU only:** Optimised for CPU usage, ensuring compatibility and efficiency across various edge computing devices without requiring specialised hardware.
 * **Monocular navigation:** Utilises a single-lens system for spatial awareness, providing a compact and cost-effective solution for 3D environment mapping.
