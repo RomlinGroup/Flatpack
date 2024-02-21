@@ -149,7 +149,7 @@ We are developing [Navformer](http://navformer.com), an AI-powered navigation sy
 
 Synthetic data was created using [Mistral-7B-Instruct-v0.2.0](https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.2) (Apache License 2.0), developed by [Mistral AI](https://mistral.ai) (EU). We are immensely grateful for their contributions to the field of AI and their commitment to open source.
 
-Our robot, Higgs, is named after the narrator in ["Erewhon"](https://en.wikipedia.org/wiki/Erewhon) by Samuel Butler.
+Our conceptual robot, Higgs, is named after the narrator in ["Erewhon"](https://en.wikipedia.org/wiki/Erewhon) by Samuel Butler.
 
 ```json
 {
