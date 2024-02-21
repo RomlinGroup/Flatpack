@@ -255,7 +255,12 @@ for _ in range(number_of_iterations):
     TASK: Generate JSON command objects for "{name}", the {role}, to execute tasks relevant to its role. Strictly adhere to the schema.
 
     SCHEMA INSTRUCTIONS:
-    - "command": Begin with "Hello {name}," and precisely specify the task for "{name}" as a {role}. Include comprehensive details such as the exact "target", "value", and any other critical specifics needed for the task.
+    - "command": Initiate every command with "Hello {name}," adapting the task description to fit "{name}'s" role using clear, everyday language. To ensure a mix of command lengths:
+    
+    For short commands, focus on the essence of the task, suitable for rapid execution or simple tasks. Example: "Check the front door."
+    For longer commands, incorporate additional specifics, such as "target," "value," and any relevant context or conditions that necessitate a detailed instruction. Example: "Navigate to the storage room, retrieve the spare projector, and set it up in Conference Room B for the 3 PM presentation."
+    Specify the desired command length (short or long) based on the task's complexity or urgency, emphasizing practicality and directness for short commands and detailed clarity for longer commands. Adjust command detail level accordingly.
+    
     - "actions": Enumerate the actions "{name}" will carry out, with details as follows:
       - "action": Specify the action type from "NAVIGATE", "HALT", "RETRIEVE", "DEPOSIT", "INTERACT".
       - "description": Provides a detailed explanation of the action's purpose and execution details, enhancing clarity and operational context.
@@ -265,6 +270,7 @@ for _ in range(number_of_iterations):
       - "value": (If not applicable, OMIT this field) Detail any supplementary specifics related to the action, either as a number or a string.
 
     REQUIREMENTS:
+    - Only allow action types from "NAVIGATE", "HALT", "RETRIEVE", "DEPOSIT", "INTERACT".
     - Ensure no living being is harmed. Prioritize safety and well-being in all tasks and actions.
     - If "intensity", "target" or "value" do not apply to an action, those fields should be completely omitted from the action object. Do NOT fill these fields with placeholders such as empty strings, None, or null.
     - The final output must align 100% with this schema, showcasing "{name}"'s function as a {role}.

@@ -153,19 +153,25 @@ Our conceptual robot, [Higgs](http://hellohiggs.com), is named after the narrato
 
 ```json
 {
-  "command": "Hello Higgs, identify pollution source.",
+  "command": "Hello Higgs, start the forest seeding process by first navigating to the north sector, then deposit the pre-germinated seed pods, and finally report back the completion.",
   "actions": [
     {
       "action": "NAVIGATE",
-      "intent": "to_survey_environment",
-      "speed": 0.5,
-      "description": "Navigate around the environment at a steady speed to survey the area for potential pollution sources."
+      "description": "Navigate towards the north sector for seeding operation, adjusting speed according to terrain conditions.",
+      "intensity": 0.7,
+      "purpose": "to_approach_north_sector"
     },
     {
-      "action": "INTERACT",
-      "intent": "to_analyze_data",
-      "speed": 0.1,
-      "description": "Analyze collected data in real-time to identify patterns and potential pollution sources, ensuring careful analysis for precise location identification."
+      "action": "DEPOSIT",
+      "description": "Deposit pre-germinated seed pods using onboard dispensers, ensuring even distribution and proper spacing.",
+      "intensity": 0.5,
+      "purpose": "to_deposit_seed_pods"
+    },
+    {
+      "action": "REPORT",
+      "description": "Report back to the central system with details of the seeding process, including number of seed pods deposited and sector conditions.",
+      "intensity": 0.5,
+      "purpose": "to_confirm_seeding_completion"
     }
   ]
 }
