@@ -20,27 +20,27 @@ schema = {
                 "properties": {
                     "action": {
                         "type": "string",
-                        "enum": ["NAVIGATE", "HALT", "RETRIEVE", "DEPOSIT", "INTERACT"]
+                        "enum": ["NAVIGATE", "HALT", "RETRIEVE", "DEPOSIT", "INTERACT", "REPORT"]
                     },
-                    "intent": {
+                    "description": {
+                        "type": "string"
+                    },
+                    "intensity": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                    },
+                    "purpose": {
                         "type": "string"
                     },
                     "target": {
                         "type": ["string", "null"]
                     },
-                    "speed": {
-                        "type": "number",
-                        "minimum": 0,
-                        "maximum": 1
-                    },
                     "value": {
                         "type": ["number", "string"]
-                    },
-                    "description": {
-                        "type": "string"
-                    },
+                    }
                 },
-                "required": ["action", "intent", "description"],
+                "required": ["action", "description", "purpose"],
                 "additionalProperties": False
             }
         }
@@ -240,7 +240,7 @@ def find_and_print_valid_json_objects(content):
 # Define a file path where you want to save the valid JSON objects
 valid_json_file_path = 'valid_json_objects.txt'
 
-number_of_iterations = 1000
+number_of_iterations = 1
 
 for _ in range(number_of_iterations):
     # Select a random role from the list
@@ -259,16 +259,17 @@ for _ in range(number_of_iterations):
     - "command": Start with "Hello {name}," specifying the task for {name} as a {role}, including any necessary details like "target" or "value" when applicable.
     - "actions": Enumerate the actions "{name}" will carry out, with details as follows:
       - "action": Specify the action type from "NAVIGATE", "HALT", "RETRIEVE", "DEPOSIT", "INTERACT".
-      - "intent": Clarify the objective behind the action.
-      - "target": (If not applicable, OMIT this field) Designate the object or location of interaction.
-      - "speed": (If not applicable, OMIT this field) Sets action speed on a 0 (minimum) to 1 (maximum) scale.
-      - "value": (If not applicable, OMIT this field) Detail any supplementary specifics related to the action, either as a number or a string.
       - "description": Provides a detailed explanation of the action's purpose and execution details, enhancing clarity and operational context.
+      - "intensity": (If not applicable, OMIT this field) Sets action intensity on a 0 (minimum) to 1 (maximum) scale.
+      - "purpose": Clarify the purpose of the action.
+      - "target": (If not applicable, OMIT this field) Designate the object or location of interaction.
+      - "value": (If not applicable, OMIT this field) Detail any supplementary specifics related to the action, either as a number or a string.
 
     REQUIREMENTS:
     - Ensure no living being is harmed. Prioritize safety and well-being in all tasks and actions.
-    - If "target", "speed", or "value" do not apply to an action, those fields should be completely omitted from the action object. Do NOT fill these fields with placeholders such as empty strings, None, or null.
+    - If "intensity", "target" or "value" do not apply to an action, those fields should be completely omitted from the action object. Do NOT fill these fields with placeholders such as empty strings, None, or null.
     - The final output must align 100% with this schema, showcasing "{name}"'s function as a {role}.
+    - Each sequence of actions should conclude with a 'REPORT' action, which will detail task outcomes and confirm completion according to the instructions.
 
     SAMPLE COMMANDS:
     {{
@@ -276,18 +277,24 @@ for _ in range(number_of_iterations):
       "actions": [
         {{
           "action": "NAVIGATE",
-          "intent": "to_approach",
-          "target": "specified_location",
-          "speed": 0.8,
-          "description": "Navigate towards the specified location at a moderate speed to begin the task."
+          "description": "Navigate towards the specified location at a moderate speed to begin the task.",
+          "intensity": 0.8,
+          "purpose": "to_approach",
+          "target": "specified_location"
         }},
         {{
           "action": "INTERACT",
-          "intent": "to_perform_action",
+          "description": "Interact with the specified object to perform the required action, utilizing task-specific details for precise execution.",
+          "intensity": 0.5,
+          "purpose": "to_perform_action",
           "target": "specified_object",
-          "speed": 0.5,
-          "value": "task_specific_detail",
-          "description": "Interact with the specified object to perform the required action, utilizing task-specific details for precise execution."
+          "value": "task_specific_detail"
+        }},
+        {{
+          "action": "REPORT",
+          "description": "Report the completion of the task to the central system, detailing the actions taken and outcomes achieved, confirming that the instructions have been followed.",
+          "intensity": 0.5,
+          "purpose": "to_confirm_completion"
         }}
       ]
     }},
@@ -296,19 +303,25 @@ for _ in range(number_of_iterations):
       "actions": [
         {{
           "action": "RETRIEVE",
-          "intent": "to_collect",
+          "description": "Retrieve the item from its location at a steady pace, ensuring to handle the specified details for identification.",
+          "intensity": 0.5,
+          "purpose": "to_collect",
           "target": "item_location",
-          "speed": 0.5,
-          "value": "item_detail",
-          "description": "Retrieve the item from its location at a steady pace, ensuring to handle the specified details for identification."
+          "value": "item_detail"
         }},
         {{
           "action": "DEPOSIT",
-          "intent": "to_place",
+          "description": "Deposit the item at the destination location carefully, considering its usage context for proper placement.",
+          "intensity": 0.1,
+          "purpose": "to_place",
           "target": "destination_location",
-          "speed": 0.1,
-          "value": "item_usage_context",
-          "description": "Deposit the item at the destination location carefully, considering its usage context for proper placement."
+          "value": "item_usage_context"
+        }},
+        {{
+          "action": "REPORT",
+          "description": "Send a final report detailing the item's retrieval and deposition, including any relevant observations or issues, to ensure all actions meet the set objectives.",
+          "intensity": 0.5,
+          "purpose": "to_confirm_completion"
         }}
       ]
     }}

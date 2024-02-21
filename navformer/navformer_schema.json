@@ -18,11 +18,25 @@
               "HALT",
               "RETRIEVE",
               "DEPOSIT",
-              "INTERACT"
+              "INTERACT",
+              "REPORT"
             ],
             "description": "Specifies the action type."
           },
-          "intent": {
+          "description": {
+            "type": "string",
+            "description": "Provides a detailed explanation of the action's purpose and execution details, enhancing clarity and operational context."
+          },
+          "intensity": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "minimum": 0,
+            "maximum": 1,
+            "description": "Sets action intensity on a 0 (minimum) to 1 (maximum) scale, if applicable."
+          },
+          "purpose": {
             "type": "string",
             "description": "Defines the action's purpose, such as 'to_relocate'."
           },
@@ -33,15 +47,6 @@
             ],
             "description": "Identifies the action's target, if applicable."
           },
-          "speed": {
-            "type": [
-              "null",
-              "number"
-            ],
-            "minimum": 0,
-            "maximum": 1,
-            "description": "Sets action speed on a 0 (minimum) to 1 (maximum) scale, if applicable."
-          },
           "value": {
             "type": [
               "array",
@@ -49,16 +54,12 @@
               "string"
             ],
             "description": "Specifies the input value or setting for the action, if applicable."
-          },
-          "description": {
-            "type": "string",
-            "description": "Provides a detailed explanation of the action's purpose and execution details, enhancing clarity and operational context."
           }
         },
         "required": [
           "action",
-          "intent",
-          "description"
+          "description",
+          "purpose"
         ],
         "additionalProperties": false
       },
