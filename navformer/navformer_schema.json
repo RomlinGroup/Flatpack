@@ -49,11 +49,16 @@
               "string"
             ],
             "description": "Specifies the input value or setting for the action, if applicable."
+          },
+          "description": {
+            "type": "string",
+            "description": "Provides a detailed explanation of the action's purpose and execution details, enhancing clarity and operational context."
           }
         },
         "required": [
           "action",
-          "intent"
+          "intent",
+          "description"
         ],
         "additionalProperties": false
       },

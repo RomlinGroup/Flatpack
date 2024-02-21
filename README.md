@@ -147,7 +147,27 @@ Robots need to avoid obstacles while navigating. We are creating [Navformer](htt
 * **Real-time inference:** Capable of processing and reacting to environmental data in real-time, crucial for dynamic and unpredictable settings.
 * **Transformer-based:** Incorporates the latest in transformer neural network technology, enabling interpretation of complex spatial data and superior understanding.
 
-Synthetic data was created using [Mistral-7B-Instruct-v0.2.0](https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.2) (Apache License 2.0), developed by [Mistral AI](https://mistral.ai) (EU). We are immensely grateful for their contributions to the field of AI and their commitment to open source.
+Synthetic data is created using [Mistral-7B-Instruct-v0.2.0](https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.2) (Apache License 2.0), developed by [Mistral AI](https://mistral.ai) (EU). We are immensely grateful for their contributions to the field of AI and their commitment to open source.
+
+```json
+{
+  "command": "Higgs, identify pollution source.",
+  "actions": [
+    {
+      "action": "NAVIGATE",
+      "intent": "to_survey_environment",
+      "speed": 0.5,
+      "description": "Navigate around the environment at a steady speed to survey the area for potential pollution sources."
+    },
+    {
+      "action": "INTERACT",
+      "intent": "to_analyze_data",
+      "speed": 0.1,
+      "description": "Analyze collected data in real-time to identify patterns and potential pollution sources, ensuring careful analysis for precise location identification."
+    }
+  ]
+}
+```
 
 ## License
 
