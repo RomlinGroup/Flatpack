@@ -151,7 +151,7 @@ Synthetic data was created using [Mistral-7B-Instruct-v0.2.0](https://huggingfac
 
 ```json
 {
-  "command": "Higgs, identify pollution source.",
+  "command": "Hello Higgs, identify pollution source.",
   "actions": [
     {
       "action": "NAVIGATE",
