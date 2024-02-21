@@ -279,7 +279,7 @@ for _ in range(number_of_iterations):
 
     SAMPLE COMMANDS:
     {{
-        "command": "Hello {name}, commence the street cleaning operation by first navigating to Main Street, collecting all plastic debris, and then reporting back the completion.",
+        "command": "Hello {name}, commence the street cleaning operation by first navigating to Main Street, collecting all plastic debris.",
         "actions": [
             {{
                 "action": "NAVIGATE",
@@ -306,7 +306,7 @@ for _ in range(number_of_iterations):
     }}
 
     {{
-        "command": "Hello {name}, initiate emergency medical aid by retrieving the first aid kit from Storage Room 3 and delivering it to the site of the accident in the Courtyard, followed by a status report.",
+        "command": "Hello {name}, initiate emergency medical aid by retrieving the first aid kit from Storage Room 3 and delivering it to the site of the accident in the Courtyard.",
         "actions": [
             {{
                 "action": "RETRIEVE",

@@ -153,7 +153,7 @@ Our conceptual robot, [Higgs](http://hellohiggs.com), is named after the narrato
 
 ```json
 {
-  "command": "Hello Higgs, start the forest seeding process by first navigating to the north sector, then deposit the pre-germinated seed pods, and finally report back the completion.",
+  "command": "Hello Higgs, start the forest seeding process by first navigating to the north sector, then deposit the pre-germinated seed pods.",
   "actions": [
     {
       "action": "NAVIGATE",
