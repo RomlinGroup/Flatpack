@@ -1,3 +1,5 @@
+# Based on https://github.com/VatsaDev/nanoChatGPT/blob/main/data/Chat/prepare.py by VatsaDev (MIT license)
+
 import os
 import re
 import numpy as np
