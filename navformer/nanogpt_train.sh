@@ -8,8 +8,8 @@ original_dir=$(pwd)
 if [ -d "nanoChatGPT" ]; then
     cd nanoChatGPT
 else
-    chmod +x setup.sh
-    ./setup.sh
+    chmod +x nanogpt_setup.sh
+    ./nanogpt_setup.sh
 fi
 
-python prepare.py
+python nanogpt_prepare.py
