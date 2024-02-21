@@ -250,13 +250,12 @@ for _ in range(number_of_iterations):
     print("\n\n")
 
     # Define the prompt template with placeholders for the name and role
-    prompt_template = """
-    [INST]
+    prompt_template = """[INST]
     ROLE: {role}
     TASK: Generate JSON command objects for "{name}", the {role}, to execute tasks relevant to its role. Strictly adhere to the schema.
 
     SCHEMA INSTRUCTIONS:
-    - "command": Start with "Hello {name}," specifying the task for {name} as a {role}, including any necessary details like "target" or "value" when applicable.
+    - "command": Begin with "Hello {name}," and precisely specify the task for "{name}" as a {role}. Include comprehensive details such as the exact "target", "value", and any other critical specifics needed for the task.
     - "actions": Enumerate the actions "{name}" will carry out, with details as follows:
       - "action": Specify the action type from "NAVIGATE", "HALT", "RETRIEVE", "DEPOSIT", "INTERACT".
       - "description": Provides a detailed explanation of the action's purpose and execution details, enhancing clarity and operational context.
@@ -270,61 +269,61 @@ for _ in range(number_of_iterations):
     - If "intensity", "target" or "value" do not apply to an action, those fields should be completely omitted from the action object. Do NOT fill these fields with placeholders such as empty strings, None, or null.
     - The final output must align 100% with this schema, showcasing "{name}"'s function as a {role}.
     - Each sequence of actions should conclude with a 'REPORT' action, which will detail task outcomes and confirm completion according to the instructions.
+    - Alternate between simple and complex commands, so the AI model can generate a diverse range of JSON objects.
 
     SAMPLE COMMANDS:
     {{
-      "command": "Hello {name}, complete the task.",
-      "actions": [
-        {{
-          "action": "NAVIGATE",
-          "description": "Navigate towards the specified location at a moderate speed to begin the task.",
-          "intensity": 0.8,
-          "purpose": "to_approach",
-          "target": "specified_location"
-        }},
-        {{
-          "action": "INTERACT",
-          "description": "Interact with the specified object to perform the required action, utilizing task-specific details for precise execution.",
-          "intensity": 0.5,
-          "purpose": "to_perform_action",
-          "target": "specified_object",
-          "value": "task_specific_detail"
-        }},
-        {{
-          "action": "REPORT",
-          "description": "Report the completion of the task to the central system, detailing the actions taken and outcomes achieved, confirming that the instructions have been followed.",
-          "intensity": 0.5,
-          "purpose": "to_confirm_completion"
-        }}
-      ]
+        "command": "Hello {name}, commence the street cleaning operation by first navigating to Main Street, collecting all plastic debris, and then reporting back the completion.",
+        "actions": [
+            {{
+                "action": "NAVIGATE",
+                "description": "Navigate towards Main Street at a moderate speed to begin the street cleaning operation.",
+                "intensity": 0.8,
+                "purpose": "to_approach_cleaning_area",
+                "target": "Main Street"
+            }},
+            {{
+                "action": "INTERACT",
+                "description": "Collect all plastic debris using onboard tools, ensuring thorough cleanup and safe handling of materials.",
+                "intensity": 0.6,
+                "purpose": "to_collect_plastic_debris",
+                "target": "Main Street",
+                "value": "plastic"
+            }},
+            {{
+                "action": "REPORT",
+                "description": "Report back to the central system with details of the cleanup, including the amount of plastic collected and the status of the cleaning operation.",
+                "intensity": 0.5,
+                "purpose": "to_confirm_cleanup_completion"
+            }}
+        ]
     }}
-    
+
     {{
-      "command": "Hello {name}, execute operation.",
-      "actions": [
-        {{
-          "action": "RETRIEVE",
-          "description": "Retrieve the item from its location at a steady pace, ensuring to handle the specified details for identification.",
-          "intensity": 0.5,
-          "purpose": "to_collect",
-          "target": "item_location",
-          "value": "item_detail"
-        }},
-        {{
-          "action": "DEPOSIT",
-          "description": "Deposit the item at the destination location carefully, considering its usage context for proper placement.",
-          "intensity": 0.1,
-          "purpose": "to_place",
-          "target": "destination_location",
-          "value": "item_usage_context"
-        }},
-        {{
-          "action": "REPORT",
-          "description": "Send a final report detailing the item's retrieval and deposition, including any relevant observations or issues, to ensure all actions meet the set objectives.",
-          "intensity": 0.5,
-          "purpose": "to_confirm_completion"
-        }}
-      ]
+        "command": "Hello {name}, initiate emergency medical aid by retrieving the first aid kit from Storage Room 3 and delivering it to the site of the accident in the Courtyard, followed by a status report.",
+        "actions": [
+            {{
+                "action": "RETRIEVE",
+                "description": "Retrieve the first aid kit from Storage Room 3, ensuring swift and secure handling.",
+                "intensity": 0.7,
+                "purpose": "to_collect_first_aid_kit",
+                "target": "Storage Room 3",
+                "value": "first aid kit"
+            }},
+            {{
+                "action": "NAVIGATE",
+                "description": "Navigate quickly to the Courtyard to deliver the first aid kit to the accident site, optimizing the fastest route for emergency response.",
+                "intensity": 0.9,
+                "purpose": "to_deliver_first_aid",
+                "target": "Courtyard"
+            }},
+            {{
+                "action": "REPORT",
+                "description": "Send a detailed report on the delivery of the first aid kit, including time of delivery and any obstacles encountered, to confirm the completion of the emergency aid operation.",
+                "intensity": 0.5,
+                "purpose": "to_confirm_emergency_aid_completion"
+            }}
+        ]
     }}
 
     Generate JSON command objects for tasks, strictly following the schema and focusing on "{name}"'s role as a {role}.
