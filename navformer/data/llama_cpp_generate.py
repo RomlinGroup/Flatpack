@@ -297,7 +297,8 @@ for _ in range(number_of_iterations):
           "purpose": "to_confirm_completion"
         }}
       ]
-    }},
+    }}
+    
     {{
       "command": "Hello {name}, execute operation.",
       "actions": [
