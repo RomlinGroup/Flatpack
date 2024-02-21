@@ -192,7 +192,6 @@ def validate_json(data, schema):
         return False  # The schema itself is invalid
 
 
-# Assume you have a function or logic to save valid JSON objects, e.g., saving them to a file
 def save_valid_json(json_data, file_path):
     with open(file_path, 'a') as f:  # Append mode
         f.write(json_data + "\n\n")  # Write the valid JSON string plus a newline
@@ -321,8 +320,6 @@ for _ in range(number_of_iterations):
     prompt = prompt_template.format(name=name, role=role)
 
     executable_path = './llama.cpp/build/bin/main'
-
-    # Assuming your script is executed from a parent directory of `llama.cpp`
     model_path = './llama.cpp/models/mistral-7b-instruct-v0.2.Q4_K_M.gguf'
 
     command = [
