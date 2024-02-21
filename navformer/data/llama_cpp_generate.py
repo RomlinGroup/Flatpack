@@ -240,7 +240,7 @@ def find_and_print_valid_json_objects(content):
 # Define a file path where you want to save the valid JSON objects
 valid_json_file_path = 'valid_json_objects.txt'
 
-number_of_iterations = 1
+number_of_iterations = 1000
 
 for _ in range(number_of_iterations):
     # Select a random role from the list
