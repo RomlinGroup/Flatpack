@@ -270,7 +270,7 @@ for _ in range(number_of_iterations):
 
     REQUIREMENTS:
     - Ensure no living being is harmed. Prioritize safety and well-being in all tasks and actions.
-    - If "target", "sensitivity", or "value" do not apply to an action, those fields should be completely omitted from the action object. Do NOT fill these fields with placeholders such as empty strings, None, or null.
+    - If "target", "speed", or "value" do not apply to an action, those fields should be completely omitted from the action object. Do NOT fill these fields with placeholders such as empty strings, None, or null.
     - The final output must align 100% with this schema, showcasing "{name}"'s function as a {role}.
 
     SAMPLE COMMANDS:
