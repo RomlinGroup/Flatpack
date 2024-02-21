@@ -33,9 +33,15 @@ if [ -d "build" ]; then
     echo "Build directory already exists. Cleaning up."
     rm -rf build
 fi
+
 mkdir build
 cd build
 
 # Configure and compile
 cmake .. -DCMAKE_APPLE_SILICON_PROCESSOR=arm64
 make -j
+
+cd ..
+
+# https://huggingface.co/TheBloke/Mistral-7B-Instruct-v0.2-GGUF
+wget -O "models/mistral-7b-instruct-v0.2.Q4_K_M.gguf" "https://huggingface.co/TheBloke/Mistral-7B-Instruct-v0.2-GGUF/resolve/main/mistral-7b-instruct-v0.2.Q4_K_M.gguf"
