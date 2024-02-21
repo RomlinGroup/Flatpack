@@ -257,7 +257,7 @@ for _ in range(number_of_iterations):
     TASK: Generate JSON command objects for "{name}", the {role}, to execute tasks relevant to its role. Strictly adhere to the schema.
 
     SCHEMA INSTRUCTIONS:
-    - "command": Define the task "{name}" is to perform as a {role}.
+    - "command": Start with "Hello {name}," specifying the task for {name} as a {role}, including any necessary details like "target" or "value" when applicable.
     - "actions": Enumerate the actions "{name}" will carry out, with details as follows:
       - "action": Specify the action type from "NAVIGATE", "HALT", "RETRIEVE", "DEPOSIT", "INTERACT".
       - "intent": Clarify the objective behind the action.
