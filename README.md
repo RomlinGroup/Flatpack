@@ -147,7 +147,7 @@ Robots need to avoid obstacles while navigating. We are creating [Navformer](htt
 * **Real-time inference:** Capable of processing and reacting to environmental data in real-time, crucial for dynamic and unpredictable settings.
 * **Transformer-based:** Incorporates the latest in transformer neural network technology, enabling interpretation of complex spatial data and superior understanding.
 
-Synthetic data is created using [Mistral-7B-Instruct-v0.2.0](https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.2) (Apache License 2.0), developed by [Mistral AI](https://mistral.ai) (EU). We are immensely grateful for their contributions to the field of AI and their commitment to open source.
+Synthetic data was created using [Mistral-7B-Instruct-v0.2.0](https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.2) (Apache License 2.0), developed by [Mistral AI](https://mistral.ai) (EU). We are immensely grateful for their contributions to the field of AI and their commitment to open source.
 
 ```json
 {
