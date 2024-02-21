@@ -16,7 +16,7 @@ __pycache__/
 /client/pyenv.sh
 /client/target
 /navformer/dataset.txt
-/navformer/llama.cpp
+/navformer/data/llama.cpp
 /navformer/nanoChatGPT
 /navformer/navformer.pt
 /package/flatpack/build
