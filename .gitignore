@@ -18,6 +18,7 @@ __pycache__/
 /navformer/dataset.txt
 /navformer/data/temp.txt
 /navformer/data/valid_json_objects.txt
+/navformer/data/main.log
 /navformer/data/llama.cpp
 /navformer/nanoChatGPT
 /navformer/navformer.pt
