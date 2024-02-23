@@ -147,35 +147,7 @@ We are developing [Navformer](http://navformer.com), an AI-powered navigation sy
 * **Real-time inference:** Capable of processing and reacting to environmental data in real-time, crucial for dynamic and unpredictable settings.
 * **Transformer-based:** Incorporates the latest in transformer neural network technology, enabling interpretation of complex spatial data and superior understanding.
 
-Synthetic data was created using [Mistral-7B-Instruct-v0.2.0](https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.2) (Apache License 2.0), developed by [Mistral AI](https://mistral.ai) (EU). We are immensely grateful for their contributions to the field of AI and their commitment to open source.
-
 Our conceptual robot, [Higgs](http://hellohiggs.com), is named after the narrator in ["Erewhon"](https://en.wikipedia.org/wiki/Erewhon) (1872) by Samuel Butler.
-
-```json
-{
-  "command": "Hello Higgs, start the forest seeding process by first navigating to the north sector, then deposit the pre-germinated seed pods.",
-  "actions": [
-    {
-      "action": "NAVIGATE",
-      "description": "Navigate towards the north sector for seeding operation, adjusting speed according to terrain conditions.",
-      "intensity": 0.7,
-      "purpose": "to_approach_north_sector"
-    },
-    {
-      "action": "DEPOSIT",
-      "description": "Deposit pre-germinated seed pods using onboard dispensers, ensuring even distribution and proper spacing.",
-      "intensity": 0.5,
-      "purpose": "to_deposit_seed_pods"
-    },
-    {
-      "action": "REPORT",
-      "description": "Report back to the central system with details of the seeding process, including number of seed pods deposited and sector conditions.",
-      "intensity": 0.5,
-      "purpose": "to_confirm_seeding_completion"
-    }
-  ]
-}
-```
 
 ## License
 
