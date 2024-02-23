@@ -147,7 +147,7 @@ We are developing [Navformer](http://navformer.com), an AI-powered navigation sy
 * **Real-time inference:** Capable of processing and reacting to environmental data in real-time, crucial for dynamic and unpredictable settings.
 * **Transformer-based:** Incorporates the latest in transformer neural network technology, enabling interpretation of complex spatial data and superior understanding.
 
-## Hello Higgs 🎩
+## Hello Higgs 👨🏻
 
 Our conceptual robot, [Higgs](http://hellohiggs.com), is named after the narrator in ["Erewhon"](https://en.wikipedia.org/wiki/Erewhon) (1872) by Samuel Butler.
 
