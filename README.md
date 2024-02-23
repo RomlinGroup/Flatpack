@@ -151,6 +151,32 @@ Synthetic data was created using [Mistral-7B-Instruct-v0.2.0](https://huggingfac
 
 Our conceptual robot, [Higgs](http://hellohiggs.com), is named after the narrator in ["Erewhon"](https://en.wikipedia.org/wiki/Erewhon) (1872) by Samuel Butler.
 
+```json
+{
+  "command": "Hello Higgs, start the forest seeding process by first navigating to the north sector, then deposit the pre-germinated seed pods.",
+  "actions": [
+    {
+      "action": "NAVIGATE",
+      "description": "Navigate towards the north sector for seeding operation, adjusting speed according to terrain conditions.",
+      "intensity": 0.7,
+      "purpose": "to_approach_north_sector"
+    },
+    {
+      "action": "DEPOSIT",
+      "description": "Deposit pre-germinated seed pods using onboard dispensers, ensuring even distribution and proper spacing.",
+      "intensity": 0.5,
+      "purpose": "to_deposit_seed_pods"
+    },
+    {
+      "action": "REPORT",
+      "description": "Report back to the central system with details of the seeding process, including number of seed pods deposited and sector conditions.",
+      "intensity": 0.5,
+      "purpose": "to_confirm_seeding_completion"
+    }
+  ]
+}
+```
+
 ## License
 
 This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
