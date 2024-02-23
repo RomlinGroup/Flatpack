@@ -10,8 +10,8 @@ except ImportError:
 try:
     from nanoChatGPT.model import GPTConfig, GPT
 except ImportError as e:
-    if str(e) == "No module named 'nanoGPT'":
-        raise ImportError("The 'nanoGPT' repository is not found.")
+    if str(e) == "No module named 'nanoChatGPT'":
+        raise ImportError("The 'nanoChatGPT' repository is not found.")
     else:
         raise ImportError("Please ensure 'model.py' is available.")
 

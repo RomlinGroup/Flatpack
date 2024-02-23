@@ -52,7 +52,7 @@ def process_files(input_dir, train_proportion=0.8):
     return np.array(train_ids, dtype=np.uint16), np.array(val_ids, dtype=np.uint16)
 
 
-split_file('dataset.txt', 'nanoChatGPT/output', 1000)
+split_file('dataset.txt', 'nanoChatGPT/output', 100)
 train_ids, val_ids = process_files('nanoChatGPT/output')
 
 train_ids.tofile('nanoChatGPT/data/custom/train.bin')
