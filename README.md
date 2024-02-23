@@ -142,7 +142,7 @@ Overall, micro language models represent a logical step in the evolution of lang
 
 We are developing [Navformer](http://navformer.com), an AI-powered navigation system for robots that avoids obstacles and executes commands efficiently. It will be a standard component in Flatpack.
 
-* **CPU friendly:** Optimised for CPU usage, ensuring compatibility and efficiency across various edge computing devices without requiring specialised hardware.
+* **CPU-friendly:** Optimised for CPU usage, ensuring compatibility and efficiency across various edge computing devices without requiring specialised hardware.
 * **Monocular navigation:** Utilises a single-lens system for spatial awareness, providing a compact and cost-effective solution for 3D environment mapping.
 * **Real-time inference:** Capable of processing and reacting to environmental data in real-time, crucial for dynamic and unpredictable settings.
 * **Transformer-based:** Incorporates the latest in transformer neural network technology, enabling interpretation of complex spatial data and superior understanding.
