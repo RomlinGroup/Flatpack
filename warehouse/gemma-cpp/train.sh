@@ -6,7 +6,7 @@ export SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 echo -e "🚀 train.sh is running in: $SCRIPT_DIR\n"
 
 # === BEGIN USER CUSTOMIZATION ===
-export REPO_NAME=gemma-cpp
+export REPO_NAME=gemma.cpp
 export FLATPACK_NAME=gemma-cpp
 # === END USER CUSTOMIZATION ===
 
@@ -24,5 +24,7 @@ if [ "$DEVICE" != "$REQUIRED_DEVICE" ]; then
 fi
 
 # === BEGIN USER CUSTOMIZATION ===
-"${VENV_PYTHON}" -c "print('Hello, World!')"
+cmake -B build
+cd build
+make -j 8 gemma
 # === END USER CUSTOMIZATION ===
