@@ -138,7 +138,7 @@ Overall, micro language models represent a logical step in the evolution of lang
 
 > **Standardisation:** "Without standards, there can be no improvement." (Taiichi Ohno)
 
-## Navformer
+## Navformer 🧭
 
 We are developing [Navformer](http://navformer.com), an AI-powered navigation system for robots that avoids obstacles and executes commands efficiently. It will be a standard component in Flatpack.
 
@@ -147,7 +147,7 @@ We are developing [Navformer](http://navformer.com), an AI-powered navigation sy
 * **Real-time inference:** Capable of processing and reacting to environmental data in real-time, crucial for dynamic and unpredictable settings.
 * **Transformer-based:** Incorporates the latest in transformer neural network technology, enabling interpretation of complex spatial data and superior understanding.
 
-## Hello Higgs
+## Hello Higgs 🎩
 
 Our conceptual robot, [Higgs](http://hellohiggs.com), is named after the narrator in ["Erewhon"](https://en.wikipedia.org/wiki/Erewhon) (1872) by Samuel Butler.
 
