@@ -14,6 +14,7 @@ Ahoy, brave explorer!
 
 | Name                                                                                                      | Type     | Requires |
 |-----------------------------------------------------------------------------------------------------------|----------|----------|
+| [gemma-cpp](https://github.com/romlingroup/flatpack-ai/tree/main/warehouse/gemma-cpp)                     | Flatpack | GPU      |
 | [llama2-scratch](https://github.com/romlingroup/flatpack-ai/tree/main/warehouse/llama2-scratch)           | Flatpack | GPU      |
 | [llama-cpp-python](https://github.com/romlingroup/flatpack-ai/tree/main/warehouse/llama-cpp-python)       | Flatpack | GPU      |
 | [nanogpt-scratch](https://github.com/romlingroup/flatpack-ai/tree/main/warehouse/nanogpt-scratch)         | Flatpack | GPU      |
