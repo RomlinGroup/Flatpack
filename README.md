@@ -50,6 +50,7 @@ flatpack list
 ```
 
 ```bash
+# macOS: DEFAULT_PATH="/Users/$(whoami)/flatpacks"
 flatpack install FPK_NAME
 ```
 
