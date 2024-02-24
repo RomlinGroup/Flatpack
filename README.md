@@ -50,6 +50,7 @@ flatpack list
 ```
 
 ```bash
+# Google Colab: DEFAULT_PATH="/content"
 # macOS: DEFAULT_PATH="/Users/$(whoami)/flatpacks"
 flatpack install FPK_NAME
 ```
