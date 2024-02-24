@@ -13,6 +13,7 @@ DEFAULT_PATH="/home/$(whoami)/flatpacks"
 
 # Environment detection
 OS=$(uname)
+
 if [[ -d "/content" ]]; then
   # Detected Google Colab environment
   if command -v nvidia-smi &> /dev/null; then
@@ -23,7 +24,8 @@ if [[ -d "/content" ]]; then
     DEVICE="cpu"
   fi
   export VENV_PYTHON="/usr/bin/python3"
-  WORK_DIR="/content/$FLATPACK_NAME/$REPO_NAME"
+  DEFAULT_PATH="/content"
+  WORK_DIR="$DEFAULT_PATH/$FLATPACK_NAME/$REPO_NAME"
 elif [ "$OS" = "Darwin" ]; then
   echo "🍎 Detected macOS environment"
   export VENV_PYTHON="${SCRIPT_DIR}/bin/python"
