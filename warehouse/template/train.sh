@@ -15,11 +15,12 @@ source "$SCRIPT_DIR/device.sh" || {
   exit 1
 }
 
-# Use "cuda" for GPU requirement, "cpu" for CPU requirement
-REQUIRED_DEVICE="cuda"
+# Required devices (cpu cuda mps)
+REQUIRED_DEVICES="cpu"
 
-if [ "$DEVICE" != "$REQUIRED_DEVICE" ]; then
-  echo "😱 Error: This script requires a $REQUIRED_DEVICE device." >&2
+# Check if DEVICE is among the required devices
+if [[ ! " $REQUIRED_DEVICES " =~ " $DEVICE " ]]; then
+  echo "😱 Error: This script requires one of the following devices: $REQUIRED_DEVICES." >&2
   exit 1
 fi
 
