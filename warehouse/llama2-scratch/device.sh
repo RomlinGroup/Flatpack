@@ -9,7 +9,7 @@ for VAR_NAME in REPO_NAME FLATPACK_NAME SCRIPT_DIR; do
 done
 
 # Default user directory path
-DEFAULT_PATH="/home/$(whoami)"
+DEFAULT_PATH="/home/$(whoami)/flatpacks"
 
 # Environment detection
 OS=$(uname)
