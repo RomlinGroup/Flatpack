@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import List, Optional
 
 import argparse
+import chromadb
 import httpx
 import ngrok
 import os
@@ -30,10 +31,6 @@ log_queue = []
 config = {
     "api_key": None
 }
-
-midas_model = None
-midas_transforms = None
-mp_detector = None
 
 
 class SessionManager:
@@ -148,7 +145,7 @@ def fpk_display_disclaimer(directory_name: str):
 -----------------------------------------------------
 STOP AND READ BEFORE YOU PROCEED ✋
 https://pypi.org/project/flatpack
-Copyright 2023 Romlin Group AB
+Copyright 2024 Romlin Group AB
 
 Licensed under the Apache License, Version 2.0
 (the "License"); you may NOT use this Python package
@@ -504,6 +501,7 @@ def main():
 
                 print("Verbose mode:", args.verbose)
                 fpk_install(directory_name, session, verbose=args.verbose)
+
             elif command == "list":
                 print(fpk_list_directories(session))
             elif command == "run":

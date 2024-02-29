@@ -62,11 +62,12 @@ flatpack train FPK_NAME
 ## Flatpack (FPK) 📦
 
 - [template](warehouse/template)
+  - flatpack.toml
   - DATASET.md
   - README.md
   - device.sh
-  - flatpack.toml
-  - train.sh *(entrypoint)*
+  - server.sh
+  - train.sh
 
 ### Code signing
 

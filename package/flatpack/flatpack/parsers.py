@@ -122,7 +122,7 @@ fi
     package_list = [f"{package}=={version}" if version != "*" and version else package for package, version in
                     packages.items()]
     if package_list:
-        script.append(f"$VENV_PYTHON -m pip install {' '.join(package_list)}")
+        script.append(f"$VENV_PYTHON pip install {' '.join(package_list)}")
 
     # Clone required git repositories
     for git in config.get("git", []):
