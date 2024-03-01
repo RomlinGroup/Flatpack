@@ -25,5 +25,6 @@ if [[ ! " $REQUIRED_DEVICES " =~ " $DEVICE " ]]; then
 fi
 
 # === BEGIN USER CUSTOMIZATION ===
-./scripts/download_mm_projector.sh
+chmod +x scripts/download_mm_projector.sh
+bash scripts/download_mm_projector.sh
 # === END USER CUSTOMIZATION ===
