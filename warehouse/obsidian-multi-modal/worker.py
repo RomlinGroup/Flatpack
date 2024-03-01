@@ -10,4 +10,7 @@ command = [
     '--model-path', 'NousResearch/Obsidian-3B-V0.5',
 ]
 
-threading.Thread(target=lambda: subprocess.run(command, check=True, shell=False), daemon=True).start()
+threading.Thread(
+    target=lambda: subprocess.run(command, check=True, shell=False),
+    daemon=True
+).start()
