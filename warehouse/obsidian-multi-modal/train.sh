@@ -25,5 +25,5 @@ if [[ ! " $REQUIRED_DEVICES " =~ " $DEVICE " ]]; then
 fi
 
 # === BEGIN USER CUSTOMIZATION ===
-"${VENV_PYTHON}" -c "print('Hello, World!')"
+./scripts/download_mm_projector.sh
 # === END USER CUSTOMIZATION ===
