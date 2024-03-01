@@ -27,5 +27,4 @@ fi
 # === BEGIN USER CUSTOMIZATION ===
 chmod +x scripts/download_mm_projector.sh
 bash scripts/download_mm_projector.sh
-nohup "${VENV_PYTHON}" -m llava.serve.controller --host 0.0.0.0 --port 10000 &
 # === END USER CUSTOMIZATION ===
