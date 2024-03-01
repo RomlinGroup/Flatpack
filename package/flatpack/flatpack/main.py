@@ -437,6 +437,7 @@ def fpk_valid_directory_name(name: str) -> bool:
 
 
 app = FastAPI()
+client = chromadb.Client()
 
 app.add_middleware(
     CORSMiddleware,
