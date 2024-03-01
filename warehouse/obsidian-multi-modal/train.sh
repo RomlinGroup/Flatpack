@@ -27,6 +27,8 @@ fi
 # === BEGIN USER CUSTOMIZATION ===
 chmod +x scripts/download_mm_projector.sh
 bash scripts/download_mm_projector.sh
+mv ../controller.py ./controller.py
+mv ../worker.py ./worker.py
 "${VENV_PYTHON}" controller.py
 "${VENV_PYTHON}" worker.py
 # === END USER CUSTOMIZATION ===
