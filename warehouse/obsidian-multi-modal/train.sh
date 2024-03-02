@@ -6,7 +6,7 @@ export SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 echo -e "🚀 train.sh is running in: $SCRIPT_DIR\n"
 
 # === BEGIN USER CUSTOMIZATION ===
-export REPO_NAME=Obsidian
+export REPO_NAME=llama.cpp
 export FLATPACK_NAME=obsidian-multi-modal
 # === END USER CUSTOMIZATION ===
 
@@ -25,18 +25,10 @@ if [[ ! " $REQUIRED_DEVICES " =~ " $DEVICE " ]]; then
 fi
 
 # === BEGIN USER CUSTOMIZATION ===
-"${VENV_PIP}" install --upgrade pip
-"${VENV_PIP}" install -e .
+make
 
 if [[ "$OS" = "Darwin" ]]; then
   # https://developer.apple.com/metal/pytorch/
   "${VENV_PIP}" install --pre torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/nightly/cpu
 fi
-
-"${VENV_PIP}" uninstall bitsandbytes -y
-
-"${VENV_PYTHON}" -m llava.serve.cli \
-    --model-path liuhaotian/llava-v1.5-7b \
-    --image-file "https://llava-vl.github.io/static/images/view.jpg" \
-    --load-4bit
 # === END USER CUSTOMIZATION ===

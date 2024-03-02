@@ -36,13 +36,8 @@ tqdm = "*"
 wandb = "*"
 
 [[git]]
-from_source = "https://github.com/haotian-liu/LLaVA"
-to_destination = "LLaVA"
-branch = "main"
-
-[[git]]
-from_source = "https://github.com/NousResearch/Obsidian"
-to_destination = "Obsidian"
+from_source = "https://github.com/ggerganov/llama.cpp"
+to_destination = "llama.cpp"
 branch = "main"
 
 [[file]]
@@ -52,14 +47,6 @@ to_destination = "/home/content/device.sh"
 [[file]]
 from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/obsidian-multi-modal/train.sh"
 to_destination = "/home/content/train.sh"
-
-[[run]]
-command = "rm"
-args = "-r Obsidian/llava"
-
-[[run]]
-command = "cp"
-args = "-r LLaVA/llava Obsidian/llava"
 
 [[run]]
 command = "chmod"
