@@ -37,7 +37,7 @@ wandb = "*"
 
 [[git]]
 from_source = "https://github.com/ggerganov/llama.cpp"
-to_destination = "llama-cpp"
+to_destination = "llama.cpp"
 branch = "master"
 
 [[file]]
