@@ -6,7 +6,7 @@ export SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 echo -e "🚀 train.sh is running in: $SCRIPT_DIR\n"
 
 # === BEGIN USER CUSTOMIZATION ===
-export REPO_NAME=llama-cpp-python
+export REPO_NAME=llama.cpp
 export FLATPACK_NAME=obsidian-multi-modal
 # === END USER CUSTOMIZATION ===
 
@@ -25,13 +25,19 @@ if [[ ! " $REQUIRED_DEVICES " =~ " $DEVICE " ]]; then
 fi
 
 # === BEGIN USER CUSTOMIZATION ===
-mkdir models
-wget -O models/mmproj-obsidian-f16.gguf https://huggingface.co/NousResearch/Obsidian-3B-V0.5-GGUF/resolve/main/mmproj-obsidian-f16.gguf
-wget -O models/obsidian-q6.gguf https://huggingface.co/NousResearch/Obsidian-3B-V0.5-GGUF/resolve/main/obsidian-q6.gguf
+make
 
-CMAKE_ARGS="-DLLAMA_BLAS=ON -DLLAMA_BLAS_VENDOR=OpenBLAS"
-"${VENV_PIP}" install llama-cpp-python
+mkdir -p models
 
-cp ../demo.py demo.py
-"${VENV_PYTHON}" demo.py
+if [ ! -f models/mmproj-obsidian-f16.gguf ]; then
+    wget -O models/mmproj-obsidian-f16.gguf https://huggingface.co/NousResearch/Obsidian-3B-V0.5-GGUF/resolve/main/mmproj-obsidian-f16.gguf
+else
+    echo "File 'models/mmproj-obsidian-f16.gguf' already exists, skipping download."
+fi
+
+if [ ! -f models/obsidian-q6.gguf ]; then
+    wget -O models/obsidian-q6.gguf https://huggingface.co/NousResearch/Obsidian-3B-V0.5-GGUF/resolve/main/obsidian-q6.gguf
+else
+    echo "File 'models/obsidian-q6.gguf' already exists, skipping download."
+fi
 # === END USER CUSTOMIZATION ===
