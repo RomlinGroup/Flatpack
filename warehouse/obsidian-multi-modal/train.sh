@@ -33,5 +33,5 @@ if [[ "$OS" = "Darwin" ]]; then
   "${VENV_PIP}" install --pre torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/nightly/cpu
 fi
 
-"${VENV_PIP}" uninstall bitsandbytes
+"${VENV_PIP}" uninstall bitsandbytes -y
 # === END USER CUSTOMIZATION ===
