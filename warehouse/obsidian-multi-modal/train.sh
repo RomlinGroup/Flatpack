@@ -26,5 +26,5 @@ fi
 
 # === BEGIN USER CUSTOMIZATION ===
 "${VENV_PIP}" install --upgrade pip
-"${VENV_PIP}" -e .
+"${VENV_PIP}" install -e .
 # === END USER CUSTOMIZATION ===
