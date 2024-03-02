@@ -38,7 +38,7 @@ wandb = "*"
 [[git]]
 from_source = "https://github.com/ggerganov/llama.cpp"
 to_destination = "llama.cpp"
-branch = "main"
+branch = "master"
 
 [[file]]
 from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/obsidian-multi-modal/device.sh"
