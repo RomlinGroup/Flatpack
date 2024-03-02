@@ -25,4 +25,6 @@ if [[ ! " $REQUIRED_DEVICES " =~ " $DEVICE " ]]; then
 fi
 
 # === BEGIN USER CUSTOMIZATION ===
+rm -r Obsidian/llava
+cp -r LLaVA/llava Obsidian/llava
 # === END USER CUSTOMIZATION ===
