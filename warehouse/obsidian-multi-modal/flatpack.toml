@@ -54,6 +54,14 @@ from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/wa
 to_destination = "/home/content/train.sh"
 
 [[run]]
+command = "rm"
+args = "-r Obsidian/llava"
+
+[[run]]
+command = "cp"
+args = "-r LLaVA/llava Obsidian/llava"
+
+[[run]]
 command = "chmod"
 args = "+x /home/content/device.sh"
 
