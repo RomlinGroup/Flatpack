@@ -25,5 +25,5 @@ if [[ ! " $REQUIRED_DEVICES " =~ " $DEVICE " ]]; then
 fi
 
 # === BEGIN USER CUSTOMIZATION ===
-pip install llama-cpp-python
+"${VENV_PIP}" install llama-cpp-python
 # === END USER CUSTOMIZATION ===
