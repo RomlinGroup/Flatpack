@@ -27,4 +27,9 @@ fi
 # === BEGIN USER CUSTOMIZATION ===
 "${VENV_PIP}" install --upgrade pip
 "${VENV_PIP}" install -e .
+
+if [[ "$OS" = "Darwin" ]]; then
+  # https://developer.apple.com/metal/pytorch/
+  "${VENV_PIP}" install --pre torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/nightly/cpu
+fi
 # === END USER CUSTOMIZATION ===
