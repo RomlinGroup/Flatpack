@@ -31,4 +31,7 @@ wget -O models/obsidian-q6.gguf https://huggingface.co/NousResearch/Obsidian-3B-
 
 CMAKE_ARGS="-DLLAMA_BLAS=ON -DLLAMA_BLAS_VENDOR=OpenBLAS"
 "${VENV_PIP}" install llama-cpp-python
+
+cp ../demo.py demo.py
+"${VENV_PYTHON}" demo.py
 # === END USER CUSTOMIZATION ===

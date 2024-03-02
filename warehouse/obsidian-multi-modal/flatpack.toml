@@ -48,6 +48,10 @@ to_destination = "/home/content/device.sh"
 from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/obsidian-multi-modal/train.sh"
 to_destination = "/home/content/train.sh"
 
+[[file]]
+from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/obsidian-multi-modal/demo.py"
+to_destination = "/home/content/demo.py"
+
 [[run]]
 command = "chmod"
 args = "+x /home/content/device.sh"
