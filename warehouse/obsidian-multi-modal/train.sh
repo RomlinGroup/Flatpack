@@ -32,4 +32,9 @@ fi
 
 chmod +x scripts/download_mm_projector.sh
 bash scripts/download_mm_projector.sh
+
+"${VENV_PYTHON}" -m llava.serve.cli \
+    --model-path NousResearch/Obsidian-3B-V0.5 \
+    --image-file "https://github.com/romlingroup/flatpack/tree/main/warehouse/obsidian-multi-modal/tiger_test.png" \
+    --load-4bit
 # === END USER CUSTOMIZATION ===
