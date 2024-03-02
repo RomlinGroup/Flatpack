@@ -6,7 +6,7 @@ export SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 echo -e "🚀 train.sh is running in: $SCRIPT_DIR\n"
 
 # === BEGIN USER CUSTOMIZATION ===
-export REPO_NAME=obsidian
+export REPO_NAME=Obsidian
 export FLATPACK_NAME=obsidian-multi-modal
 # === END USER CUSTOMIZATION ===
 
@@ -25,16 +25,4 @@ if [[ ! " $REQUIRED_DEVICES " =~ " $DEVICE " ]]; then
 fi
 
 # === BEGIN USER CUSTOMIZATION ===
-"${VENV_PIP}" install flash-attn --no-build-isolation
-"${VENV_PIP}" install ninja
-"${VENV_PIP}" install -e .
-"${VENV_PIP}" install --upgrade transformers==4.34.0
-
-chmod +x scripts/download_mm_projector.sh
-bash scripts/download_mm_projector.sh
-
-"${VENV_PYTHON}" -m llava.serve.cli \
-    --model-path NousResearch/Obsidian-3B-V0.5 \
-    --image-file "https://github.com/romlingroup/flatpack/tree/main/warehouse/obsidian-multi-modal/tiger.png" \
-    --load-4bit
 # === END USER CUSTOMIZATION ===

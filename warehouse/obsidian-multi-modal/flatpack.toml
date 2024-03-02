@@ -36,8 +36,13 @@ tqdm = "*"
 wandb = "*"
 
 [[git]]
+from_source = "https://github.com/haotian-liu/LLaVA"
+to_destination = "LLaVA"
+branch = "main"
+
+[[git]]
 from_source = "https://github.com/NousResearch/Obsidian"
-to_destination = "obsidian"
+to_destination = "Obsidian"
 branch = "main"
 
 [[file]]
