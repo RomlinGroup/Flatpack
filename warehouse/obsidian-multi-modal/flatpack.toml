@@ -36,9 +36,9 @@ tqdm = "*"
 wandb = "*"
 
 [[git]]
-from_source = "https://github.com/ggerganov/llama.cpp"
-to_destination = "llama.cpp"
-branch = "master"
+from_source = "https://github.com/romlingroup/llama-cpp-python"
+to_destination = "/home/content/llama-cpp-python"
+branch = "main"
 
 [[file]]
 from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/obsidian-multi-modal/device.sh"

@@ -25,5 +25,6 @@ if [[ ! " $REQUIRED_DEVICES " =~ " $DEVICE " ]]; then
 fi
 
 # === BEGIN USER CUSTOMIZATION ===
+CMAKE_ARGS="-DLLAMA_BLAS=ON -DLLAMA_BLAS_VENDOR=OpenBLAS"
 "${VENV_PIP}" install llama-cpp-python
 # === END USER CUSTOMIZATION ===

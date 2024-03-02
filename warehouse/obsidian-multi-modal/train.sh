@@ -6,7 +6,7 @@ export SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 echo -e "🚀 train.sh is running in: $SCRIPT_DIR\n"
 
 # === BEGIN USER CUSTOMIZATION ===
-export REPO_NAME=llama.cpp
+export REPO_NAME=llama-cpp-python
 export FLATPACK_NAME=obsidian-multi-modal
 # === END USER CUSTOMIZATION ===
 
@@ -25,10 +25,6 @@ if [[ ! " $REQUIRED_DEVICES " =~ " $DEVICE " ]]; then
 fi
 
 # === BEGIN USER CUSTOMIZATION ===
-make
-
-if [[ "$OS" = "Darwin" ]]; then
-  # https://developer.apple.com/metal/pytorch/
-  "${VENV_PIP}" install --pre torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/nightly/cpu
-fi
+CMAKE_ARGS="-DLLAMA_BLAS=ON -DLLAMA_BLAS_VENDOR=OpenBLAS"
+"${VENV_PIP}" install llama-cpp-python
 # === END USER CUSTOMIZATION ===
