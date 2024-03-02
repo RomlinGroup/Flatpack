@@ -25,4 +25,6 @@ if [[ ! " $REQUIRED_DEVICES " =~ " $DEVICE " ]]; then
 fi
 
 # === BEGIN USER CUSTOMIZATION ===
+"${VENV_PIP}" install --upgrade pip
+"${VENV_PIP}" -e .
 # === END USER CUSTOMIZATION ===
