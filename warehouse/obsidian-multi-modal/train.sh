@@ -25,10 +25,18 @@ if [[ ! " $REQUIRED_DEVICES " =~ " $DEVICE " ]]; then
 fi
 
 # === BEGIN USER CUSTOMIZATION ===
-"${VENV_PYTHON}" pip install flash-attn --no-build-isolation
-"${VENV_PYTHON}" pip install ninja
-"${VENV_PYTHON}" pip install -e .
-"${VENV_PYTHON}" pip install --upgrade transformers==4.34.0
+# Temporary workaround for macOS
+if [ "$OS" = "Darwin" ]; then
+  pip install flash-attn --no-build-isolation
+  pip install ninja
+  pip install -e .
+  pip install --upgrade transformers==4.34.0
+else
+  "${VENV_PYTHON}" pip install flash-attn --no-build-isolation
+  "${VENV_PYTHON}" pip install ninja
+  "${VENV_PYTHON}" pip install -e .
+  "${VENV_PYTHON}" pip install --upgrade transformers==4.34.0
+fi
 
 chmod +x scripts/download_mm_projector.sh
 bash scripts/download_mm_projector.sh
