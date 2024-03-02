@@ -6,7 +6,7 @@ export SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 echo -e "🚀 train.sh is running in: $SCRIPT_DIR\n"
 
 # === BEGIN USER CUSTOMIZATION ===
-export REPO_NAME=llama.cpp
+export REPO_NAME=llama-cpp
 export FLATPACK_NAME=obsidian-multi-modal
 # === END USER CUSTOMIZATION ===
 
