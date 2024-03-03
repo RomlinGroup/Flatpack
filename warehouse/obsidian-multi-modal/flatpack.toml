@@ -45,8 +45,8 @@ from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/wa
 to_destination = "/home/content/device.sh"
 
 [[file]]
-from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/obsidian-multi-modal/server.sh"
-to_destination = "/home/content/server.sh"
+from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/obsidian-multi-modal/train.sh"
+to_destination = "/home/content/train.sh"
 
 [[run]]
 command = "chmod"
@@ -54,8 +54,8 @@ args = "+x /home/content/device.sh"
 
 [[run]]
 command = "chmod"
-args = "+x /home/content/server.sh"
+args = "+x /home/content/train.sh"
 
 [[cmd]]
 command = "bash"
-args = "/home/content/server.sh"
+args = "/home/content/train.sh"
