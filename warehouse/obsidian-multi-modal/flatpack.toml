@@ -58,8 +58,8 @@ args = "+x /home/content/device.sh"
 
 [[run]]
 command = "chmod"
-args = "+x /home/content/train.sh"
+args = "+x /home/content/server.sh"
 
 [[cmd]]
 command = "bash"
-args = "/home/content/train.sh"
+args = "/home/content/server.sh"
