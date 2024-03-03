@@ -248,13 +248,16 @@ def fpk_install(directory_name: str, session, verbose: bool = False):
         f.write(toml_content)
 
     bash_script_content = parse_toml_to_venv_script('temp_flatpack.toml', '3.10.12', directory_name)
+
     with open('flatpack.sh', 'w') as f:
         f.write(bash_script_content)
 
     os.remove('temp_flatpack.toml')
+
     print(f"Installing {directory_name}...")
 
     command = ["bash", shlex.quote("flatpack.sh")]
+
     try:
         if verbose:
             process = subprocess.Popen(command)

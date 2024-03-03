@@ -91,6 +91,7 @@ handle_error() {{
 }}
 
 if [[ $IS_COLAB -eq 0 ]]; then
+    
     # Check if python3 is available
     if command -v python3 &>/dev/null; then
         PYTHON_CMD=python3
@@ -107,6 +108,20 @@ fi
     """.strip()
     script.append(venv_setup)
 
+    # Additional logic to determine VENV_PIP based on OS
+    script.append(f"""
+OS=$(uname)
+if [[ "$OS" = "Darwin" ]]; then
+    export VENV_PIP="$(dirname $VENV_PYTHON)/pip"
+elif [[ "$OS" = "Linux" ]] || [[ -d "/content" ]]; then
+    # For Linux and Google Colab, assuming python3 and venv setup
+    export VENV_PIP="$(dirname $VENV_PYTHON)/pip"
+else
+    echo "⚠️  Virtual environment's pip could not be determined."
+    exit 1
+fi
+    """.strip())
+
     # Create other directories as per the TOML configuration
     directories_map = config.get("directories")
     if directories_map:
@@ -121,8 +136,9 @@ fi
     packages = config.get("packages", {}).get("python", {})
     package_list = [f"{package}=={version}" if version != "*" and version else package for package, version in
                     packages.items()]
+
     if package_list:
-        script.append(f"$VENV_PYTHON pip install {' '.join(package_list)}")
+        script.append(f"$VENV_PIP install {' '.join(package_list)}")
 
     # Clone required git repositories
     for git in config.get("git", []):

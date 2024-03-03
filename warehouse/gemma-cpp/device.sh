@@ -54,16 +54,6 @@ else
   WORK_DIR="$DEFAULT_PATH/$FLATPACK_NAME/$REPO_NAME"
 fi
 
-if [[ "$OS" = "Darwin" ]]; then
-  export VENV_PIP="${SCRIPT_DIR}/bin/pip"
-elif [[ "$OS" = "Linux" ]] || [[ -d "/content" ]]; then
-  # For Linux and Google Colab, assuming python3 and venv setup
-  export VENV_PIP="$(dirname $VENV_PYTHON)/pip"
-else
-  echo "⚠️  Virtual environment's pip could not be determined."
-  exit 1
-fi
-
 # Echo the determined working directory and device
 echo "Determined WORK_DIR: $WORK_DIR"
 echo "Determined DEVICE: $DEVICE"
