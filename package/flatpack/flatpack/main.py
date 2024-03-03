@@ -493,6 +493,7 @@ def main():
                     return
 
                 fpk_display_disclaimer(directory_name)
+
                 while True:
                     user_response = input().strip().upper()
                     if user_response == "YES":
