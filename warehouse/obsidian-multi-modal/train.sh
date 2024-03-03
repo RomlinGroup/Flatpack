@@ -66,7 +66,7 @@ else
 fi
 
 echo "Attempting to run 'server' with specified models..."
-./server -m models/obsidian-q6.gguf --mmproj models/mmproj-obsidian-f16.gguf -ngl 42 -c 2048
+./server -m models/obsidian-q6.gguf --mmproj models/mmproj-obsidian-f16.gguf -ngl 42
 if [ $? -eq 0 ]; then
     echo "'server' started successfully."
 else
