@@ -25,19 +25,52 @@ if [[ ! " $REQUIRED_DEVICES " =~ " $DEVICE " ]]; then
 fi
 
 # === BEGIN USER CUSTOMIZATION ===
-make
-
-mkdir -p models
-
-if [ ! -f models/mmproj-obsidian-f16.gguf ]; then
-    wget -O models/mmproj-obsidian-f16.gguf https://huggingface.co/NousResearch/Obsidian-3B-V0.5-GGUF/resolve/main/mmproj-obsidian-f16.gguf
+echo "Checking if 'server' executable exists..."
+if [ ! -f "server" ]; then
+    echo "'server' not found. Starting compilation..."
+    make
+    if [ $? -eq 0 ]; then
+        echo "'server' compiled successfully."
+    else
+        echo "Compilation failed. Please check the makefile and source code for errors."
+        exit 1
+    fi
 else
-    echo "File 'models/mmproj-obsidian-f16.gguf' already exists, skipping download."
+    echo "'server' executable already exists. Skipping compilation."
 fi
 
-if [ ! -f models/obsidian-q6.gguf ]; then
-    wget -O models/obsidian-q6.gguf https://huggingface.co/NousResearch/Obsidian-3B-V0.5-GGUF/resolve/main/obsidian-q6.gguf
+echo "Ensuring 'models' directory exists..."
+if [[ ! -d "models" ]]; then
+    mkdir -p "models"
+    echo "'models' directory created."
 else
-    echo "File 'models/obsidian-q6.gguf' already exists, skipping download."
+    echo "'models' directory already exists. Moving on..."
+fi
+
+echo "Checking for model 'mmproj-obsidian-f16.gguf'..."
+if [ ! -f models/mmproj-obsidian-f16.gguf ]; then
+    echo "Model 'mmproj-obsidian-f16.gguf' not found. Downloading..."
+    wget -O models/mmproj-obsidian-f16.gguf https://huggingface.co/NousResearch/Obsidian-3B-V0.5-GGUF/resolve/main/mmproj-obsidian-f16.gguf
+    echo "Download complete."
+else
+    echo "Model 'mmproj-obsidian-f16.gguf' already exists, skipping download."
+fi
+
+echo "Checking for model 'obsidian-q6.gguf'..."
+if [ ! -f models/obsidian-q6.gguf ]; then
+    echo "Model 'obsidian-q6.gguf' not found. Downloading..."
+    wget -O models/obsidian-q6.gguf https://huggingface.co/NousResearch/Obsidian-3B-V0.5-GGUF/resolve/main/obsidian-q6.gguf
+    echo "Download complete."
+else
+    echo "Model 'obsidian-q6.gguf' already exists, skipping download."
+fi
+
+echo "Attempting to run 'server' with specified models..."
+./server -m models/obsidian-q6.gguf --mmproj models/mmproj-obsidian-f16.gguf -ngl 42
+if [ $? -eq 0 ]; then
+    echo "'server' started successfully."
+else
+    echo "'server' failed to start. Please check the command line arguments and model files."
+    exit 2
 fi
 # === END USER CUSTOMIZATION ===
