@@ -16,6 +16,7 @@ __pycache__/
 /package/flatpack/dist
 /package/flatpack/flatpack.sh
 /package/flatpack/flatpack.egg-info
+/utilities/compress_and_sign_fpk/compressed_file.fpk
 /utilities/compress_and_sign_fpk/debug.log
 /utilities/compress_and_sign_fpk/decompressed_output
 /utilities/compress_and_sign_fpk/private_key.pem
