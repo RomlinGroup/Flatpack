@@ -12,16 +12,6 @@ target/
 
 __pycache__/
 
-/client/Containerfile
-/client/pyenv.sh
-/client/target
-/navformer/dataset.txt
-/navformer/data/temp.txt
-/navformer/data/valid_json_objects.txt
-/navformer/data/main.log
-/navformer/data/llama.cpp
-/navformer/nanoChatGPT
-/navformer/navformer.pt
 /package/flatpack/build
 /package/flatpack/dist
 /package/flatpack/flatpack.sh
