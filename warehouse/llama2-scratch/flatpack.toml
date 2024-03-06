@@ -36,7 +36,7 @@ tqdm = "*"
 wandb = "*"
 
 [[git]]
-from_source = "https://github.com/romlingroup/llama2.c"
+from_source = "https://github.com/karpathy/llama2.c"
 to_destination = "/home/content/llama2.c"
 branch = "master"
 

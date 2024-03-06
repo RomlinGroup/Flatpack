@@ -36,7 +36,7 @@ tqdm = "*"
 wandb = "*"
 
 [[git]]
-from_source = "https://github.com/romlingroup/llama-cpp-python"
+from_source = "https://github.com/abetlen/llama-cpp-python"
 to_destination = "/home/content/llama-cpp-python"
 branch = "main"
 
