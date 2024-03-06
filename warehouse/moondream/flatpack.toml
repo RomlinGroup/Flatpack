@@ -41,11 +41,11 @@ to_destination = "moondream"
 branch = "main"
 
 [[file]]
-from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/moondream2/device.sh"
+from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/moondream/device.sh"
 to_destination = "/home/content/device.sh"
 
 [[file]]
-from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/moondream2/train.sh"
+from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/moondream/train.sh"
 to_destination = "/home/content/train.sh"
 
 [[run]]
