@@ -25,5 +25,5 @@ if [[ ! " $REQUIRED_DEVICES " =~ " $DEVICE " ]]; then
 fi
 
 # === BEGIN USER CUSTOMIZATION ===
-"${VENV_PYTHON}" -c "print('Hello, World!')"
+"${VENV_PYTHON}" webcam_gradio_demo.py
 # === END USER CUSTOMIZATION ===
