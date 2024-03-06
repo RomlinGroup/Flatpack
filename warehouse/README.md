@@ -8,14 +8,15 @@
 
 Flatpack is experimental; please avoid using it for production.
 
-| Name                                                                                                      | Type     | Requires |
-|-----------------------------------------------------------------------------------------------------------|----------|----------|
-| [gemma-cpp](https://github.com/romlingroup/flatpack-ai/tree/main/warehouse/gemma-cpp)                     | Flatpack | GPU      |
-| [llama2-scratch](https://github.com/romlingroup/flatpack-ai/tree/main/warehouse/llama2-scratch)           | Flatpack | GPU      |
-| [llama-cpp-python](https://github.com/romlingroup/flatpack-ai/tree/main/warehouse/llama-cpp-python)       | Flatpack | GPU      |
-| [nanogpt-scratch](https://github.com/romlingroup/flatpack-ai/tree/main/warehouse/nanogpt-scratch)         | Flatpack | GPU      |
-| [obsidian-multi-modal](https://github.com/romlingroup/flatpack-ai/tree/main/warehouse/obsidian-multi-modal)         | Flatpack | GPU      |
-| [rwkv-infctx-trainer](https://github.com/romlingroup/flatpack-ai/tree/main/warehouse/rwkv-infctx-trainer) | Flatpack | GPU      |
+| Name                                                                                                        | Type     | Requires |
+|-------------------------------------------------------------------------------------------------------------|----------|----------|
+| [gemma-cpp](https://github.com/romlingroup/flatpack-ai/tree/main/warehouse/gemma-cpp)                       | Flatpack | GPU      |
+| [llama2-scratch](https://github.com/romlingroup/flatpack-ai/tree/main/warehouse/llama2-scratch)             | Flatpack | GPU      |
+| [llama-cpp-python](https://github.com/romlingroup/flatpack-ai/tree/main/warehouse/llama-cpp-python)         | Flatpack | GPU      |
+| [moondream](https://github.com/romlingroup/flatpack-ai/tree/main/warehouse/moondream)                       | Flatpack | GPU      |
+| [nanogpt-scratch](https://github.com/romlingroup/flatpack-ai/tree/main/warehouse/nanogpt-scratch)           | Flatpack | GPU      |
+| [obsidian-multi-modal](https://github.com/romlingroup/flatpack-ai/tree/main/warehouse/obsidian-multi-modal) | Flatpack | GPU      |
+| [rwkv-infctx-trainer](https://github.com/romlingroup/flatpack-ai/tree/main/warehouse/rwkv-infctx-trainer)   | Flatpack | GPU      |
 
 ## Friendly notice ❤️
 
