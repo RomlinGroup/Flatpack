@@ -25,5 +25,7 @@ if [[ ! " $REQUIRED_DEVICES " =~ " $DEVICE " ]]; then
 fi
 
 # === BEGIN USER CUSTOMIZATION ===
-"${VENV_PYTHON}" webcam_gradio_demo.py
+#"${VENV_PIP}" install -r requirements.txt
+mv ../tiger.png tiger.png
+"${VENV_PYTHON}" sample.py --image "tiger.png" --prompt "Should I pet this dog?"
 # === END USER CUSTOMIZATION ===
