@@ -18,7 +18,7 @@ Flatpack democratises AI and ML through micro language models and model compress
 
 ## Elevator pitch
 
-When we were children, we imagined our toys could come to life. This dream is becoming a reality with the advancement of AI and micro language models. These technological wonders have the potential to transform the ordinary into something extraordinary, making our real-world environment as captivating as any metaverse or virtual reality. This fusion of AI with the physical world accelerates scientific progress, enhances life quality, and opens vast business opportunities. By imbuing our surroundings with intelligence, we unlock limitless potential for connection, creativity, and growth, heralding a new frontier of human accomplishment.
+When we were children, we imagined our toys could come to life. This dream is becoming a reality with the advancement of AI and micro language models. These technological wonders have the potential to transform the ordinary into something extraordinary, making our real-world environment as captivating as any metaverse or virtual reality. This fusion of AI with the physical world accelerates scientific progress, enhances life quality, and unlocks vast business opportunities. By imbuing our surroundings with intelligence, we unlock limitless potential for connection, creativity, and growth, heralding a new frontier of human accomplishment.
 
 > **Flatpack:** "Picture merging the Swedish ingenuity of flatpacks (hence our name) and ready-to-assemble furniture with the imaginative appeal of certain Danish snap-together toy bricks. Our method of developing micro language models is designed to be intelligently integrated into the physical world." (Henric Romlin 2023)
 
