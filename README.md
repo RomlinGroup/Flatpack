@@ -12,9 +12,9 @@
 
 ## Ready-to-assemble AI
 
-Flatpack is an open-source project built around micro language models (ranging from 10 million to 10 billion parameters). It started as a way to standardise our internal process of working with artificial intelligence (AI) and machine learning (ML) but pivoted to become a decentralised and open-source platform entirely dedicated to micro language models and model compression for hyperautomatisation.
+Welcome, brave explorer! We are still in stealth mode (of sorts), but we are glad you found us.
 
-We are still in stealth mode, so if you somehow managed to find this page, we salute you.
+Flatpack is an open-source project built around micro language models (ranging from 10 million to 10 billion parameters). It started as a way to standardise our internal process of working with artificial intelligence (AI) and machine learning (ML) but pivoted to become a decentralised and open-source platform entirely dedicated to micro language models and model compression for hyperautomatisation.
 
 ## Elevator pitch
 
