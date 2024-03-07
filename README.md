@@ -14,7 +14,7 @@
 
 Welcome, brave explorer! We are still in stealth mode (of sorts), but we are glad you found us.
 
-Flatpack is an open-source project dedicated to micro language models and model compression. These models vary in size, ranging from 10 million to 10 billion parameters, and are packaged in standardised formats known as flatpacks (FPKs). We initiated Flatpack to improve our internal workflows when working with AI and ML.
+Flatpack is an open-source project that brings cutting-edge artificial intelligence (AI) within everyone's reach by focusing on micro language models and model compression. Our models range from 10 million to 10 billion parameters and are uniquely packaged into standardized units known as flatpacks (FPKs). This initiative began to streamline our internal processes in AI and machine learning (ML) development. By creating Flatpack, we aim to simplify the use of sophisticated AI technologies, making it more accessible and efficient for developers and innovators. Flatpack is designed to lower the barriers to AI and ML, enabling more people to leverage these powerful tools for their projects, regardless of their technical experience.
 
 ## Elevator pitch
 
