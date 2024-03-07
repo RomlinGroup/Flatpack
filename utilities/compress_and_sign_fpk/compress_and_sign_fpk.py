@@ -19,7 +19,8 @@ def compress_data(input_path, output_path):
             # Handling individual files
             with open(input_path, 'rb') as f:
                 data = f.read()
-            compressed_data = zstd.compress(data)
+            compression_level = 22
+            compressed_data = zstd.compress(data, compression_level)
             with open(output_path, 'wb') as f:
                 f.write(compressed_data)
         elif os.path.isdir(input_path):

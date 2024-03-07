@@ -25,6 +25,13 @@ def find_folders_to_compress(base_dir):
     return folders
 
 
+def delete_existing_fpk_files(folder_path):
+    for file in os.listdir(folder_path):
+        if file.endswith(".fpk"):
+            os.remove(os.path.join(folder_path, file))
+            logging.info(f"Deleted existing .fpk file: {file}")
+
+
 def main():
     parser = argparse.ArgumentParser(
         description='Automatically compress, sign, and then only keep the signed folders found directly within /warehouse, excluding the "template" directory, which is two levels up from the script location.')
@@ -44,6 +51,9 @@ def main():
     folders = find_folders_to_compress(base_dir)
 
     for folder in folders:
+        # Delete any existing .fpk files in the current folder
+        delete_existing_fpk_files(folder)
+
         folder_name = os.path.basename(folder)
         output_path = os.path.join(folder, f"{folder_name}-temp.fpk")
         signed_path = os.path.join(folder, f"{folder_name}.fpk")
