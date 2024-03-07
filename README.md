@@ -14,7 +14,7 @@
 
 Welcome, brave explorer! We are still in stealth mode (of sorts), but we are glad you found us.
 
-Flatpack is an open-source project that focuses on micro language models and model compression. These models range from 10 million to 10 billion parameters and are stored in standardised flatpacks (FPKs). We started Flatpack to enhance our internal working processes with AI.
+Flatpack is an open-source project dedicated to micro language models and model compression. These models vary in size, ranging from 10 million to 10 billion parameters, and are packaged in standardised formats known as flatpacks (FPKs). We initiated Flatpack to improve our internal workflows when working with AI and ML.
 
 ## Elevator pitch
 
