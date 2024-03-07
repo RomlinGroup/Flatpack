@@ -12,7 +12,7 @@
 
 ## Ready-to-assemble AI
 
-In the vast field of artificial intelligence (AI) and machine learning (ML), we encounter a significant challenge: the need for a unified format. This format acts as a thread that binds different AI and ML technologies together, ensuring compatibility and simplifying development. We are not just creating; we are unifying.
+In the field of artificial intelligence (AI) and machine learning (ML), we encounter a significant challenge: the need for a unified format. This format acts as a thread that binds different AI and ML technologies together, ensuring compatibility and simplifying development. We are not just creating; we are unifying.
 
 ## Elevator pitch
 
