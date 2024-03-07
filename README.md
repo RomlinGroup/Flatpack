@@ -14,7 +14,7 @@
 
 Welcome, brave explorer! We are still in stealth mode (of sorts), but we are glad you found us.
 
-Flatpack is an open-source project that brings artificial intelligence (AI) and machine learning (ML) within everyone's reach by focusing on micro language models and model compression. Our models range from 10 million to 10 billion parameters and are uniquely packaged into standardised units known as flatpacks (FPKs). This initiative began to streamline our internal processes in AI and ML development. In the not-so-distant future, it will be possible to create edge computing devices, electronic components and robots using FPKs - the floppy disks or game cartridges in the age of AI.
+Flatpack democratises AI/ML with micro language models and model compression. Models range from 10M to 10B parameters and are included in our standardised flatpacks (FPKs). FPKs will soon be available for edge devices, components, and robots, akin to floppy disks or game cartridges for earlier computing.
 
 ## Elevator pitch
 
