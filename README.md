@@ -14,7 +14,7 @@
 
 Welcome, brave explorer! We are still in stealth mode (of sorts), but we are glad you found us.
 
-Flatpack democratises AI/ML with micro language models and model compression. Models range from 10M to 10B parameters and are included in our standardised flatpacks (FPKs), which will soon be available for edge computing devices, electronic components, and robots, akin to floppy disks or game cartridges.
+Flatpack democratises AI and ML, integrating existing open-source micro language models and model compression technologies while offering the capability to train your models from scratch. Our platform supports a range of models, from 10 million to 10 billion parameters, packaged into standardised packages known as flatpacks (FPKs). These flatpacks are designed to revolutionise the use of AI and ML in edge computing devices, electronic components, and robots, similar to the role of floppy disks or game cartridges in the past.
 
 ## Elevator pitch
 
