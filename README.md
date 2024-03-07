@@ -14,7 +14,7 @@
 
 Welcome, brave explorer! We are still in stealth mode (of sorts), but we are glad you found us.
 
-Flatpack democratises AI and ML by harnessing the power of open-source micro language models and advanced model compression technologies. Our innovative platform enables users to train custom models from the ground up, catering to a diverse range of complexities - from 10 million to 10 billion parameters.
+Flatpack democratises AI and ML by harnessing the power of open-source micro language models and model compression technologies. Our innovative platform enables users to train custom models from the ground up, catering to a diverse range of complexities - from 10 million to 10 billion parameters.
 
 We introduce flatpacks (FPKs), our standardised packages designed to seamlessly integrate AI and ML into edge computing devices, electronic components, and robots. Imagine the transformative impact of floppy disks or game cartridges reimagined for today's technology landscape. Flatpack is set to redefine how we deploy and interact with AI and ML, making it more accessible, impactful, and versatile.
 
