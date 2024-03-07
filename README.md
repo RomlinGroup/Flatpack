@@ -12,7 +12,7 @@
 
 ## Ready-to-assemble AI
 
-In the field of artificial intelligence (AI) and machine learning (ML), we encounter a significant challenge: the need for a unified format. This format acts as a thread that binds different AI and ML technologies together, ensuring compatibility and simplifying development. We are not just creating; we are unifying.
+Flatpack is an open-source project built around micro language models (ranging from 10 million to 10 billion parameters). It started as a way to standardise our internal process of working with artificial intelligence (AI) and machine learning (ML) but pivoted to become a first-of-its-kind decentralised and open-source platform dedicated to micro language models and model compression for hyperautomatisation. We are still in stealth mode, with zero marketing, so if you somehow managed to find this page, we salute you, brave explorer.
 
 ## Elevator pitch
 
