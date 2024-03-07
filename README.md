@@ -14,9 +14,7 @@
 
 Welcome, brave explorer! We are still in stealth mode (of sorts), but we are glad you found us.
 
-Flatpack democratises AI and ML by harnessing the power of open-source micro language models and model compression technologies. Our innovative platform enables users to train custom models from the ground up, catering to a diverse range of complexities - from 10 million to 10 billion parameters.
-
-We introduce flatpacks (FPKs), our standardised packages designed to seamlessly integrate AI and ML into edge computing devices, electronic components, and robots. Imagine the transformative impact of floppy disks or game cartridges reimagined for today's technology landscape. Flatpack is set to redefine how we deploy and interact with AI and ML, making it more accessible, impactful, and versatile.
+Flatpack democratises AI and ML through micro language models and model compression. Our platform enables users to train customised models with 10M to 10B parameters. We introduce flatpacks (FPKs) to integrate AI and ML into edge computing, electronic components, and robots.
 
 ## Elevator pitch
 
@@ -146,7 +144,7 @@ Overall, micro language models represent a logical step in the evolution of lang
 
 We are developing [Navformer](http://navformer.com), an AI-powered navigation system for robots that avoids obstacles and executes commands efficiently. It will be a standard component in Flatpack.
 
-* **CPU-friendly:** Optimised for CPU usage, ensuring compatibility and efficiency across various edge computing devices without requiring specialised hardware.
+* **CPU-friendly:** Optimised for CPU usage, ensuring compatibility and efficiency across various edge computing without requiring specialised hardware.
 * **Monocular navigation:** Utilises a single-lens system for spatial awareness, providing a compact and cost-effective solution for 3D environment mapping.
 * **Real-time inference:** Capable of processing and reacting to environmental data in real-time, crucial for dynamic and unpredictable settings.
 * **Transformer-based:** Incorporates the latest in transformer neural network technology, enabling interpretation of complex spatial data and superior understanding.
