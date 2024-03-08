@@ -26,7 +26,8 @@ fi
 
 # === BEGIN USER CUSTOMIZATION ===
 cp train.py train.py.backup
-sed -i 's/dtype = "bfloat16"/dtype = "float16"/' train.py
+sed -i "s/device = 'cuda'/device = 'mps'/" train.py
+sed -i "s/dtype = 'bfloat16' if torch.cuda.is_available() and torch.cuda.is_bf16_supported() else 'float16'/dtype = 'float16' if torch.cuda.is_available() and torch.cuda.is_bf16_supported() else 'float16'/" train.py
 sed -i 's/compile = True/compile = False/' train.py
 "${VENV_PYTHON}" data/shakespeare_char/prepare.py
 "${VENV_PYTHON}" train.py config/train_shakespeare_char.py
