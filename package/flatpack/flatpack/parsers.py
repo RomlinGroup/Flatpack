@@ -14,14 +14,20 @@ def parse_toml_to_venv_script(file_path: str, python_version="3.10.12", env_name
     - Bash script as a string.
     """
 
+    def is_url(s):
+        """Check if a string is a URL."""
+        return s.startswith('http://') or s.startswith('https://')
+
     def check_command_availability(commands: list) -> list:
         """Generate bash snippets to check if each command in the provided list is available."""
-        checks = [f"""
+        checks = [
+            f"""
 if [[ $IS_COLAB -eq 0 ]] && ! command -v {cmd} >/dev/null; then
   echo "{cmd} not found. Please install {cmd}."
   exit 1
 fi
-        """.strip() for cmd in commands]
+            """.strip() for cmd in commands
+        ]
         return checks
 
     # Load TOML configuration
@@ -36,22 +42,22 @@ fi
 
     # Check if running in Google Colab and whether it's a GPU or CPU environment
     colab_check = """
-    if [[ -d "/content" ]]; then
-      # Detected Google Colab environment
-      if command -v nvidia-smi &> /dev/null; then
-        echo "Running in Google Colab with GPU"
-        IS_COLAB=1
-        DEVICE="cuda"
-      else
-        echo "Running in Google Colab with CPU only"
-        IS_COLAB=1
-        DEVICE="cpu"
-      fi
-    else
-      echo "Not running in Google Colab environment"
-      IS_COLAB=0
-      # Placeholder for setting DEVICE based on other conditions if needed
-    fi
+if [[ -d "/content" ]]; then
+  # Detected Google Colab environment
+  if command -v nvidia-smi &> /dev/null; then
+    echo "Running in Google Colab with GPU"
+    IS_COLAB=1
+    DEVICE="cuda"
+  else
+    echo "Running in Google Colab with CPU only"
+    IS_COLAB=1
+    DEVICE="cpu"
+  fi
+else
+  echo "Not running in Google Colab environment"
+  IS_COLAB=0
+  # Placeholder for setting DEVICE based on other conditions if needed
+fi
     """.strip()
     script.append(colab_check)
 
@@ -91,7 +97,7 @@ handle_error() {{
 }}
 
 if [[ $IS_COLAB -eq 0 ]]; then
-    
+
     # Check if python3 is available
     if command -v python3 &>/dev/null; then
         PYTHON_CMD=python3
@@ -170,7 +176,16 @@ fi
         for item in config.get(item_type, []):
             from_source, to_destination = item.get("from_source"), item.get("to_destination")
             if from_source and to_destination:
-                script.append(f"curl -L {from_source} -o ./{model_name}/{to_destination.replace('/home/content/', '')}")
+                destination_path = f"./{model_name}/{to_destination.replace('/home/content/', '')}"
+                # Check if the source is a URL or a local file path
+                if is_url(from_source):
+                    # Download the file from the URL
+                    script.append(f"curl -L {from_source} -o {destination_path}")
+                else:
+                    # Ensure the directory for the destination path exists
+                    script.append(f"mkdir -p $(dirname {destination_path})")
+                    # Copy the file from a local path
+                    script.append(f"cp {from_source} {destination_path}")
 
     # Execute specified run commands
     run_vec = config.get("run", [])

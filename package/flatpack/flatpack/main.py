@@ -233,16 +233,30 @@ def fpk_find_models(directory_path: str = None) -> List[str]:
     return model_files
 
 
-def fpk_install(directory_name: str, session, verbose: bool = False):
-    """Install a specified flatpack."""
-    if not fpk_valid_directory_name(directory_name):
-        print(f"❌ Invalid directory name: '{directory_name}'.")
-        return
+def fpk_install(directory_name: str, session, verbose: bool = False, local: bool = False):
+    # Handle local directory installation
+    if local:
+        local_directory_path = Path(directory_name)
+        if not local_directory_path.exists() or not local_directory_path.is_dir():
+            print(f"❌ Local directory does not exist: '{directory_name}'.")
+            return
+        # Assuming flatpack.toml is required in the directory
+        toml_path = local_directory_path / 'flatpack.toml'
+        if not toml_path.exists():
+            print(f"❌ flatpack.toml not found in the specified directory: '{directory_name}'.")
+            return
+        with open(toml_path, 'r') as f:
+            toml_content = f.read()
+    else:
+        # Existing GitHub fetch logic
+        if not fpk_valid_directory_name(directory_name):
+            print(f"❌ Invalid directory name: '{directory_name}'.")
+            return
 
-    toml_content = fpk_fetch_flatpack_toml_from_dir(directory_name, session)
-    if not toml_content:
-        print(f"❌ Error: Failed to fetch TOML content for '{directory_name}'.")
-        return
+        toml_content = fpk_fetch_flatpack_toml_from_dir(directory_name, session)
+        if not toml_content:
+            print(f"❌ Error: Failed to fetch TOML content for '{directory_name}'.")
+            return
 
     with open('temp_flatpack.toml', 'w') as f:
         f.write(toml_content)
@@ -468,6 +482,8 @@ def main():
             parser.add_argument('command', help='Command to run')
             parser.add_argument('input', nargs='?', default=None, help='Input for the callback')
             parser.add_argument('--verbose', action='store_true', help='Display detailed outputs for debugging.')
+            parser.add_argument('--local', action='store_true',
+                                help='Install from a local directory instead of GitHub.')
 
             args = parser.parse_args()
             command = args.command
@@ -487,26 +503,39 @@ def main():
 
                 directory_name = args.input
 
-                existing_dirs = fpk_fetch_github_dirs(session)
-                if directory_name not in existing_dirs:
-                    print(f"❌ The flatpack '{directory_name}' does not exist.")
-                    return
-
-                fpk_display_disclaimer(directory_name)
-
-                while True:
-                    user_response = input().strip().upper()
-                    if user_response == "YES":
-                        break
-                    elif user_response == "NO":
-                        print("❌ Installation aborted by user.")
+                if not args.local:
+                    # If not installing from a local directory, check if the flatpack exists in GitHub directories
+                    existing_dirs = fpk_fetch_github_dirs(session)
+                    if directory_name not in existing_dirs:
+                        print(f"❌ The flatpack '{directory_name}' does not exist.")
                         return
-                    else:
-                        print("❌ Invalid input. Please type 'YES' to accept or 'NO' to decline.")
+
+                    # Display disclaimer and proceed with installation
+                    fpk_display_disclaimer(directory_name)
+
+                    while True:
+                        user_response = input().strip().upper()
+                        if user_response == "YES":
+                            break
+                        elif user_response == "NO":
+                            print("❌ Installation aborted by user.")
+                            return
+                        else:
+                            print("❌ Invalid input. Please type 'YES' to accept or 'NO' to decline.")
+
+                if args.local:
+                    # For local installation, directly proceed without GitHub check
+                    local_directory_path = Path(directory_name)
+                    if not local_directory_path.exists() or not local_directory_path.is_dir():
+                        print(f"❌ Local directory does not exist: '{directory_name}'.")
+                        return
+                    toml_path = local_directory_path / 'flatpack.toml'
+                    if not toml_path.exists():
+                        print(f"❌ flatpack.toml not found in the specified directory: '{directory_name}'.")
+                        return
 
                 print("Verbose mode:", args.verbose)
-                fpk_install(directory_name, session, verbose=args.verbose)
-
+                fpk_install(directory_name, session, verbose=args.verbose, local=args.local)
             elif command == "list":
                 print(fpk_list_directories(session))
             elif command == "run":
