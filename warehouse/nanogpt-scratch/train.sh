@@ -16,7 +16,7 @@ source "$SCRIPT_DIR/device.sh" || {
 }
 
 # Required devices (cpu cuda mps)
-REQUIRED_DEVICES="mps"
+REQUIRED_DEVICES="cuda mps"
 
 # Check if DEVICE is among the required devices
 if [[ ! " $REQUIRED_DEVICES " =~ " $DEVICE " ]]; then
@@ -25,6 +25,8 @@ if [[ ! " $REQUIRED_DEVICES " =~ " $DEVICE " ]]; then
 fi
 
 # === BEGIN USER CUSTOMIZATION ===
+"${VENV_PIP}" install --pre torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/nightly/cpu
+
 cp train.py train.py.backup
 sed -i 's/dtype = "bfloat16"/dtype = "float16"/' train.py
 sed -i 's/compile = True/compile = False/' train.py
