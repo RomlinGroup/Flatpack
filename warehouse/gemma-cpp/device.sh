@@ -25,12 +25,12 @@ if [[ -d "/content" ]]; then
   fi
   export VENV_PYTHON="/usr/bin/python3"
   DEFAULT_PATH="/content"
-  WORK_DIR="$DEFAULT_PATH/$FLATPACK_NAME/$REPO_NAME"
+  WORK_DIR="$DEFAULT_PATH/$FLATPACK_NAME/build/$REPO_NAME"
 elif [ "$OS" = "Darwin" ]; then
   echo "🍎 Detected macOS environment"
   export VENV_PYTHON="${SCRIPT_DIR}/bin/python"
   DEFAULT_PATH="/Users/$(whoami)/flatpacks"
-  WORK_DIR="$DEFAULT_PATH/$FLATPACK_NAME/$REPO_NAME"
+  WORK_DIR="$DEFAULT_PATH/$FLATPACK_NAME/build/$REPO_NAME"
   DEVICE="mps"
 elif [ "$OS" = "Linux" ]; then
   # Check for Python version and adjust VENV_PYTHON accordingly
@@ -41,17 +41,17 @@ elif [ "$OS" = "Linux" ]; then
   fi
   if [ -f /etc/os-release ] && grep -q "Ubuntu" /etc/os-release; then
     echo "🐧 Detected Ubuntu environment"
-    WORK_DIR="$DEFAULT_PATH/$FLATPACK_NAME/$REPO_NAME"
+    WORK_DIR="$DEFAULT_PATH/$FLATPACK_NAME/build/$REPO_NAME"
   else
     echo "🐧 Detected Linux environment (non-Ubuntu)"
-    WORK_DIR="$DEFAULT_PATH/$FLATPACK_NAME/$REPO_NAME"
+    WORK_DIR="$DEFAULT_PATH/$FLATPACK_NAME/build/$REPO_NAME"
   fi
   DEVICE="cpu"
 else
   echo "❓ Detected other OS environment"
   # Assume CPU for other environments as a fallback
   DEVICE="cpu"
-  WORK_DIR="$DEFAULT_PATH/$FLATPACK_NAME/$REPO_NAME"
+  WORK_DIR="$DEFAULT_PATH/$FLATPACK_NAME/build/$REPO_NAME"
 fi
 
 if [[ "$OS" = "Darwin" ]]; then

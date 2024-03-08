@@ -64,7 +64,7 @@ fi
     script.append(colab_check)
 
     # Ensure the build/model_name directory exists
-    script.append(f"mkdir -p .{model_name}/{build_prefix}")
+    script.append(f"mkdir -p {model_name}/{build_prefix}")
 
     # Ensure required commands are available
     script.extend(check_command_availability(["curl", "wget", "git"]))
@@ -140,7 +140,7 @@ fi
     if directories_map:
         for directory_path in directories_map.values():
             formatted_path = directory_path.lstrip('/').replace("home/content/", "")
-            script.append(f"mkdir -p .{model_name}/{build_prefix}/{formatted_path}")
+            script.append(f"mkdir -p {model_name}/{build_prefix}/{formatted_path}")
 
     # Set model name as an environment variable
     script.append(f"export model_name={model_name}")
@@ -180,18 +180,15 @@ fi
         for item in config.get(item_type, []):
             from_source, to_destination = item.get("from_source"), item.get("to_destination")
             if from_source and to_destination:
-                destination_path = f"{model_name}/{build_prefix}"
-                if is_url(from_source):
-                    script.append(f"curl -L {from_source} -o {destination_path}")
-                else:
-                    script.append(f"mkdir -p $(dirname {destination_path}) && cp {from_source} {destination_path}")
+                script.append(
+                    f"curl -L {from_source} -o ./{model_name}/{build_prefix}/{to_destination.replace('/home/content/', '')}")
 
     # Execute specified run commands
     run_vec = config.get("run", [])
     for run in run_vec:
         command, args = run.get("command"), run.get("args")
         if command and args:
-            replaced_args = args.replace("/home/content/", f".{model_name}/{build_prefix}/")
+            replaced_args = args.replace("/home/content/", f"{model_name}/{build_prefix}/")
             script.append(f"{command} {replaced_args}")
 
     return "\n".join(script)
