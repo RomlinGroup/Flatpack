@@ -36,8 +36,8 @@ tqdm = "*"
 wandb = "*"
 
 [[git]]
-from_source = "https://github.com/hafeild/nanoGPT-colab"
-to_destination = "/home/content/nanoGPT-colab"
+from_source = "https://github.com/karpathy/nanoGPT"
+to_destination = "/home/content/nanoGPT"
 branch = "main"
 
 [[file]]

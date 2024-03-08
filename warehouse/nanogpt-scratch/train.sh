@@ -6,7 +6,7 @@ export SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 echo -e "🚀 train.sh is running in: $SCRIPT_DIR\n"
 
 # === BEGIN USER CUSTOMIZATION ===
-export REPO_NAME=nanoGPT-colab
+export REPO_NAME=nanoGPT
 export FLATPACK_NAME=nanogpt-scratch
 # === END USER CUSTOMIZATION ===
 
@@ -25,8 +25,6 @@ if [[ ! " $REQUIRED_DEVICES " =~ " $DEVICE " ]]; then
 fi
 
 # === BEGIN USER CUSTOMIZATION ===
-"${VENV_PIP}" install --pre torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/nightly/cpu
-
 cp train.py train.py.backup
 sed -i 's/dtype = "bfloat16"/dtype = "float16"/' train.py
 sed -i 's/compile = True/compile = False/' train.py
