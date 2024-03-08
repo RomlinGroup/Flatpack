@@ -4,6 +4,7 @@ import toml
 def parse_toml_to_venv_script(file_path: str, python_version="3.10.12", env_name="myenv") -> str:
     """
     Convert a TOML configuration to a bash script that sets up a python environment using venv and performs actions based on the TOML.
+    Now ensures all directories, Git repositories, and other related files are created within a `/build` directory.
 
     Parameters:
     - file_path: The path to the TOML file.
@@ -38,6 +39,8 @@ fi
     if not model_name:
         raise ValueError("Missing model_name in flatpack.toml")
 
+    build_prefix = "build"
+
     script = ["#!/bin/bash"]
 
     # Check if running in Google Colab and whether it's a GPU or CPU environment
@@ -56,21 +59,12 @@ if [[ -d "/content" ]]; then
 else
   echo "Not running in Google Colab environment"
   IS_COLAB=0
-  # Placeholder for setting DEVICE based on other conditions if needed
 fi
     """.strip()
     script.append(colab_check)
 
-    # Bash check for directory existence
-    script.append(f"""
-if [[ $IS_COLAB -eq 1 ]]; then
-    if [ ! -d "{model_name}" ]; then
-        mkdir -p {model_name}
-    else
-        echo 'Directory {model_name} already exists in Google Colab. Moving on.'
-    fi
-fi
-    """)
+    # Ensure the build/model_name directory exists
+    script.append(f"mkdir -p .{model_name}/{build_prefix}")
 
     # Ensure required commands are available
     script.extend(check_command_availability(["curl", "wget", "git"]))
@@ -97,30 +91,43 @@ handle_error() {{
 }}
 
 if [[ $IS_COLAB -eq 0 ]]; then
-
-    # Check if python3 is available
+    
+    echo "🐍 Checking for Python"
     if command -v python3 &>/dev/null; then
         PYTHON_CMD=python3
+        echo "Using python3"
     else
         PYTHON_CMD=python
+        echo "Fallback to python"
     fi
 
-    if [ ! -d "{env_name}" ]; then
-        $PYTHON_CMD -m venv {env_name} || handle_error
-    fi
+    echo "Python command to be used: $PYTHON_CMD"
 
-    export VENV_PYTHON={env_name}/bin/python
+    echo "🦄 Creating the virtual environment at {env_name}/{build_prefix}"
+    
+    if ! $PYTHON_CMD -m venv "{env_name}/{build_prefix}"; then
+        echo "❌ Failed to create the virtual environment using $PYTHON_CMD"
+        handle_error
+    else
+        echo "✅ Successfully created the virtual environment"
+    fi
+    
+    # Ensuring the VENV_PYTHON path does not begin with a dot and is correctly formed
+    export VENV_PYTHON="{env_name}/{build_prefix}/bin/python"
+    if [[ -f "$VENV_PYTHON" ]]; then
+        echo "✅ VENV_PYTHON is set correctly to $VENV_PYTHON"
+    else
+        echo "❌ VENV_PYTHON is set to $VENV_PYTHON, but this file does not exist"
+        handle_error
+    fi
 fi
     """.strip()
     script.append(venv_setup)
 
-    # Additional logic to determine VENV_PIP based on OS
+    # Additional logic for determining VENV_PIP
     script.append(f"""
 OS=$(uname)
-if [[ "$OS" = "Darwin" ]]; then
-    export VENV_PIP="$(dirname $VENV_PYTHON)/pip"
-elif [[ "$OS" = "Linux" ]] || [[ -d "/content" ]]; then
-    # For Linux and Google Colab, assuming python3 and venv setup
+if [[ "$OS" = "Darwin" ]] || [[ "$OS" = "Linux" ]] || [[ -d "/content" ]]; then
     export VENV_PIP="$(dirname $VENV_PYTHON)/pip"
 else
     echo "⚠️  Virtual environment's pip could not be determined."
@@ -128,12 +135,12 @@ else
 fi
     """.strip())
 
-    # Create other directories as per the TOML configuration
+    # Create other directories within the build directory as per the TOML configuration
     directories_map = config.get("directories")
     if directories_map:
         for directory_path in directories_map.values():
             formatted_path = directory_path.lstrip('/').replace("home/content/", "")
-            script.append(f"mkdir -p ./{model_name}/{formatted_path}")
+            script.append(f"mkdir -p .{model_name}/{build_prefix}/{formatted_path}")
 
     # Set model name as an environment variable
     script.append(f"export model_name={model_name}")
@@ -142,7 +149,6 @@ fi
     packages = config.get("packages", {}).get("python", {})
     package_list = [f"{package}=={version}" if version != "*" and version else package for package, version in
                     packages.items()]
-
     if package_list:
         script.append(f"$VENV_PIP install {' '.join(package_list)}")
 
@@ -150,7 +156,7 @@ fi
     for git in config.get("git", []):
         from_source, to_destination, branch = git.get("from_source"), git.get("to_destination"), git.get("branch")
         if from_source and to_destination and branch:
-            repo_path = f"./{model_name}/{to_destination.replace('/home/content/', '')}"
+            repo_path = f"{model_name}/{build_prefix}/{to_destination.replace('/home/content/', '')}"
             git_clone = f"""
 echo "Cloning repository from: {from_source}"
 git clone -b {branch} {from_source} {repo_path}
@@ -161,8 +167,6 @@ else
     exit 1
 fi
 if [ -f {repo_path}/requirements.txt ]; then
-    echo "pwd: $(pwd)"
-    echo "repo_path: {repo_path}"
     echo "Found requirements.txt, installing dependencies..."
     ${{VENV_PIP}} install -r {repo_path}/requirements.txt
 else
@@ -176,23 +180,18 @@ fi
         for item in config.get(item_type, []):
             from_source, to_destination = item.get("from_source"), item.get("to_destination")
             if from_source and to_destination:
-                destination_path = f"./{model_name}/{to_destination.replace('/home/content/', '')}"
-                # Check if the source is a URL or a local file path
+                destination_path = f"{model_name}/{build_prefix}"
                 if is_url(from_source):
-                    # Download the file from the URL
                     script.append(f"curl -L {from_source} -o {destination_path}")
                 else:
-                    # Ensure the directory for the destination path exists
-                    script.append(f"mkdir -p $(dirname {destination_path})")
-                    # Copy the file from a local path
-                    script.append(f"cp {from_source} {destination_path}")
+                    script.append(f"mkdir -p $(dirname {destination_path}) && cp {from_source} {destination_path}")
 
     # Execute specified run commands
     run_vec = config.get("run", [])
     for run in run_vec:
         command, args = run.get("command"), run.get("args")
         if command and args:
-            replaced_args = args.replace("/home/content/", f"./{model_name}/")
+            replaced_args = args.replace("/home/content/", f".{model_name}/{build_prefix}/")
             script.append(f"{command} {replaced_args}")
 
     return "\n".join(script)

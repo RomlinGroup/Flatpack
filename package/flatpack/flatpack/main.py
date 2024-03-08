@@ -101,14 +101,24 @@ def fpk_get_api_key() -> Optional[str]:
 
 
 def fpk_cache_last_flatpack(directory_name: str):
-    """Cache the last installed flatpack's directory name to a file.
+    """Cache the last installed flatpack's directory name to a file within the corresponding build directory."""
+    # The directory where the flatpack is installed, which includes the build directory
+    flatpack_dir = Path.cwd() / directory_name / "build"
+    flatpack_dir.mkdir(parents=True, exist_ok=True)  # Ensure the directory exists
 
-    Args:
-        directory_name (str): Name of the flatpack directory.
-    """
-    cache_file_path = os.path.join(os.getcwd(), 'last_flatpack.cache')
+    # The cache file that contains the name of the last installed flatpack
+    cache_file_path = flatpack_dir / 'last_flatpack.cache'
     with open(cache_file_path, 'w') as f:
         f.write(directory_name)
+
+
+def fpk_get_last_flatpack(directory_name: str) -> Optional[str]:
+    """Retrieve the last installed flatpack's directory name from the cache file within the correct build directory."""
+    flatpack_dir = Path.cwd() / directory_name / "build"
+    cache_file_path = flatpack_dir / 'last_flatpack.cache'
+    if cache_file_path.exists():
+        return cache_file_path.read_text().strip()
+    return None
 
 
 def fpk_colorize(text, color):
@@ -234,19 +244,24 @@ def fpk_find_models(directory_path: str = None) -> List[str]:
 
 
 def fpk_install(directory_name: str, session, verbose: bool = False, local: bool = False):
+    # Define the directory where the flatpack will be installed, which includes the build directory
+    flatpack_dir = Path.cwd() / directory_name
+    flatpack_dir.mkdir(parents=True, exist_ok=True)  # Ensure the directory exists
+    build_dir = flatpack_dir / "build"
+    build_dir.mkdir(parents=True, exist_ok=True)  # Explicitly ensure that build_dir exists
+
+    # Define the path for the temporary flatpack TOML file
+    temp_toml_path = build_dir / 'temp_flatpack.toml'
+
     # Handle local directory installation
     if local:
-        local_directory_path = Path(directory_name)
-        if not local_directory_path.exists() or not local_directory_path.is_dir():
-            print(f"❌ Local directory does not exist: '{directory_name}'.")
-            return
+        local_directory_path = flatpack_dir  # Use flatpack_dir directly since it already points to the correct location
         # Assuming flatpack.toml is required in the directory
         toml_path = local_directory_path / 'flatpack.toml'
         if not toml_path.exists():
             print(f"❌ flatpack.toml not found in the specified directory: '{directory_name}'.")
             return
-        with open(toml_path, 'r') as f:
-            toml_content = f.read()
+        toml_content = toml_path.read_text()
     else:
         # Existing GitHub fetch logic
         if not fpk_valid_directory_name(directory_name):
@@ -258,19 +273,23 @@ def fpk_install(directory_name: str, session, verbose: bool = False, local: bool
             print(f"❌ Error: Failed to fetch TOML content for '{directory_name}'.")
             return
 
-    with open('temp_flatpack.toml', 'w') as f:
-        f.write(toml_content)
+    # Write the TOML content to the temporary file
+    temp_toml_path.write_text(toml_content)
 
-    bash_script_content = parse_toml_to_venv_script('temp_flatpack.toml', '3.10.12', directory_name)
+    # Generate the bash script content from the TOML file
+    bash_script_content = parse_toml_to_venv_script(str(temp_toml_path), '3.10.12', directory_name)
 
-    with open('flatpack.sh', 'w') as f:
-        f.write(bash_script_content)
+    # Save the bash script in the build directory
+    bash_script_path = build_dir / 'flatpack.sh'
+    bash_script_path.write_text(bash_script_content)
 
-    os.remove('temp_flatpack.toml')
+    # Remove the temporary TOML file after it's no longer needed
+    temp_toml_path.unlink()
 
     print(f"Installing {directory_name}...")
 
-    command = ["bash", shlex.quote("flatpack.sh")]
+    # Execute the bash script
+    command = ["bash", str(bash_script_path)]
 
     try:
         if verbose:
@@ -281,9 +300,9 @@ def fpk_install(directory_name: str, session, verbose: bool = False, local: bool
             stdout, stderr = process.communicate()
             if process.returncode != 0:
                 print("❌ Error: Failed to execute the bash script.")
-                # Uncomment for debugging
-                # print("Standard Output:", stdout.decode())
-                # print("Standard Error:", stderr.decode())
+                if verbose:
+                    print("Standard Output:", stdout.decode())
+                    print("Standard Error:", stderr.decode())
 
         if process.returncode == 0:
             fpk_cache_last_flatpack(directory_name)
@@ -377,27 +396,25 @@ def fpk_process_output(output, session, last_installed_flatpack):
                 fpk_log_to_api(line, session, api_key=api_key, model_name=last_installed_flatpack)
 
 
-def fpk_train(directory_name: str = None, session: httpx.Client = None):
-    """Train a model using a training script from a specific or last installed flatpack."""
-    cache_file_path = Path.cwd() / 'last_flatpack.cache'
-
-    if directory_name:
-        if not fpk_valid_directory_name(directory_name):
-            print(f"❌ Invalid directory name: '{directory_name}'.")
-            return
-        last_installed_flatpack = directory_name
-        fpk_cache_last_flatpack(directory_name)
+def fpk_train(directory: str, session: httpx.Client = None):
+    """Train a model using a training script from the last installed flatpack."""
+    # Iterate through each directory to find the 'last_flatpack.cache' file
+    for directory in Path.cwd().iterdir():
+        if directory.is_dir():
+            cache_file_path = directory / 'build' / 'last_flatpack.cache'
+            if cache_file_path.exists():
+                last_installed_flatpack = cache_file_path.read_text().strip()
+                break
     else:
-        if not cache_file_path.exists():
-            print("❌ No cached flatpack found.")
-            return
-        with cache_file_path.open('r') as f:
-            last_installed_flatpack = f.read().strip()
-            if not fpk_valid_directory_name(last_installed_flatpack):
-                print(f"❌ Invalid directory name from cache: '{last_installed_flatpack}'.")
-                return
+        print("❌ No cached flatpack found.")
+        return
 
-    training_script_path = Path(last_installed_flatpack) / 'train.sh'
+    if not fpk_valid_directory_name(last_installed_flatpack):
+        print(f"❌ Invalid directory name from cache: '{last_installed_flatpack}'.")
+        return
+
+    # Construct the path to the training script within the cached flatpack directory
+    training_script_path = directory / 'build' / 'train.sh'
     if not training_script_path.exists():
         print(f"❌ Training script not found in {last_installed_flatpack}.")
         return
@@ -535,6 +552,8 @@ def main():
                         return
 
                 print("Verbose mode:", args.verbose)
+
+                print(f"✅ Directory name resolved to: '{directory_name}'")
                 fpk_install(directory_name, session, verbose=args.verbose, local=args.local)
             elif command == "list":
                 print(fpk_list_directories(session))

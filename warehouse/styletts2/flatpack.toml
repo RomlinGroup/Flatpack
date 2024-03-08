@@ -4,7 +4,7 @@
 version = "0.0.1"
 
 [environment]
-model_name = "moondream"
+model_name = "styletts2"
 
 [[port]]
 external = 1337
@@ -36,20 +36,16 @@ tqdm = "*"
 wandb = "*"
 
 [[git]]
-from_source = "https://github.com/vikhyat/moondream"
-to_destination = "/home/content/moondream"
+from_source = "https://github.com/sidharthrajaram/StyleTTS2"
+to_destination = "/home/content/StyleTTS2"
 branch = "main"
 
 [[file]]
-from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/moondream/tiger.png"
-to_destination = "/home/content/tiger.png"
-
-[[file]]
-from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/moondream/device.sh"
+from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/styletts2/device.sh"
 to_destination = "/home/content/device.sh"
 
 [[file]]
-from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/moondream/train.sh"
+from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/styletts2/train.sh"
 to_destination = "/home/content/train.sh"
 
 [[run]]
