@@ -16,7 +16,7 @@ source "$SCRIPT_DIR/device.sh" || {
 }
 
 # Required devices (cpu cuda mps)
-REQUIRED_DEVICES="cuda mps"
+REQUIRED_DEVICES="mps"
 
 # Check if DEVICE is among the required devices
 if [[ ! " $REQUIRED_DEVICES " =~ " $DEVICE " ]]; then
