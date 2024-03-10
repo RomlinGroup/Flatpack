@@ -28,8 +28,6 @@ https://pypi.org/project/flatpack
 
 **NOTE:** Flatpack is currently experimental. Please refrain from using it in production environments.
 
-Are you looking to use Flatpack on your Linux or macOS device? Look no further! This quick example will show how easy it is to get started. With Flatpack, you can save time and streamline your work processes. Give it a try and see for yourself!
-
 ```bash
 # Install from PyPI
 pip install flatpack==3.2.0
@@ -47,7 +45,7 @@ flatpack install moondream
 
 ```bash
 # And last, but not least
-flatpack train moondream
+flatpack train
 ```
 
 ## Flatpack (FPK) 📦
