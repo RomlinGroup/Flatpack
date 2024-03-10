@@ -56,6 +56,7 @@ flatpack train moondream
 ## Flatpack (FPK) 📦
 
 - [template](warehouse/template)
+  - /app
   - flatpack.toml
   - DATASET.md
   - README.md
