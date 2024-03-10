@@ -4,8 +4,11 @@
 
 ## Ready-to-assemble AI
 
-Flatpack aims to be the go-to platform for AI experimentation and innovation, from educational settings to the
-highest echelons of industry and research.
+Welcome, brave explorer! We are still in stealth mode (of sorts), but we are glad you found us.
+
+Flatpack democratises AI and ML through micro language models and model compression. Our platform enables users to train
+customised models with 10M to 10B parameters. We introduce flatpacks (FPKs) to integrate AI and ML into edge computing,
+electronic components, and robots.
 
 ## Flatpack 3.X.X (Aglaonice)
 
@@ -49,7 +52,9 @@ MIT (INBOUND) is compatible with Apache-2.0 (OUTBOUND) for combined works but do
 original MIT-licensed component when distributed
 separately ([JLA 2023](https://joinup.ec.europa.eu/licence/compatibility-check/MIT/Apache-2.0)).
 
-*Check out the [JLA - Compatibility Checker](https://joinup.ec.europa.eu/collection/eupl/solution/joinup-licensing-assistant/jla-compatibility-checker) (European Commission 2023).*
+*Check out
+the [JLA - Compatibility Checker](https://joinup.ec.europa.eu/collection/eupl/solution/joinup-licensing-assistant/jla-compatibility-checker) (
+European Commission 2023).*
 
 - **[chromadb](https://pypi.org/project/cryptography/)**\
   Apache-2.0 ([LICENSE](https://github.com/chroma-core/chroma/blob/main/LICENSE))

@@ -30,7 +30,7 @@ https://pypi.org/project/flatpack
 
 ```bash
 # Install from PyPI
-pip install flatpack==3.2.0
+pip install flatpack==3.2.1
 ```
 
 ```bash
