@@ -24,7 +24,7 @@ Flatpack democratises AI and ML through micro language models and model compress
 
 https://pypi.org/project/flatpack
 
-Flatpack is currently experimental. Please refrain from using it in production environments. Below is a simple example of how to use Flatpack on Linux or macOS.
+Flatpack is currently experimental. Please refrain from using it in production environments. Below is a simple example of how to use Flatpack.
 
 ```bash
 # Install from PyPI
