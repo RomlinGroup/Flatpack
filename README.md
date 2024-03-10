@@ -32,6 +32,7 @@ https://pypi.org/project/flatpack
 # Colab: /content
 # Linux: /home/<username>/flatpacks
 # macOS: /Users/<username>/flatpacks
+# Windows: Use WSL2 and see Linux path
 
 # Install from PyPI
 pip install flatpack==3.2.1
