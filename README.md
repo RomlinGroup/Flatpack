@@ -50,7 +50,7 @@ flatpack install moondream
 
 ```bash
 # And last, but not least
-flatpack train
+flatpack train moondream
 ```
 
 ## Flatpack (FPK) 📦
