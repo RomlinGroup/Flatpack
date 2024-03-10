@@ -398,27 +398,27 @@ def fpk_process_output(output, session, last_installed_flatpack):
 
 def fpk_train(directory: str, session: httpx.Client = None):
     """Train a model using a training script from the last installed flatpack."""
-    cache_file_path = Path('last_flatpack.cache')  # Assuming the script runs in the directory containing this file
+    cache_file_path = Path('last_flatpack.cache')
     print(f"Looking for cached flatpack in {cache_file_path}.")
 
-    if not cache_file_path.exists():
-        print("❌ No cached flatpack found.")
+    if directory and fpk_valid_directory_name(directory):
+        print(f"Using provided directory: {directory}")
+        last_installed_flatpack = directory
+    elif cache_file_path.exists():
+        print(f"Found cached flatpack in {cache_file_path}.")
+        last_installed_flatpack = cache_file_path.read_text().strip()
+        if not fpk_valid_directory_name(last_installed_flatpack):
+            print(f"❌ Invalid directory name from cache: '{last_installed_flatpack}'.")
+            return
+    else:
+        print("❌ No cached flatpack found, and no valid directory provided.")
         return
 
-    print(f"Found cached flatpack in {cache_file_path}.")
-    last_installed_flatpack = cache_file_path.read_text().strip()
-
-    if not fpk_valid_directory_name(last_installed_flatpack):
-        print(f"❌ Invalid directory name from cache: '{last_installed_flatpack}'.")
-        return
-
-    # Assuming the flatpack directory structure remains the same, adjust paths as needed
     training_script_path = Path(last_installed_flatpack) / 'build' / 'train.sh'
     if not training_script_path.exists():
         print(f"❌ Training script not found in {last_installed_flatpack}.")
         return
 
-    # Start the subprocess for the training script
     env = dict(os.environ, PYTHONUNBUFFERED="1")
     safe_script_path = shlex.quote(str(training_script_path))
 
@@ -430,27 +430,22 @@ def fpk_train(directory: str, session: httpx.Client = None):
         outputs = [proc.stdout, proc.stderr]
 
         try:
-            # Continuously read from the subprocess's output
             while True:
-                # Check if process is still running
                 retcode = proc.poll()
                 if retcode is not None:
-                    break  # Process finished
+                    break
 
-                # Read lines from stdout and stderr
                 rlist, _, _ = select.select(outputs, [], [], 0.1)
                 for r in rlist:
                     line = r.readline()
                     if line:
                         fpk_process_output(line, session, last_installed_flatpack)
 
-                        # If the line does not end with a newline, it's likely a prompt waiting for input
                         if not line.endswith('\n'):
-                            user_input = input()  # Get input from user
-                            print(user_input, file=proc.stdin)  # Send input to subprocess
+                            user_input = input()
+                            print(user_input, file=proc.stdin)
 
         finally:
-            # Ensure subprocess finishes
             proc.wait()
     except subprocess.SubprocessError as e:
         print(f"❌ An error occurred while executing the subprocess: {e}")
