@@ -24,6 +24,8 @@ Flatpack democratises AI and ML through micro language models and model compress
 
 https://pypi.org/project/flatpack
 
+## Quick start
+
 Below is a quick example of how to use Flatpack on Linux or macOS. Please remember that we are still in stealth mode and do not provide support at this point. We appreciate your interest in Flatpack, but please be aware that documentation, features, and support are limited during this phase.
 
 ```bash
