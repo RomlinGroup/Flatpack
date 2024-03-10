@@ -103,7 +103,7 @@ def fpk_get_api_key() -> Optional[str]:
 def fpk_cache_last_flatpack(directory_name: str):
     """Cache the last installed flatpack's directory name to a file within the corresponding build directory."""
     # The directory where the flatpack is installed, which includes the build directory
-    flatpack_dir = Path.cwd() / directory_name / "build"
+    flatpack_dir = Path.cwd()
     flatpack_dir.mkdir(parents=True, exist_ok=True)  # Ensure the directory exists
 
     # The cache file that contains the name of the last installed flatpack
@@ -114,7 +114,7 @@ def fpk_cache_last_flatpack(directory_name: str):
 
 def fpk_get_last_flatpack(directory_name: str) -> Optional[str]:
     """Retrieve the last installed flatpack's directory name from the cache file within the correct build directory."""
-    flatpack_dir = Path.cwd() / directory_name / "build"
+    flatpack_dir = Path.cwd()
     cache_file_path = flatpack_dir / 'last_flatpack.cache'
     if cache_file_path.exists():
         return cache_file_path.read_text().strip()
@@ -398,23 +398,22 @@ def fpk_process_output(output, session, last_installed_flatpack):
 
 def fpk_train(directory: str, session: httpx.Client = None):
     """Train a model using a training script from the last installed flatpack."""
-    # Iterate through each directory to find the 'last_flatpack.cache' file
-    for directory in Path.cwd().iterdir():
-        if directory.is_dir():
-            cache_file_path = directory / 'build' / 'last_flatpack.cache'
-            if cache_file_path.exists():
-                last_installed_flatpack = cache_file_path.read_text().strip()
-                break
-    else:
+    cache_file_path = Path('last_flatpack.cache')  # Assuming the script runs in the directory containing this file
+    print(f"Looking for cached flatpack in {cache_file_path}.")
+
+    if not cache_file_path.exists():
         print("❌ No cached flatpack found.")
         return
+
+    print(f"Found cached flatpack in {cache_file_path}.")
+    last_installed_flatpack = cache_file_path.read_text().strip()
 
     if not fpk_valid_directory_name(last_installed_flatpack):
         print(f"❌ Invalid directory name from cache: '{last_installed_flatpack}'.")
         return
 
-    # Construct the path to the training script within the cached flatpack directory
-    training_script_path = directory / 'build' / 'train.sh'
+    # Assuming the flatpack directory structure remains the same, adjust paths as needed
+    training_script_path = Path(last_installed_flatpack) / 'build' / 'train.sh'
     if not training_script_path.exists():
         print(f"❌ Training script not found in {last_installed_flatpack}.")
         return

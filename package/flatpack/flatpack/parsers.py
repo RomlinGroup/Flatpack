@@ -180,15 +180,19 @@ fi
         for item in config.get(item_type, []):
             from_source, to_destination = item.get("from_source"), item.get("to_destination")
             if from_source and to_destination:
-                script.append(
-                    f"curl -L {from_source} -o ./{model_name}/{build_prefix}/{to_destination.replace('/home/content/', '')}")
+                if is_url(from_source):
+                    download_command = f"curl -L {from_source} -o ./{model_name}/{build_prefix}/{to_destination.replace('/home/content/', '')}"
+                    script.append(download_command)
+                else:
+                    download_command = f"cp .{from_source} ./{model_name}/{build_prefix}/{to_destination.replace('/home/content/', '')}"
+                    script.append(download_command)
 
     # Execute specified run commands
     run_vec = config.get("run", [])
     for run in run_vec:
         command, args = run.get("command"), run.get("args")
         if command and args:
-            replaced_args = args.replace("/home/content/", f"{model_name}/{build_prefix}/")
+            replaced_args = args.replace("/home/content/", f"./{model_name}/{build_prefix}/")
             script.append(f"{command} {replaced_args}")
 
     return "\n".join(script)

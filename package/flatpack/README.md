@@ -12,6 +12,9 @@ highest echelons of industry and research.
 *Aglaonice, an ancient Greek astronomer from the 2nd or 1st century BC, was celebrated for her precise lunar eclipse
 predictions. Her mastery inspired the Greek proverb: "As the moon obeys Aglaonice," signifying unwavering certainty.*
 
+`3.2.0` (2024-03-09)\
+*Added support for installing local flatpacks using --local.*
+
 `3.1.0` (2023-12-11)\
 *Introduced a local web interface for a better user experience.*
 

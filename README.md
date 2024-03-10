@@ -24,31 +24,26 @@ Flatpack democratises AI and ML through micro language models and model compress
 
 https://pypi.org/project/flatpack
 
+Below is a simple example of how to use Flatpack on Linux or macOS.
+
 ```bash
-# Google Colab / macOS
-pip install --upgrade flatpack
+# Install from PyPI
+pip install flatpack==3.2.0
 ```
 
 ```bash
-# Ubuntu Server 23.10
-sudo apt update && sudo apt install pipx
-pipx ensurepath
-
-pipx install flatpack
-```
-
-```bash
+# List all available flatpacks
 flatpack list
 ```
 
 ```bash
-# Google Colab: DEFAULT_PATH="/content"
-# macOS: DEFAULT_PATH="/Users/$(whoami)/flatpacks"
-flatpack install FPK_NAME
+# Install a flatpack (I picked moondream for this example)
+flatpack install moondream
 ```
 
 ```bash
-flatpack train FPK_NAME
+# And last, but not least
+flatpack train moondream
 ```
 
 ## Flatpack (FPK) 📦
