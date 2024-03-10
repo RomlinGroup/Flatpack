@@ -34,7 +34,7 @@ transformers = "*"
 torch = "*"
 tqdm = "*"
 wandb = "*"
-styletts2 = "*"
+styletts2 = "0.1.6"
 
 [[git]]
 from_source = "https://github.com/sidharthrajaram/StyleTTS2"
