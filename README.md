@@ -44,7 +44,7 @@ flatpack list
 ```
 
 ```bash
-# Install a flatpack (I picked moondream for this example)
+# Install a flatpack of your choice
 flatpack install moondream
 ```
 
