@@ -26,7 +26,9 @@ https://pypi.org/project/flatpack
 
 ## Quick start
 
-Below is a quick example of how to use Flatpack on Linux or macOS. Please remember that we are still in stealth mode and do not provide support at this point. We appreciate your interest in Flatpack, but please be aware that documentation, features, and support are limited during this phase.
+**NOTE:** Flatpack is currently experimental. Please refrain from using it in production environments.
+
+Are you looking to use Flatpack on your Linux or macOS device? Look no further! This quick example will show how easy it is to get started. With Flatpack, you can save time and streamline your work processes. Give it a try and see for yourself!
 
 ```bash
 # Install from PyPI
