@@ -29,7 +29,9 @@ https://pypi.org/project/flatpack
 **NOTE:** Flatpack is currently experimental. Please refrain from using it in production environments.
 
 **Colab:** /content
+
 **Linux:** /home/<username>/flatpacks
+
 **macOS:** /Users/<username>/flatpacks
 
 ```bash
