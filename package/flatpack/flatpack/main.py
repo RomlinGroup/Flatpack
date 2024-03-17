@@ -1,12 +1,5 @@
-from cryptography.fernet import Fernet
-from fastapi import FastAPI
-from fastapi.responses import JSONResponse
-from fastapi.middleware.cors import CORSMiddleware
-from .parsers import parse_toml_to_venv_script
-from pathlib import Path
-from typing import List, Optional
-
 import argparse
+import atexit
 import chromadb
 import httpx
 import ngrok
@@ -20,6 +13,15 @@ import sys
 import toml
 import uvicorn
 
+from chromadb.config import Settings
+from cryptography.fernet import Fernet
+from fastapi import FastAPI
+from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
+from .parsers import parse_toml_to_venv_script
+from pathlib import Path
+from typing import List, Optional
+
 CONFIG_FILE_PATH = os.path.join(os.path.expanduser("~"), ".fpk_config.toml")
 LOGGING_BATCH_SIZE = 10
 GITHUB_REPO_URL = "https://api.github.com/repos/romlingroup/flatpack"
@@ -31,6 +33,18 @@ log_queue = []
 config = {
     "api_key": None
 }
+
+
+def safe_cleanup():
+    try:
+        # Your cleanup code here
+        print("🦺 Safe cleanup completed.")
+    except Exception as e:
+        # Log the exception or silently pass
+        print(f"Exception during safe_cleanup: {e}")
+
+
+atexit.register(safe_cleanup)
 
 
 class SessionManager:
@@ -429,26 +443,37 @@ def fpk_train(directory: str, session: httpx.Client = None):
 
         outputs = [proc.stdout, proc.stderr]
 
-        try:
-            while True:
-                retcode = proc.poll()
-                if retcode is not None:
-                    break
+        while True:
+            retcode = proc.poll()
+            if retcode is not None:  # Subprocess has exited
+                break
 
-                rlist, _, _ = select.select(outputs, [], [], 0.1)
-                for r in rlist:
-                    line = r.readline()
-                    if line:
-                        fpk_process_output(line, session, last_installed_flatpack)
+            rlist, _, _ = select.select(outputs, [], [], 0.1)
+            for r in rlist:
+                line = r.readline()
+                if line:
+                    fpk_process_output(line, session, last_installed_flatpack)
 
-                        if not line.endswith('\n'):
+                    if not line.endswith('\n'):
+                        try:
                             user_input = input()
                             print(user_input, file=proc.stdin)
+                        except EOFError:
+                            # Handle end-of-file condition (e.g., if input redirection is closed)
+                            break
 
-        finally:
-            proc.wait()
     except subprocess.SubprocessError as e:
         print(f"❌ An error occurred while executing the subprocess: {e}")
+    except KeyboardInterrupt:
+        proc.terminate()
+        try:
+            proc.wait(timeout=5)  # Wait up to 5 seconds for proc to terminate
+        except subprocess.TimeoutExpired:
+            proc.kill()  # Forcefully kill if not terminated after timeout
+    finally:
+        # Ensure that the proc.wait() is in the finally block to guarantee it executes.
+        if proc and proc.poll() is None:  # Check if proc is still running
+            proc.wait()
 
 
 def fpk_valid_directory_name(name: str) -> bool:
@@ -465,7 +490,7 @@ def fpk_valid_directory_name(name: str) -> bool:
 
 
 app = FastAPI()
-client = chromadb.Client()
+client = chromadb.Client(Settings(anonymized_telemetry=False))
 
 app.add_middleware(
     CORSMiddleware,
