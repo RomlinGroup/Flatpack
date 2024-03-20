@@ -16,7 +16,7 @@ electronic components, and robots.
 predictions. Her mastery inspired the Greek proverb: "As the moon obeys Aglaonice," signifying unwavering certainty.*
 
 `3.2.0` (2024-03-09)\
-*Added support for installing local flatpacks using --local.*
+*Added support for unboxing local flatpacks using --local.*
 
 `3.1.0` (2023-12-11)\
 *Introduced a local web interface for a better user experience.*

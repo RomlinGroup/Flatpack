@@ -44,7 +44,7 @@ flatpack list
 ```
 
 ```bash
-# Install a flatpack of your choice
+# Unbox a flatpack of your choice
 flatpack unbox moondream
 ```
 
