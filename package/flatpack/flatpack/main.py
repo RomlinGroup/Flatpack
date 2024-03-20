@@ -37,10 +37,16 @@ config = {
 
 def safe_cleanup():
     try:
-        # Your cleanup code here
-        print("🦺 Safe cleanup completed.")
+        files_to_delete = ["flatpack.sh", "device.sh"]
+        current_directory = Path.cwd()
+
+        for filename in files_to_delete:
+            file_path = current_directory / filename
+
+            if file_path.exists():
+                file_path.unlink()
+                print(f"Deleted {filename}.")
     except Exception as e:
-        # Log the exception or silently pass
         print(f"Exception during safe_cleanup: {e}")
 
 
@@ -115,19 +121,19 @@ def fpk_get_api_key() -> Optional[str]:
 
 
 def fpk_cache_last_flatpack(directory_name: str):
-    """Cache the last installed flatpack's directory name to a file within the corresponding build directory."""
-    # The directory where the flatpack is installed, which includes the build directory
+    """Cache the last unboxed flatpack's directory name to a file within the corresponding build directory."""
+    # The directory where the flatpack is unboxed, which includes the build directory
     flatpack_dir = Path.cwd()
     flatpack_dir.mkdir(parents=True, exist_ok=True)  # Ensure the directory exists
 
-    # The cache file that contains the name of the last installed flatpack
+    # The cache file that contains the name of the last unboxed flatpack
     cache_file_path = flatpack_dir / 'last_flatpack.cache'
     with open(cache_file_path, 'w') as f:
         f.write(directory_name)
 
 
 def fpk_get_last_flatpack(directory_name: str) -> Optional[str]:
-    """Retrieve the last installed flatpack's directory name from the cache file within the correct build directory."""
+    """Retrieve the last unboxed flatpack's directory name from the cache file within the correct build directory."""
     flatpack_dir = Path.cwd()
     cache_file_path = flatpack_dir / 'last_flatpack.cache'
     if cache_file_path.exists():
@@ -190,9 +196,9 @@ To accept, type 'YES'. To decline, type 'NO'.
 """
 
     please_note_content = """
-PLEASE NOTE: The flatpack you are about to install is
+PLEASE NOTE: The flatpack you are about to unbox is
 governed by its own licenses and terms, separate from
-this installer. You may find further details at:
+this software. You may find further details at:
 
 https://fpk.ai/w/{}
 """.format(directory_name)
@@ -257,8 +263,8 @@ def fpk_find_models(directory_path: str = None) -> List[str]:
     return model_files
 
 
-def fpk_install(directory_name: str, session, verbose: bool = False, local: bool = False):
-    # Define the directory where the flatpack will be installed, which includes the build directory
+def fpk_unbox(directory_name: str, session, verbose: bool = False, local: bool = False):
+    # Define the directory where the flatpack will be unboxed, which includes the build directory
     flatpack_dir = Path.cwd() / directory_name
     flatpack_dir.mkdir(parents=True, exist_ok=True)  # Ensure the directory exists
     build_dir = flatpack_dir / "build"
@@ -267,7 +273,7 @@ def fpk_install(directory_name: str, session, verbose: bool = False, local: bool
     # Define the path for the temporary flatpack TOML file
     temp_toml_path = build_dir / 'temp_flatpack.toml'
 
-    # Handle local directory installation
+    # Handle local directory unboxing
     if local:
         local_directory_path = flatpack_dir  # Use flatpack_dir directly since it already points to the correct location
         # Assuming flatpack.toml is required in the directory
@@ -300,7 +306,7 @@ def fpk_install(directory_name: str, session, verbose: bool = False, local: bool
     # Remove the temporary TOML file after it's no longer needed
     temp_toml_path.unlink()
 
-    print(f"Installing {directory_name}...")
+    print(f"Unboxing {directory_name}...")
 
     # Execute the bash script
     command = ["bash", str(bash_script_path)]
@@ -384,7 +390,7 @@ def fpk_log_to_api(message: str, session: httpx.Client, api_key: Optional[str] =
         print(f"Failed to send request: {e}")
 
 
-def fpk_process_output(output, session, last_installed_flatpack):
+def fpk_process_output(output, session, last_unboxed_flatpack):
     """Process output and log it."""
     # Get the API key for logging
     api_key = fpk_get_api_key()
@@ -407,34 +413,34 @@ def fpk_process_output(output, session, last_installed_flatpack):
 
             # If we have an API key, log the line to the API
             if api_key:
-                fpk_log_to_api(line, session, api_key=api_key, model_name=last_installed_flatpack)
+                fpk_log_to_api(line, session, api_key=api_key, model_name=last_unboxed_flatpack)
 
 
-def fpk_train(directory: str, session: httpx.Client = None):
-    """Train a model using a training script from the last installed flatpack."""
+def fpk_build(directory: str, session: httpx.Client = None):
+    """Build a model using a building script from the last unboxed flatpack."""
     cache_file_path = Path('last_flatpack.cache')
     print(f"Looking for cached flatpack in {cache_file_path}.")
 
     if directory and fpk_valid_directory_name(directory):
         print(f"Using provided directory: {directory}")
-        last_installed_flatpack = directory
+        last_unboxed_flatpack = directory
     elif cache_file_path.exists():
         print(f"Found cached flatpack in {cache_file_path}.")
-        last_installed_flatpack = cache_file_path.read_text().strip()
-        if not fpk_valid_directory_name(last_installed_flatpack):
-            print(f"❌ Invalid directory name from cache: '{last_installed_flatpack}'.")
+        last_unboxed_flatpack = cache_file_path.read_text().strip()
+        if not fpk_valid_directory_name(last_unboxed_flatpack):
+            print(f"❌ Invalid directory name from cache: '{last_unboxed_flatpack}'.")
             return
     else:
         print("❌ No cached flatpack found, and no valid directory provided.")
         return
 
-    training_script_path = Path(last_installed_flatpack) / 'build' / 'train.sh'
-    if not training_script_path.exists():
-        print(f"❌ Training script not found in {last_installed_flatpack}.")
+    building_script_path = Path(last_unboxed_flatpack) / 'build' / 'build.sh'
+    if not building_script_path.exists():
+        print(f"❌ Building script not found in {last_unboxed_flatpack}.")
         return
 
     env = dict(os.environ, PYTHONUNBUFFERED="1")
-    safe_script_path = shlex.quote(str(training_script_path))
+    safe_script_path = shlex.quote(str(building_script_path))
 
     try:
         proc = subprocess.Popen(["bash", "-u", safe_script_path], stdin=subprocess.PIPE,
@@ -452,7 +458,7 @@ def fpk_train(directory: str, session: httpx.Client = None):
             for r in rlist:
                 line = r.readline()
                 if line:
-                    fpk_process_output(line, session, last_installed_flatpack)
+                    fpk_process_output(line, session, last_unboxed_flatpack)
 
                     if not line.endswith('\n'):
                         try:
@@ -519,7 +525,7 @@ def main():
             parser.add_argument('input', nargs='?', default=None, help='Input for the callback')
             parser.add_argument('--verbose', action='store_true', help='Display detailed outputs for debugging.')
             parser.add_argument('--local', action='store_true',
-                                help='Install from a local directory instead of GitHub.')
+                                help='Unbox from a local directory instead of GitHub.')
 
             args = parser.parse_args()
             command = args.command
@@ -532,21 +538,21 @@ def main():
                 print("[HELP]")
             elif command == "get-api-key":
                 print(fpk_get_api_key())
-            elif command == "install":
+            elif command == "unbox":
                 if not args.input:
-                    print("❌ Please specify a flatpack for the install command.")
+                    print("❌ Please specify a flatpack for the unbox command.")
                     return
 
                 directory_name = args.input
 
                 if not args.local:
-                    # If not installing from a local directory, check if the flatpack exists in GitHub directories
+                    # If not unboxing from a local directory, check if the flatpack exists in GitHub directories
                     existing_dirs = fpk_fetch_github_dirs(session)
                     if directory_name not in existing_dirs:
                         print(f"❌ The flatpack '{directory_name}' does not exist.")
                         return
 
-                    # Display disclaimer and proceed with installation
+                    # Display disclaimer and proceed with unboxing
                     fpk_display_disclaimer(directory_name)
 
                     while True:
@@ -554,13 +560,13 @@ def main():
                         if user_response == "YES":
                             break
                         elif user_response == "NO":
-                            print("❌ Installation aborted by user.")
+                            print("❌ Unboxing aborted by user.")
                             return
                         else:
                             print("❌ Invalid input. Please type 'YES' to accept or 'NO' to decline.")
 
                 if args.local:
-                    # For local installation, directly proceed without GitHub check
+                    # For local unboxing, directly proceed without GitHub check
                     local_directory_path = Path(directory_name)
                     if not local_directory_path.exists() or not local_directory_path.is_dir():
                         print(f"❌ Local directory does not exist: '{directory_name}'.")
@@ -573,7 +579,7 @@ def main():
                 print("Verbose mode:", args.verbose)
 
                 print(f"✅ Directory name resolved to: '{directory_name}'")
-                fpk_install(directory_name, session, verbose=args.verbose, local=args.local)
+                fpk_unbox(directory_name, session, verbose=args.verbose, local=args.local)
             elif command == "list":
                 print(fpk_list_directories(session))
             elif command == "run":
@@ -599,9 +605,9 @@ def main():
                     return
                 fpk_set_api_key(args.input)
                 print("API key set successfully!")
-            elif command == "train":
+            elif command == "build":
                 directory_name = args.input
-                fpk_train(directory_name, session)
+                fpk_build(directory_name, session)
             elif command == "version":
                 print("[VERSION]")
             else:

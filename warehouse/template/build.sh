@@ -3,11 +3,11 @@
 # Get the directory where the script is located
 export SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-echo -e "🚀 train.sh is running in: $SCRIPT_DIR\n"
+echo -e "🚀 build.sh is running in: $SCRIPT_DIR\n"
 
 # === BEGIN USER CUSTOMIZATION ===
-export REPO_NAME=llama2.c
-export FLATPACK_NAME=llama2-scratch
+export REPO_NAME=template
+export FLATPACK_NAME=template
 # === END USER CUSTOMIZATION ===
 
 source "$SCRIPT_DIR/device.sh" || {
@@ -25,10 +25,5 @@ if [[ ! " $REQUIRED_DEVICES " =~ " $DEVICE " ]]; then
 fi
 
 # === BEGIN USER CUSTOMIZATION ===
-cp train.py train.py.backup
-sed -i 's/batch_size = 128/batch_size = 64/' train.py
-sed -i 's/dtype = "bfloat16"/dtype = "float16"/' train.py
-"${VENV_PYTHON}" tinystories.py download
-"${VENV_PYTHON}" tinystories.py pretokenize
-"${VENV_PYTHON}" train.py
+"${VENV_PYTHON}" -c "print('Hello, World!')"
 # === END USER CUSTOMIZATION ===

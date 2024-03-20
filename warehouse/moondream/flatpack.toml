@@ -49,8 +49,8 @@ from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/wa
 to_destination = "/home/content/device.sh"
 
 [[file]]
-from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/moondream/train.sh"
-to_destination = "/home/content/train.sh"
+from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/moondream/build.sh"
+to_destination = "/home/content/build.sh"
 
 [[run]]
 command = "chmod"
@@ -58,8 +58,8 @@ args = "+x /home/content/device.sh"
 
 [[run]]
 command = "chmod"
-args = "+x /home/content/train.sh"
+args = "+x /home/content/build.sh"
 
 [[cmd]]
 command = "bash"
-args = "/home/content/train.sh"
+args = "/home/content/build.sh"

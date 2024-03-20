@@ -3,11 +3,11 @@
 # Get the directory where the script is located
 export SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-echo -e "🚀 train.sh is running in: $SCRIPT_DIR\n"
+echo -e "🚀 build.sh is running in: $SCRIPT_DIR\n"
 
 # === BEGIN USER CUSTOMIZATION ===
-export REPO_NAME=nanoGPT
-export FLATPACK_NAME=nanogpt-scratch
+export REPO_NAME=llama2.c
+export FLATPACK_NAME=llama2-scratch
 # === END USER CUSTOMIZATION ===
 
 source "$SCRIPT_DIR/device.sh" || {
@@ -26,8 +26,9 @@ fi
 
 # === BEGIN USER CUSTOMIZATION ===
 cp train.py train.py.backup
-sed -i '' "s/device = 'cuda'/device = 'mps'/" train.py
-sed -i '' 's/compile = True/compile = False/' train.py
-"${VENV_PYTHON}" data/shakespeare_char/prepare.py
-"${VENV_PYTHON}" train.py config/train_shakespeare_char.py
+sed -i 's/batch_size = 128/batch_size = 64/' train.py
+sed -i 's/dtype = "bfloat16"/dtype = "float16"/' train.py
+"${VENV_PYTHON}" tinystories.py download
+"${VENV_PYTHON}" tinystories.py pretokenize
+"${VENV_PYTHON}" train.py
 # === END USER CUSTOMIZATION ===

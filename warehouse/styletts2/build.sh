@@ -3,11 +3,11 @@
 # Get the directory where the script is located
 export SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-echo -e "🚀 train.sh is running in: $SCRIPT_DIR\n"
+echo -e "🚀 build.sh is running in: $SCRIPT_DIR\n"
 
 # === BEGIN USER CUSTOMIZATION ===
-export REPO_NAME=gemma.cpp
-export FLATPACK_NAME=gemma-cpp
+export REPO_NAME=StyleTTS2
+export FLATPACK_NAME=styletts2
 # === END USER CUSTOMIZATION ===
 
 source "$SCRIPT_DIR/device.sh" || {
@@ -25,7 +25,5 @@ if [[ ! " $REQUIRED_DEVICES " =~ " $DEVICE " ]]; then
 fi
 
 # === BEGIN USER CUSTOMIZATION ===
-cmake -B build
-cd build
-make -j 8 gemma
+"${VENV_PYTHON}" -c "print('Hello, World!')"
 # === END USER CUSTOMIZATION ===

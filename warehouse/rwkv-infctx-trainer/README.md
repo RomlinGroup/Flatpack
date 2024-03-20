@@ -10,7 +10,7 @@ We have no official affiliation or association with RWKV, nor are we endorsed or
 
 Flatpack is experimental; please avoid using it for production.
 
-## train.sh (scratch)
+## build.sh (scratch)
 
 Dataset: [tinyshakespeare](https://raw.githubusercontent.com/karpathy/char-rnn/master/data/tinyshakespeare/input.txt) ([Public Domain](https://creativecommons.org/publicdomain/zero/1.0/))
 

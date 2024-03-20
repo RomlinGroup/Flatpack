@@ -45,12 +45,12 @@ flatpack list
 
 ```bash
 # Install a flatpack of your choice
-flatpack install moondream
+flatpack unbox moondream
 ```
 
 ```bash
 # And last, but not least
-flatpack train moondream
+flatpack build moondream
 ```
 
 ## Flatpack (FPK) 📦
@@ -62,7 +62,7 @@ flatpack train moondream
   - README.md
   - device.sh
   - server.sh
-  - train.sh
+  - build.sh
 
 ### Code signing
 

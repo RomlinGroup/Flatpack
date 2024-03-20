@@ -10,7 +10,7 @@ We have no official affiliation or association with Andrej Karpathy, nor are we 
 
 Flatpack is experimental; please avoid using it for production.
 
-## train.sh (scratch)
+## build.sh (scratch)
 
 Dataset: [roneneldan/TinyStories](https://huggingface.co/datasets/roneneldan/TinyStories) ([CDLA-Sharing-1.0](https://cdla.dev/sharing-1-0/))
 
