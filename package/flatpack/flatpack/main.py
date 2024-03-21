@@ -306,7 +306,7 @@ def fpk_unbox(directory_name: str, session, verbose: bool = False, local: bool =
     # Remove the temporary TOML file after it's no longer needed
     temp_toml_path.unlink()
 
-    print(f"Unboxing {directory_name}...")
+    print(f"📦 Unboxing {directory_name}...")
 
     # Execute the bash script
     command = ["bash", str(bash_script_path)]
