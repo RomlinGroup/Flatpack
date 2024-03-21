@@ -60,9 +60,8 @@ flatpack build moondream
   - flatpack.toml
   - DATASET.md
   - README.md
-  - device.sh
-  - server.sh
   - build.sh
+  - device.sh
 
 ### Code signing
 
