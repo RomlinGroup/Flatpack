@@ -35,7 +35,7 @@ https://pypi.org/project/flatpack
 # Windows: Use WSL2 and see Linux path
 
 # Install from PyPI
-pip install flatpack==3.2.2
+pip install flatpack==3.2.12
 ```
 
 ```bash

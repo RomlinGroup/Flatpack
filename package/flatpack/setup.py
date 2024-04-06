@@ -5,7 +5,7 @@ with open("README.md", "r") as f:
 
 setup(
     name="flatpack",
-    version="3.2.11",
+    version="3.2.12",
     license="Apache Software License (Apache-2.0)",
     packages=find_packages(),
     install_requires=[
@@ -15,7 +15,8 @@ setup(
         "httpx==0.27.0",
         "ngrok==1.2.0",
         "toml==0.10.2",
-        "uvicorn==0.28.0"
+        "torch==2.2.2",
+        "uvicorn==0.29.0"
     ],
     author="Romlin Group AB",
     author_email="hello@romlin.com",

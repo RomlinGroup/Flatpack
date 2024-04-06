@@ -297,7 +297,7 @@ def fpk_unbox(directory_name: str, session, verbose: bool = False, local: bool =
     temp_toml_path.write_text(toml_content)
 
     # Generate the bash script content from the TOML file
-    bash_script_content = parse_toml_to_venv_script(str(temp_toml_path), '3.10.12', directory_name)
+    bash_script_content = parse_toml_to_venv_script(str(temp_toml_path), '3.11.8', directory_name)
 
     # Save the bash script in the build directory
     bash_script_path = build_dir / 'flatpack.sh'

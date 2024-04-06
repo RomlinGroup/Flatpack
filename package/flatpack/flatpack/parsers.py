@@ -1,7 +1,7 @@
 import toml
 
 
-def parse_toml_to_venv_script(file_path: str, python_version="3.10.12", env_name="myenv") -> str:
+def parse_toml_to_venv_script(file_path: str, python_version="3.11.8", env_name="myenv") -> str:
     """
     Convert a TOML configuration to a bash script that sets up a python environment using venv and performs actions based on the TOML.
     Now ensures all directories, Git repositories, and other related files are created within a `/build` directory.
@@ -93,13 +93,8 @@ handle_error() {{
 if [[ $IS_COLAB -eq 0 ]]; then
     
     echo "🐍 Checking for Python"
-    if command -v python3 &>/dev/null; then
-        PYTHON_CMD=python3
-        echo "Using python3"
-    else
-        PYTHON_CMD=python
-        echo "Fallback to python"
-    fi
+    
+    PYTHON_CMD=python
 
     echo "Python command to be used: $PYTHON_CMD"
 
@@ -116,6 +111,8 @@ if [[ $IS_COLAB -eq 0 ]]; then
     export VENV_PYTHON="{env_name}/{build_prefix}/bin/python"
     if [[ -f "$VENV_PYTHON" ]]; then
         echo "✅ VENV_PYTHON is set correctly to $VENV_PYTHON"
+        echo "🐍 Checking Python version in the virtual environment..."
+        $VENV_PYTHON --version
     else
         echo "❌ VENV_PYTHON is set to $VENV_PYTHON, but this file does not exist"
         handle_error
@@ -184,7 +181,7 @@ fi
                     download_command = f"curl -L {from_source} -o ./{model_name}/{build_prefix}/{to_destination.replace('/home/content/', '')}"
                     script.append(download_command)
                 else:
-                    download_command = f"cp .{from_source} ./{model_name}/{build_prefix}/{to_destination.replace('/home/content/', '')}"
+                    download_command = f"cp -r .{from_source} ./{model_name}/{build_prefix}/{to_destination.replace('/home/content/', '')}"
                     script.append(download_command)
 
     # Execute specified run commands

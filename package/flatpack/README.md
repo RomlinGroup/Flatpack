@@ -74,5 +74,8 @@ European Commission 2023).*
 - **[toml](https://pypi.org/project/toml/)**\
   MIT ([LICENSE](https://github.com/uiri/toml/blob/master/LICENSE))
 
+- **[torch](https://pypi.org/project/torch/)**\
+  BSD-3-Clause ([LICENSE](https://github.com/pytorch/pytorch/blob/main/LICENSE))
+
 - **[uvicorn](https://pypi.org/project/uvicorn/)**\
   BSD-3-Clause ([LICENSE](https://github.com/encode/uvicorn/blob/master/LICENSE.md))
