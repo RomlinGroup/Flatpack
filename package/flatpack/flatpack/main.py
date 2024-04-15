@@ -1,6 +1,5 @@
 import argparse
 import atexit
-import chromadb
 import httpx
 import ngrok
 import os
@@ -13,7 +12,6 @@ import sys
 import toml
 import uvicorn
 
-from chromadb.config import Settings
 from cryptography.fernet import Fernet
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
@@ -496,7 +494,6 @@ def fpk_valid_directory_name(name: str) -> bool:
 
 
 app = FastAPI()
-client = chromadb.Client(Settings(anonymized_telemetry=False))
 
 app.add_middleware(
     CORSMiddleware,

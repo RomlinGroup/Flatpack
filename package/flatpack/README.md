@@ -56,9 +56,6 @@ separately ([JLA 2023](https://joinup.ec.europa.eu/licence/compatibility-check/M
 the [JLA - Compatibility Checker](https://joinup.ec.europa.eu/collection/eupl/solution/joinup-licensing-assistant/jla-compatibility-checker) (
 European Commission 2023).*
 
-- **[chromadb](https://pypi.org/project/cryptography/)**\
-  Apache-2.0 ([LICENSE](https://github.com/chroma-core/chroma/blob/main/LICENSE))
-
 - **[cryptography](https://pypi.org/project/cryptography/)**\
   Apache-2.0 OR BSD-3-Clause ([LICENSE](https://github.com/pyca/cryptography/blob/main/LICENSE.APACHE))
 
