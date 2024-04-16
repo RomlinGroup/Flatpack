@@ -1,9 +1,11 @@
 import argparse
 import atexit
+import faiss
 import httpx
 import ngrok
 import os
 import re
+import requests
 import select
 import shlex
 import stat
@@ -18,7 +20,9 @@ from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from .parsers import parse_toml_to_venv_script
 from pathlib import Path
+from sentence_transformers import SentenceTransformer
 from typing import List, Optional
+from .vector_manager import VectorManager
 
 CONFIG_FILE_PATH = os.path.join(os.path.expanduser("~"), ".fpk_config.toml")
 LOGGING_BATCH_SIZE = 10
@@ -31,6 +35,8 @@ log_queue = []
 config = {
     "api_key": None
 }
+
+vm = VectorManager()
 
 
 def safe_cleanup():
@@ -518,24 +524,96 @@ def main():
     try:
         with SessionManager() as session:
             parser = argparse.ArgumentParser(description='flatpack command line interface')
-            parser.add_argument('command', help='Command to run')
-            parser.add_argument('input', nargs='?', default=None, help='Input for the callback')
+            subparsers = parser.add_subparsers(dest='command', help='Available commands')
+
+            # Adding subparsers for each command
+            subparsers.add_parser('list', help='List available flatpack directories.')
+            subparsers.add_parser('find', help='Find model files in the current directory.')
+            subparsers.add_parser('help', help='Display help for commands.')
+            subparsers.add_parser('get-api-key', help='Get the current API key.')
+
+            # Adjusting the subparser setup for the 'unbox' command
+            parser_unbox = subparsers.add_parser('unbox', help='Unbox a flatpack from GitHub or a local directory.')
+            parser_unbox.add_argument('input', nargs='?', default=None, help='The name of the flatpack to unbox.')
+            parser_unbox.add_argument('--local', action='store_true',
+                                      help='Unbox from a local directory instead of GitHub.')
             parser.add_argument('--verbose', action='store_true', help='Display detailed outputs for debugging.')
-            parser.add_argument('--local', action='store_true',
-                                help='Unbox from a local directory instead of GitHub.')
+
+            subparsers.add_parser('run', help='Run the FastAPI server.')
+            subparsers.add_parser('set-api-key', help='Set the API key.')
+
+            # Adjusting the subparser setup for the 'build' command
+            parser_build = subparsers.add_parser('build',
+                                                 help='Build a model using the building script from the last unboxed flatpack.')
+            parser_build.add_argument('directory', nargs='?', default=None,
+                                      help='The directory of the flatpack to build.')
+
+            subparsers.add_parser('version', help='Display the version of flatpack.')
+
+            # Adding subparsers for 'add-text' and 'search-text' commands specifically because they need additional arguments
+            parser_add_text = subparsers.add_parser('add-text',
+                                                    help='Add new texts to generate embeddings and store them.')
+            parser_add_text.add_argument('texts', nargs='+', help='Texts to add.')
+
+            parser_search_text = subparsers.add_parser('search-text',
+                                                       help='Search for texts similar to the given query.')
+            parser_search_text.add_argument('query', help='Text query to search for.')
+
+            parser_add_pdf = subparsers.add_parser('add-pdf', help='Add text from a PDF file to the vector database.')
+            parser_add_pdf.add_argument('pdf_path', help='Path to the PDF file to add.')
+
+            parser_add_url = subparsers.add_parser('add-url', help='Add text from a URL to the vector database.')
+            parser_add_url.add_argument('url', help='URL to add.')
 
             args = parser.parse_args()
-            command = args.command
 
             fpk_get_api_key()
 
-            if command == "find":
+            if args.command == 'add-text':
+                vm.add_texts(args.texts)
+                print(f"Added {len(args.texts)} texts to the database.")
+            elif args.command == 'search-text':
+                try:
+                    results = vm.search_vectors(args.query)
+                    if results:
+                        print("Search results:")
+                        for result in results:
+                            id = result["id"]
+                            rank = result["rank"]
+                            text = result["text"]
+                            print(f"({rank}) {id}: {text}\n")
+                    else:
+                        print("No results found.")
+                except ValueError as e:
+                    print(f"Error: {e}")
+                except Exception as e:
+                    print(f"❌ An unexpected error occurred.")
+            elif args.command == 'add-pdf':
+                pdf_path = args.pdf_path
+                if not os.path.exists(pdf_path):
+                    print(f"❌ PDF file does not exist: '{pdf_path}'.")
+                    return
+                vm.add_pdf(pdf_path)
+                print(f"✅ Added text from PDF: '{pdf_path}' to the vector database.")
+            elif args.command == 'add-url':
+                url = args.url
+                try:
+                    response = requests.head(url, allow_redirects=True, timeout=5)
+                    if response.status_code >= 200 and response.status_code < 400:
+                        vm.add_url(url)
+                        print(f"✅ Added text from URL: '{url}' to the vector database.")
+                    else:
+                        print(f"❌ URL is not accessible: '{url}'. HTTP Status Code: {response.status_code}")
+                except requests.RequestException as e:
+                    print(f"❌ Failed to access URL: '{url}'. Error: {e}")
+            elif args.command == "find":
                 print(fpk_find_models())
-            elif command == "help":
+            elif args.command == "help":
                 print("[HELP]")
-            elif command == "get-api-key":
+            elif args.command == "get-api-key":
                 print(fpk_get_api_key())
-            elif command == "unbox":
+            elif args.command == "unbox":
+
                 if not args.input:
                     print("❌ Please specify a flatpack for the unbox command.")
                     return
@@ -577,41 +655,41 @@ def main():
 
                 print(f"✅ Directory name resolved to: '{directory_name}'")
                 fpk_unbox(directory_name, session, verbose=args.verbose, local=args.local)
-            elif command == "list":
+
+            elif args.command == "list":
                 print(fpk_list_directories(session))
-            elif command == "run":
+            elif args.command == "run":
 
                 try:
                     port = 8000
                     listener = ngrok.forward(port, authtoken_from_env=True)
                     print(f"Ingress established at {listener.url()}")
                     uvicorn.run(app, host="0.0.0.0", port=port)
+
                 except Exception as e:
-                    print(f"An unexpected error occurred: {e}")
+                    print(f"❌ An unexpected error occurred: {e}")
                 except KeyboardInterrupt:
-                    print("FastAPI server has been stopped.")
+                    print("❌ FastAPI server has been stopped.")
                 except Exception as e:
-                    print(f"An unexpected error occurred: {e}")
+                    print(f"❌ An unexpected error occurred: {e}")
                 finally:
                     print("Finalizing...")
                     ngrok.disconnect(listener.url())
 
-            elif command == "set-api-key":
-                if not args.input:
-                    print("❌ Please provide an API key to set.")
-                    return
-                fpk_set_api_key(args.input)
-                print("API key set successfully!")
-            elif command == "build":
-                directory_name = args.input
-                fpk_build(directory_name, session)
-            elif command == "version":
+            elif args.command == "set-api-key":
+                if args.api_key:
+                    fpk_set_api_key(args.api_key)
+                    print("API key set successfully!")
+            elif args.command == "build":
+                if args.directory:
+                    fpk_build(args.directory, session)
+            elif args.command == "version":
                 print("[VERSION]")
             else:
-                print(f"Unknown command: {command}")
+                parser.print_help()
 
     except Exception as e:
-        print(f"An unexpected error occurred: {e}")
+        print(f"❌ An unexpected error occurred: {e}")
     sys.exit(1)
 
 

@@ -15,6 +15,9 @@ electronic components, and robots.
 *Aglaonice, an ancient Greek astronomer from the 2nd or 1st century BC, was celebrated for her precise lunar eclipse
 predictions. Her mastery inspired the Greek proverb: "As the moon obeys Aglaonice," signifying unwavering certainty.*
 
+`3.3.0` (2024-04-16)\
+*Added a vector database for storing and querying embeddings.*
+
 `3.2.0` (2024-03-09)\
 *Added support for unboxing local flatpacks using --local.*
 
@@ -56,8 +59,14 @@ separately ([JLA 2023](https://joinup.ec.europa.eu/licence/compatibility-check/M
 the [JLA - Compatibility Checker](https://joinup.ec.europa.eu/collection/eupl/solution/joinup-licensing-assistant/jla-compatibility-checker) (
 European Commission 2023).*
 
+- **[beautifulsoup4](https://pypi.org/project/beautifulsoup4/)**\
+  MIT ([LICENSE](https://pypi.org/project/beautifulsoup4/))
+
 - **[cryptography](https://pypi.org/project/cryptography/)**\
   Apache-2.0 OR BSD-3-Clause ([LICENSE](https://github.com/pyca/cryptography/blob/main/LICENSE.APACHE))
+
+- **[faiss-cpu](https://pypi.org/project/faiss-cpu/)**\
+  MIT ([LICENSE](https://github.com/kyamagu/faiss-wheels/blob/main/LICENSE))
 
 - **[fastapi](https://pypi.org/project/fastapi/)**\
   MIT ([LICENSE](https://github.com/tiangolo/fastapi/blob/master/LICENSE))
@@ -67,6 +76,15 @@ European Commission 2023).*
 
 - **[ngrok](https://pypi.org/project/ngrok/)**\
   Apache-2.0 OR MIT ([LICENSE](https://github.com/ngrok/ngrok-python/blob/main/LICENSE-APACHE))
+
+- **[pypdf](https://pypi.org/project/pypdf/)**\
+  BSD-3-Clause ([LICENSE](https://github.com/py-pdf/pypdf/blob/main/LICENSE)
+
+- **[requests](https://pypi.org/project/requests/)**\
+  Apache-2.0 ([LICENSE](https://github.com/psf/requests/blob/main/LICENSE))
+
+- **[sentence-transformers](https://pypi.org/project/sentence-transformers/)**\
+  Apache-2.0 ([LICENSE](https://github.com/UKPLab/sentence-transformers/blob/master/LICENSE))
 
 - **[toml](https://pypi.org/project/toml/)**\
   MIT ([LICENSE](https://github.com/uiri/toml/blob/master/LICENSE))
