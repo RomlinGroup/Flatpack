@@ -551,28 +551,29 @@ def main():
             subparsers.add_parser('version', help='Display the version of flatpack.')
 
             # Adding subparsers for 'add-text' and 'search-text' commands specifically because they need additional arguments
-            parser_add_text = subparsers.add_parser('add-text',
+            parser_add_text = subparsers.add_parser('vector-add-texts',
                                                     help='Add new texts to generate embeddings and store them.')
             parser_add_text.add_argument('texts', nargs='+', help='Texts to add.')
 
-            parser_search_text = subparsers.add_parser('search-text',
+            parser_search_text = subparsers.add_parser('vector-search-text',
                                                        help='Search for texts similar to the given query.')
             parser_search_text.add_argument('query', help='Text query to search for.')
 
-            parser_add_pdf = subparsers.add_parser('add-pdf', help='Add text from a PDF file to the vector database.')
+            parser_add_pdf = subparsers.add_parser('vector-add-pdf',
+                                                   help='Add text from a PDF file to the vector database.')
             parser_add_pdf.add_argument('pdf_path', help='Path to the PDF file to add.')
 
-            parser_add_url = subparsers.add_parser('add-url', help='Add text from a URL to the vector database.')
+            parser_add_url = subparsers.add_parser('vector-add-url', help='Add text from a URL to the vector database.')
             parser_add_url.add_argument('url', help='URL to add.')
 
             args = parser.parse_args()
 
             fpk_get_api_key()
 
-            if args.command == 'add-text':
+            if args.command == 'vector-add-texts':
                 vm.add_texts(args.texts)
                 print(f"Added {len(args.texts)} texts to the database.")
-            elif args.command == 'search-text':
+            elif args.command == 'vector-search':
                 try:
                     results = vm.search_vectors(args.query)
                     if results:
@@ -588,14 +589,14 @@ def main():
                     print(f"Error: {e}")
                 except Exception as e:
                     print(f"❌ An unexpected error occurred.")
-            elif args.command == 'add-pdf':
+            elif args.command == 'vector-add-pdf':
                 pdf_path = args.pdf_path
                 if not os.path.exists(pdf_path):
                     print(f"❌ PDF file does not exist: '{pdf_path}'.")
                     return
                 vm.add_pdf(pdf_path)
                 print(f"✅ Added text from PDF: '{pdf_path}' to the vector database.")
-            elif args.command == 'add-url':
+            elif args.command == 'vector-add-url':
                 url = args.url
                 try:
                     response = requests.head(url, allow_redirects=True, timeout=5)
