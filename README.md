@@ -14,7 +14,7 @@
 
 Welcome, brave explorer! We are still in stealth mode (of sorts), but we are glad you found us.
 
-Flatpack democratises AI and ML through micro language models and model compression. Our platform enables users to train customised models with 10M to 10B parameters. We introduce flatpacks (FPKs) to integrate AI and ML into edge computing, electronic components, and robots.
+Flatpack democratises AI and ML through micro language models and model compression. Our platform enables users to train custom models with 100M to 10B parameters. We introduce flatpacks (FPKs) to integrate AI and ML into edge computing, electronic components, and robots.
 
 > **Flatpack:** "Picture merging the Swedish ingenuity of flatpacks (hence our name) and ready-to-assemble furniture with the imaginative appeal of certain Danish snap-together toy bricks. Our method of developing micro language models is designed to be intelligently integrated into the physical world."
 
@@ -116,7 +116,7 @@ Once completed, it will be a mandatory component in all flatpacks.
 
 ## Micro language models 🤏
 
-[Micro language models](http://microlanguagemodels.com) with around 100 million to 10 billion parameters, offer a compelling alternative to the deployment and scalability challenges associated with traditional large language models (LLMs). Their smaller size allows for rapid pre-training and fine-tuning, enabling organisations to adapt quickly to market changes or specific requirements. Micro language models can be deployed in edge-adjacent environments like laptops, microprocessors, or smartphones, benefiting from [edge computing](https://en.wikipedia.org/wiki/Edge_computing) (computation and storage closer to data sources) to facilitate low-latency and privacy-conscious applications. These characteristics make micro language models broadly accessible, energy-efficient, and specialized, even to smaller teams or individual developers.
+[Micro language models](http://microlanguagemodels.com) with around 100M to 10B parameters, offer a compelling alternative to the deployment and scalability challenges associated with traditional large language models (LLMs). Their smaller size allows for rapid pre-training and fine-tuning, enabling organisations to adapt quickly to market changes or specific requirements. Micro language models can be deployed in edge-adjacent environments like laptops, microprocessors, or smartphones, benefiting from [edge computing](https://en.wikipedia.org/wiki/Edge_computing) (computation and storage closer to data sources) to facilitate low-latency and privacy-conscious applications. These characteristics make micro language models broadly accessible, energy-efficient, and specialized, even to smaller teams or individual developers.
 
 Overall, micro language models represent a logical step in the evolution of language models, effectively merging the capabilities of LLMs with the practical needs of real-world applications.
 
