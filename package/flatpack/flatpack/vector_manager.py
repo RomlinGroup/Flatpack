@@ -22,7 +22,7 @@ nltk.download('punkt')
 VECTOR_DIMENSION = 384
 INDEX_FILE = "vector.index"
 METADATA_FILE = "metadata.json"
-SENTENCE_CHUNK_SIZE = 5
+SENTENCE_CHUNK_SIZE = 1
 
 
 class VectorManager:
