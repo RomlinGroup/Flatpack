@@ -31,6 +31,9 @@ class VectorManager:
             index = faiss.read_index(INDEX_FILE)
         return index
 
+    def is_index_ready(self):
+        return self.index.ntotal > 0
+
     def _load_metadata(self):
         if not os.path.exists(METADATA_FILE):
             return [], set()

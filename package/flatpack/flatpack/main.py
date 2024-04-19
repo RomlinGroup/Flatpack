@@ -574,6 +574,10 @@ def main():
                 vm.add_texts(args.texts)
                 print(f"Added {len(args.texts)} texts to the database.")
             elif args.command == 'vector-search':
+                if not vm.is_index_ready():
+                    print("Vector index is not ready. Skipping search.")
+                    return
+
                 try:
                     results = vm.search_vectors(args.query)
                     if results:
