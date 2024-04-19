@@ -77,6 +77,9 @@ European Commission 2023).*
 - **[ngrok](https://pypi.org/project/ngrok/)**\
   Apache-2.0 OR MIT ([LICENSE](https://github.com/ngrok/ngrok-python/blob/main/LICENSE-APACHE))
 
+- **[nltk](https://pypi.org/project/nltk/)**\
+  Apache-2.0 ([LICENSE](https://github.com/nltk/nltk/blob/develop/LICENSE.txt))
+
 - **[pypdf](https://pypi.org/project/pypdf/)**\
   BSD-3-Clause ([LICENSE](https://github.com/py-pdf/pypdf/blob/main/LICENSE)
 

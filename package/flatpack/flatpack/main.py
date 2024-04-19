@@ -566,6 +566,10 @@ def main():
             parser_add_url = subparsers.add_parser('vector-add-url', help='Add text from a URL to the vector database.')
             parser_add_url.add_argument('url', help='URL to add.')
 
+            parser_add_wikipedia_page = subparsers.add_parser('vector-add-wikipedia-page',
+                                                              help='Add text from a Wikipedia page to the vector database.')
+            parser_add_wikipedia_page.add_argument('page_title', help='The title of the Wikipedia page to add.')
+
             args = parser.parse_args()
 
             fpk_get_api_key()
@@ -611,6 +615,10 @@ def main():
                         print(f"❌ URL is not accessible: '{url}'. HTTP Status Code: {response.status_code}")
                 except requests.RequestException as e:
                     print(f"❌ Failed to access URL: '{url}'. Error: {e}")
+            elif args.command == 'vector-add-wikipedia-page':
+                page_title = args.page_title
+                vm.add_wikipedia_page(page_title)
+                print(f"✅ Added text from Wikipedia page: '{page_title}' to the vector database.")
             elif args.command == "find":
                 print(fpk_find_models())
             elif args.command == "help":

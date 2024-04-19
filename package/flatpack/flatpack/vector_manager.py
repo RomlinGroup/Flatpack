@@ -2,16 +2,22 @@ import faiss
 import hashlib
 import json
 import logging
+import nltk
 import numpy as np
 import os
 import re
 import requests
 
 from bs4 import BeautifulSoup
+from nltk.tokenize import sent_tokenize
 from pypdf import PdfReader
 from sentence_transformers import SentenceTransformer
 from typing import List
 from urllib.parse import urlparse
+
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+
+nltk.download('punkt')
 
 VECTOR_DIMENSION = 384
 INDEX_FILE = "vector.index"
@@ -90,9 +96,12 @@ class VectorManager:
         return results
 
     def _process_text_and_add(self, text):
-        sentences = re.split(r'(?<=[.!?]) +', text)
+        if not isinstance(text, str):
+            logging.error(f"_process_text_and_add expected a string but got {type(text)}. Value: {text}")
+            return  # Exit early if not a string
+        sentences = sent_tokenize(text)
         for i in range(0, len(sentences), SENTENCE_CHUNK_SIZE):
-            chunk_text = " ".join(sentences[i:i + SENTENCE_CHUNK_SIZE])
+            chunk_text = " ".join(sentences[i:i + SENTENCE_CHUNK_SIZE]).strip()
             self.add_texts([chunk_text])
 
     def add_pdf(self, pdf_path: str):
@@ -102,10 +111,54 @@ class VectorManager:
         self._process_text_and_add(all_text)
 
     def add_url(self, url: str):
+        logging.info(f"Fetching URL: {url}")
         response = requests.get(url)
         if response.status_code == 200:
+            logging.debug("URL fetched successfully.")
             soup = BeautifulSoup(response.content, 'html.parser')
             text = soup.get_text(separator=' ', strip=True)
-            self._process_text_and_add(text)
+            logging.debug("Extracted text from HTML.")
+            logging.debug("Starting to clean text.")
+            cleaned_text = self.clean_text(text)
+            logging.debug("Cleaned text obtained.")
+            self._process_text_and_add(cleaned_text)
+            logging.info("Text added successfully.")
         else:
-            print(f"Failed to fetch {url}: Status code {response.status_code}")
+            logging.error(f"Failed to fetch {url}: Status code {response.status_code}")
+
+    def get_wikipedia_text(self, page_title):
+        """
+        Fetches the plain text content of a Wikipedia page given its title using the Wikipedia API.
+        """
+        logging.info(f"Fetching Wikipedia page for: {page_title}")
+        base_url = "https://en.wikipedia.org/w/api.php"
+        params = {
+            "action": "query",
+            "titles": page_title,
+            "prop": "extracts",
+            "explaintext": 1,
+            "exsectionformat": "plain",
+            "redirects": 1,
+            "format": "json"
+        }
+
+        response = requests.get(base_url, params=params)
+        response.raise_for_status()  # Raises HTTPError, if one occurred during the request
+
+        data = response.json()
+        page = next(iter(data["query"]["pages"].values()))
+        return page.get("extract", "")
+
+    def add_wikipedia_page(self, page_title):
+        try:
+            text = self.get_wikipedia_text(page_title)
+            if text:
+                logging.debug("Starting to process and add Wikipedia text.")
+                # Debug log to check the type and content of text
+                logging.debug(f"Type of text: {type(text)}, Content: {text[:100]}")
+                self._process_text_and_add(text)
+                logging.info("Wikipedia text added successfully.")
+            else:
+                logging.error(f"No text found for Wikipedia page: {page_title}")
+        except requests.HTTPError as e:
+            logging.error(f"Failed to fetch Wikipedia page: {page_title}. HTTPError: {e}")
