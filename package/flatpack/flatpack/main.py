@@ -588,9 +588,9 @@ def main():
                         print("Search results:")
                         for result in results:
                             id = result["id"]
-                            rank = result["rank"]
+                            distance = result["distance"]
                             text = result["text"]
-                            print(f"({rank}) {id}: {text}\n")
+                            print(f"({distance}) {id}: {text}\n")
                     else:
                         print("No results found.")
                 except ValueError as e:

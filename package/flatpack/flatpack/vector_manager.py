@@ -81,15 +81,18 @@ class VectorManager:
         query_np = np.array(query_embedding, dtype=np.float32).reshape(1, -1)
         extended_top_k = min(top_k * 3, len(self.metadata))
         distances, indices = self.index.search(query_np, extended_top_k)
+
+        ranked_results = sorted(zip(distances[0], indices[0]), key=lambda x: x[0])
+
         results = []
         seen_hashes = set()
-        for idx in indices.flatten():
+        for distance, idx in ranked_results:
             if idx < len(self.metadata):
                 metadata_entry = self.metadata[idx]
                 text_hash = metadata_entry["hash"]
                 text = metadata_entry["text"]
                 if text_hash not in seen_hashes:
-                    results.append({"id": text_hash, "rank": idx, "text": text})
+                    results.append({"id": text_hash, "distance": distance, "text": text})
                     seen_hashes.add(text_hash)
                 if len(results) == top_k:
                     break
