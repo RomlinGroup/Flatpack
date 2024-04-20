@@ -47,17 +47,15 @@ This project is released under [Apache-2.0](https://github.com/romlingroup/flatp
 
 ## install_requires
 
-BSD-3-Clause (INBOUND) is compatible with Apache-2.0 (OUTBOUND) for combined works but does not allow re-licensing of
-the original BSD-licensed component when distributed
-separately ([JLA 2023](https://joinup.ec.europa.eu/licence/compatibility-check/BSD-3-Clause/Apache-2.0)).
+**DISCLAIMER:** The license compatibility information provided herein serves solely as a technical reference. It does not imply endorsement or legal advice. Users are encouraged to perform compatibility checks and consult with legal experts before commercially utilising any software. The user is responsible for ensuring compliance with applicable licensing requirements.
 
-MIT (INBOUND) is compatible with Apache-2.0 (OUTBOUND) for combined works but does not allow re-licensing of the
-original MIT-licensed component when distributed
-separately ([JLA 2023](https://joinup.ec.europa.eu/licence/compatibility-check/MIT/Apache-2.0)).
+BSD 2-Clause "Simplified" (INBOUND) is compatible with Apache-2.0 (OUTBOUND) for combined works but does not allow re-licensing of the original BSD-licensed component when distributed separately ([JLA 2023](https://joinup.ec.europa.eu/licence/compatibility-check/BSD-2-Clause/Apache-2.0)).
 
-*Check out
-the [JLA - Compatibility Checker](https://joinup.ec.europa.eu/collection/eupl/solution/joinup-licensing-assistant/jla-compatibility-checker) (
-European Commission 2023).*
+BSD-3-Clause (INBOUND) is compatible with Apache-2.0 (OUTBOUND) for combined works but does not allow re-licensing of the original BSD-licensed component when distributed separately ([JLA 2023](https://joinup.ec.europa.eu/licence/compatibility-check/BSD-3-Clause/Apache-2.0)).
+
+MIT (INBOUND) is compatible with Apache-2.0 (OUTBOUND) for combined works but does not allow re-licensing of the original MIT-licensed component when distributed separately ([JLA 2023](https://joinup.ec.europa.eu/licence/compatibility-check/MIT/Apache-2.0)).
+
+*Check out the [JLA - Compatibility Checker](https://joinup.ec.europa.eu/collection/eupl/solution/joinup-licensing-assistant/jla-compatibility-checker) (European Commission 2023).*
 
 - **[beautifulsoup4](https://pypi.org/project/beautifulsoup4/)**\
   MIT ([LICENSE](https://pypi.org/project/beautifulsoup4/))
@@ -72,7 +70,7 @@ European Commission 2023).*
   MIT ([LICENSE](https://github.com/tiangolo/fastapi/blob/master/LICENSE))
 
 - **[httpx](https://pypi.org/project/httpx/)**\
-  BSD-3-Clause ([LICENSE](https://github.com/encode/httpx/blob/master/LICENSE.md))
+  BSD ([LICENSE](https://github.com/encode/httpx/blob/master/LICENSE.md))
 
 - **[ngrok](https://pypi.org/project/ngrok/)**\
   Apache-2.0 OR MIT ([LICENSE](https://github.com/ngrok/ngrok-python/blob/main/LICENSE-APACHE))
@@ -80,8 +78,11 @@ European Commission 2023).*
 - **[nltk](https://pypi.org/project/nltk/)**\
   Apache-2.0 ([LICENSE](https://github.com/nltk/nltk/blob/develop/LICENSE.txt))
 
+- **[olefile](https://pypi.org/project/olefile/)**\
+  BSD ([LICENSE](https://github.com/decalage2/olefile/blob/master/LICENSE.txt))
+
 - **[pypdf](https://pypi.org/project/pypdf/)**\
-  BSD-3-Clause ([LICENSE](https://github.com/py-pdf/pypdf/blob/main/LICENSE)
+  BSD ([LICENSE](https://github.com/py-pdf/pypdf/blob/main/LICENSE))
 
 - **[requests](https://pypi.org/project/requests/)**\
   Apache-2.0 ([LICENSE](https://github.com/psf/requests/blob/main/LICENSE))
@@ -93,7 +94,7 @@ European Commission 2023).*
   MIT ([LICENSE](https://github.com/uiri/toml/blob/master/LICENSE))
 
 - **[torch](https://pypi.org/project/torch/)**\
-  BSD-3-Clause ([LICENSE](https://github.com/pytorch/pytorch/blob/main/LICENSE))
+  BSD-3 ([LICENSE](https://github.com/pytorch/pytorch/blob/main/LICENSE))
 
 - **[uvicorn](https://pypi.org/project/uvicorn/)**\
-  BSD-3-Clause ([LICENSE](https://github.com/encode/uvicorn/blob/master/LICENSE.md))
+  BSD ([LICENSE](https://github.com/encode/uvicorn/blob/master/LICENSE.md))
