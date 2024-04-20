@@ -47,7 +47,7 @@ This project is released under [Apache-2.0](https://github.com/romlingroup/flatp
 
 ## install_requires
 
-**DISCLAIMER:** The license compatibility information provided herein serves solely as a technical reference. It does not imply endorsement or legal advice. Users are encouraged to perform compatibility checks and consult with legal experts before commercially utilising any software. The user is responsible for ensuring compliance with applicable licensing requirements.
+**DISCLAIMER:** This information is only a technical reference, not legal advice or endorsement. Before using any software for commercial purposes, perform compatibility checks and seek legal advice. You are responsible for ensuring compliance with licensing requirements.
 
 BSD 2-Clause "Simplified" (INBOUND) is compatible with Apache-2.0 (OUTBOUND) for combined works but does not allow re-licensing of the original BSD-licensed component when distributed separately ([JLA 2023](https://joinup.ec.europa.eu/licence/compatibility-check/BSD-2-Clause/Apache-2.0)).
 
