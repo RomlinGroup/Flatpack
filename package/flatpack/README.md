@@ -58,43 +58,45 @@ MIT (INBOUND) is compatible with Apache-2.0 (OUTBOUND) for combined works but do
 *Check out the [JLA - Compatibility Checker](https://joinup.ec.europa.eu/collection/eupl/solution/joinup-licensing-assistant/jla-compatibility-checker) (European Commission 2023).*
 
 - **[beautifulsoup4](https://pypi.org/project/beautifulsoup4/)**\
-  MIT ([LICENSE](https://pypi.org/project/beautifulsoup4/))
+  MIT License (MIT License) ([LICENSE](https://pypi.org/project/beautifulsoup4/))
 
 - **[cryptography](https://pypi.org/project/cryptography/)**\
-  Apache-2.0 OR BSD-3-Clause ([LICENSE](https://github.com/pyca/cryptography/blob/main/LICENSE.APACHE))
+  Apache Software License, BSD License (Apache-2.0 OR BSD-3-Clause) ([LICENSE](https://github.com/pyca/cryptography/blob/main/LICENSE.APACHE))
 
 - **[faiss-cpu](https://pypi.org/project/faiss-cpu/)**\
-  MIT ([LICENSE](https://github.com/kyamagu/faiss-wheels/blob/main/LICENSE))
+  MIT License (MIT License) ([LICENSE](https://github.com/kyamagu/faiss-wheels/blob/main/LICENSE))
 
 - **[fastapi](https://pypi.org/project/fastapi/)**\
-  MIT ([LICENSE](https://github.com/tiangolo/fastapi/blob/master/LICENSE))
+  MIT License ([LICENSE](https://github.com/tiangolo/fastapi/blob/master/LICENSE))
 
 - **[httpx](https://pypi.org/project/httpx/)**\
-  BSD ([LICENSE](https://github.com/encode/httpx/blob/master/LICENSE.md))
+  BSD License ([LICENSE](https://github.com/encode/httpx/blob/master/LICENSE.md))
 
 - **[ngrok](https://pypi.org/project/ngrok/)**\
-  Apache-2.0 OR MIT ([LICENSE](https://github.com/ngrok/ngrok-python/blob/main/LICENSE-APACHE))
+  MIT License (MIT OR Apache-2.0) ([LICENSE](https://github.com/ngrok/ngrok-python/blob/main/LICENSE-APACHE))
 
 - **[nltk](https://pypi.org/project/nltk/)**\
-  Apache-2.0 ([LICENSE](https://github.com/nltk/nltk/blob/develop/LICENSE.txt))
+  Apache Software License (Apache License, Version 2.0) ([LICENSE](https://github.com/nltk/nltk/blob/develop/LICENSE.txt))
 
 - **[olefile](https://pypi.org/project/olefile/)**\
-  BSD ([LICENSE](https://github.com/decalage2/olefile/blob/master/LICENSE.txt))
+  BSD License (BSD) ([LICENSE](https://github.com/decalage2/olefile/blob/master/LICENSE.txt))
 
 - **[pypdf](https://pypi.org/project/pypdf/)**\
-  BSD ([LICENSE](https://github.com/py-pdf/pypdf/blob/main/LICENSE))
+  BSD License ([LICENSE](https://github.com/py-pdf/pypdf/blob/main/LICENSE))
 
 - **[requests](https://pypi.org/project/requests/)**\
-  Apache-2.0 ([LICENSE](https://github.com/psf/requests/blob/main/LICENSE))
+  Apache Software License (Apache 2.0) ([LICENSE](https://github.com/psf/requests/blob/main/LICENSE))
 
 - **[sentence-transformers](https://pypi.org/project/sentence-transformers/)**\
-  Apache-2.0 ([LICENSE](https://github.com/UKPLab/sentence-transformers/blob/master/LICENSE))
+  Apache Software License (Apache License 2.0) ([LICENSE](https://github.com/UKPLab/sentence-transformers/blob/master/LICENSE))
 
 - **[toml](https://pypi.org/project/toml/)**\
-  MIT ([LICENSE](https://github.com/uiri/toml/blob/master/LICENSE))
+  MIT License (MIT) ([LICENSE](https://github.com/uiri/toml/blob/master/LICENSE))
 
 - **[torch](https://pypi.org/project/torch/)**\
-  BSD-3 ([LICENSE](https://github.com/pytorch/pytorch/blob/main/LICENSE))
+  BSD License (BSD-3) ([LICENSE](https://github.com/pytorch/pytorch/blob/main/LICENSE))
 
 - **[uvicorn](https://pypi.org/project/uvicorn/)**\
-  BSD ([LICENSE](https://github.com/encode/uvicorn/blob/master/LICENSE.md))
+  BSD License ([LICENSE](https://github.com/encode/uvicorn/blob/master/LICENSE.md))
+
+Last updated: 2024-04-20
