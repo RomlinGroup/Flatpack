@@ -121,10 +121,7 @@ class VectorManager:
             soup = BeautifulSoup(response.content, 'html.parser')
             text = soup.get_text(separator=' ', strip=True)
             logging.debug("Extracted text from HTML.")
-            logging.debug("Starting to clean text.")
-            cleaned_text = self.clean_text(text)
-            logging.debug("Cleaned text obtained.")
-            self._process_text_and_add(cleaned_text)
+            self._process_text_and_add(text)
             logging.info("Text added successfully.")
         else:
             logging.error(f"Failed to fetch {url}: Status code {response.status_code}")
