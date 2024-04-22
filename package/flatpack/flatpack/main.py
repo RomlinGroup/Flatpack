@@ -537,7 +537,8 @@ def main():
             parser_unbox.add_argument('input', nargs='?', default=None, help='The name of the flatpack to unbox.')
             parser_unbox.add_argument('--local', action='store_true',
                                       help='Unbox from a local directory instead of GitHub.')
-            parser.add_argument('--verbose', action='store_true', help='Display detailed outputs for debugging.')
+            # Move this line into the 'unbox' command setup
+            parser_unbox.add_argument('--verbose', action='store_true', help='Display detailed outputs for debugging.')
 
             subparsers.add_parser('run', help='Run the FastAPI server.')
             subparsers.add_parser('set-api-key', help='Set the API key.')
