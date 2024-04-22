@@ -77,25 +77,27 @@ class VectorManager:
         if not hasattr(self, 'index') or self.index is None:
             raise ValueError("Vector index is not available.")
 
+        # Encode the query text to get the embedding
         query_embedding = self.model.encode([query_text])[0]
         query_np = np.array(query_embedding, dtype=np.float32).reshape(1, -1)
-        extended_top_k = min(top_k * 3, len(self.metadata))
-        distances, indices = self.index.search(query_np, extended_top_k)
 
-        ranked_results = sorted(zip(distances[0], indices[0]), key=lambda x: x[0])
+        # Adjust the extended_top_k strategy based on duplication rates observed
+        extended_top_k = min(top_k * 2, len(self.metadata))  # Adjust based on observed duplication rates
+        distances, indices = self.index.search(query_np, extended_top_k)
 
         results = []
         seen_hashes = set()
-        for distance, idx in ranked_results:
-            if idx < len(self.metadata):
-                metadata_entry = self.metadata[idx]
-                text_hash = metadata_entry["hash"]
-                text = metadata_entry["text"]
-                if text_hash not in seen_hashes:
-                    results.append({"id": text_hash, "distance": distance, "text": text})
-                    seen_hashes.add(text_hash)
-                if len(results) == top_k:
-                    break
+        for distance, idx in zip(distances[0], indices[0]):
+            if len(results) >= top_k:
+                break  # Stop if we have enough results
+            if idx >= len(self.metadata):
+                continue  # Skip if index is out of bounds for metadata
+            metadata_entry = self.metadata[idx]
+            text_hash = metadata_entry["hash"]
+            if text_hash not in seen_hashes:
+                seen_hashes.add(text_hash)
+                results.append({"id": text_hash, "distance": distance, "text": metadata_entry["text"]})
+
         return results
 
     def _process_text_and_add(self, text):
