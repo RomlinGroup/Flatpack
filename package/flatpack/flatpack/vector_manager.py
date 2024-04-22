@@ -15,7 +15,7 @@ from sentence_transformers import SentenceTransformer
 from typing import List
 from urllib.parse import urlparse
 
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 nltk.download('punkt')
 
