@@ -1,3 +1,4 @@
+import datetime
 import faiss
 import hashlib
 import json
@@ -67,10 +68,13 @@ class VectorManager:
             if text_hash not in self.hash_set:
                 embeddings.append(self.model.encode([text])[0])
                 self.hash_set.add(text_hash)
+                now = datetime.datetime.now()
+                date_added = now.strftime("%Y-%m-%d %H:%M:%S")
                 new_entries.append({
                     "hash": text_hash,
-                    "text": text,
-                    "source": source_reference  # Include the source reference in the metadata
+                    "source": source_reference,
+                    "date": date_added,
+                    "text": text
                 })
         if embeddings:
             self.index.add(np.array(embeddings))
@@ -104,8 +108,9 @@ class VectorManager:
                 results.append({
                     "id": text_hash,
                     "distance": distance,
-                    "text": metadata_entry["text"],
-                    "source": metadata_entry["source"]  # Include the source reference
+                    "source": metadata_entry["source"],
+                    "date": metadata_entry["date"],
+                    "text": metadata_entry["text"]
                 })
 
         return results
