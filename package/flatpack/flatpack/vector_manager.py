@@ -59,7 +59,7 @@ class VectorManager:
         hash_object = hashlib.sha256(text.encode())
         return int(hash_object.hexdigest()[:16], 16)
 
-    def add_texts(self, texts):
+    def add_texts(self, texts, source_reference):
         embeddings = []
         new_entries = []
         for text in texts:
@@ -67,7 +67,11 @@ class VectorManager:
             if text_hash not in self.hash_set:
                 embeddings.append(self.model.encode([text])[0])
                 self.hash_set.add(text_hash)
-                new_entries.append({"hash": text_hash, "text": text})
+                new_entries.append({
+                    "hash": text_hash,
+                    "text": text,
+                    "source": source_reference  # Include the source reference in the metadata
+                })
         if embeddings:
             self.index.add(np.array(embeddings))
             self.metadata.extend(new_entries)
@@ -96,24 +100,30 @@ class VectorManager:
             text_hash = metadata_entry["hash"]
             if text_hash not in seen_hashes:
                 seen_hashes.add(text_hash)
-                results.append({"id": text_hash, "distance": distance, "text": metadata_entry["text"]})
+                # Now also append the source reference for each entry
+                results.append({
+                    "id": text_hash,
+                    "distance": distance,
+                    "text": metadata_entry["text"],
+                    "source": metadata_entry["source"]  # Include the source reference
+                })
 
         return results
 
-    def _process_text_and_add(self, text):
+    def _process_text_and_add(self, text, source_reference):
         if not isinstance(text, str):
             logging.error(f"_process_text_and_add expected a string but got {type(text)}. Value: {text}")
-            return  # Exit early if not a string
+            return
         sentences = sent_tokenize(text)
         for i in range(0, len(sentences), SENTENCE_CHUNK_SIZE):
             chunk_text = " ".join(sentences[i:i + SENTENCE_CHUNK_SIZE]).strip()
-            self.add_texts([chunk_text])
+            self.add_texts([chunk_text], source_reference)
 
     def add_pdf(self, pdf_path: str):
         with open(pdf_path, 'rb') as file:
             pdf = PdfReader(file)
             all_text = " ".join(page.extract_text() or "" for page in pdf.pages)
-        self._process_text_and_add(all_text)
+        self._process_text_and_add(all_text, pdf_path)
 
     def add_url(self, url: str):
         logging.info(f"Fetching URL: {url}")
@@ -123,7 +133,7 @@ class VectorManager:
             soup = BeautifulSoup(response.content, 'html.parser')
             text = soup.get_text(separator=' ', strip=True)
             logging.debug("Extracted text from HTML.")
-            self._process_text_and_add(text)
+            self._process_text_and_add(text, url)  # Pass the URL as the source reference
             logging.info("Text added successfully.")
         else:
             logging.error(f"Failed to fetch {url}: Status code {response.status_code}")
@@ -156,9 +166,7 @@ class VectorManager:
             text = self.get_wikipedia_text(page_title)
             if text:
                 logging.debug("Starting to process and add Wikipedia text.")
-                # Debug log to check the type and content of text
-                logging.debug(f"Type of text: {type(text)}, Content: {text[:100]}")
-                self._process_text_and_add(text)
+                self._process_text_and_add(text, f"wikipedia:{page_title}")
                 logging.info("Wikipedia text added successfully.")
             else:
                 logging.error(f"No text found for Wikipedia page: {page_title}")
