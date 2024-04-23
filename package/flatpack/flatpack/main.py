@@ -39,7 +39,7 @@ config = {
 
 def safe_cleanup():
     try:
-        files_to_delete = ["flatpack.sh", "device.sh"]
+        files_to_delete = ["flatpack.sh"]
         current_directory = Path.cwd()
 
         for filename in files_to_delete:
@@ -521,6 +521,7 @@ async def test_endpoint():
 def main():
     try:
         with SessionManager() as session:
+            # Define the command-line interface
             parser = argparse.ArgumentParser(description='flatpack command line interface')
             subparsers = parser.add_subparsers(dest='command', help='Available commands')
 
@@ -535,8 +536,10 @@ def main():
             parser_unbox.add_argument('input', nargs='?', default=None, help='The name of the flatpack to unbox.')
             parser_unbox.add_argument('--local', action='store_true',
                                       help='Unbox from a local directory instead of GitHub.')
-            # Move this line into the 'unbox' command setup
             parser_unbox.add_argument('--verbose', action='store_true', help='Display detailed outputs for debugging.')
+            # Make '--data-dir' optional with a default value
+            parser_unbox.add_argument('--data-dir', type=str, default='./data',
+                                      help='Directory path for storing the vector database and metadata files.')
 
             subparsers.add_parser('run', help='Run the FastAPI server.')
             subparsers.add_parser('set-api-key', help='Set the API key.')
@@ -546,34 +549,40 @@ def main():
                                                  help='Build a model using the building script from the last unboxed flatpack.')
             parser_build.add_argument('directory', nargs='?', default=None,
                                       help='The directory of the flatpack to build.')
+            # Make '--data-dir' optional with a default value
+            parser_build.add_argument('--data-dir', type=str, default='./data',
+                                      help='Directory path for storing the vector database and metadata files.')
 
             subparsers.add_parser('version', help='Display the version of flatpack.')
 
-            # Adding subparsers for 'add-text' and 'search-text' commands
+            # Subparser for 'vector-add-texts' command
             parser_add_text = subparsers.add_parser('vector-add-texts',
                                                     help='Add new texts to generate embeddings and store them.')
             parser_add_text.add_argument('texts', nargs='+', help='Texts to add.')
             parser_add_text.add_argument('--data-dir', type=str, default='./data',
                                          help='Directory path for storing the vector database and metadata files.')
 
+            # Subparser for 'vector-search-text' command
             parser_search_text = subparsers.add_parser('vector-search-text',
                                                        help='Search for texts similar to the given query.')
             parser_search_text.add_argument('query', help='Text query to search for.')
-            # Assuming you might also need to specify a data directory for searching
             parser_search_text.add_argument('--data-dir', type=str, default='./data',
                                             help='Directory path for storing the vector database and metadata files.')
 
+            # Subparser for 'vector-add-pdf' command
             parser_add_pdf = subparsers.add_parser('vector-add-pdf',
                                                    help='Add text from a PDF file to the vector database.')
             parser_add_pdf.add_argument('pdf_path', help='Path to the PDF file to add.')
             parser_add_pdf.add_argument('--data-dir', type=str, default='./data',
                                         help='Directory path for storing the vector database and metadata files.')
 
+            # Subparser for 'vector-add-url' command
             parser_add_url = subparsers.add_parser('vector-add-url', help='Add text from a URL to the vector database.')
             parser_add_url.add_argument('url', help='URL to add.')
             parser_add_url.add_argument('--data-dir', type=str, default='./data',
                                         help='Directory path for storing the vector database and metadata files.')
 
+            # Subparser for 'vector-add-wikipedia-page' command
             parser_add_wikipedia_page = subparsers.add_parser('vector-add-wikipedia-page',
                                                               help='Add text from a Wikipedia page to the vector database.')
             parser_add_wikipedia_page.add_argument('page_title', help='The title of the Wikipedia page to add.')
