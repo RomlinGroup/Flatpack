@@ -549,28 +549,36 @@ def main():
 
             subparsers.add_parser('version', help='Display the version of flatpack.')
 
-            # Adding subparsers for 'add-text' and 'search-text' commands specifically because they need additional arguments
+            # Adding subparsers for 'add-text' and 'search-text' commands
             parser_add_text = subparsers.add_parser('vector-add-texts',
                                                     help='Add new texts to generate embeddings and store them.')
             parser_add_text.add_argument('texts', nargs='+', help='Texts to add.')
+            parser_add_text.add_argument('--data-dir', type=str, default='./data',
+                                         help='Directory path for storing the vector database and metadata files.')
 
             parser_search_text = subparsers.add_parser('vector-search-text',
                                                        help='Search for texts similar to the given query.')
             parser_search_text.add_argument('query', help='Text query to search for.')
+            # Assuming you might also need to specify a data directory for searching
+            parser_search_text.add_argument('--data-dir', type=str, default='./data',
+                                            help='Directory path for storing the vector database and metadata files.')
 
             parser_add_pdf = subparsers.add_parser('vector-add-pdf',
                                                    help='Add text from a PDF file to the vector database.')
             parser_add_pdf.add_argument('pdf_path', help='Path to the PDF file to add.')
+            parser_add_pdf.add_argument('--data-dir', type=str, default='./data',
+                                        help='Directory path for storing the vector database and metadata files.')
 
             parser_add_url = subparsers.add_parser('vector-add-url', help='Add text from a URL to the vector database.')
             parser_add_url.add_argument('url', help='URL to add.')
+            parser_add_url.add_argument('--data-dir', type=str, default='./data',
+                                        help='Directory path for storing the vector database and metadata files.')
 
             parser_add_wikipedia_page = subparsers.add_parser('vector-add-wikipedia-page',
                                                               help='Add text from a Wikipedia page to the vector database.')
             parser_add_wikipedia_page.add_argument('page_title', help='The title of the Wikipedia page to add.')
-
-            parser.add_argument('--data-dir', type=str, default='./data',
-                                help='Directory path for storing the vector database and metadata files.')
+            parser_add_wikipedia_page.add_argument('--data-dir', type=str, default='./data',
+                                                   help='Directory path for storing the vector database and metadata files.')
 
             args = parser.parse_args()
 
