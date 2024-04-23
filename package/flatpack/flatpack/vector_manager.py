@@ -16,9 +16,10 @@ from sentence_transformers import SentenceTransformer
 from typing import List
 from urllib.parse import urlparse
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.CRITICAL, format='%(asctime)s - %(levelname)s - %(message)s')
 
-nltk.download('punkt')
+if not nltk.find('tokenizers/punkt'):
+    nltk.download('punkt', quiet=True)
 
 VECTOR_DIMENSION = 384
 INDEX_FILE = "vector.index"
@@ -27,34 +28,40 @@ SENTENCE_CHUNK_SIZE = 5
 
 
 class VectorManager:
-    def __init__(self, model_name='all-MiniLM-L6-v2'):
+    def __init__(self, model_name='all-MiniLM-L6-v2', directory='./data'):  # Add directory parameter
+        self.directory = directory
+        self.index_file = os.path.join(self.directory, "vector.index")  # Update path
+        self.metadata_file = os.path.join(self.directory, "metadata.json")  # Update path
+
+        if not os.path.exists(self.directory):  # Ensure directory exists
+            os.makedirs(self.directory)
+
         self.model = SentenceTransformer(model_name)
         self.index = self._initialize_index()
         self.metadata, self.hash_set = self._load_metadata()
 
     def _initialize_index(self):
-        index = faiss.IndexFlatL2(VECTOR_DIMENSION)
-        if os.path.exists(INDEX_FILE):
-            index = faiss.read_index(INDEX_FILE)
-        return index
+        if os.path.exists(self.index_file):  # Use updated path
+            return faiss.read_index(self.index_file)
+        return faiss.IndexFlatL2(VECTOR_DIMENSION)
 
     def is_index_ready(self):
         return self.index.ntotal > 0
 
     def _load_metadata(self):
-        if not os.path.exists(METADATA_FILE):
-            return [], set()
-        with open(METADATA_FILE, 'r') as file:
-            metadata = [json.loads(line) for line in file]
-        hash_set = {entry['hash'] for entry in metadata}
-        return metadata, hash_set
+        if os.path.exists(self.metadata_file):  # Use updated path
+            with open(self.metadata_file, 'r') as file:
+                metadata = [json.loads(line) for line in file]
+            hash_set = {entry['hash'] for entry in metadata}
+            return metadata, hash_set
+        return [], set()
 
     def _save_metadata(self):
-        with open(METADATA_FILE, 'w') as file:
+        with open(self.metadata_file, 'w') as file:  # Use updated path
             for entry in self.metadata:
                 json.dump(entry, file)
                 file.write('\n')
-        faiss.write_index(self.index, INDEX_FILE)
+        faiss.write_index(self.index, self.index_file)  # Use updated path
 
     def _generate_positive_hash(self, text):
         hash_object = hashlib.sha256(text.encode())

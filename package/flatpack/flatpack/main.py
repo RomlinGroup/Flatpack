@@ -36,8 +36,6 @@ config = {
     "api_key": None
 }
 
-vm = VectorManager()
-
 
 def safe_cleanup():
     try:
@@ -571,9 +569,15 @@ def main():
                                                               help='Add text from a Wikipedia page to the vector database.')
             parser_add_wikipedia_page.add_argument('page_title', help='The title of the Wikipedia page to add.')
 
+            parser.add_argument('--data-dir', type=str, default='./data',
+                                help='Directory path for storing the vector database and metadata files.')
+
             args = parser.parse_args()
 
             fpk_get_api_key()
+
+            # Initialization of VectorManager with dynamic directory handling
+            vm = VectorManager(model_name='all-MiniLM-L6-v2', directory=args.data_dir)
 
             if args.command == 'vector-add-texts':
                 vm.add_texts(args.texts)
