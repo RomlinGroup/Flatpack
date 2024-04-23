@@ -28,20 +28,17 @@ SENTENCE_CHUNK_SIZE = 5
 
 
 class VectorManager:
-    def __init__(self, model_name='all-MiniLM-L6-v2', directory='./data'):  # Add directory parameter
+    def __init__(self, model_name='all-MiniLM-L6-v2', directory='./data'):
         self.directory = directory
-        self.index_file = os.path.join(self.directory, "vector.index")  # Update path
-        self.metadata_file = os.path.join(self.directory, "metadata.json")  # Update path
-
-        if not os.path.exists(self.directory):  # Ensure directory exists
-            os.makedirs(self.directory)
+        self.index_file = os.path.join(self.directory, "vector.index")
+        self.metadata_file = os.path.join(self.directory, "metadata.json")
 
         self.model = SentenceTransformer(model_name)
         self.index = self._initialize_index()
         self.metadata, self.hash_set = self._load_metadata()
 
     def _initialize_index(self):
-        if os.path.exists(self.index_file):  # Use updated path
+        if os.path.exists(self.index_file):
             return faiss.read_index(self.index_file)
         return faiss.IndexFlatL2(VECTOR_DIMENSION)
 
@@ -49,7 +46,7 @@ class VectorManager:
         return self.index.ntotal > 0
 
     def _load_metadata(self):
-        if os.path.exists(self.metadata_file):  # Use updated path
+        if os.path.exists(self.metadata_file):
             with open(self.metadata_file, 'r') as file:
                 metadata = [json.loads(line) for line in file]
             hash_set = {entry['hash'] for entry in metadata}
@@ -57,11 +54,11 @@ class VectorManager:
         return [], set()
 
     def _save_metadata(self):
-        with open(self.metadata_file, 'w') as file:  # Use updated path
+        with open(self.metadata_file, 'w') as file:
             for entry in self.metadata:
                 json.dump(entry, file)
                 file.write('\n')
-        faiss.write_index(self.index, self.index_file)  # Use updated path
+        faiss.write_index(self.index, self.index_file)
 
     def _generate_positive_hash(self, text):
         hash_object = hashlib.sha256(text.encode())
@@ -92,26 +89,24 @@ class VectorManager:
         if not hasattr(self, 'index') or self.index is None:
             raise ValueError("Vector index is not available.")
 
-        # Encode the query text to get the embedding
         query_embedding = self.model.encode([query_text])[0]
         query_np = np.array(query_embedding, dtype=np.float32).reshape(1, -1)
 
-        # Adjust the extended_top_k strategy based on duplication rates observed
-        extended_top_k = min(top_k * 2, len(self.metadata))  # Adjust based on observed duplication rates
+        extended_top_k = min(top_k * 2, len(self.metadata))
         distances, indices = self.index.search(query_np, extended_top_k)
 
         results = []
         seen_hashes = set()
         for distance, idx in zip(distances[0], indices[0]):
             if len(results) >= top_k:
-                break  # Stop if we have enough results
+                break
             if idx >= len(self.metadata):
-                continue  # Skip if index is out of bounds for metadata
+                continue
             metadata_entry = self.metadata[idx]
             text_hash = metadata_entry["hash"]
             if text_hash not in seen_hashes:
                 seen_hashes.add(text_hash)
-                # Now also append the source reference for each entry
+
                 results.append({
                     "id": text_hash,
                     "distance": distance,
@@ -145,15 +140,12 @@ class VectorManager:
             soup = BeautifulSoup(response.content, 'html.parser')
             text = soup.get_text(separator=' ', strip=True)
             logging.debug("Extracted text from HTML.")
-            self._process_text_and_add(text, url)  # Pass the URL as the source reference
+            self._process_text_and_add(text, url)
             logging.info("Text added successfully.")
         else:
             logging.error(f"Failed to fetch {url}: Status code {response.status_code}")
 
     def get_wikipedia_text(self, page_title):
-        """
-        Fetches the plain text content of a Wikipedia page given its title using the Wikipedia API.
-        """
         logging.info(f"Fetching Wikipedia page for: {page_title}")
         base_url = "https://en.wikipedia.org/w/api.php"
         params = {
@@ -167,7 +159,7 @@ class VectorManager:
         }
 
         response = requests.get(base_url, params=params)
-        response.raise_for_status()  # Raises HTTPError, if one occurred during the request
+        response.raise_for_status()
 
         data = response.json()
         page = next(iter(data["query"]["pages"].values()))

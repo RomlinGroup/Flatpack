@@ -124,11 +124,9 @@ def fpk_get_api_key() -> Optional[str]:
 
 def fpk_cache_last_flatpack(directory_name: str):
     """Cache the last unboxed flatpack's directory name to a file within the corresponding build directory."""
-    # The directory where the flatpack is unboxed, which includes the build directory
     flatpack_dir = Path.cwd()
-    flatpack_dir.mkdir(parents=True, exist_ok=True)  # Ensure the directory exists
+    flatpack_dir.mkdir(parents=True, exist_ok=True)
 
-    # The cache file that contains the name of the last unboxed flatpack
     cache_file_path = flatpack_dir / 'last_flatpack.cache'
     with open(cache_file_path, 'w') as f:
         f.write(directory_name)
@@ -266,26 +264,21 @@ def fpk_find_models(directory_path: str = None) -> List[str]:
 
 
 def fpk_unbox(directory_name: str, session, verbose: bool = False, local: bool = False):
-    # Define the directory where the flatpack will be unboxed, which includes the build directory
     flatpack_dir = Path.cwd() / directory_name
-    flatpack_dir.mkdir(parents=True, exist_ok=True)  # Ensure the directory exists
+    flatpack_dir.mkdir(parents=True, exist_ok=True)
     build_dir = flatpack_dir / "build"
-    build_dir.mkdir(parents=True, exist_ok=True)  # Explicitly ensure that build_dir exists
+    build_dir.mkdir(parents=True, exist_ok=True)
 
-    # Define the path for the temporary flatpack TOML file
     temp_toml_path = build_dir / 'temp_flatpack.toml'
 
-    # Handle local directory unboxing
     if local:
-        local_directory_path = flatpack_dir  # Use flatpack_dir directly since it already points to the correct location
-        # Assuming flatpack.toml is required in the directory
+        local_directory_path = flatpack_dir
         toml_path = local_directory_path / 'flatpack.toml'
         if not toml_path.exists():
             print(f"❌ flatpack.toml not found in the specified directory: '{directory_name}'.")
             return
         toml_content = toml_path.read_text()
     else:
-        # Existing GitHub fetch logic
         if not fpk_valid_directory_name(directory_name):
             print(f"❌ Invalid directory name: '{directory_name}'.")
             return
@@ -295,22 +288,17 @@ def fpk_unbox(directory_name: str, session, verbose: bool = False, local: bool =
             print(f"❌ Error: Failed to fetch TOML content for '{directory_name}'.")
             return
 
-    # Write the TOML content to the temporary file
     temp_toml_path.write_text(toml_content)
 
-    # Generate the bash script content from the TOML file
     bash_script_content = parse_toml_to_venv_script(str(temp_toml_path), '3.11.8', directory_name)
 
-    # Save the bash script in the build directory
     bash_script_path = build_dir / 'flatpack.sh'
     bash_script_path.write_text(bash_script_content)
 
-    # Remove the temporary TOML file after it's no longer needed
     temp_toml_path.unlink()
 
     print(f"📦 Unboxing {directory_name}...")
 
-    # Execute the bash script
     command = ["bash", str(bash_script_path)]
 
     try:
@@ -394,26 +382,17 @@ def fpk_log_to_api(message: str, session: httpx.Client, api_key: Optional[str] =
 
 def fpk_process_output(output, session, last_unboxed_flatpack):
     """Process output and log it."""
-    # Get the API key for logging
     api_key = fpk_get_api_key()
 
-    # Regular expression pattern to match ANSI escape codes
     ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
 
-    # Iterate over each line in the output
     for line in output.splitlines():
-        # Remove any leading or trailing whitespace
         line = line.strip()
-
-        # Remove ANSI escape codes from the line
         line = ansi_escape.sub('', line)
 
-        # If the line isn't empty, process it
         if line:
-            # Display the line with a prefix
             print(f"(*) {line}", flush=True)
 
-            # If we have an API key, log the line to the API
             if api_key:
                 fpk_log_to_api(line, session, api_key=api_key, model_name=last_unboxed_flatpack)
 
@@ -453,7 +432,7 @@ def fpk_build(directory: str, session: httpx.Client = None):
 
         while True:
             retcode = proc.poll()
-            if retcode is not None:  # Subprocess has exited
+            if retcode is not None:
                 break
 
             rlist, _, _ = select.select(outputs, [], [], 0.1)
@@ -467,7 +446,6 @@ def fpk_build(directory: str, session: httpx.Client = None):
                             user_input = input()
                             print(user_input, file=proc.stdin)
                         except EOFError:
-                            # Handle end-of-file condition (e.g., if input redirection is closed)
                             break
 
     except subprocess.SubprocessError as e:
@@ -475,12 +453,11 @@ def fpk_build(directory: str, session: httpx.Client = None):
     except KeyboardInterrupt:
         proc.terminate()
         try:
-            proc.wait(timeout=5)  # Wait up to 5 seconds for proc to terminate
+            proc.wait(timeout=5)
         except subprocess.TimeoutExpired:
-            proc.kill()  # Forcefully kill if not terminated after timeout
+            proc.kill()
     finally:
-        # Ensure that the proc.wait() is in the finally block to guarantee it executes.
-        if proc and proc.poll() is None:  # Check if proc is still running
+        if proc and proc.poll() is None:
             proc.wait()
 
 
@@ -521,68 +498,59 @@ async def test_endpoint():
 def main():
     try:
         with SessionManager() as session:
-            # Define the command-line interface
             parser = argparse.ArgumentParser(description='flatpack command line interface')
             subparsers = parser.add_subparsers(dest='command', help='Available commands')
 
-            # Adding subparsers for each command
             subparsers.add_parser('list', help='List available flatpack directories.')
             subparsers.add_parser('find', help='Find model files in the current directory.')
             subparsers.add_parser('help', help='Display help for commands.')
             subparsers.add_parser('get-api-key', help='Get the current API key.')
 
-            # Adjusting the subparser setup for the 'unbox' command
             parser_unbox = subparsers.add_parser('unbox', help='Unbox a flatpack from GitHub or a local directory.')
             parser_unbox.add_argument('input', nargs='?', default=None, help='The name of the flatpack to unbox.')
             parser_unbox.add_argument('--local', action='store_true',
                                       help='Unbox from a local directory instead of GitHub.')
             parser_unbox.add_argument('--verbose', action='store_true', help='Display detailed outputs for debugging.')
-            # Make '--data-dir' optional with a default value
+
             parser_unbox.add_argument('--data-dir', type=str, default='./data',
                                       help='Directory path for storing the vector database and metadata files.')
 
             subparsers.add_parser('run', help='Run the FastAPI server.')
             subparsers.add_parser('set-api-key', help='Set the API key.')
 
-            # Adjusting the subparser setup for the 'build' command
             parser_build = subparsers.add_parser('build',
                                                  help='Build a model using the building script from the last unboxed flatpack.')
             parser_build.add_argument('directory', nargs='?', default=None,
                                       help='The directory of the flatpack to build.')
-            # Make '--data-dir' optional with a default value
+
             parser_build.add_argument('--data-dir', type=str, default='./data',
                                       help='Directory path for storing the vector database and metadata files.')
 
             subparsers.add_parser('version', help='Display the version of flatpack.')
 
-            # Subparser for 'vector-add-texts' command
             parser_add_text = subparsers.add_parser('vector-add-texts',
                                                     help='Add new texts to generate embeddings and store them.')
             parser_add_text.add_argument('texts', nargs='+', help='Texts to add.')
             parser_add_text.add_argument('--data-dir', type=str, default='./data',
                                          help='Directory path for storing the vector database and metadata files.')
 
-            # Subparser for 'vector-search-text' command
             parser_search_text = subparsers.add_parser('vector-search-text',
                                                        help='Search for texts similar to the given query.')
             parser_search_text.add_argument('query', help='Text query to search for.')
             parser_search_text.add_argument('--data-dir', type=str, default='./data',
                                             help='Directory path for storing the vector database and metadata files.')
 
-            # Subparser for 'vector-add-pdf' command
             parser_add_pdf = subparsers.add_parser('vector-add-pdf',
                                                    help='Add text from a PDF file to the vector database.')
             parser_add_pdf.add_argument('pdf_path', help='Path to the PDF file to add.')
             parser_add_pdf.add_argument('--data-dir', type=str, default='./data',
                                         help='Directory path for storing the vector database and metadata files.')
 
-            # Subparser for 'vector-add-url' command
             parser_add_url = subparsers.add_parser('vector-add-url', help='Add text from a URL to the vector database.')
             parser_add_url.add_argument('url', help='URL to add.')
             parser_add_url.add_argument('--data-dir', type=str, default='./data',
                                         help='Directory path for storing the vector database and metadata files.')
 
-            # Subparser for 'vector-add-wikipedia-page' command
             parser_add_wikipedia_page = subparsers.add_parser('vector-add-wikipedia-page',
                                                               help='Add text from a Wikipedia page to the vector database.')
             parser_add_wikipedia_page.add_argument('page_title', help='The title of the Wikipedia page to add.')
@@ -593,7 +561,6 @@ def main():
 
             fpk_get_api_key()
 
-            # Initialization of VectorManager with dynamic directory handling
             vm = VectorManager(model_name='all-MiniLM-L6-v2', directory=args.data_dir)
 
             if args.command == 'vector-add-texts':
@@ -656,13 +623,11 @@ def main():
                 directory_name = args.input
 
                 if not args.local:
-                    # If not unboxing from a local directory, check if the flatpack exists in GitHub directories
                     existing_dirs = fpk_fetch_github_dirs(session)
                     if directory_name not in existing_dirs:
                         print(f"❌ The flatpack '{directory_name}' does not exist.")
                         return
 
-                    # Display disclaimer and proceed with unboxing
                     fpk_display_disclaimer(directory_name)
 
                     while True:
@@ -676,7 +641,6 @@ def main():
                             print("❌ Invalid input. Please type 'YES' to accept or 'NO' to decline.")
 
                 if args.local:
-                    # For local unboxing, directly proceed without GitHub check
                     local_directory_path = Path(directory_name)
                     if not local_directory_path.exists() or not local_directory_path.is_dir():
                         print(f"❌ Local directory does not exist: '{directory_name}'.")
