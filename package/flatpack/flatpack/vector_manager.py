@@ -21,14 +21,14 @@ logging.basicConfig(level=logging.CRITICAL, format='%(asctime)s - %(levelname)s 
 if not nltk.find('tokenizers/punkt'):
     nltk.download('punkt', quiet=True)
 
-VECTOR_DIMENSION = 128
+VECTOR_DIMENSION = 384
 INDEX_FILE = "vector.index"
 METADATA_FILE = "metadata.json"
 SENTENCE_CHUNK_SIZE = 5
 
 
 class VectorManager:
-    def __init__(self, model_name='bongsoo/kpf-sbert-128d-v1', directory='./data'):
+    def __init__(self, model_name='all-MiniLM-L6-v2', directory='./data'):
         self.directory = directory
         self.index_file = os.path.join(self.directory, "vector.index")
         self.metadata_file = os.path.join(self.directory, "metadata.json")
