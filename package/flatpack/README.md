@@ -66,8 +66,8 @@ MIT (INBOUND) is compatible with Apache-2.0 (OUTBOUND) for combined works but do
 - **[faiss-cpu](https://pypi.org/project/faiss-cpu/)**\
   MIT License (MIT License) ([LICENSE](https://github.com/kyamagu/faiss-wheels/blob/main/LICENSE))
 
-- **[fastapi](https://pypi.org/project/fastapi/)**\
-  MIT License ([LICENSE](https://github.com/tiangolo/fastapi/blob/master/LICENSE))
+- **[hnswlib](https://pypi.org/project/hnswlib/)**\
+  Apache-2.0 license ([LICENSE](https://github.com/nmslib/hnswlib/blob/master/LICENSE))
 
 - **[httpx](https://pypi.org/project/httpx/)**\
   BSD License ([LICENSE](https://github.com/encode/httpx/blob/master/LICENSE.md))
