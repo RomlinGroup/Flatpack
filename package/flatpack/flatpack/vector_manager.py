@@ -32,7 +32,6 @@ class VectorManager:
         self.directory = directory
         self.index_file = os.path.join(self.directory, "vector.index")
         self.metadata_file = os.path.join(self.directory, "metadata.json")
-
         self.model = SentenceTransformer(model_name)
         self.index = self._initialize_index()
         self.metadata, self.hash_set = self._load_metadata()
@@ -40,7 +39,10 @@ class VectorManager:
     def _initialize_index(self):
         if os.path.exists(self.index_file):
             return faiss.read_index(self.index_file)
-        return faiss.IndexFlatL2(VECTOR_DIMENSION)
+        # Initialize HNSW index with L2 distance metric
+        index = faiss.IndexHNSWFlat(VECTOR_DIMENSION, 32)  # Example with M=32
+        index.hnsw.efConstruction = 200  # Example, higher is more accurate but slower to build
+        return index
 
     def is_index_ready(self):
         return self.index.ntotal > 0
