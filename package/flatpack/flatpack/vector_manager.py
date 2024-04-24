@@ -28,7 +28,7 @@ SENTENCE_CHUNK_SIZE = 5
 
 
 class VectorManager:
-    def __init__(self, model_name='all-MiniLM-L6-v2', directory='./data'):
+    def __init__(self, model_name='bongsoo/kpf-sbert-128d-v1', directory='./data'):
         self.directory = directory
         self.index_file = os.path.join(self.directory, "vector.index")
         self.metadata_file = os.path.join(self.directory, "metadata.json")
