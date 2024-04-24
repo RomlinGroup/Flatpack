@@ -46,6 +46,9 @@ class VectorManager:
         else:
             self.index.init_index(max_elements=10000, ef_construction=200, M=16)
 
+    def is_index_ready(self):
+        return self.index.get_current_count() > 0
+
     def _load_metadata(self):
         if os.path.exists(self.metadata_file):
             with open(self.metadata_file, 'r') as file:
