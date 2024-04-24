@@ -23,7 +23,7 @@ logging.basicConfig(level=logging.CRITICAL, format='%(asctime)s - %(levelname)s 
 if not nltk.find('tokenizers/punkt'):
     nltk.download('punkt', quiet=True)
 
-VECTOR_DIMENSION = 128
+VECTOR_DIMENSION = 384
 INDEX_FILE = "hnsw_index.bin"
 METADATA_FILE = "metadata.json"
 SENTENCE_CHUNK_SIZE = 5
