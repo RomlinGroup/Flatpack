@@ -6,10 +6,15 @@ import logging
 import nltk
 import numpy as np
 import os
+import re
+import requests
 
+from bs4 import BeautifulSoup
 from nltk.tokenize import sent_tokenize
 from pypdf import PdfReader
 from sentence_transformers import SentenceTransformer
+from typing import List
+from urllib.parse import urlparse
 
 # Configure logging
 logging.basicConfig(level=logging.CRITICAL, format='%(asctime)s - %(levelname)s - %(message)s')
