@@ -682,8 +682,11 @@ def main():
                     fpk_set_api_key(args.api_key)
                     print("API key set successfully!")
             elif args.command == "build":
+                print("Building flatpack...")
                 if args.directory:
                     fpk_build(args.directory, session)
+                else:
+                    fpk_build(None, session)
             elif args.command == "version":
                 print("[VERSION]")
             else:
