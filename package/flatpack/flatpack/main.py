@@ -512,22 +512,16 @@ def main():
                                       help='Unbox from a local directory instead of GitHub.')
             parser_unbox.add_argument('--verbose', action='store_true', help='Display detailed outputs for debugging.')
 
-            parser_unbox.add_argument('--data-dir', type=str, default='./data',
-                                      help='Directory path for storing the vector database and metadata files.')
-
-            subparsers.add_parser('run', help='Run the FastAPI server.')
-            subparsers.add_parser('set-api-key', help='Set the API key.')
-
             parser_build = subparsers.add_parser('build',
                                                  help='Build a model using the building script from the last unboxed flatpack.')
             parser_build.add_argument('directory', nargs='?', default=None,
                                       help='The directory of the flatpack to build.')
 
-            parser_build.add_argument('--data-dir', type=str, default='./data',
-                                      help='Directory path for storing the vector database and metadata files.')
-
+            subparsers.add_parser('run', help='Run the FastAPI server.')
+            subparsers.add_parser('set-api-key', help='Set the API key.')
             subparsers.add_parser('version', help='Display the version of flatpack.')
 
+            # Vector operations as regular commands
             parser_add_text = subparsers.add_parser('vector-add-texts',
                                                     help='Add new texts to generate embeddings and store them.')
             parser_add_text.add_argument('texts', nargs='+', help='Texts to add.')
@@ -559,9 +553,17 @@ def main():
 
             args = parser.parse_args()
 
-            fpk_get_api_key()
+            if args.command in ['vector-add-texts', 'vector-search-text', 'vector-add-pdf', 'vector-add-url',
+                                'vector-add-wikipedia-page'] and hasattr(args, 'data_dir'):
+                print(f"Using data directory: {args.data_dir}")
+                vm = VectorManager(model_name='all-MiniLM-L6-v2', directory=args.data_dir)
+            else:
+                vm = VectorManager(model_name='all-MiniLM-L6-v2')
 
-            vm = VectorManager(model_name='all-MiniLM-L6-v2', directory=args.data_dir)
+            if args.command == 'list':
+                print("Listing available flatpack directories...")
+
+            fpk_get_api_key()
 
             if args.command == 'vector-add-texts':
                 vm.add_texts(args.texts)
