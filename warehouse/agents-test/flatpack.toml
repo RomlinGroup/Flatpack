@@ -53,7 +53,7 @@ from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/wa
 to_destination = "/home/content/build.sh"
 
 [[file]]
-from_source = "/agents-test/hello_world.py"
+from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/agents-test/hello_world.py"
 to_destination = "/home/content/hello_world.py"
 
 [[run]]
