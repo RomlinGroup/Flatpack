@@ -10,6 +10,7 @@ Flatpack is experimental; please avoid using it for production.
 
 | Name                                                                                              | Type     | Requires |
 |---------------------------------------------------------------------------------------------------|----------|----------|
+| [flatpack-test](https://github.com/romlingroup/flatpack-ai/tree/main/warehouse/flatpack-test)     | Flatpack | GPU      |
 | [moondream](https://github.com/romlingroup/flatpack-ai/tree/main/warehouse/moondream)             | Flatpack | GPU      |
 | [nanogpt-scratch](https://github.com/romlingroup/flatpack-ai/tree/main/warehouse/nanogpt-scratch) | Flatpack | GPU      |
 
