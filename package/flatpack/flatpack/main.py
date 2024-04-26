@@ -25,6 +25,7 @@ from typing import List, Optional
 from .vector_manager import VectorManager
 
 CONFIG_FILE_PATH = os.path.join(os.path.expanduser("~"), ".fpk_config.toml")
+KEY_FILE_PATH = os.path.join(os.path.expanduser("~"), ".fpk_encryption_key")
 LOGGING_BATCH_SIZE = 10
 GITHUB_REPO_URL = "https://api.github.com/repos/romlingroup/flatpack"
 BASE_URL = "https://raw.githubusercontent.com/romlingroup/flatpack/main/warehouse"
@@ -64,26 +65,16 @@ class SessionManager:
         self.session.close()
 
 
-def fpk_get_encryption_key():
-    key = os.environ.get("FPK_ENCRYPTION_KEY")
-    if key is not None:
-        return key.encode()
-    return None
-
-
-def fpk_encrypt_data(data, key):
+def fpk_encrypt_data(data: str, key: bytes) -> str:
+    """Encrypt data using the provided key."""
     fernet = Fernet(key)
-    if isinstance(data, str):
-        data = data.encode()
-    return fernet.encrypt(data)
+    return fernet.encrypt(data.encode()).decode()
 
 
-def fpk_decrypt_data(data, key):
+def fpk_decrypt_data(encrypted_data: str, key: bytes) -> str:
+    """Decrypt data using the provided key."""
     fernet = Fernet(key)
-    if isinstance(data, str):
-        data = data.encode()
-    decrypted = fernet.decrypt(data)
-    return decrypted.decode()
+    return fernet.decrypt(encrypted_data.encode()).decode()
 
 
 def fpk_set_secure_file_permissions(file_path):
@@ -95,31 +86,59 @@ class FPKEncryptionKeyError(Exception):
     pass
 
 
+def get_or_create_encryption_key() -> bytes:
+    """Retrieve or generate and save an encryption key."""
+    try:
+        with open(KEY_FILE_PATH, "rb") as key_file:
+            key = key_file.read()
+    except FileNotFoundError:
+        print("No encryption key found. Generating a new key for persistent use.")
+        key = Fernet.generate_key()
+        with open(KEY_FILE_PATH, "wb") as key_file:
+            key_file.write(key)
+        os.chmod(KEY_FILE_PATH, 0o600)
+    return key
+
+
 def fpk_set_api_key(api_key: str):
-    encryption_key = fpk_get_encryption_key()
-    if not encryption_key:
-        raise FPKEncryptionKeyError("❌ Encryption key not set.")
+    """Set and encrypt the API key."""
+    encryption_key = get_or_create_encryption_key()
     encrypted_api_key = fpk_encrypt_data(api_key, encryption_key)
-    config["api_key"] = encrypted_api_key.decode()
+    config = {'api_key': encrypted_api_key}
 
     with open(CONFIG_FILE_PATH, "w") as config_file:
         toml.dump(config, config_file)
-    fpk_set_secure_file_permissions(CONFIG_FILE_PATH)
+    os.chmod(CONFIG_FILE_PATH, 0o600)
+    print("API key set successfully!")
+
+    # Optionally, verify the key immediately after setting
+    try:
+        test_key = fpk_get_api_key()  # Attempt to retrieve the key to ensure it can be decrypted properly
+        if test_key == api_key:
+            print("Verification successful: API key can be decrypted correctly.")
+        else:
+            print("Verification failed: Decrypted key does not match the original.")
+    except Exception as e:
+        print(f"Error during API key verification: {e}")
 
 
 def fpk_get_api_key() -> Optional[str]:
-    encryption_key = fpk_get_encryption_key()
-    if not encryption_key or not os.path.exists(CONFIG_FILE_PATH):
-        return None
+    """Retrieve and decrypt the API key from the configuration file."""
+    if not os.path.exists(CONFIG_FILE_PATH):
+        return None  # Avoid unnecessary prints when the config file doesn't exist
 
-    with open(CONFIG_FILE_PATH, "r") as config_file:
-        loaded_config = toml.load(config_file)
-        encrypted_api_key_str = loaded_config.get("api_key")
-        if encrypted_api_key_str:
-            encrypted_api_key_bytes = encrypted_api_key_str.encode()
-            return fpk_decrypt_data(encrypted_api_key_bytes, encryption_key)
-        else:
-            return None
+    try:
+        with open(CONFIG_FILE_PATH, 'r') as config_file:
+            loaded_config = toml.load(config_file)
+        encrypted_api_key = loaded_config.get('api_key')
+
+        if encrypted_api_key:
+            encryption_key = get_or_create_encryption_key()
+            return fpk_decrypt_data(encrypted_api_key, encryption_key)
+    except Exception as e:
+        print(f"Error decrypting API key: {e}")
+
+    return None
 
 
 def fpk_cache_last_flatpack(directory_name: str):
@@ -495,6 +514,16 @@ async def test_endpoint():
     return JSONResponse(content={"message": "Hello, World!"})
 
 
+def check_ngrok_auth():
+    ngrok_auth_token = os.environ.get('NGROK_AUTHTOKEN')
+    if not ngrok_auth_token:
+        print("❌ Error: NGROK_AUTHTOKEN is not set. Please set it using:")
+        print("export NGROK_AUTHTOKEN='your_ngrok_auth_token'")
+        sys.exit(1)
+    else:
+        print("NGROK_AUTHTOKEN is set.")
+
+
 def main():
     try:
         with SessionManager() as session:
@@ -518,7 +547,11 @@ def main():
                                       help='The directory of the flatpack to build.')
 
             subparsers.add_parser('run', help='Run the FastAPI server.')
-            subparsers.add_parser('set-api-key', help='Set the API key.')
+
+            parser_set_api_key = subparsers.add_parser('set-api-key', help='Set the API key.')
+            parser_set_api_key.add_argument('api_key', help='API key to set.')
+            parser_set_api_key.set_defaults(func=lambda args: fpk_set_api_key(args.api_key))
+
             subparsers.add_parser('version', help='Display the version of flatpack.')
 
             # Vector operations as regular commands
@@ -562,8 +595,6 @@ def main():
 
             if args.command == 'list':
                 print("Listing available flatpack directories...")
-
-            fpk_get_api_key()
 
             if args.command == 'vector-add-texts':
                 vm.add_texts(args.texts)
@@ -660,6 +691,7 @@ def main():
             elif args.command == "list":
                 print(fpk_list_directories(session))
             elif args.command == "run":
+                check_ngrok_auth()
 
                 try:
                     port = 8000
@@ -680,7 +712,6 @@ def main():
             elif args.command == "set-api-key":
                 if args.api_key:
                     fpk_set_api_key(args.api_key)
-                    print("API key set successfully!")
             elif args.command == "build":
                 print("Building flatpack...")
                 if args.directory:
