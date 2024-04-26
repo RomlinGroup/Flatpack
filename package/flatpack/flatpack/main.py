@@ -31,8 +31,6 @@ GITHUB_REPO_URL = "https://api.github.com/repos/romlingroup/flatpack"
 BASE_URL = "https://raw.githubusercontent.com/romlingroup/flatpack/main/warehouse"
 LOGGING_ENDPOINT = "https://fpk.ai/api/index.php"
 
-log_queue = []
-
 config = {
     "api_key": None
 }
