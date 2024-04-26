@@ -16,8 +16,8 @@ import uvicorn
 
 from cryptography.fernet import Fernet
 from fastapi import FastAPI
-from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from .parsers import parse_toml_to_venv_script
 from pathlib import Path
 from sentence_transformers import SentenceTransformer
@@ -315,7 +315,6 @@ def fpk_unbox(directory_name: str, session, verbose: bool = False, local: bool =
     temp_toml_path.write_text(toml_content)
 
     bash_script_content = parse_toml_to_venv_script(str(temp_toml_path), '3.11.8', directory_name)
-
     bash_script_path = build_dir / 'flatpack.sh'
     bash_script_path.write_text(bash_script_content)
 
