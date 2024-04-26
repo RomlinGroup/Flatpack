@@ -40,6 +40,10 @@ wandb = "*"
 # to_destination = "{{git_destination_dir}}"
 # branch = "{{branch_name}}"
 
+[[run]]
+command = "mkdir"
+args = "/home/content/agents-test"
+
 [[file]]
 from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/agents-test/device.sh"
 to_destination = "/home/content/device.sh"
