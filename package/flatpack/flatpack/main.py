@@ -113,9 +113,8 @@ def fpk_set_api_key(api_key: str):
     os.chmod(CONFIG_FILE_PATH, 0o600)
     print("API key set successfully!")
 
-    # Optionally, verify the key immediately after setting
     try:
-        test_key = fpk_get_api_key()  # Attempt to retrieve the key to ensure it can be decrypted properly
+        test_key = fpk_get_api_key()
         if test_key == api_key:
             print("Verification successful: API key can be decrypted correctly.")
         else:
@@ -127,7 +126,7 @@ def fpk_set_api_key(api_key: str):
 def fpk_get_api_key() -> Optional[str]:
     """Retrieve and decrypt the API key from the configuration file."""
     if not os.path.exists(CONFIG_FILE_PATH):
-        return None  # Avoid unnecessary prints when the config file doesn't exist
+        return None
 
     try:
         with open(CONFIG_FILE_PATH, 'r') as config_file:
@@ -556,7 +555,6 @@ def main():
 
             subparsers.add_parser('version', help='Display the version of flatpack.')
 
-            # Vector operations as regular commands
             parser_add_text = subparsers.add_parser('vector-add-texts',
                                                     help='Add new texts to generate embeddings and store them.')
             parser_add_text.add_argument('texts', nargs='+', help='Texts to add.')
