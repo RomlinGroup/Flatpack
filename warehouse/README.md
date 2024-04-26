@@ -12,8 +12,6 @@ Flatpack is experimental; please avoid using it for production.
 |-------------------------------------------------------------------------------------------------------------|----------|----------|
 | [moondream](https://github.com/romlingroup/flatpack-ai/tree/main/warehouse/moondream)                       | Flatpack | GPU      |
 | [nanogpt-scratch](https://github.com/romlingroup/flatpack-ai/tree/main/warehouse/nanogpt-scratch)           | Flatpack | GPU      |
-| [obsidian-multi-modal](https://github.com/romlingroup/flatpack-ai/tree/main/warehouse/obsidian-multi-modal) | Flatpack | GPU      |
-| [rwkv-infctx-trainer](https://github.com/romlingroup/flatpack-ai/tree/main/warehouse/rwkv-infctx-trainer)   | Flatpack | GPU      |
 
 ## Friendly notice ❤️
 
