@@ -37,6 +37,7 @@ config = {
 
 
 def safe_cleanup():
+    """Safely clean up temporary files."""
     try:
         files_to_delete = ["flatpack.sh"]
         current_directory = Path.cwd()
@@ -56,10 +57,12 @@ atexit.register(safe_cleanup)
 
 class SessionManager:
     def __enter__(self):
+        """Create an HTTP session."""
         self.session = httpx.Client()
         return self.session
 
     def __exit__(self, exc_type, exc_value, traceback):
+        """Close the HTTP session."""
         self.session.close()
 
 
@@ -76,6 +79,7 @@ def fpk_decrypt_data(encrypted_data: str, key: bytes) -> str:
 
 
 def fpk_set_secure_file_permissions(file_path):
+    """Set secure file permissions for the specified file."""
     os.chmod(file_path, stat.S_IRUSR | stat.S_IWUSR)
 
 
@@ -99,6 +103,7 @@ def get_or_create_encryption_key() -> bytes:
 
 
 def fpk_set_api_key(api_key: str):
+    """Set the API key in the configuration file."""
     global config
 
     """Set and encrypt the API key."""
@@ -282,6 +287,7 @@ def fpk_find_models(directory_path: str = None) -> List[str]:
 
 
 def fpk_unbox(directory_name: str, session, verbose: bool = False, local: bool = False):
+    """Unbox a flatpack from GitHub or a local directory."""
     flatpack_dir = Path.cwd() / directory_name
     flatpack_dir.mkdir(parents=True, exist_ok=True)
     build_dir = flatpack_dir / "build"
@@ -514,6 +520,7 @@ async def test_endpoint():
 
 
 def check_ngrok_auth():
+    """Check if the NGROK_AUTHTOKEN environment variable is set."""
     ngrok_auth_token = os.environ.get('NGROK_AUTHTOKEN')
     if not ngrok_auth_token:
         print("❌ Error: NGROK_AUTHTOKEN is not set. Please set it using:")
@@ -524,6 +531,7 @@ def check_ngrok_auth():
 
 
 def main():
+    """Main entry point for the flatpack command line interface."""
     try:
         with SessionManager() as session:
             parser = argparse.ArgumentParser(description='flatpack command line interface')
