@@ -609,6 +609,7 @@ def setup_arg_parser():
     parser_build = subparsers.add_parser('build',
                                          help='Build a model using the building script from the last unboxed flatpack.')
     parser_build.add_argument('directory', nargs='?', default=None, help='The directory of the flatpack to build.')
+    parser_build.add_argument('--verbose', action='store_true', help='Display detailed outputs for debugging.')
 
     # Run server
     subparsers.add_parser('run', help='Run the FastAPI server.')
