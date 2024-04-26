@@ -55,6 +55,58 @@ def safe_cleanup():
 atexit.register(safe_cleanup)
 
 
+class AgentManager:
+    def __init__(self, filepath='processes.json'):
+        self.processes = {}
+        self.filepath = filepath
+        self.load_processes()
+
+    def save_processes(self):
+        with open(self.filepath, 'w') as f:
+            json.dump(self.processes, f, default=str)
+
+    def load_processes(self):
+        try:
+            with open(self.filepath, 'r') as f:
+                self.processes = json.load(f)
+
+                for pid in list(self.processes.keys()):
+                    process = subprocess.Popen.poll(subprocess.Popen(pid=pid))
+                    if process is None or process.returncode is not None:
+                        del self.processes[pid]
+        except FileNotFoundError:
+            self.processes = {}
+
+    def spawn_agent(self, script_path):
+        process = subprocess.Popen(["python", script_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        pid = process.pid
+        self.processes[str(pid)] = {
+            'process': process.pid,
+            'start_time': datetime.now(),
+            'script_path': script_path
+        }
+        self.save_processes()
+        print(f"Started process {pid} running '{script_path}'")
+        return pid
+
+    def list_agents(self):
+        print("Active processes:")
+        for pid, details in self.processes.items():
+            print(f"PID: {pid}, Script: {details['script_path']}, Start Time: {details['start_time']}")
+
+    def terminate_agent(self, pid):
+        pid = str(pid)
+        if pid in self.processes:
+            process = subprocess.Popen(pid=int(pid))
+            process.terminate()
+            process.wait()
+            print(f"Terminated process {pid}")
+            del self.processes[pid]
+            self.save_processes()
+        else:
+            print(f"No process with PID {pid} found.")
+
+
 class SessionManager:
     def __enter__(self):
         """Create an HTTP session."""
@@ -529,208 +581,218 @@ def check_ngrok_auth():
         print("NGROK_AUTHTOKEN is set.")
 
 
+def setup_arg_parser():
+    # Create the top-level parser
+    parser = argparse.ArgumentParser(description='Flatpack command line interface')
+    subparsers = parser.add_subparsers(dest='command', help='Available commands')
+
+    # General commands
+    subparsers.add_parser('list', help='List available flatpack directories.')
+    subparsers.add_parser('find', help='Find model files in the current directory.')
+    subparsers.add_parser('help', help='Display help for commands.')
+    subparsers.add_parser('version', help='Display the version of flatpack.')
+
+    # API Key Management
+    parser_api_key = subparsers.add_parser('api-key', help='API key management commands')
+    api_key_subparsers = parser_api_key.add_subparsers(dest='api_key_command')
+    get_api_key_parser = api_key_subparsers.add_parser('get', help='Get the current API key.')
+    set_api_key_parser = api_key_subparsers.add_parser('set', help='Set the API key.')
+    set_api_key_parser.add_argument('api_key', help='API key to set.')
+
+    # Unbox commands
+    parser_unbox = subparsers.add_parser('unbox', help='Unbox a flatpack from GitHub or a local directory.')
+    parser_unbox.add_argument('input', nargs='?', default=None, help='The name of the flatpack to unbox.')
+    parser_unbox.add_argument('--local', action='store_true', help='Unbox from a local directory instead of GitHub.')
+    parser_unbox.add_argument('--verbose', action='store_true', help='Display detailed outputs for debugging.')
+
+    # Build commands
+    parser_build = subparsers.add_parser('build',
+                                         help='Build a model using the building script from the last unboxed flatpack.')
+    parser_build.add_argument('directory', nargs='?', default=None, help='The directory of the flatpack to build.')
+
+    # Run server
+    subparsers.add_parser('run', help='Run the FastAPI server.')
+
+    # Vector database management
+    parser_vector = subparsers.add_parser('vector', help='Vector database management')
+    vector_subparsers = parser_vector.add_subparsers(dest='vector_command')
+
+    parser_add_text = vector_subparsers.add_parser('add-texts',
+                                                   help='Add new texts to generate embeddings and store them.')
+    parser_add_text.add_argument('texts', nargs='+', help='Texts to add.')
+    parser_add_text.add_argument('--data-dir', type=str, default='./data',
+                                 help='Directory path for storing the vector database and metadata files.')
+
+    parser_search_text = vector_subparsers.add_parser('search-text',
+                                                      help='Search for texts similar to the given query.')
+    parser_search_text.add_argument('query', help='Text query to search for.')
+    parser_search_text.add_argument('--data-dir', type=str, default='./data',
+                                    help='Directory path for storing the vector database and metadata files.')
+
+    parser_add_pdf = vector_subparsers.add_parser('add-pdf', help='Add text from a PDF file to the vector database.')
+    parser_add_pdf.add_argument('pdf_path', help='Path to the PDF file to add.')
+    parser_add_pdf.add_argument('--data-dir', type=str, default='./data',
+                                help='Directory path for storing the vector database and metadata files.')
+
+    parser_add_url = vector_subparsers.add_parser('add-url', help='Add text from a URL to the vector database.')
+    parser_add_url.add_argument('url', help='URL to add.')
+    parser_add_url.add_argument('--data-dir', type=str, default='./data',
+                                help='Directory path for storing the vector database and metadata files.')
+
+    parser_add_wikipedia_page = vector_subparsers.add_parser('add-wikipedia',
+                                                             help='Add text from a Wikipedia page to the vector database.')
+    parser_add_wikipedia_page.add_argument('page_title', help='The title of the Wikipedia page to add.')
+    parser_add_wikipedia_page.add_argument('--data-dir', type=str, default='./data',
+                                           help='Directory path for storing the vector database and metadata files.')
+
+    return parser
+
+
 def main():
     """Main entry point for the flatpack command line interface."""
     try:
         with SessionManager() as session:
-            parser = argparse.ArgumentParser(description='flatpack command line interface')
-            subparsers = parser.add_subparsers(dest='command', help='Available commands')
-
-            subparsers.add_parser('list', help='List available flatpack directories.')
-            subparsers.add_parser('find', help='Find model files in the current directory.')
-            subparsers.add_parser('help', help='Display help for commands.')
-            subparsers.add_parser('get-api-key', help='Get the current API key.')
-
-            parser_unbox = subparsers.add_parser('unbox', help='Unbox a flatpack from GitHub or a local directory.')
-            parser_unbox.add_argument('input', nargs='?', default=None, help='The name of the flatpack to unbox.')
-            parser_unbox.add_argument('--local', action='store_true',
-                                      help='Unbox from a local directory instead of GitHub.')
-            parser_unbox.add_argument('--verbose', action='store_true', help='Display detailed outputs for debugging.')
-
-            parser_build = subparsers.add_parser('build',
-                                                 help='Build a model using the building script from the last unboxed flatpack.')
-            parser_build.add_argument('directory', nargs='?', default=None,
-                                      help='The directory of the flatpack to build.')
-
-            subparsers.add_parser('run', help='Run the FastAPI server.')
-
-            parser_set_api_key = subparsers.add_parser('set-api-key', help='Set the API key.')
-            parser_set_api_key.add_argument('api_key', help='API key to set.')
-            parser_set_api_key.set_defaults(func=lambda args: fpk_set_api_key(args.api_key))
-
-            subparsers.add_parser('version', help='Display the version of flatpack.')
-
-            parser_add_text = subparsers.add_parser('vector-add-texts',
-                                                    help='Add new texts to generate embeddings and store them.')
-            parser_add_text.add_argument('texts', nargs='+', help='Texts to add.')
-            parser_add_text.add_argument('--data-dir', type=str, default='./data',
-                                         help='Directory path for storing the vector database and metadata files.')
-
-            parser_search_text = subparsers.add_parser('vector-search-text',
-                                                       help='Search for texts similar to the given query.')
-            parser_search_text.add_argument('query', help='Text query to search for.')
-            parser_search_text.add_argument('--data-dir', type=str, default='./data',
-                                            help='Directory path for storing the vector database and metadata files.')
-
-            parser_add_pdf = subparsers.add_parser('vector-add-pdf',
-                                                   help='Add text from a PDF file to the vector database.')
-            parser_add_pdf.add_argument('pdf_path', help='Path to the PDF file to add.')
-            parser_add_pdf.add_argument('--data-dir', type=str, default='./data',
-                                        help='Directory path for storing the vector database and metadata files.')
-
-            parser_add_url = subparsers.add_parser('vector-add-url', help='Add text from a URL to the vector database.')
-            parser_add_url.add_argument('url', help='URL to add.')
-            parser_add_url.add_argument('--data-dir', type=str, default='./data',
-                                        help='Directory path for storing the vector database and metadata files.')
-
-            parser_add_wikipedia_page = subparsers.add_parser('vector-add-wikipedia-page',
-                                                              help='Add text from a Wikipedia page to the vector database.')
-            parser_add_wikipedia_page.add_argument('page_title', help='The title of the Wikipedia page to add.')
-            parser_add_wikipedia_page.add_argument('--data-dir', type=str, default='./data',
-                                                   help='Directory path for storing the vector database and metadata files.')
-
+            parser = setup_arg_parser()
             args = parser.parse_args()
 
-            if args.command in ['vector-add-texts', 'vector-search-text', 'vector-add-pdf', 'vector-add-url',
-                                'vector-add-wikipedia-page'] and hasattr(args, 'data_dir'):
-                print(f"Using data directory: {args.data_dir}")
-                vm = VectorManager(model_name='all-MiniLM-L6-v2', directory=args.data_dir)
-            else:
-                vm = VectorManager(model_name='all-MiniLM-L6-v2')
+            # Dispatch to the appropriate function based on the command
+            command_handlers = {
+                'list': lambda: handle_list(session),
+                'find': handle_find,
+                'help': handle_help,
+                'get-api-key': handle_get_api_key,
+                'unbox': lambda: handle_unbox(args, session),
+                'run': handle_run,
+                'set-api-key': lambda: handle_set_api_key(args.api_key),
+                'build': lambda: handle_build(args, session),
+                'version': handle_version,
+            }
 
-            if args.command == 'list':
-                print("Listing available flatpack directories...")
-
-            if args.command == 'vector-add-texts':
-                vm.add_texts(args.texts)
-                print(f"Added {len(args.texts)} texts to the database.")
-            elif args.command == 'vector-search':
-                if not vm.is_index_ready():
-                    print("Vector index is not ready. Skipping search.")
-                    return
-
-                try:
-                    results = vm.search_vectors(args.query)
-                    if results:
-                        print("Search results:")
-                        for result in results:
-                            id = result["id"]
-                            distance = result["distance"]
-                            text = result["text"]
-                            print(f"({distance}) {id}: {text}\n")
-                    else:
-                        print("No results found.")
-                except ValueError as e:
-                    print(f"Error: {e}")
-                except Exception as e:
-                    print(f"❌ An unexpected error occurred.")
-            elif args.command == 'vector-add-pdf':
-                pdf_path = args.pdf_path
-                if not os.path.exists(pdf_path):
-                    print(f"❌ PDF file does not exist: '{pdf_path}'.")
-                    return
-                vm.add_pdf(pdf_path)
-                print(f"✅ Added text from PDF: '{pdf_path}' to the vector database.")
-            elif args.command == 'vector-add-url':
-                url = args.url
-                try:
-                    response = requests.head(url, allow_redirects=True, timeout=5)
-                    if response.status_code >= 200 and response.status_code < 400:
-                        vm.add_url(url)
-                        print(f"✅ Added text from URL: '{url}' to the vector database.")
-                    else:
-                        print(f"❌ URL is not accessible: '{url}'. HTTP Status Code: {response.status_code}")
-                except requests.RequestException as e:
-                    print(f"❌ Failed to access URL: '{url}'. Error: {e}")
-            elif args.command == 'vector-add-wikipedia-page':
-                page_title = args.page_title
-                vm.add_wikipedia_page(page_title)
-                print(f"✅ Added text from Wikipedia page: '{page_title}' to the vector database.")
-            elif args.command == "find":
-                print(fpk_find_models())
-            elif args.command == "help":
-                print("[HELP]")
-            elif args.command == "get-api-key":
-                print(fpk_get_api_key())
-            elif args.command == "unbox":
-
-                if not args.input:
-                    print("❌ Please specify a flatpack for the unbox command.")
-                    return
-
-                directory_name = args.input
-
-                if not args.local:
-                    existing_dirs = fpk_fetch_github_dirs(session)
-                    if directory_name not in existing_dirs:
-                        print(f"❌ The flatpack '{directory_name}' does not exist.")
-                        return
-
-                    fpk_display_disclaimer(directory_name)
-
-                    while True:
-                        user_response = input().strip().upper()
-                        if user_response == "YES":
-                            break
-                        elif user_response == "NO":
-                            print("❌ Unboxing aborted by user.")
-                            return
-                        else:
-                            print("❌ Invalid input. Please type 'YES' to accept or 'NO' to decline.")
-
-                if args.local:
-                    local_directory_path = Path(directory_name)
-                    if not local_directory_path.exists() or not local_directory_path.is_dir():
-                        print(f"❌ Local directory does not exist: '{directory_name}'.")
-                        return
-                    toml_path = local_directory_path / 'flatpack.toml'
-                    if not toml_path.exists():
-                        print(f"❌ flatpack.toml not found in the specified directory: '{directory_name}'.")
-                        return
-
-                print("Verbose mode:", args.verbose)
-
-                print(f"✅ Directory name resolved to: '{directory_name}'")
-                fpk_unbox(directory_name, session, verbose=args.verbose, local=args.local)
-
-            elif args.command == "list":
-                print(fpk_list_directories(session))
-            elif args.command == "run":
-                check_ngrok_auth()
-
-                try:
-                    port = 8000
-                    listener = ngrok.forward(port, authtoken_from_env=True)
-                    print(f"Ingress established at {listener.url()}")
-                    uvicorn.run(app, host="0.0.0.0", port=port)
-
-                except Exception as e:
-                    print(f"❌ An unexpected error occurred: {e}")
-                except KeyboardInterrupt:
-                    print("❌ FastAPI server has been stopped.")
-                except Exception as e:
-                    print(f"❌ An unexpected error occurred: {e}")
-                finally:
-                    print("Finalizing...")
-                    ngrok.disconnect(listener.url())
-
-            elif args.command == "set-api-key":
-                if args.api_key:
-                    fpk_set_api_key(args.api_key)
-            elif args.command == "build":
-                print("Building flatpack...")
-                if args.directory:
-                    fpk_build(args.directory, session)
-                else:
-                    fpk_build(None, session)
-            elif args.command == "version":
-                print("[VERSION]")
-            else:
-                parser.print_help()
+            # Handling vector-related commands as a group
+            if args.command in command_handlers:
+                command_handlers[args.command]()
+            elif 'vector-' in args.command:
+                handle_vector_commands(args, session)
 
     except Exception as e:
         print(f"❌ An unexpected error occurred: {e}")
-    sys.exit(1)
+        sys.exit(1)
+
+
+def handle_list(session):
+    print(fpk_list_directories(session))
+
+
+def handle_find():
+    print(fpk_find_models())
+
+
+def handle_help():
+    print("[HELP]")
+
+
+def handle_get_api_key():
+    print(fpk_get_api_key())
+
+
+def handle_unbox(args, session):
+    if not args.input:
+        print("❌ Please specify a flatpack for the unbox command.")
+        return
+
+    directory_name = args.input
+    if not args.local and directory_name not in fpk_fetch_github_dirs(session):
+        print(f"❌ The flatpack '{directory_name}' does not exist.")
+        return
+
+    if args.local:
+        local_directory_path = Path(directory_name)
+        if not local_directory_path.exists() or not local_directory_path.is_dir():
+            print(f"❌ Local directory does not exist: '{directory_name}'.")
+            return
+        toml_path = local_directory_path / 'flatpack.toml'
+        if not toml_path.exists():
+            print(f"❌ flatpack.toml not found in the specified directory: '{directory_name}'.")
+            return
+
+    print("Verbose mode:", args.verbose)
+    print(f"✅ Directory name resolved to: '{directory_name}'")
+    fpk_unbox(directory_name, session, verbose=args.verbose, local=args.local)
+
+
+def handle_run():
+    check_ngrok_auth()
+    try:
+        port = 8000
+        listener = ngrok.forward(port, authtoken_from_env=True)
+        print(f"Ingress established at {listener.url()}")
+        uvicorn.run(app, host="0.0.0.0", port=port)
+    except KeyboardInterrupt:
+        print("❌ FastAPI server has been stopped.")
+    except Exception as e:
+        print(f"❌ An unexpected error occurred during server run: {e}")
+    finally:
+        ngrok.disconnect(listener.url())
+
+
+def handle_set_api_key(api_key):
+    fpk_set_api_key(api_key)
+
+
+def handle_build(args, session):
+    if args.directory:
+        print("Building flatpack...")
+        fpk_build(args.directory, session)
+    else:
+        fpk_build(None, session)
+
+
+def handle_version():
+    print("[VERSION]")
+
+
+def handle_vector_commands(args, session):
+    # Instantiate the vector manager with possible custom data directory
+    vm = VectorManager(model_name='all-MiniLM-L6-v2', directory=getattr(args, 'data_dir', './data'))
+
+    if args.command == 'vector-add-texts':
+        vm.add_texts(args.texts)
+        print(f"Added {len(args.texts)} texts to the database.")
+    elif args.command == 'vector-search':
+        results = vm.search_vectors(args.query)
+        if results:
+            print("Search results:")
+            for result in results:
+                print(f"({result['distance']}) {result['id']}: {result['text']}\n")
+        else:
+            print("No results found.")
+    elif args.command == 'vector-add-pdf':
+        handle_add_pdf(args.pdf_path, vm)
+    elif args.command == 'vector-add-url':
+        handle_add_url(args.url, vm)
+    elif args.command == 'vector-add-wikipedia-page':
+        vm.add_wikipedia_page(args.page_title)
+        print(f"✅ Added text from Wikipedia page: '{args.page_title}' to the vector database.")
+
+
+def handle_add_pdf(pdf_path, vm):
+    if not os.path.exists(pdf_path):
+        print(f"❌ PDF file does not exist: '{pdf_path}'.")
+        return
+    vm.add_pdf(pdf_path)
+    print(f"✅ Added text from PDF: '{pdf_path}' to the vector database.")
+
+
+def handle_add_url(url, vm):
+    try:
+        response = requests.head(url, allow_redirects=True, timeout=5)
+        if response.status_code >= 200 and response.status_code < 400:
+            vm.add_url(url)
+            print(f"✅ Added text from URL: '{url}' to the vector database.")
+        else:
+            print(f"❌ URL is not accessible: '{url}'. HTTP Status Code: {response.status_code}")
+    except requests.RequestException as e:
+        print(f"❌ Failed to access URL: '{url}'. Error: {e}")
 
 
 if __name__ == "__main__":
