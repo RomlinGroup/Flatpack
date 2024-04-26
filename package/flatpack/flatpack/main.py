@@ -101,6 +101,8 @@ def get_or_create_encryption_key() -> bytes:
 
 
 def fpk_set_api_key(api_key: str):
+    global config
+
     """Set and encrypt the API key."""
     encryption_key = get_or_create_encryption_key()
     encrypted_api_key = fpk_encrypt_data(api_key, encryption_key)
