@@ -475,28 +475,31 @@ def fpk_process_output(output, session, last_unboxed_flatpack):
 def fpk_build(directory: str, session: httpx.Client = None):
     """Build a model using a building script from the last unboxed flatpack."""
     cache_file_path = Path('last_flatpack.cache')
-    print(f"Looking for cached flatpack in {cache_file_path}.")
 
     if directory and fpk_valid_directory_name(directory):
         print(f"Using provided directory: {directory}")
         last_unboxed_flatpack = directory
     elif cache_file_path.exists():
-        print(f"Found cached flatpack in {cache_file_path}.")
         last_unboxed_flatpack = cache_file_path.read_text().strip()
+        print(f"Found cached flatpack in {cache_file_path}: {last_unboxed_flatpack}")
+
         if not fpk_valid_directory_name(last_unboxed_flatpack):
             print(f"❌ Invalid directory name from cache: '{last_unboxed_flatpack}'.")
             return
+
     else:
         print("❌ No cached flatpack found, and no valid directory provided.")
         return
 
     building_script_path = Path(last_unboxed_flatpack) / 'build' / 'build.sh'
+
     if not building_script_path.exists():
         print(f"❌ Building script not found in {last_unboxed_flatpack}.")
         return
 
     env = dict(os.environ, PYTHONUNBUFFERED="1")
     safe_script_path = shlex.quote(str(building_script_path))
+    print(safe_script_path)
 
     try:
         proc = subprocess.Popen(["bash", "-u", safe_script_path], stdin=subprocess.PIPE,
@@ -743,8 +746,11 @@ def handle_set_api_key(api_key):
 def handle_build(args, session):
     if args.directory:
         print("Building flatpack...")
+        print("Directory:", args.directory)
         fpk_build(args.directory, session)
     else:
+        print("Building flatpack...")
+        print("Directory: None")
         fpk_build(None, session)
 
 

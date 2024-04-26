@@ -42,7 +42,7 @@ wandb = "*"
 
 [[run]]
 command = "mkdir"
-args = "/home/content/agents-test"
+args = "/home/content/local"
 
 [[file]]
 from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/agents-test/device.sh"
@@ -51,6 +51,10 @@ to_destination = "/home/content/device.sh"
 [[file]]
 from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/agents-test/build.sh"
 to_destination = "/home/content/build.sh"
+
+[[file]]
+from_source = "/agents-test/hello_world.py"
+to_destination = "/home/content/hello_world.py"
 
 [[run]]
 command = "chmod"

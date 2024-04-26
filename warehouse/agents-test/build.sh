@@ -6,7 +6,7 @@ export SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 echo -e "🚀 build.sh is running in: $SCRIPT_DIR\n"
 
 # === BEGIN USER CUSTOMIZATION ===
-export REPO_NAME=agents-test
+export REPO_NAME=local
 export FLATPACK_NAME=agents-test
 # === END USER CUSTOMIZATION ===
 
@@ -25,5 +25,6 @@ if [[ ! " $REQUIRED_DEVICES " =~ " $DEVICE " ]]; then
 fi
 
 # === BEGIN USER CUSTOMIZATION ===
-"${VENV_PYTHON}" -c "print('Hello, World!')"
+cp -f ../hello_world.py ./local/hello_world.py
+"${VENV_PYTHON}" hello_world.py
 # === END USER CUSTOMIZATION ===
