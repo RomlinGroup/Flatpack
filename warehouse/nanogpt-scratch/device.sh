@@ -8,9 +8,11 @@ for VAR_NAME in REPO_NAME FLATPACK_NAME SCRIPT_DIR; do
 done
 
 DEFAULT_PATH="/home/$(whoami)/flatpacks"
+
 OS=$(uname)
 
 if [[ -d "/content" ]]; then
+
   if command -v nvidia-smi &> /dev/null; then
     echo "🌀 Detected Colab GPU environment"
     DEVICE="cuda"
@@ -31,11 +33,7 @@ elif [ "$OS" = "Darwin" ]; then
   DEVICE="mps"
 
 elif [ "$OS" = "Linux" ]; then
-  if [[ -x "$(command -v python3)" ]]; then
-    export VENV_PYTHON="python3"
-  else
-    export VENV_PYTHON="python"
-  fi
+  export VENV_PYTHON="${SCRIPT_DIR}/bin/python"
   if [ -f /etc/os-release ] && grep -q "Ubuntu" /etc/os-release; then
     echo "🐧 Detected Ubuntu environment"
   else
@@ -50,12 +48,7 @@ else
   WORK_DIR="$DEFAULT_PATH/$FLATPACK_NAME/build/$REPO_NAME"
 fi
 
-if [[ "$OS" = "Darwin" ]] || [[ "$OS" = "Linux" ]] || [[ -d "/content" ]]; then
-    export VENV_PIP="$(dirname $VENV_PYTHON)/pip"
-else
-    echo "⚠️  Virtual environment's pip could not be determined."
-    exit 1
-fi
+export VENV_PIP="$(dirname $VENV_PYTHON)/pip"
 
 echo "Determined WORK_DIR: $WORK_DIR"
 echo "Determined DEVICE: $DEVICE"
@@ -65,12 +58,12 @@ if [[ -d "$WORK_DIR" ]]; then
   echo "Current working directory after changing: $(pwd)"
   echo "[DEBUG] VENV_PYTHON: $VENV_PYTHON / VENV_PIP: $VENV_PIP"
 
-  if [[ -z "$VIRTUAL_ENV" ]]; then
-    echo "❌ Error: Not running inside a virtual environment. Exiting." >&2
+  if [[ -z "${VIRTUAL_ENV:-}" ]]; then
+    echo "Error: Not running inside a virtual environment. Exiting." >&2
     exit 1
   fi
 
 else
-  echo "❌ Error: Failed to change to directory $WORK_DIR" >&2
+  echo "Error: Failed to change to directory $WORK_DIR" >&2
   exit 1
 fi
