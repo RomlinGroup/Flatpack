@@ -23,16 +23,23 @@ if [[ -d "/content" ]]; then
     echo "🌀 Detected Colab CPU environment"
     DEVICE="cpu"
   fi
-  export VENV_PYTHON="/usr/bin/python3"
+
+  # export VENV_PYTHON="/usr/bin/python3"
+  export VENV_PYTHON="${SCRIPT_DIR}/bin/python"
+
   DEFAULT_PATH="/content"
   WORK_DIR="$DEFAULT_PATH/$FLATPACK_NAME/build/$REPO_NAME"
+
 elif [ "$OS" = "Darwin" ]; then
+
   echo "🍎 Detected macOS environment"
   export VENV_PYTHON="${SCRIPT_DIR}/bin/python"
   DEFAULT_PATH="/Users/$(whoami)/flatpacks"
   WORK_DIR="$DEFAULT_PATH/$FLATPACK_NAME/build/$REPO_NAME"
   DEVICE="mps"
+
 elif [ "$OS" = "Linux" ]; then
+
   # Check for Python version and adjust VENV_PYTHON accordingly
   if [[ -x "$(command -v python3)" ]]; then
     export VENV_PYTHON="python3"
@@ -47,11 +54,14 @@ elif [ "$OS" = "Linux" ]; then
     WORK_DIR="$DEFAULT_PATH/$FLATPACK_NAME/build/$REPO_NAME"
   fi
   DEVICE="cpu"
+
 else
+
   echo "❓ Detected other OS environment"
   # Assume CPU for other environments as a fallback
   DEVICE="cpu"
   WORK_DIR="$DEFAULT_PATH/$FLATPACK_NAME/build/$REPO_NAME"
+
 fi
 
 if [[ "$OS" = "Darwin" ]]; then
