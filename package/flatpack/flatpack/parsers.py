@@ -92,22 +92,19 @@ handle_error() {{
 if [[ $IS_COLAB -eq 0 ]]; then
     
     echo "🐍 Checking for Python"
-    
-    PYTHON_CMD=python
-
+    PYTHON_CMD=python3
     echo "Python command to be used: $PYTHON_CMD"
-
-    echo "🦄 Creating the virtual environment at {env_name}/{build_prefix}"
+    echo "🦄 Creating the virtual environment at ${env_name}/${build_prefix}"
     
-    if ! $PYTHON_CMD -m venv "{env_name}/{build_prefix}"; then
+    if ! $PYTHON_CMD -m venv "${env_name}/${build_prefix}"; then
         echo "❌ Failed to create the virtual environment using $PYTHON_CMD"
         handle_error
     else
         echo "✅ Successfully created the virtual environment"
     fi
     
-    # Ensuring the VENV_PYTHON path does not begin with a dot and is correctly formed
-    export VENV_PYTHON="{env_name}/{build_prefix}/bin/python"
+    export VENV_PYTHON="${env_name}/${build_prefix}/bin/python"
+    
     if [[ -f "$VENV_PYTHON" ]]; then
         echo "✅ VENV_PYTHON is set correctly to $VENV_PYTHON"
         echo "🐍 Checking Python version in the virtual environment..."
@@ -117,26 +114,24 @@ if [[ $IS_COLAB -eq 0 ]]; then
         handle_error
     fi
     
-    # Ensure pip is installed within the virtual environment
-    if [ ! -x "$VENV_PYTHON -m pip" ]; then
-        echo "Installing pip within the virtual environment..."
-        $VENV_PYTHON -m ensurepip
-    fi
-    
-    # Set VENV_PIP variable to the path of pip within the virtual environment
-    export VENV_PIP="$VENV_PYTHON -m pip"
+    echo "Ensuring pip is installed within the virtual environment..."
+    $VENV_PYTHON -m ensurepip
+    export PIP_CMD="$VENV_PYTHON -m pip"
     
 else
+    
     echo "🐍 Checking for Python in Google Colab environment"
     if command -v python3 &>/dev/null; then
-        PYTHON_CMD=python3
+        export VENV_PYTHON=python3
         echo "Python command to be used: $PYTHON_CMD"
         export VENV_PYTHON=$(python3 -c "import sys; print(sys.executable)")
         echo "✅ VENV_PYTHON is set correctly to $VENV_PYTHON"
+        export VENV_PIP="$VENV_PYTHON -m pip"
     else
         echo "❌ Python not found in Google Colab environment"
         handle_error
     fi
+    
 fi
     """
     script.append(venv_setup)
