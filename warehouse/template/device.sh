@@ -71,7 +71,10 @@ echo "Determined DEVICE: $DEVICE"
 # Check if the directory exists before changing
 if [[ -d "$WORK_DIR" ]]; then
   cd "$WORK_DIR"
+
   echo "Current working directory after changing: $(pwd)"
+  echo "[DEBUG] VENV_PYTHON: $VENV_PYTHON / VENV_PIP: $VENV_PIP"
+
 else
   echo "Error: Failed to change to directory $WORK_DIR" >&2
   exit 1
