@@ -88,11 +88,16 @@ handle_error() {{
     echo "😟 Oops! Something went wrong."
     exit 1
 }}
+
+if [[ $IS_COLAB -ne 0 ]]; then
+    apt install python3.10-venv
+fi  
     
 echo "🐍 Checking for Python"
 PYTHON_CMD=python
 
 echo "Python command to be used: $PYTHON_CMD"
+
 echo "🦄 Creating the virtual environment at {env_name}/{build_prefix}"
     
 if ! $PYTHON_CMD -m venv "{env_name}/{build_prefix}"; then
