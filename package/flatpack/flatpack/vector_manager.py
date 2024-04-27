@@ -10,6 +10,7 @@ import re
 import requests
 
 from bs4 import BeautifulSoup
+from contextlib import redirect_stdout
 from nltk.tokenize import sent_tokenize
 from pypdf import PdfReader
 from sentence_transformers import SentenceTransformer
@@ -19,8 +20,7 @@ from urllib.parse import urlparse
 # Configure logging
 logging.basicConfig(level=logging.CRITICAL, format='%(asctime)s - %(levelname)s - %(message)s')
 
-# Ensure punkt tokenizer is downloaded
-if not nltk.find('tokenizers/punkt'):
+with redirect_stdout(open(os.devnull, "w")):
     nltk.download('punkt', quiet=True)
 
 VECTOR_DIMENSION = 384

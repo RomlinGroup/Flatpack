@@ -83,7 +83,6 @@ fi
         """.strip()
         script.append(apt_install)
 
-    # Setup venv environment
     venv_setup = f"""
 handle_error() {{
     echo "😟 Oops! Something went wrong."
@@ -117,20 +116,30 @@ if [[ $IS_COLAB -eq 0 ]]; then
         echo "❌ VENV_PYTHON is set to $VENV_PYTHON, but this file does not exist"
         handle_error
     fi
-fi
-    """.strip()
-    script.append(venv_setup)
-
-    # Additional logic for determining VENV_PIP
-    script.append(f"""
-OS=$(uname)
-if [[ "$OS" = "Darwin" ]] || [[ "$OS" = "Linux" ]] || [[ -d "/content" ]]; then
-    export VENV_PIP="$(dirname $VENV_PYTHON)/pip"
+    
+    # Ensure pip is installed within the virtual environment
+    if [ ! -x "$VENV_PYTHON -m pip" ]; then
+        echo "Installing pip within the virtual environment..."
+        $VENV_PYTHON -m ensurepip
+    fi
+    
+    # Set VENV_PIP variable to the path of pip within the virtual environment
+    export VENV_PIP="$VENV_PYTHON -m pip"
+    
 else
-    echo "⚠️  Virtual environment's pip could not be determined."
-    exit 1
+    echo "🐍 Checking for Python in Google Colab environment"
+    if command -v python3 &>/dev/null; then
+        PYTHON_CMD=python3
+        echo "Python command to be used: $PYTHON_CMD"
+        export VENV_PYTHON=$(python3 -c "import sys; print(sys.executable)")
+        echo "✅ VENV_PYTHON is set correctly to $VENV_PYTHON"
+    else
+        echo "❌ Python not found in Google Colab environment"
+        handle_error
+    fi
 fi
-    """.strip())
+    """
+    script.append(venv_setup)
 
     # Create other directories within the build directory as per the TOML configuration
     directories_map = config.get("directories")

@@ -33,7 +33,6 @@ tiktoken = "*"
 transformers = "*"
 torch = "*"
 tqdm = "*"
-wandb = "*"
 
 [[git]]
 from_source = "https://github.com/karpathy/nanoGPT"

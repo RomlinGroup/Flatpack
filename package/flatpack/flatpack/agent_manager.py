@@ -38,14 +38,14 @@ class AgentManager:
             'script_path': script_path
         }
         self.save_processes()
-        print(f"Started process {pid} running '{script_path}'")
+        print(f"Spawned agent {pid} running '{script_path}'")
         return pid
 
     def list_agents(self):
         if not self.processes:
             print("No active agents.")
         else:
-            print("Active processes:")
+            print("Active agents:")
             for pid, details in self.processes.items():
                 print(f"PID: {pid}, Script: {details['script_path']}, Start Time: {details['start_time']}")
 
@@ -54,10 +54,10 @@ class AgentManager:
         if pid in self.processes:
             try:
                 os.kill(int(pid), signal.SIGTERM)  # Send SIGTERM signal to terminate the process
-                print(f"Terminated process {pid}")
+                print(f"Terminated agent {pid}")
                 del self.processes[pid]
                 self.save_processes()
             except OSError as e:
-                print(f"Failed to terminate process {pid}: {e}")
+                print(f"Failed to terminate agent {pid}: {e}")
         else:
-            print(f"No process with PID {pid} found.")
+            print(f"No agent with PID {pid} found.")
