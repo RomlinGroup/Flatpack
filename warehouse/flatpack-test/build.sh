@@ -25,5 +25,7 @@ if [[ ! " $REQUIRED_DEVICES " =~ " $DEVICE " ]]; then
 fi
 
 # === BEGIN USER CUSTOMIZATION ===
+echo "🦙 Building llama.cpp"
 make
+echo "✅ Finished building llama.cpp"
 # === END USER CUSTOMIZATION ===
