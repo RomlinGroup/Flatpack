@@ -122,9 +122,9 @@ else
     
     echo "🐍 Checking for Python in Google Colab environment"
     if command -v python3 &>/dev/null; then
-        export VENV_PYTHON=python3
+        PYTHON_CMD=python3
         echo "Python command to be used: $PYTHON_CMD"
-        export VENV_PYTHON=$(python3 -c "import sys; print(sys.executable)")
+        export VENV_PYTHON=$($PYTHON_CMD -c "import sys; print(sys.executable)")
         echo "✅ VENV_PYTHON is set correctly to $VENV_PYTHON"
         export VENV_PIP="$VENV_PYTHON -m pip"
     else
