@@ -2,6 +2,7 @@ import argparse
 import atexit
 import faiss
 import httpx
+import json
 import ngrok
 import os
 import re
@@ -15,6 +16,7 @@ import toml
 import uvicorn
 
 from cryptography.fernet import Fernet
+from datetime import datetime
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
