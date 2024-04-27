@@ -81,6 +81,9 @@ MIT (INBOUND) is compatible with Apache-2.0 (OUTBOUND) for combined works but do
 - **[olefile](https://pypi.org/project/olefile/)**\
   BSD License (BSD) ([LICENSE](https://github.com/decalage2/olefile/blob/master/LICENSE.txt))
 
+- **[psutil](https://pypi.org/project/psutil/)**\
+  BSD License (BSD-3-Clause) ([LICENSE](https://github.com/giampaolo/psutil/blob/master/LICENSE))
+
 - **[pypdf](https://pypi.org/project/pypdf/)**\
   BSD License ([LICENSE](https://github.com/py-pdf/pypdf/blob/main/LICENSE))
 
@@ -99,4 +102,4 @@ MIT (INBOUND) is compatible with Apache-2.0 (OUTBOUND) for combined works but do
 - **[uvicorn](https://pypi.org/project/uvicorn/)**\
   BSD License ([LICENSE](https://github.com/encode/uvicorn/blob/master/LICENSE.md))
 
-Last updated: 2024-04-20
+Last updated: 2024-04-27
