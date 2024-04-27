@@ -26,10 +26,8 @@ from .vector_manager import VectorManager
 
 CONFIG_FILE_PATH = os.path.join(os.path.expanduser("~"), ".fpk_config.toml")
 KEY_FILE_PATH = os.path.join(os.path.expanduser("~"), ".fpk_encryption_key")
-LOGGING_BATCH_SIZE = 10
 GITHUB_REPO_URL = "https://api.github.com/repos/romlingroup/flatpack"
 BASE_URL = "https://raw.githubusercontent.com/romlingroup/flatpack/main/warehouse"
-LOGGING_ENDPOINT = "https://fpk.ai/api/index.php"
 
 config = {
     "api_key": None
@@ -421,122 +419,38 @@ def fpk_list_directories(session: httpx.Client) -> str:
     return "\n".join(dirs)
 
 
-def fpk_log_to_api(message: str, session: httpx.Client, api_key: Optional[str] = None,
-                   model_name: str = "YOUR_MODEL_NAME"):
-    """Log a message to the API.
-
-    Args:
-        message (str): The log message.
-        session (httpx.Client): HTTP client session for making requests.
-        api_key (Optional[str]): The API key for authentication. Defaults to the global API_KEY.
-        model_name (str): Name of the model associated with the log. Defaults to "YOUR_MODEL_NAME".
-    """
-    if not api_key:
-        api_key = config["api_key"]
-        if not api_key:
-            print("❌ API key not set.")
-            return
-
-    headers = {
-        "Content-Type": "application/json"
-    }
-    params = {
-        "endpoint": "log-message",
-        "api_key": api_key
-    }
-    data = {
-        "model_name": model_name,
-        "log_message": message
-    }
-
-    try:
-        response = session.post(LOGGING_ENDPOINT, params=params, json=data, headers=headers, timeout=10)
-    except httpx.RequestError as e:
-        print(f"Failed to send request: {e}")
-
-
-def fpk_process_output(output, session, last_unboxed_flatpack):
-    """Process output and log it."""
-    api_key = fpk_get_api_key()
-
-    ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
-
-    for line in output.splitlines():
-        line = line.strip()
-        line = ansi_escape.sub('', line)
-
-        if line:
-            print(f"(*) {line}", flush=True)
-
-            if api_key:
-                fpk_log_to_api(line, session, api_key=api_key, model_name=last_unboxed_flatpack)
-
-
-def fpk_build(directory: str, session: httpx.Client = None):
+def fpk_build(directory: str):
     """Build a model using a building script from the last unboxed flatpack."""
     cache_file_path = Path('last_flatpack.cache')
+    print(f"Looking for cached flatpack in {cache_file_path}.")
 
     if directory and fpk_valid_directory_name(directory):
         print(f"Using provided directory: {directory}")
         last_unboxed_flatpack = directory
     elif cache_file_path.exists():
+        print(f"Found cached flatpack in {cache_file_path}.")
         last_unboxed_flatpack = cache_file_path.read_text().strip()
-        print(f"Found cached flatpack in {cache_file_path}: {last_unboxed_flatpack}")
-
         if not fpk_valid_directory_name(last_unboxed_flatpack):
             print(f"❌ Invalid directory name from cache: '{last_unboxed_flatpack}'.")
             return
-
     else:
         print("❌ No cached flatpack found, and no valid directory provided.")
         return
 
     building_script_path = Path(last_unboxed_flatpack) / 'build' / 'build.sh'
-
     if not building_script_path.exists():
         print(f"❌ Building script not found in {last_unboxed_flatpack}.")
         return
 
-    env = dict(os.environ, PYTHONUNBUFFERED="1")
+    # Ensure the script path is safe to use in the shell
     safe_script_path = shlex.quote(str(building_script_path))
-    print(safe_script_path)
 
-    try:
-        proc = subprocess.Popen(["bash", "-u", safe_script_path], stdin=subprocess.PIPE,
-                                stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=1, universal_newlines=True,
-                                env=env)
-
-        outputs = [proc.stdout, proc.stderr]
-
-        while True:
-            retcode = proc.poll()
-            if retcode is not None:
-                break
-
-            rlist, _, _ = select.select(outputs, [], [], 0.1)
-            for r in rlist:
-                line = r.readline()
-                if line:
-                    fpk_process_output(line, session, last_unboxed_flatpack)
-
-                    if not line.endswith('\n'):
-                        try:
-                            user_input = input()
-                            print(user_input, file=proc.stdin)
-                        except EOFError:
-                            break
-
-    except subprocess.SubprocessError as e:
-        print(f"❌ An error occurred while executing the subprocess: {e}")
-    except KeyboardInterrupt:
-        proc.terminate()
-        try:
-            proc.wait(timeout=5)
-        except subprocess.TimeoutExpired:
-            proc.kill()
-    finally:
-        if proc and proc.poll() is None:
-            proc.wait()
+    # Running the build script directly
+    result = os.system(f"bash -u {safe_script_path}")
+    if result != 0:
+        print("❌ An error occurred while executing the build script.")
+    else:
+        print("✅ Build script executed successfully.")
 
 
 def fpk_valid_directory_name(name: str) -> bool:
@@ -668,7 +582,7 @@ def main():
                 'unbox': lambda: handle_unbox(args, session),
                 'run': handle_run,
                 'set-api-key': lambda: handle_set_api_key(args.api_key),
-                'build': lambda: handle_build(args, session),
+                'build': lambda: handle_build(args),
                 'version': handle_version,
             }
 
@@ -743,15 +657,9 @@ def handle_set_api_key(api_key):
     fpk_set_api_key(api_key)
 
 
-def handle_build(args, session):
-    if args.directory:
-        print("Building flatpack...")
-        print("Directory:", args.directory)
-        fpk_build(args.directory, session)
-    else:
-        print("Building flatpack...")
-        print("Directory: None")
-        fpk_build(None, session)
+def handle_build(args):
+    directory_name = args.directory
+    fpk_build(directory_name)
 
 
 def handle_version():
