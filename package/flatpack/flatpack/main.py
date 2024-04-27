@@ -179,7 +179,7 @@ def fpk_set_api_key(api_key: str):
 def fpk_get_api_key() -> Optional[str]:
     """Retrieve and decrypt the API key from the configuration file."""
     if not os.path.exists(CONFIG_FILE_PATH):
-        return None
+        return None  # Avoid unnecessary prints when the config file doesn't exist
 
     try:
         with open(CONFIG_FILE_PATH, 'r') as config_file:
@@ -504,32 +504,48 @@ def setup_arg_parser():
     subparsers = parser.add_subparsers(dest='command', help='Available commands')
 
     # General commands
-    subparsers.add_parser('list', help='List available flatpack directories.')
-    subparsers.add_parser('find', help='Find model files in the current directory.')
-    subparsers.add_parser('help', help='Display help for commands.')
-    subparsers.add_parser('version', help='Display the version of flatpack.')
+    parser_list = subparsers.add_parser('list', help='List available flatpack directories.')
+    parser_list.set_defaults(func=lambda args, session: handle_list(args, session))
 
-    # API Key Management
+    parser_find = subparsers.add_parser('find', help='Find model files in the current directory.')
+    parser_find.set_defaults(func=lambda args, session: handle_find(args, session))
+
+    parser_help = subparsers.add_parser('help', help='Display help for commands.')
+    parser_help.set_defaults(func=handle_help)
+
+    parser_version = subparsers.add_parser('version', help='Display the version of flatpack.')
+    parser_version.set_defaults(func=handle_version)
+
+    # API Key management
     parser_api_key = subparsers.add_parser('api-key', help='API key management commands')
     api_key_subparsers = parser_api_key.add_subparsers(dest='api_key_command')
-    get_api_key_parser = api_key_subparsers.add_parser('get', help='Get the current API key.')
-    set_api_key_parser = api_key_subparsers.add_parser('set', help='Set the API key.')
-    set_api_key_parser.add_argument('api_key', help='API key to set.')
+
+    # Set API key
+    parser_set_api = api_key_subparsers.add_parser('set', help='Set the API key')
+    parser_set_api.add_argument('api_key', type=str, help='API key to set')
+    parser_set_api.set_defaults(func=lambda args, session: handle_set_api_key(args, session))
+
+    # Get API key
+    parser_get_api = api_key_subparsers.add_parser('get', help='Get the current API key')
+    parser_get_api.set_defaults(func=lambda args, session: handle_get_api_key(args, session))
 
     # Unbox commands
     parser_unbox = subparsers.add_parser('unbox', help='Unbox a flatpack from GitHub or a local directory.')
     parser_unbox.add_argument('input', nargs='?', default=None, help='The name of the flatpack to unbox.')
     parser_unbox.add_argument('--local', action='store_true', help='Unbox from a local directory instead of GitHub.')
     parser_unbox.add_argument('--verbose', action='store_true', help='Display detailed outputs for debugging.')
+    parser_unbox.set_defaults(func=lambda args, session: handle_unbox(args, session))
 
     # Build commands
     parser_build = subparsers.add_parser('build',
                                          help='Build a model using the building script from the last unboxed flatpack.')
     parser_build.add_argument('directory', nargs='?', default=None, help='The directory of the flatpack to build.')
     parser_build.add_argument('--verbose', action='store_true', help='Display detailed outputs for debugging.')
+    parser_build.set_defaults(func=lambda args, session: handle_build(args, session))
 
     # Run server
-    subparsers.add_parser('run', help='Run the FastAPI server.')
+    parser_run = subparsers.add_parser('run', help='Run the FastAPI server.')
+    parser_run.set_defaults(func=lambda args, session: handle_run(args, session))
 
     # Vector database management
     parser_vector = subparsers.add_parser('vector', help='Vector database management')
@@ -538,30 +554,35 @@ def setup_arg_parser():
     parser_add_text = vector_subparsers.add_parser('add-texts',
                                                    help='Add new texts to generate embeddings and store them.')
     parser_add_text.add_argument('texts', nargs='+', help='Texts to add.')
-    parser_add_text.add_argument('--data-dir', type=str, default='./data',
+    parser_add_text.add_argument('--data-dir', type=str, default='.',
                                  help='Directory path for storing the vector database and metadata files.')
+    parser_add_text.set_defaults(func=lambda args, session: handle_vector_commands(args, session))
 
     parser_search_text = vector_subparsers.add_parser('search-text',
                                                       help='Search for texts similar to the given query.')
     parser_search_text.add_argument('query', help='Text query to search for.')
-    parser_search_text.add_argument('--data-dir', type=str, default='./data',
+    parser_search_text.add_argument('--data-dir', type=str, default='.',
                                     help='Directory path for storing the vector database and metadata files.')
+    parser_search_text.set_defaults(func=lambda args, session: handle_vector_commands(args, session))
 
     parser_add_pdf = vector_subparsers.add_parser('add-pdf', help='Add text from a PDF file to the vector database.')
     parser_add_pdf.add_argument('pdf_path', help='Path to the PDF file to add.')
-    parser_add_pdf.add_argument('--data-dir', type=str, default='./data',
+    parser_add_pdf.add_argument('--data-dir', type=str, default='.',
                                 help='Directory path for storing the vector database and metadata files.')
+    parser_add_pdf.set_defaults(func=lambda args, session: handle_vector_commands(args, session))
 
     parser_add_url = vector_subparsers.add_parser('add-url', help='Add text from a URL to the vector database.')
     parser_add_url.add_argument('url', help='URL to add.')
-    parser_add_url.add_argument('--data-dir', type=str, default='./data',
+    parser_add_url.add_argument('--data-dir', type=str, default='.',
                                 help='Directory path for storing the vector database and metadata files.')
+    parser_add_url.set_defaults(func=lambda args, session: handle_vector_commands(args, session))
 
     parser_add_wikipedia_page = vector_subparsers.add_parser('add-wikipedia',
                                                              help='Add text from a Wikipedia page to the vector database.')
     parser_add_wikipedia_page.add_argument('page_title', help='The title of the Wikipedia page to add.')
-    parser_add_wikipedia_page.add_argument('--data-dir', type=str, default='./data',
+    parser_add_wikipedia_page.add_argument('--data-dir', type=str, default='.',
                                            help='Directory path for storing the vector database and metadata files.')
+    parser_add_wikipedia_page.set_defaults(func=lambda args, session: handle_vector_commands(args, session))
 
     return parser
 
@@ -573,43 +594,31 @@ def main():
             parser = setup_arg_parser()
             args = parser.parse_args()
 
-            # Dispatch to the appropriate function based on the command
-            command_handlers = {
-                'list': lambda: handle_list(session),
-                'find': handle_find,
-                'help': handle_help,
-                'get-api-key': handle_get_api_key,
-                'unbox': lambda: handle_unbox(args, session),
-                'run': handle_run,
-                'set-api-key': lambda: handle_set_api_key(args.api_key),
-                'build': lambda: handle_build(args),
-                'version': handle_version,
-            }
-
-            # Handling vector-related commands as a group
-            if args.command in command_handlers:
-                command_handlers[args.command]()
-            elif 'vector-' in args.command:
-                handle_vector_commands(args, session)
+            # Directly call the function assigned to the current command
+            if hasattr(args, 'func'):
+                args.func(args, session)  # Passing session if needed by the function
+            else:
+                parser.print_help()
 
     except Exception as e:
         print(f"❌ An unexpected error occurred: {e}")
         sys.exit(1)
 
 
-def handle_list(session):
+def handle_list(args, session):
     print(fpk_list_directories(session))
 
 
-def handle_find():
+def handle_find(args, session):
     print(fpk_find_models())
 
 
-def handle_help():
+def handle_help(args, session):
     print("[HELP]")
 
 
-def handle_get_api_key():
+def handle_get_api_key(args, session):
+    print("Retrieving API key...")
     print(fpk_get_api_key())
 
 
@@ -638,7 +647,7 @@ def handle_unbox(args, session):
     fpk_unbox(directory_name, session, verbose=args.verbose, local=args.local)
 
 
-def handle_run():
+def handle_run(args, session):
     check_ngrok_auth()
     try:
         port = 8000
@@ -653,39 +662,63 @@ def handle_run():
         ngrok.disconnect(listener.url())
 
 
-def handle_set_api_key(api_key):
-    fpk_set_api_key(api_key)
+def handle_set_api_key(args, session):
+    print(f"Setting API key: {args.api_key}")
+    global config
+    api_key = args.api_key
+
+    """Set and encrypt the API key."""
+    encryption_key = get_or_create_encryption_key()
+    encrypted_api_key = fpk_encrypt_data(api_key, encryption_key)
+    config = {'api_key': encrypted_api_key}
+
+    with open(CONFIG_FILE_PATH, "w") as config_file:
+        toml.dump(config, config_file)
+    os.chmod(CONFIG_FILE_PATH, 0o600)
+    print("API key set successfully!")
+
+    # Optionally, verify the key immediately after setting
+    try:
+        test_key = fpk_get_api_key()  # Attempt to retrieve the key to ensure it can be decrypted properly
+        if test_key == api_key:
+            print("Verification successful: API key can be decrypted correctly.")
+        else:
+            print("Verification failed: Decrypted key does not match the original.")
+    except Exception as e:
+        print(f"Error during API key verification: {e}")
 
 
-def handle_build(args):
+def handle_build(args, session):
     directory_name = args.directory
     fpk_build(directory_name)
 
 
-def handle_version():
+def handle_version(args, session):
     print("[VERSION]")
 
 
 def handle_vector_commands(args, session):
-    # Instantiate the vector manager with possible custom data directory
-    vm = VectorManager(model_name='all-MiniLM-L6-v2', directory=getattr(args, 'data_dir', './data'))
+    print("Handling vector commands...")
 
-    if args.command == 'vector-add-texts':
+    # Instantiate the vector manager with possible custom data directory
+    vm = VectorManager(model_name='all-MiniLM-L6-v2', directory=getattr(args, 'data_dir', '.'))
+
+    if args.vector_command == 'add-texts':
         vm.add_texts(args.texts)
         print(f"Added {len(args.texts)} texts to the database.")
-    elif args.command == 'vector-search':
+    elif args.vector_command == 'search-text':
         results = vm.search_vectors(args.query)
         if results:
             print("Search results:")
             for result in results:
-                print(f"({result['distance']}) {result['id']}: {result['text']}\n")
+                print(f"{result['id']}: {result['text']}\n")
         else:
             print("No results found.")
-    elif args.command == 'vector-add-pdf':
+    elif args.vector_command == 'add-pdf':
         handle_add_pdf(args.pdf_path, vm)
-    elif args.command == 'vector-add-url':
+    elif args.vector_command == 'add-url':
         handle_add_url(args.url, vm)
-    elif args.command == 'vector-add-wikipedia-page':
+    elif args.vector_command == 'add-wikipedia':
         vm.add_wikipedia_page(args.page_title)
         print(f"✅ Added text from Wikipedia page: '{args.page_title}' to the vector database.")
 
