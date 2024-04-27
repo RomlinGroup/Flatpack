@@ -6,7 +6,7 @@ export SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 echo -e "🚀 build.sh is running in: $SCRIPT_DIR\n"
 
 # === BEGIN USER CUSTOMIZATION ===
-export REPO_NAME=flatpack-test
+export REPO_NAME=llama.cpp
 export FLATPACK_NAME=flatpack-test
 # === END USER CUSTOMIZATION ===
 
@@ -25,5 +25,5 @@ if [[ ! " $REQUIRED_DEVICES " =~ " $DEVICE " ]]; then
 fi
 
 # === BEGIN USER CUSTOMIZATION ===
-"${VENV_PYTHON}" -c "print('Hello, World!')"
+make
 # === END USER CUSTOMIZATION ===
