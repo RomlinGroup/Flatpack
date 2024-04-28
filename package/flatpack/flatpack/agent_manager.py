@@ -30,7 +30,8 @@ class AgentManager:
             self.processes = {}
 
     def spawn_agent(self, script_path):
-        process = subprocess.Popen(["python", script_path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        process = subprocess.Popen(["python", script_path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                                   preexec_fn=os.setsid)
         pid = process.pid
         self.processes[str(pid)] = {
             'process': process.pid,
