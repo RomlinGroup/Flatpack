@@ -1,4 +1,5 @@
 import json
+import multiprocessing
 import os
 import psutil
 import signal
@@ -30,17 +31,28 @@ class AgentManager:
             self.processes = {}
 
     def spawn_agent(self, script_path):
-        process = subprocess.Popen(["python", script_path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-                                   preexec_fn=os.setsid)
+        if multiprocessing.get_start_method(allow_none=True) != 'spawn':
+            multiprocessing.set_start_method('spawn', force=True)
+        process = multiprocessing.Process(target=self.run_script, args=(script_path,))
+        process.start()
         pid = process.pid
         self.processes[str(pid)] = {
-            'process': process.pid,
+            'process': process,
             'start_time': datetime.now(),
             'script_path': script_path
         }
         self.save_processes()
         print(f"Spawned agent {pid} running '{script_path}'")
         return pid
+
+    def run_script(self, script_path):
+        try:
+            result = subprocess.run(['python', script_path], capture_output=True, text=True)
+            print(f"Script output: {result.stdout}")
+            if result.stderr:
+                print(f"Script error: {result.stderr}")
+        except Exception as e:
+            print(f"Error running script {script_path}: {e}")
 
     def list_agents(self):
         if not self.processes:
@@ -54,11 +66,13 @@ class AgentManager:
         pid = str(pid)
         if pid in self.processes:
             try:
-                os.kill(int(pid), signal.SIGTERM)  # Send SIGTERM signal to terminate the process
+                process = self.processes[pid]['process']
+                process.terminate()
+                process.join()
                 print(f"Terminated agent {pid}")
                 del self.processes[pid]
                 self.save_processes()
-            except OSError as e:
+            except Exception as e:
                 print(f"Failed to terminate agent {pid}: {e}")
         else:
             print(f"No agent with PID {pid} found.")
