@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import psutil
 import signal
@@ -19,14 +20,25 @@ class AgentManager:
             cls._instance.load_processes()
         return cls._instance
 
+    def __init__(self):
+        logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
     def save_processes(self):
-        with self.filepath.open('w') as f:
-            json.dump(self.processes, f, indent=4)
+        try:
+            with self.filepath.open('w') as f:
+                json.dump(self.processes, f, indent=4)
+            logging.info("Process data saved successfully.")
+        except Exception as e:
+            logging.error(f"Failed to save process data: {e}")
 
     def load_processes(self):
         if self.filepath.exists():
-            with self.filepath.open('r') as f:
-                self.processes = json.load(f)
+            try:
+                with self.filepath.open('r') as f:
+                    self.processes = json.load(f)
+                logging.info("Process data loaded successfully.")
+            except Exception as e:
+                logging.error(f"Failed to load process data: {e}")
         self.update_active_processes()
 
     def update_active_processes(self):
@@ -35,37 +47,40 @@ class AgentManager:
             if psutil.pid_exists(int(pid)):
                 active_processes[pid] = info
             else:
-                print(f"Process with PID {pid} no longer exists.")
+                logging.warning(f"Process with PID {pid} no longer exists.")
         self.processes = active_processes
         self.save_processes()
 
     def spawn_agent(self, script_path):
-        command = f"python {script_path}"
-        pid = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).pid
-        self.processes[str(pid)] = {
-            'start_time': datetime.now().isoformat(),
-            'script_path': script_path
-        }
-        self.save_processes()
-        print(f"Spawned agent with PID {pid} running '{script_path}'")
-        return pid
+        try:
+            command = ["python", script_path]
+            pid = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE).pid
+            self.processes[str(pid)] = {
+                'start_time': datetime.now().isoformat(),
+                'script_path': script_path
+            }
+            self.save_processes()
+            logging.info(f"Spawned agent with PID {pid} running '{script_path}'")
+            return pid
+        except Exception as e:
+            logging.error(f"Failed to spawn agent: {e}")
 
     def list_agents(self):
         self.update_active_processes()
         if not self.processes:
-            print("No active agents.")
+            logging.info("No active agents.")
         else:
-            print("Active agents:")
+            logging.info("Active agents:")
             for pid, details in self.processes.items():
-                print(f"PID: {pid}, Script: {details['script_path']}, Start Time: {details['start_time']}")
+                logging.info(f"PID: {pid}, Script: {details['script_path']}, Start Time: {details['start_time']}")
 
     def terminate_agent(self, pid):
         try:
             os.kill(int(pid), signal.SIGTERM)
-            print(f"Terminated agent with PID {pid}")
+            logging.info(f"Terminated agent with PID {pid}")
             del self.processes[str(pid)]
             self.save_processes()
         except OSError as e:
-            print(f"Failed to terminate agent with PID {pid}: {e}")
+            logging.error(f"Failed to terminate agent with PID {pid}: {e}")
         except KeyError:
-            print(f"No agent with PID {pid} found.")
+            logging.error(f"No agent with PID {pid} found.")
