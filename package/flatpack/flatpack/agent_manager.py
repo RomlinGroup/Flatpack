@@ -2,34 +2,28 @@ import json
 import multiprocessing
 import os
 import psutil
-import signal
 import subprocess
-
 from datetime import datetime
 from pathlib import Path
 
 
 class AgentManager:
-    def __init__(self, filepath='/content/processes.json'):
+    def __init__(self, filepath='processes.json'):
         self.processes = {}
-        self.filepath = filepath
+        self.filepath = Path(filepath)
         self.load_processes()
 
     def save_processes(self):
-        with open(self.filepath, 'w') as f:
-            json.dump(self.processes, f, indent=4)
-            f.flush()
-            os.fsync(f.fileno())
+        serializable_data = {pid: {key: val for key, val in data.items() if key != 'process'}
+                             for pid, data in self.processes.items()}
+        with self.filepath.open('w') as f:
+            json.dump(serializable_data, f, indent=4)
 
     def load_processes(self):
-        try:
-            with open(self.filepath, 'r') as f:
+        if self.filepath.exists():
+            with self.filepath.open('r') as f:
                 self.processes = json.load(f)
-        except FileNotFoundError:
-            self.processes = {}
-
-        self.processes = {pid: details for pid, details in self.processes.items() if psutil.pid_exists(int(pid))}
-        self.save_processes()
+                self.processes = {pid: data for pid, data in self.processes.items() if psutil.pid_exists(int(pid))}
 
     def spawn_agent(self, script_path):
         if multiprocessing.get_start_method(allow_none=True) != 'spawn':
