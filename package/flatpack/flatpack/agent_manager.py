@@ -33,7 +33,8 @@ class AgentManager:
     def spawn_agent(self, script_path):
         if multiprocessing.get_start_method(allow_none=True) != 'spawn':
             multiprocessing.set_start_method('spawn', force=True)
-        process = multiprocessing.Process(target=self.run_script, args=(script_path,))
+        process = multiprocessing.Process(target=self.run_script, args=(script_path))
+        process.daemon = True
         process.start()
         pid = process.pid
         self.processes[str(pid)] = {
