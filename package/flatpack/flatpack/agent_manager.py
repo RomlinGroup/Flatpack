@@ -10,36 +10,37 @@ from pathlib import Path
 
 
 class AgentManager:
-    def __init__(self, filepath='processes.json'):
+    def __init__(self, filepath='/content/processes.json'):
         self.processes = {}
         self.filepath = filepath
         self.load_processes()
 
     def save_processes(self):
         with open(self.filepath, 'w') as f:
-            json.dump(self.processes, f, default=str)
+            json.dump(self.processes, f, indent=4)
+            f.flush()
+            os.fsync(f.fileno())
 
     def load_processes(self):
         try:
             with open(self.filepath, 'r') as f:
                 self.processes = json.load(f)
-
-                for pid in list(self.processes.keys()):
-                    if not psutil.pid_exists(int(pid)):
-                        del self.processes[pid]
         except FileNotFoundError:
             self.processes = {}
+
+        self.processes = {pid: details for pid, details in self.processes.items() if psutil.pid_exists(int(pid))}
+        self.save_processes()
 
     def spawn_agent(self, script_path):
         if multiprocessing.get_start_method(allow_none=True) != 'spawn':
             multiprocessing.set_start_method('spawn', force=True)
-        process = multiprocessing.Process(target=self.run_script, args=(script_path))
+        process = multiprocessing.Process(target=self.run_script, args=(script_path,))
         process.daemon = True
         process.start()
         pid = process.pid
         self.processes[str(pid)] = {
             'process': process,
-            'start_time': datetime.now(),
+            'start_time': datetime.now().isoformat(),
             'script_path': script_path
         }
         self.save_processes()
@@ -47,13 +48,7 @@ class AgentManager:
         return pid
 
     def run_script(self, script_path):
-        try:
-            result = subprocess.run(['python', script_path], capture_output=True, text=True)
-            print(f"Script output: {result.stdout}")
-            if result.stderr:
-                print(f"Script error: {result.stderr}")
-        except Exception as e:
-            print(f"Error running script {script_path}: {e}")
+        os.system(f'python {script_path}')
 
     def list_agents(self):
         if not self.processes:
@@ -64,16 +59,12 @@ class AgentManager:
                 print(f"PID: {pid}, Script: {details['script_path']}, Start Time: {details['start_time']}")
 
     def terminate_agent(self, pid):
-        pid = str(pid)
-        if pid in self.processes:
-            try:
-                process = self.processes[pid]['process']
-                process.terminate()
-                process.join()
-                print(f"Terminated agent {pid}")
-                del self.processes[pid]
-                self.save_processes()
-            except Exception as e:
-                print(f"Failed to terminate agent {pid}: {e}")
+        process = self.processes.get(str(pid), {}).get('process')
+        if process:
+            process.terminate()
+            process.join()
+            print(f"Terminated agent {pid}")
+            del self.processes[pid]
+            self.save_processes()
         else:
             print(f"No agent with PID {pid} found.")
