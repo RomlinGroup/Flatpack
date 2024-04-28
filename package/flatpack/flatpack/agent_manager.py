@@ -1,8 +1,9 @@
 import json
-import multiprocessing
 import os
 import psutil
+import signal
 import subprocess
+
 from datetime import datetime
 from pathlib import Path
 
@@ -14,37 +15,38 @@ class AgentManager:
         self.load_processes()
 
     def save_processes(self):
-        serializable_data = {pid: {key: val for key, val in data.items() if key != 'process'}
-                             for pid, data in self.processes.items()}
+        """Save the current state of processes to a JSON file."""
         with self.filepath.open('w') as f:
-            json.dump(serializable_data, f, indent=4)
+            json.dump(self.processes, f, indent=4)
 
     def load_processes(self):
+        """Load and update the state of processes from the JSON file."""
         if self.filepath.exists():
             with self.filepath.open('r') as f:
                 self.processes = json.load(f)
-                self.processes = {pid: data for pid, data in self.processes.items() if psutil.pid_exists(int(pid))}
+            active_processes = {}
+            for pid, info in self.processes.items():
+                if psutil.pid_exists(int(pid)):
+                    active_processes[pid] = info
+                else:
+                    print(f"Process with PID {pid} no longer exists.")
+            self.processes = active_processes
+            self.save_processes()
 
     def spawn_agent(self, script_path):
-        if multiprocessing.get_start_method(allow_none=True) != 'spawn':
-            multiprocessing.set_start_method('spawn', force=True)
-        process = multiprocessing.Process(target=self.run_script, args=(script_path,))
-        process.daemon = True
-        process.start()
-        pid = process.pid
+        """Spawn a new agent to run a given script."""
+        command = f"python {script_path}"
+        pid = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).pid
         self.processes[str(pid)] = {
-            'process': process,
             'start_time': datetime.now().isoformat(),
             'script_path': script_path
         }
         self.save_processes()
-        print(f"Spawned agent {pid} running '{script_path}'")
+        print(f"Spawned agent with PID {pid} running '{script_path}'")
         return pid
 
-    def run_script(self, script_path):
-        os.system(f'python {script_path}')
-
     def list_agents(self):
+        """List all currently active agents."""
         if not self.processes:
             print("No active agents.")
         else:
@@ -53,12 +55,13 @@ class AgentManager:
                 print(f"PID: {pid}, Script: {details['script_path']}, Start Time: {details['start_time']}")
 
     def terminate_agent(self, pid):
-        process = self.processes.get(str(pid), {}).get('process')
-        if process:
-            process.terminate()
-            process.join()
-            print(f"Terminated agent {pid}")
-            del self.processes[pid]
+        """Terminate an agent by PID."""
+        try:
+            os.kill(int(pid), signal.SIGTERM)
+            print(f"Terminated agent with PID {pid}")
+            del self.processes[str(pid)]
             self.save_processes()
-        else:
+        except OSError as e:
+            print(f"Failed to terminate agent with PID {pid}: {e}")
+        except KeyError:
             print(f"No agent with PID {pid} found.")
