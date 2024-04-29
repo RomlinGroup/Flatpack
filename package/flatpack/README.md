@@ -51,6 +51,9 @@ This project is released under [Apache-2.0](https://github.com/romlingroup/flatp
 
 Check out the [JLA - Compatibility Checker](https://joinup.ec.europa.eu/collection/eupl/solution/joinup-licensing-assistant/jla-compatibility-checker) (European Commission 2023).
 
+- **[aiofiles](https://pypi.org/project/aiofiles/)**\
+  Apache Software License (Apache-2.0) ([LICENSE](https://github.com/Tinche/aiofiles/blob/main/LICENSE))
+
 - **[asyncio](https://pypi.org/project/asyncio/)**\
   PSF ([LICENSE](https://pypi.org/project/asyncio/))
 

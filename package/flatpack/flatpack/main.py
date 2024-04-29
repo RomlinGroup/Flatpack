@@ -65,10 +65,8 @@ def fpk_build(directory: str):
         print(f"❌ Building script not found in {last_unboxed_flatpack}.")
         return
 
-    # Ensure the script path is safe to use in the shell
     safe_script_path = shlex.quote(str(building_script_path))
 
-    # Running the build script directly
     result = os.system(f"bash -u {safe_script_path}")
     if result != 0:
         print("❌ An error occurred while executing the build script.")
@@ -234,7 +232,7 @@ def fpk_find_models(directory_path: str = None) -> List[str]:
 def fpk_get_api_key() -> Optional[str]:
     """Retrieve and decrypt the API key from the configuration file."""
     if not os.path.exists(CONFIG_FILE_PATH):
-        return None  # Avoid unnecessary prints when the config file doesn't exist
+        return None
 
     try:
         with open(CONFIG_FILE_PATH, 'r') as config_file:
@@ -610,9 +608,8 @@ def fpk_cli_handle_set_api_key(args, session):
     os.chmod(CONFIG_FILE_PATH, 0o600)
     print("API key set successfully!")
 
-    # Optionally, verify the key immediately after setting
     try:
-        test_key = fpk_get_api_key()  # Attempt to retrieve the key to ensure it can be decrypted properly
+        test_key = fpk_get_api_key()
         if test_key == api_key:
             print("Verification successful: API key can be decrypted correctly.")
         else:
@@ -666,7 +663,6 @@ def fpk_cli_handle_version(args, session):
 def fpk_cli_handle_vector_commands(args, session):
     print("Handling vector commands...")
 
-    # Instantiate the vector manager with possible custom data directory
     vm = VectorManager(model_name='all-MiniLM-L6-v2', directory=getattr(args, 'data_dir', '.'))
 
     if args.vector_command == 'add-texts':
@@ -696,9 +692,8 @@ def main():
             parser = setup_arg_parser()
             args = parser.parse_args()
 
-            # Directly call the function assigned to the current command
             if hasattr(args, 'func'):
-                args.func(args, session)  # Passing session if needed by the function
+                args.func(args, session)
             else:
                 parser.print_help()
 
