@@ -49,13 +49,10 @@ This project is released under [Apache-2.0](https://github.com/romlingroup/flatp
 
 **DISCLAIMER:** This information is only a technical reference, not an endorsement or legal advice. Before using any software for commercial purposes, perform compatibility checks and seek legal advice. You are responsible for ensuring compliance with licensing requirements.
 
-BSD 2-Clause "Simplified" (INBOUND) is compatible with Apache-2.0 (OUTBOUND) for combined works but does not allow re-licensing of the original BSD-licensed component when distributed separately ([JLA 2023](https://joinup.ec.europa.eu/licence/compatibility-check/BSD-2-Clause/Apache-2.0)).
+Check out the [JLA - Compatibility Checker](https://joinup.ec.europa.eu/collection/eupl/solution/joinup-licensing-assistant/jla-compatibility-checker) (European Commission 2023).
 
-BSD-3-Clause (INBOUND) is compatible with Apache-2.0 (OUTBOUND) for combined works but does not allow re-licensing of the original BSD-licensed component when distributed separately ([JLA 2023](https://joinup.ec.europa.eu/licence/compatibility-check/BSD-3-Clause/Apache-2.0)).
-
-MIT (INBOUND) is compatible with Apache-2.0 (OUTBOUND) for combined works but does not allow re-licensing of the original MIT-licensed component when distributed separately ([JLA 2023](https://joinup.ec.europa.eu/licence/compatibility-check/MIT/Apache-2.0)).
-
-*Check out the [JLA - Compatibility Checker](https://joinup.ec.europa.eu/collection/eupl/solution/joinup-licensing-assistant/jla-compatibility-checker) (European Commission 2023).*
+- **[asyncio](https://pypi.org/project/asyncio/)**\
+  PSF ([LICENSE](https://pypi.org/project/asyncio/))
 
 - **[beautifulsoup4](https://pypi.org/project/beautifulsoup4/)**\
   MIT License (MIT License) ([LICENSE](https://pypi.org/project/beautifulsoup4/))
@@ -108,4 +105,4 @@ MIT (INBOUND) is compatible with Apache-2.0 (OUTBOUND) for combined works but do
 - **[uvicorn](https://pypi.org/project/uvicorn/)**\
   BSD License ([LICENSE](https://github.com/encode/uvicorn/blob/master/LICENSE.md))
 
-Last updated: 2024-04-27
+Last updated: 2024-04-29

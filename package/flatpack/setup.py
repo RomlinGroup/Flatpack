@@ -5,10 +5,11 @@ with open("README.md", "r") as f:
 
 setup(
     name="flatpack",
-    version="3.3.75",
+    version="3.3.76",
     license="Apache Software License (Apache-2.0)",
     packages=find_packages(),
     install_requires=[
+        "asyncio==3.4.3",
         "beautifulsoup4==4.12.3",
         "cryptography==42.0.5",
         "faiss-cpu==1.8.0",
