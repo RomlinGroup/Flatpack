@@ -8,7 +8,7 @@ app = FastAPI()
 
 @app.get("/")
 async def read_root():
-    pid = os.getpid()  # Directly retrieve the PID internally
+    pid = os.getpid()
     return {"message": f"Hello from Agent {pid}"}
 
 
