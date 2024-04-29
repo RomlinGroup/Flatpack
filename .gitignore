@@ -12,6 +12,7 @@ target/
 
 __pycache__/
 
+/engines/processes.json
 /package/flatpack/build
 /package/flatpack/dist
 /package/flatpack/flatpack.sh
