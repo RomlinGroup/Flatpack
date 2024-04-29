@@ -44,6 +44,7 @@ class AgentManager:
 
         process = subprocess.Popen(["python", script_path], env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         pid = process.pid
+
         self.processes[str(pid)] = {
             'process': process.pid,
             'start_time': datetime.now(),

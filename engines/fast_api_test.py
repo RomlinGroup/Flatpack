@@ -5,9 +5,12 @@ from fastapi import FastAPI
 
 app = FastAPI()
 
+
 @app.get("/")
 async def read_root():
-    return {"message": "Hello from Agent"}
+    pid = os.getpid()  # Directly retrieve the PID internally
+    return {"message": f"Hello from Agent {pid}"}
+
 
 if __name__ == "__main__":
     port = int(os.environ.get("AGENT_PORT", 8000))
