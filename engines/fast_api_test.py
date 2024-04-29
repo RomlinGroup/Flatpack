@@ -1,6 +1,7 @@
-from fastapi import FastAPI
-import uvicorn
 import os
+import uvicorn
+
+from fastapi import FastAPI
 
 app = FastAPI()
 
