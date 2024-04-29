@@ -18,7 +18,7 @@ def find_free_port():
 
 
 class AgentManager:
-    def __init__(self, filepath='processes.json'):
+    def __init__(self, filepath=os.path.join(os.path.expanduser("~"), ".fpk_agents.json")):
         self.processes = {}
         self.filepath = Path(filepath)
         self.load_processes()
