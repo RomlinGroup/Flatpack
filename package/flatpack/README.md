@@ -49,13 +49,7 @@ This project is released under [Apache-2.0](https://github.com/romlingroup/flatp
 
 **DISCLAIMER:** This information is only a technical reference, not an endorsement or legal advice. Before using any software for commercial purposes, perform compatibility checks and seek legal advice. You are responsible for ensuring compliance with licensing requirements.
 
-Check out the [JLA - Compatibility Checker](https://joinup.ec.europa.eu/collection/eupl/solution/joinup-licensing-assistant/jla-compatibility-checker) (European Commission 2023).
-
-- **[aiofiles](https://pypi.org/project/aiofiles/)**\
-  Apache Software License (Apache-2.0) ([LICENSE](https://github.com/Tinche/aiofiles/blob/main/LICENSE))
-
-- **[asyncio](https://pypi.org/project/asyncio/)**\
-  PSF ([LICENSE](https://pypi.org/project/asyncio/))
+*Check out the [JLA - Compatibility Checker](https://joinup.ec.europa.eu/collection/eupl/solution/joinup-licensing-assistant/jla-compatibility-checker) (European Commission 2023).*
 
 - **[beautifulsoup4](https://pypi.org/project/beautifulsoup4/)**\
   MIT License (MIT License) ([LICENSE](https://pypi.org/project/beautifulsoup4/))
@@ -108,4 +102,4 @@ Check out the [JLA - Compatibility Checker](https://joinup.ec.europa.eu/collecti
 - **[uvicorn](https://pypi.org/project/uvicorn/)**\
   BSD License ([LICENSE](https://github.com/encode/uvicorn/blob/master/LICENSE.md))
 
-Last updated: 2024-04-29
+Last updated: 2024-04-27

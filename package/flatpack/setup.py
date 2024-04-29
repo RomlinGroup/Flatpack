@@ -9,8 +9,6 @@ setup(
     license="Apache Software License (Apache-2.0)",
     packages=find_packages(),
     install_requires=[
-        "aiofiles==23.2.1",
-        "asyncio==3.4.3",
         "beautifulsoup4==4.12.3",
         "cryptography==42.0.5",
         "faiss-cpu==1.8.0",
