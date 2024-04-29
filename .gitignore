@@ -12,13 +12,13 @@ target/
 
 __pycache__/
 
-/engines/processes.json
 /package/flatpack/build
 /package/flatpack/dist
 /package/flatpack/flatpack.sh
 /package/flatpack/flatpack.egg-info
 /package/flatpack/metadata.json
 /package/flatpack/vector.index
+/packages/flatpack/flatpack/engines/processes.json
 /utilities/compress_and_sign_fpk/compressed_file.fpk
 /utilities/compress_and_sign_fpk/debug.log
 /utilities/compress_and_sign_fpk/decompressed_output

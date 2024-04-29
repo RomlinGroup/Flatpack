@@ -2,10 +2,11 @@ import json
 import os
 import psutil
 import signal
-import subprocess
 import socket
+import subprocess
 
 from datetime import datetime
+from .engines.llama_cpp import LlamaCPPEngine
 from pathlib import Path
 
 
@@ -36,6 +37,16 @@ class AgentManager:
                         del self.processes[pid]
         else:
             self.processes = {}
+
+    def load_engine(self):
+        self.engine = LlamaCPPEngine(
+            repo_id="microsoft/Phi-3-mini-4k-instruct-gguf",
+            filename="*q4.gguf",
+            n_ctx=4096,
+            n_threads=8,
+            verbose=True
+        )
+        print("Engine loaded successfully.")
 
     def spawn_agent(self, script_path):
         free_port = find_free_port()
