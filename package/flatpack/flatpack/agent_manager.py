@@ -6,7 +6,7 @@ import socket
 import subprocess
 
 from datetime import datetime
-from .engines.llama_cpp import LlamaCPPEngine
+from .engines.engine_llama_cpp import LlamaCPPEngine
 from pathlib import Path
 
 

@@ -2,9 +2,8 @@ import os
 import uvicorn
 
 from fastapi import FastAPI, HTTPException
+from engine_llama_cpp import LlamaCPPEngine
 from pydantic import BaseModel
-
-from engines.llama_cpp import LlamaCPPEngine
 
 app = FastAPI()
 
