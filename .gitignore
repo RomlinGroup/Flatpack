@@ -1,23 +1,18 @@
-# Ignore Cargo lock file in the /client directory
-/client/Cargo.lock
-
-# Ignore macOS .DS_Store files
 .DS_Store
 
-# Ignore JetBrains IntelliJ IDEA files
 .idea/
-
-# Ignore build artifacts in the target directory
-target/
 
 __pycache__/
 
+target/
+
 /package/flatpack/build
 /package/flatpack/dist
-/package/flatpack/flatpack.sh
 /package/flatpack/flatpack.egg-info
+/package/flatpack/flatpack.sh
 /package/flatpack/metadata.json
 /package/flatpack/vector.index
+
 /utilities/compress_and_sign_fpk/compressed_file.fpk
 /utilities/compress_and_sign_fpk/debug.log
 /utilities/compress_and_sign_fpk/decompressed_output
