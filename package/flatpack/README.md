@@ -15,6 +15,9 @@ electronic components, and robots.
 *Aglaonice, an ancient Greek astronomer from the 2nd or 1st century BC, was celebrated for her precise lunar eclipse
 predictions. Her mastery inspired the Greek proverb: "As the moon obeys Aglaonice," signifying unwavering certainty.*
 
+`3.4.0` (2024-04-30)\
+*Added support for spawning agents with micro APIs.*
+
 `3.3.0` (2024-04-16)\
 *Added a vector database for storing and querying embeddings.*
 
