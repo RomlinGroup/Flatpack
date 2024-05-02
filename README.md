@@ -55,13 +55,13 @@ flatpack list
 ```bash
 # Unbox a flatpack of your choice
 # flatpack unbox your_local_flatpack --local --verbose (if you have a local flatpack)
-# moondream is pulled from github.com/romlingroup/flatpack/tree/main/warehouse
+# moondream is pulled from https://github.com/romlingroup/flatpack/tree/main/warehouse
 flatpack unbox moondream --verbose
 ```
 
 ```bash
 # And last, but not least
-# github.com/romlingroup/flatpack/blob/main/warehouse/moondream/build.sh is the entry point
+# https://github.com/romlingroup/flatpack/blob/main/warehouse/moondream/build.sh is the entry point
 flatpack build moondream --verbose
 ```
 
