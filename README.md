@@ -75,6 +75,7 @@ flatpack agents spawn fast_api_test.py
 ```
 
 ```bash
+# Remember to replace the port number with the one you get from the spawn command
 curl -X 'POST' \
   'http://127.0.0.1:8000/generate-response/' \
   -H 'accept: application/json' \
