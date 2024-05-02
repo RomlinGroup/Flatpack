@@ -109,7 +109,6 @@ flatpack vector add-pdf document.pdf
 
 ```bash
 # https://en.wikipedia.org/wiki/Edge_computing
-# https://creativecommons.org/licenses/by-sa/4.0/
 flatpack vector add-wikipedia "Edge computing"
 ```
 
