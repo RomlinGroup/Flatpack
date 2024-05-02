@@ -45,7 +45,7 @@ pip install flatpack
 ```
 
 ```bash
-# Check version (optional)
+# Check version
 flatpack version
 ```
 
