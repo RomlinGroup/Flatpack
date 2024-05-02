@@ -39,6 +39,11 @@ pip install flatpack
 ```
 
 ```bash
+# Check version (optional)
+flatpack version
+```
+
+```bash
 # List all available flatpacks
 flatpack list
 ```
