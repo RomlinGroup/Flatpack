@@ -637,9 +637,23 @@ def fpk_cli_handle_unbox(args, session):
         return
 
     directory_name = args.input
-    if not args.local and directory_name not in fpk_fetch_github_dirs(session):
+    existing_dirs = fpk_fetch_github_dirs(session)
+
+    if directory_name not in existing_dirs:
         print(f"❌ The flatpack '{directory_name}' does not exist.")
         return
+
+    fpk_display_disclaimer(directory_name)
+
+    while True:
+        user_response = input().strip().upper()
+        if user_response == "YES":
+            break
+        elif user_response == "NO":
+            print("❌ Installation aborted by user.")
+            return
+        else:
+            print("❌ Invalid input. Please type 'YES' to accept or 'NO' to decline.")
 
     if args.local:
         local_directory_path = Path(directory_name)

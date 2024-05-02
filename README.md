@@ -20,7 +20,7 @@ Flatpack democratises AI and ML through micro language models and model compress
 
 ## Edge artificial intelligence
 
-> "The nascent field of edge artificial intelligence (edge AI) implements the artificial intelligence in an edge computing environment, on the device or close to where data is collected." ([Wikipedia 2024](https://en.wikipedia.org/wiki/Edge_computing))
+> "Edge artificial intelligence (AI), or AI at the edge, is the implementation of artificial intelligence in an edge computing environment, which allows computations to be done close to where data is actually collected, rather than at a centralized cloud computing facility or an offsite data center." ([Red Hat 2023](https://www.redhat.com/en/topics/edge-computing/what-is-edge-ai))
 
 ## Flatpack 3.X.X (Aglaonice)
 
