@@ -95,6 +95,8 @@ flatpack agents terminate PID
 
 ## VectorManager (HNSW)
 
+Hierarchical Navigable Small World (HNSW) graphs excel as indexes for vector similarity searches, repeatedly achieving leading-edge results through high recall rates and rapid search capabilities.
+
 ```bash
 flatpack vector add-texts \
 "Edge computing reduces latency by placing computation near data sources." \
