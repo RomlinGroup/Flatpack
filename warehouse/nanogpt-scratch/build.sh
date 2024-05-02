@@ -25,6 +25,8 @@ if [[ ! " $REQUIRED_DEVICES " =~ " $DEVICE " ]]; then
 fi
 
 # === BEGIN USER CUSTOMIZATION ===
+"${VENV_PIP}" install --pre torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/nightly/cpu
+
 cp train.py train.py.backup
 sed -i '' "s/device = 'cuda'/device = 'mps'/" train.py
 sed -i '' 's/compile = True/compile = False/' train.py

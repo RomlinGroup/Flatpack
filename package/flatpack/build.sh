@@ -36,7 +36,7 @@ fi
 
 # Uninstalling existing flatpack package without confirmation
 echo "🗑️  Uninstalling any existing version of flatpack..."
-pip uninstall -y flatpack
+pip uninstall flatpack -y
 
 # Installing the locally built version
 echo "⚙️  Installing the locally built version of flatpack..."
