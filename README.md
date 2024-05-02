@@ -45,6 +45,8 @@ flatpack list
 
 ```bash
 # Unbox a flatpack of your choice
+# flatpack unbox my_local_flatpack --local --verbose (if you have a local flatpack)
+# moondream is pulled from https://github.com/romlingroup/flatpack/tree/main/warehouse
 flatpack unbox moondream --verbose
 ```
 
