@@ -2,12 +2,12 @@ import os
 import uvicorn
 
 from fastapi import FastAPI, HTTPException
-from engine_llama_cpp import LlamaCPPEngine
+from flatpack import load_engines
 from pydantic import BaseModel
 
 app = FastAPI()
 
-engine = LlamaCPPEngine(
+engine = load_engines.LlamaCPPEngine(
     repo_id="microsoft/Phi-3-mini-4k-instruct-gguf",
     filename="*q4.gguf",
     n_ctx=4096,
