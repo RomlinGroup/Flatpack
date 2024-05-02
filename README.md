@@ -18,7 +18,7 @@ Flatpack democratises AI and ML through micro language models and model compress
 
 > **Flatpack:** "Picture merging the Swedish ingenuity of flatpacks (hence our name) and ready-to-assemble furniture with the imaginative appeal of certain Danish snap-together toy bricks. Our method of developing micro language models is designed to be intelligently integrated into the physical world."
 
-# Edge artificial intelligence
+## Edge artificial intelligence
 
 > "The nascent field of edge artificial intelligence (edge AI) implements the artificial intelligence in an edge computing environment, on the device or close to where data is collected." ([Wikipedia 2024](https://en.wikipedia.org/wiki/Edge_computing))
 
