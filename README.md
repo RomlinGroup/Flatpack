@@ -61,7 +61,6 @@ flatpack unbox moondream --verbose
 
 ```bash
 # And last, but not least
-# build.sh is the entry point
 flatpack build moondream --verbose
 ```
 
