@@ -76,7 +76,7 @@ flatpack agents spawn fast_api_test.py
 
 ```bash
 curl -X 'POST' \
-  'http://127.0.0.1:1234/generate-response/' \
+  'http://127.0.0.1:8000/generate-response/' \
   -H 'accept: application/json' \
   -H 'Content-Type: application/json' \
   -d '{
