@@ -91,7 +91,8 @@ flatpack agents terminate PID
 ## VectorManager (HNSW)
 
 ```bash
-flatpack vector add-texts "Alpha", "Bravo", "Charlie"
+flatpack vector add-texts \
+"Edge AI deploys AI on devices or near data for efficient processing." \
 ```
 
 ```bash
@@ -99,11 +100,13 @@ flatpack vector add-pdf document.pdf
 ```
 
 ```bash
-flatpack vector add-wikipedia "Ethics of artificial intelligence"
+# https://en.wikipedia.org/wiki/Edge_computing
+# https://creativecommons.org/licenses/by-sa/4.0/ (CC BY-SA 4.0)
+flatpack vector add-wikipedia "Edge computing"
 ```
 
 ```bash
-flatpack vector search-text "machine ethics"
+flatpack vector search-text "edge artificial intelligence"
 ```
 
 ## Flatpack (FPK) 📦
