@@ -88,7 +88,7 @@ flatpack agents list
 flatpack agents terminate PID
 ```
 
-## VectorManager
+## VectorManager (HNSW)
 
 ```bash
 flatpack vector add-texts "Alpha", "Bravo", "Charlie"
