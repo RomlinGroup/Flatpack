@@ -153,7 +153,7 @@ permissions and limitations under the License.
 {please_note}
 To accept, type 'YES'. To decline, type 'NO'.
 -----------------------------------------------------
-"""
+    """
 
     please_note_content = """
 PLEASE NOTE: The flatpack you are about to unbox is
@@ -161,7 +161,7 @@ governed by its own licenses and terms, separate from
 this software. You may find further details at:
 
 https://fpk.ai/w/{}
-""".format(directory_name)
+    """.format(directory_name)
 
     please_note_colored = fpk_colorize(please_note_content, "yellow")
     print(disclaimer_template.format(please_note=please_note_colored))
@@ -469,6 +469,8 @@ def setup_arg_parser():
 
     # Run server
     parser_run = subparsers.add_parser('run', help='Run the FastAPI server.')
+    parser_run.add_argument('input', nargs='?', default=None, help='The name of the flatpack to run.')
+    parser_run.add_argument('--verbose', action='store_true', help='Display detailed outputs for debugging.')
     parser_run.set_defaults(func=lambda args, session: fpk_cli_handle_run(args, session))
 
     # Vector database management
@@ -579,6 +581,17 @@ def fpk_cli_handle_list_agents(args, session):
 
 
 def fpk_cli_handle_run(args, session):
+    if not args.input:
+        print("❌ Please specify a flatpack for the run command.")
+        return
+
+    directory_name = args.input
+    existing_dirs = fpk_fetch_github_dirs(session)
+
+    if directory_name not in existing_dirs:
+        print(f"❌ The flatpack '{directory_name}' does not exist.")
+        return
+
     fpk_check_ngrok_auth()
     try:
         port = 8000
