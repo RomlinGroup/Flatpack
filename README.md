@@ -56,7 +56,7 @@ flatpack build moondream --verbose
 ## AgentManager
 
 ```bash
-# https://raw.githubusercontent.com/romlingroup/flatpack/main/package/flatpack/flatpack/engines/fast_api_test.py
+wget https://raw.githubusercontent.com/romlingroup/flatpack/main/package/flatpack/flatpack/engines/fast_api_test.py
 flatpack agents spawn fast_api_test.py
 ```
 
