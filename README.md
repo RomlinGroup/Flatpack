@@ -45,12 +45,30 @@ flatpack list
 
 ```bash
 # Unbox a flatpack of your choice
-flatpack unbox moondream
+flatpack unbox moondream --verbose
 ```
 
 ```bash
 # And last, but not least
-flatpack build moondream
+flatpack build moondream --verbose
+```
+
+## VectorManager
+
+```bash
+flatpack vector add-texts "Alpha", "Bravo", "Charlie"
+```
+
+```bash
+flatpack vector add-pdf document.pdf
+```
+
+```bash
+flatpack vector add-wikipedia "Ethics of artificial intelligence"
+```
+
+```bash
+flatpack vector search-text "machine ethics"
 ```
 
 ## Flatpack (FPK) 📦

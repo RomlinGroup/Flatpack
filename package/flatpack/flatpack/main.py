@@ -533,7 +533,7 @@ def fpk_cli_handle_add_pdf(pdf_path, vm):
     if not os.path.exists(pdf_path):
         print(f"❌ PDF file does not exist: '{pdf_path}'.")
         return
-    vm.add_pdf(pdf_path)
+    vm.add_pdf(pdf_path, pdf_path)
     print(f"✅ Added text from PDF: '{pdf_path}' to the vector database.")
 
 
@@ -666,7 +666,7 @@ def fpk_cli_handle_vector_commands(args, session):
     vm = VectorManager(model_name='all-MiniLM-L6-v2', directory=getattr(args, 'data_dir', '.'))
 
     if args.vector_command == 'add-texts':
-        vm.add_texts(args.texts)
+        vm.add_texts(args.texts, "manual")
         print(f"Added {len(args.texts)} texts to the database.")
     elif args.vector_command == 'search-text':
         results = vm.search_vectors(args.query)
