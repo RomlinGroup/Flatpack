@@ -95,7 +95,7 @@ flatpack agents terminate PID
 
 ## VectorManager (HNSW)
 
-Hierarchical Navigable Small World (HNSW) graphs excel as indexes for vector similarity searches, repeatedly achieving leading-edge results through high recall rates and rapid search capabilities.
+Hierarchical Navigable Small World (HNSW) graphs excel as indexes for vector similarity searches with leading-edge results through high recall rates and rapid search capabilities.
 
 ```bash
 flatpack vector add-texts \
