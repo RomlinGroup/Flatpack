@@ -53,6 +53,32 @@ flatpack unbox moondream --verbose
 flatpack build moondream --verbose
 ```
 
+## AgentManager
+
+```bash
+# https://raw.githubusercontent.com/romlingroup/flatpack/main/package/flatpack/flatpack/engines/fast_api_test.py
+flatpack agents spawn fast_api_test.py
+```
+
+```bash
+curl -X 'POST' \
+  'http://127.0.0.1:1234/generate-response/' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "context": "You are a helpful assistant.",
+  "question": "What is the capital of Sweden?"
+}'
+```
+
+```bash
+flatpack agents list
+```
+
+```bash
+flatpack agents terminate PID
+```
+
 ## VectorManager
 
 ```bash
