@@ -93,7 +93,7 @@ flatpack agents terminate PID
 ```bash
 flatpack vector add-texts \
 "Edge computing reduces latency by placing computation near data sources." \
-"Edge AI deploys AI on devices or near data for efficient processing."
+"Edge AI deploys AI near data and on devices for efficient processing."
 ```
 
 ```bash
