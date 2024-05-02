@@ -69,7 +69,7 @@ flatpack build moondream --verbose
 ## AgentManager
 
 ```bash
-# fast_api_test.py is a test running microsoft/Phi-3-mini-4k-instruct-gguf (MIT)
+# fast_api_test.py is running microsoft/Phi-3-mini-4k-instruct-gguf (MIT)
 wget https://raw.githubusercontent.com/romlingroup/flatpack/main/agents/fast_api_test.py
 flatpack agents spawn fast_api_test.py
 ```
