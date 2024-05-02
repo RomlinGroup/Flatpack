@@ -20,7 +20,7 @@ Flatpack democratises AI and ML through micro language models and model compress
 
 ## Edge artificial intelligence
 
-Edge artificial intelligence employs local devices to enhance decision-making close to data sources, reducing reliance on cloud connectivity and improving response times, privacy, and security. The benefits of edge artificial intelligence include bandwidth usage reduction, energy consumption reduction, latency reduction, privacy enhancement, and scalability improvement.
+Edge artificial intelligence uses local devices to enhance decision-making near data sources, improving privacy, response times and security and reducing reliance on cloud connectivity. Benefits include decreased latency, improved privacy and scalability, and reduced bandwidth and energy usage.
 
 > "Edge artificial intelligence (AI), or AI at the edge, is the implementation of artificial intelligence in an edge computing environment, which allows computations to be done close to where data is actually collected, rather than at a centralized cloud computing facility or an offsite data center." ([Red Hat 2023](https://www.redhat.com/en/topics/edge-computing/what-is-edge-ai))
 
