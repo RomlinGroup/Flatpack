@@ -80,7 +80,7 @@ curl -X 'POST' \
   -H 'Content-Type: application/json' \
   -d '{
   "context": "You are a helpful assistant.",
-  "question": "What is the capital of Sweden?"
+  "question": "What is edge artificial intelligence?"
 }'
 ```
 
