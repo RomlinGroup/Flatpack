@@ -17,7 +17,6 @@ from .agent_manager import AgentManager
 from cryptography.fernet import Fernet
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from importlib.metadata import version
 from .parsers import parse_toml_to_venv_script
@@ -413,14 +412,12 @@ app.add_middleware(
 )
 
 
-@app.get("/")
-async def landing_page():
-    return JSONResponse(content={"message": "flatpack"})
-
-
-@app.get("/test")
-async def test_endpoint():
-    return JSONResponse(content={"message": "Hello, World!"})
+def setup_static_directory(app, directory: str):
+    if os.path.exists(directory) and os.path.isdir(directory):
+        app.mount("/", StaticFiles(directory=f"{directory}/build", html=True), name="static")
+        print(f"Static files will be served from: {directory}")
+    else:
+        print(f"The directory '{directory}' does not exist or is not a directory.")
 
 
 def setup_arg_parser():
@@ -595,8 +592,8 @@ def fpk_cli_handle_run(args, session):
         return
 
     fpk_check_ngrok_auth()
-
-    app.mount("/", StaticFiles(directory=directory, html=True), name="static")
+    
+    setup_static_directory(app, directory)
 
     try:
         port = 8000
