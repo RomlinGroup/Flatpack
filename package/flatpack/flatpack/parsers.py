@@ -133,7 +133,7 @@ export VENV_PIP="$VENV_PYTHON -m pip"
     directories_map = config.get("directories")
     if directories_map:
         for directory_path in directories_map.values():
-            formatted_path = directory_path.lstrip('/')
+            formatted_path = directory_path.lstrip('/').replace("home/content/", "")
             script.append(f"mkdir -p {model_name}/{build_prefix}/{formatted_path}")
 
     # Set model name as an environment variable
@@ -150,7 +150,7 @@ export VENV_PIP="$VENV_PYTHON -m pip"
     for git in config.get("git", []):
         from_source, to_destination, branch = git.get("from_source"), git.get("to_destination"), git.get("branch")
         if from_source and to_destination and branch:
-            repo_path = f"{model_name}/{build_prefix}/{to_destination}"
+            repo_path = f"{model_name}/{build_prefix}/{to_destination.replace('/home/content/', '')}"
             git_clone = f"""
 echo "Cloning repository from: {from_source}"
 git clone -b {branch} {from_source} {repo_path}
@@ -175,10 +175,10 @@ fi
             from_source, to_destination = item.get("from_source"), item.get("to_destination")
             if from_source and to_destination:
                 if is_url(from_source):
-                    download_command = f"curl -s -L {from_source} -o ./{model_name}/{build_prefix}/{to_destination}"
+                    download_command = f"curl -s -L {from_source} -o ./{model_name}/{build_prefix}/{to_destination.replace('/home/content/', '')}"
                     script.append(download_command)
                 else:
-                    download_command = f"cp -r .{from_source} ./{model_name}/{build_prefix}/{to_destination}"
+                    download_command = f"cp -r .{from_source} ./{model_name}/{build_prefix}/{to_destination.replace('/home/content/', '')}"
                     script.append(download_command)
 
     # Execute specified run commands
@@ -186,6 +186,7 @@ fi
     for run in run_vec:
         command, args = run.get("command"), run.get("args")
         if command and args:
-            script.append(f"{command} {args}")
+            replaced_args = args.replace("/home/content/", f"./{model_name}/{build_prefix}/")
+            script.append(f"{command} {replaced_args}")
 
     return "\n".join(script)

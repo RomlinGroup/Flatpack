@@ -11,10 +11,10 @@ external = 1337
 internal = 80
 
 [directories]
-checkpoints = "checkpoints"
-data = "data"
-models = "models"
-scripts = "scripts"
+checkpoints = "/home/content/checkpoints"
+data = "/home/content/data"
+models = "/home/content/models"
+scripts = "/home/content/scripts"
 
 [packages]
 
@@ -38,20 +38,20 @@ tqdm = "4.66.2"
 
 [[file]]
 from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/{{model_name}}/device.sh"
-to_destination = "device.sh"
+to_destination = "/home/content/device.sh"
 
 [[file]]
 from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/{{model_name}}/build.sh"
-to_destination = "build.sh"
+to_destination = "/home/content/build.sh"
 
 [[run]]
 command = "chmod"
-args = "+x device.sh"
+args = "+x /home/content/device.sh"
 
 [[run]]
 command = "chmod"
-args = "+x build.sh"
+args = "+x /home/content/build.sh"
 
 [[cmd]]
 command = "bash"
-args = "build.sh"
+args = "/home/content/build.sh"
