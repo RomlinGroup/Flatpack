@@ -92,21 +92,21 @@ handle_error() {{
 if [[ $IS_COLAB -ne 0 ]]; then
     apt install python3.10-venv
 fi  
-    
+
 echo "🐍 Checking for Python"
 PYTHON_CMD=python
 
 echo "Python command to be used: $PYTHON_CMD"
 
 echo "🦄 Creating the virtual environment at {env_name}/{build_prefix}"
-    
+
 if ! $PYTHON_CMD -m venv "{env_name}/{build_prefix}"; then
     echo "❌ Failed to create the virtual environment using $PYTHON_CMD"
     handle_error
 else
     echo "✅ Successfully created the virtual environment"
 fi
-    
+
 # Ensuring the VENV_PYTHON path does not begin with a dot and is correctly formed
 export VENV_PYTHON="{env_name}/{build_prefix}/bin/python"
 if [[ -f "$VENV_PYTHON" ]]; then
@@ -117,13 +117,13 @@ else
     echo "❌ VENV_PYTHON is set to $VENV_PYTHON, but this file does not exist"
     handle_error
 fi
-    
+
 # Ensure pip is installed within the virtual environment
 if [ ! -x "$VENV_PYTHON -m pip" ]; then
     echo "Installing pip within the virtual environment..."
     $VENV_PYTHON -m ensurepip
 fi
-    
+
 # Set VENV_PIP variable to the path of pip within the virtual environment
 export VENV_PIP="$VENV_PYTHON -m pip"
     """

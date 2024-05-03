@@ -399,7 +399,7 @@ def fpk_valid_directory_name(name: str) -> bool:
     return re.match(r'^[\w-]+$', name) is not None
 
 
-# atexit.register(fpk_safe_cleanup)
+atexit.register(fpk_safe_cleanup)
 
 app = FastAPI()
 
