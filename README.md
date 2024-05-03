@@ -100,8 +100,8 @@ Hierarchical Navigable Small World (HNSW) graphs excel as indexes for vector sim
 
 ```bash
 flatpack vector add-texts \
-"Edge computing reduces latency by placing computation near data sources." \
-"Edge artificial intelligence deploys AI near data and on devices."
+"Edge computing (edge) reduces latency by processing data near its sources." \
+"Edge artificial intelligence (edge AI) deploys AI near data and on devices."
 ```
 
 ```bash
