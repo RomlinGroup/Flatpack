@@ -50,12 +50,12 @@ to_destination = "build.sh"
 
 [[run]]
 command = "chmod +x"
-args = "device.sh"
+file = "device.sh"
 
 [[run]]
 command = "chmod +x"
-args = "build.sh"
+file = "build.sh"
 
 [[cmd]]
 command = "bash"
-args = "build.sh"
+file = "build.sh"

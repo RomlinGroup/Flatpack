@@ -184,11 +184,9 @@ fi
     # Execute specified run commands
     run_vec = config.get("run", [])
     for run in run_vec:
-        command, args = run.get("command"), run.get("args")
-        if command and args:
-            # Directly prepend the model name and build prefix to args
-            replaced_args = f"./{model_name}/{build_prefix}/" + args
-
-            script.append(f"{command} {replaced_args}")
+        command, file = run.get("command"), run.get("file")
+        if command and file:
+            prepended_file = f"./{model_name}/{build_prefix}/" + file
+            script.append(f"{command} {prepended_file}")
 
     return "\n".join(script)
