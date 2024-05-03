@@ -120,7 +120,6 @@ flatpack vector search-text "edge artificial intelligence"
 ## Flatpack (FPK) 📦
 
 - [template](warehouse/template)
-  - /app
   - flatpack.toml
   - DATASET.md
   - README.md
