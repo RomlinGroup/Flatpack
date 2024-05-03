@@ -46,11 +46,11 @@ to_destination = "build.sh"
 
 [[run]]
 command = "chmod +x"
-args = "+x device.sh"
+args = "device.sh"
 
 [[run]]
 command = "chmod +x"
-args = "+x build.sh"
+args = "build.sh"
 
 [[cmd]]
 command = "bash"
