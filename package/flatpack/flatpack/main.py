@@ -18,6 +18,7 @@ from cryptography.fernet import Fernet
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 from importlib.metadata import version
 from .parsers import parse_toml_to_venv_script
 from pathlib import Path
@@ -593,6 +594,9 @@ def fpk_cli_handle_run(args, session):
         return
 
     fpk_check_ngrok_auth()
+
+    app.mount("/", StaticFiles(directory=directory_name, html=True), name="static")
+
     try:
         port = 8000
         listener = ngrok.forward(port, authtoken_from_env=True)
