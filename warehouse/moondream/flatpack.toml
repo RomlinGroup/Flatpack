@@ -11,10 +11,10 @@ external = 1337
 internal = 80
 
 [directories]
-checkpoints = "/home/content/checkpoints"
-data = "/home/content/data"
-models = "/home/content/models"
-scripts = "/home/content/scripts"
+checkpoints = "checkpoints"
+data = "data"
+models = "models"
+scripts = "scripts"
 
 [packages]
 
@@ -33,29 +33,29 @@ tqdm = "4.66.2"
 
 [[git]]
 from_source = "https://github.com/vikhyat/moondream"
-to_destination = "/home/content/moondream"
+to_destination = "moondream"
 branch = "main"
 
 [[file]]
 from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/moondream/tiger.png"
-to_destination = "/home/content/tiger.png"
+to_destination = "tiger.png"
 
 [[file]]
 from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/moondream/device.sh"
-to_destination = "/home/content/device.sh"
+to_destination = "device.sh"
 
 [[file]]
 from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/moondream/build.sh"
-to_destination = "/home/content/build.sh"
+to_destination = "build.sh"
 
 [[run]]
 command = "chmod"
-args = "+x /home/content/device.sh"
+args = "+x device.sh"
 
 [[run]]
 command = "chmod"
-args = "+x /home/content/build.sh"
+args = "+x build.sh"
 
 [[cmd]]
 command = "bash"
-args = "/home/content/build.sh"
+args = "build.sh"
