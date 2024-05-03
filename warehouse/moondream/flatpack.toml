@@ -41,6 +41,10 @@ from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/wa
 to_destination = "tiger.png"
 
 [[file]]
+from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/moondream/index.html"
+to_destination = "index.html"
+
+[[file]]
 from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/moondream/device.sh"
 to_destination = "device.sh"
 

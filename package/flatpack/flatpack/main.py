@@ -586,16 +586,17 @@ def fpk_cli_handle_run(args, session):
         print("❌ Please specify a flatpack for the run command.")
         return
 
-    directory_name = args.input
-    existing_dirs = fpk_fetch_github_dirs(session)
+    directory = args.input
 
-    if directory_name not in existing_dirs:
-        print(f"❌ The flatpack '{directory_name}' does not exist.")
+    if os.path.exists(directory) and os.path.isdir(directory):
+        print(f"Using provided flatpack: {directory}")
+    else:
+        print(f"❌ The flatpack '{directory}' does not exist.")
         return
 
     fpk_check_ngrok_auth()
 
-    app.mount("/", StaticFiles(directory=directory_name, html=True), name="static")
+    app.mount("/", StaticFiles(directory=directory, html=True), name="static")
 
     try:
         port = 8000

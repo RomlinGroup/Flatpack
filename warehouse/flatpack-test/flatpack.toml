@@ -37,6 +37,10 @@ to_destination = "llama.cpp"
 branch = "master"
 
 [[file]]
+from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/flatpack-test/index.html"
+to_destination = "index.html"
+
+[[file]]
 from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/flatpack-test/device.sh"
 to_destination = "device.sh"
 

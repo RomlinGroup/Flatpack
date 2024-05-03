@@ -37,6 +37,10 @@ tqdm = "4.66.2"
 # branch = "{{branch_name}}"
 
 [[file]]
+from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/{{model_name}}/index.html"
+to_destination = "index.html"
+
+[[file]]
 from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/{{model_name}}/device.sh"
 to_destination = "device.sh"
 
