@@ -20,7 +20,7 @@ setup(
         "ngrok==1.2.0",
         "nltk==3.8.1",
         "olefile==0.47",
-        "psutil==5.9.8",
+        "psutil==5.9.5",
         "pydantic==2.7.1",
         "pypdf==4.2.0",
         "requests==2.31.0",
