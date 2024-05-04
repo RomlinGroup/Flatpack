@@ -173,12 +173,14 @@ fi
     for item_type in ["dataset", "file"]:
         for item in config.get(item_type, []):
             from_source, to_destination = item.get("from_source"), item.get("to_destination")
+
             if from_source and to_destination:
+
                 if is_url(from_source):
                     download_command = f"curl -s -L {from_source} -o ./{model_name}/{build_prefix}/{to_destination}"
                     script.append(download_command)
                 else:
-                    download_command = f"cp -r .{from_source} ./{model_name}/{build_prefix}/{to_destination}"
+                    download_command = f"cp -r ./{model_name}/{from_source} ./{model_name}/{build_prefix}/{to_destination}"
                     script.append(download_command)
 
     # Execute specified run commands
