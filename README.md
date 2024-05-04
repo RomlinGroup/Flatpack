@@ -53,12 +53,12 @@ flatpack list
 # Unbox a flatpack of your choice
 # flatpack unbox <flatpack_name> --local
 # moondream is pulled from https://github.com/romlingroup/flatpack/tree/main/warehouse
-flatpack unbox moondream
+flatpack unbox <flatpack_name>
 ```
 
 ```bash
 # And last, but not least
-flatpack build moondream
+flatpack build <flatpack_name>
 ```
 
 ## AgentManager
