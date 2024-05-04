@@ -75,8 +75,8 @@ curl -X 'POST' \
   -H 'accept: application/json' \
   -H 'Content-Type: application/json' \
   -d '{
-  "context": "You are a helpful assistant.",
-  "question": "What is edge artificial intelligence?"
+  "context": "<context_description>",
+  "question": "<your_question>"
 }'
 ```
 
