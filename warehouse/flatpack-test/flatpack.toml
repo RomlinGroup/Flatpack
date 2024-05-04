@@ -40,21 +40,30 @@ branch = "master"
 from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/flatpack-test/index.html"
 to_destination = "index.html"
 
-[[file]]
-from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/flatpack-test/device.sh"
-to_destination = "device.sh"
 
 [[file]]
 from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/flatpack-test/build.sh"
 to_destination = "build.sh"
 
-[[run]]
-command = "chmod +x"
-file = "device.sh"
+[[file]]
+from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/flatpack-test/custom.sh"
+to_destination = "custom.sh"
+
+[[file]]
+from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/flatpack-test/device.sh"
+to_destination = "device.sh"
 
 [[run]]
 command = "chmod +x"
 file = "build.sh"
+
+[[run]]
+command = "chmod +x"
+file = "custom.sh"
+
+[[run]]
+command = "chmod +x"
+file = "device.sh"
 
 [[cmd]]
 command = "bash"
