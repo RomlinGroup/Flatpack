@@ -26,8 +26,9 @@ from .session_manager import SessionManager
 from typing import List, Optional
 from .vector_manager import VectorManager
 
-CONFIG_FILE_PATH = os.path.join(os.path.expanduser("~"), ".fpk_config.toml")
-KEY_FILE_PATH = os.path.join(os.path.expanduser("~"), ".fpk_encryption_key")
+HOME_DIR = Path.home()
+CONFIG_FILE_PATH = HOME_DIR / ".fpk_config.toml"
+KEY_FILE_PATH = HOME_DIR / ".fpk_encryption_key"
 GITHUB_REPO_URL = "https://api.github.com/repos/romlingroup/flatpack"
 BASE_URL = "https://raw.githubusercontent.com/romlingroup/flatpack/main/warehouse"
 VERSION = version("flatpack")
@@ -44,23 +45,21 @@ class FPKEncryptionKeyError(Exception):
 
 def fpk_build(directory: str):
     """Build a model using a building script from the last unboxed flatpack."""
-    cache_file_path = Path('last_flatpack.cache')
+    cache_file_path = HOME_DIR / ".fpk_unbox.cache"
     print(f"Looking for cached flatpack in {cache_file_path}.")
 
     if directory and fpk_valid_directory_name(directory):
         print(f"Using provided directory: {directory}")
         last_unboxed_flatpack = directory
+        building_script_path = Path(last_unboxed_flatpack) / 'build' / 'build.sh'
     elif cache_file_path.exists():
         print(f"Found cached flatpack in {cache_file_path}.")
         last_unboxed_flatpack = cache_file_path.read_text().strip()
-        if not fpk_valid_directory_name(last_unboxed_flatpack):
-            print(f"❌ Invalid directory name from cache: '{last_unboxed_flatpack}'.")
-            return
+        building_script_path = Path(last_unboxed_flatpack) / 'build' / 'build.sh'
     else:
         print("❌ No cached flatpack found, and no valid directory provided.")
         return
 
-    building_script_path = Path(last_unboxed_flatpack) / 'build' / 'build.sh'
     if not building_script_path.exists():
         print(f"❌ Building script not found in {last_unboxed_flatpack}.")
         return
@@ -74,12 +73,9 @@ def fpk_build(directory: str):
         print("✅ Build script executed successfully.")
 
 
-def fpk_cache_last_flatpack(directory_name: str):
+def fpk_cache_unbox(directory_name: str):
     """Cache the last unboxed flatpack's directory name to a file within the corresponding build directory."""
-    flatpack_dir = Path.cwd()
-    flatpack_dir.mkdir(parents=True, exist_ok=True)
-
-    cache_file_path = flatpack_dir / 'last_flatpack.cache'
+    cache_file_path = HOME_DIR / ".fpk_unbox.cache"
     with open(cache_file_path, 'w') as f:
         f.write(directory_name)
 
@@ -250,8 +246,7 @@ def fpk_get_api_key() -> Optional[str]:
 
 def fpk_get_last_flatpack(directory_name: str) -> Optional[str]:
     """Retrieve the last unboxed flatpack's directory name from the cache file within the correct build directory."""
-    flatpack_dir = Path.cwd()
-    cache_file_path = flatpack_dir / 'last_flatpack.cache'
+    cache_file_path = HOME_DIR / ".fpk_unbox.cache"
     if cache_file_path.exists():
         return cache_file_path.read_text().strip()
     return None
@@ -382,8 +377,8 @@ def fpk_unbox(directory_name: str, session, local: bool = False):
     if result != 0:
         print("❌ Error: Failed to execute the bash script.")
     else:
-        fpk_cache_last_flatpack(directory_name)
-        print(f"🎉 All done!")
+        fpk_cache_unbox(str(flatpack_dir))
+        print("🎉 All done!")
 
 
 def fpk_valid_directory_name(name: str) -> bool:
