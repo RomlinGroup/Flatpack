@@ -6,7 +6,7 @@ export SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 echo -e "🚀 build.sh is running in: $SCRIPT_DIR"
 
 # === BEGIN USER CUSTOMIZATION ===
-export REPO_NAME=moondream
+export DEFAULT_REPO_NAME=moondream
 export FLATPACK_NAME=moondream
 # === END USER CUSTOMIZATION ===
 

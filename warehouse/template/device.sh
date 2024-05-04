@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Check essential environment variables: REPO_NAME, FLATPACK_NAME, and SCRIPT_DIR
-for VAR_NAME in REPO_NAME FLATPACK_NAME SCRIPT_DIR; do
+# Check essential environment variables: DEFAULT_REPO_NAME, FLATPACK_NAME, and SCRIPT_DIR
+for VAR_NAME in DEFAULT_REPO_NAME FLATPACK_NAME SCRIPT_DIR; do
   if [[ -z "${!VAR_NAME}" ]]; then
     echo "Error: $VAR_NAME is not set. Please set the $VAR_NAME environment variable." >&2
     exit 1
@@ -28,14 +28,14 @@ if [[ -d "/content" ]]; then
   export VENV_PYTHON="${SCRIPT_DIR}/bin/python"
 
   DEFAULT_PATH="/content"
-  WORK_DIR="$DEFAULT_PATH/$FLATPACK_NAME/build/$REPO_NAME"
+  WORK_DIR="$DEFAULT_PATH/$FLATPACK_NAME/build/$DEFAULT_REPO_NAME"
 
 elif [ "$OS" = "Darwin" ]; then
 
   echo "🍎 Detected macOS environment"
   export VENV_PYTHON="${SCRIPT_DIR}/bin/python"
   DEFAULT_PATH="/Users/$(whoami)/flatpacks"
-  WORK_DIR="$DEFAULT_PATH/$FLATPACK_NAME/build/$REPO_NAME"
+  WORK_DIR="$DEFAULT_PATH/$FLATPACK_NAME/build/$DEFAULT_REPO_NAME"
   DEVICE="mps"
 
 elif [ "$OS" = "Linux" ]; then
@@ -48,10 +48,10 @@ elif [ "$OS" = "Linux" ]; then
   fi
   if [ -f /etc/os-release ] && grep -q "Ubuntu" /etc/os-release; then
     echo "🐧 Detected Ubuntu environment"
-    WORK_DIR="$DEFAULT_PATH/$FLATPACK_NAME/build/$REPO_NAME"
+    WORK_DIR="$DEFAULT_PATH/$FLATPACK_NAME/build/$DEFAULT_REPO_NAME"
   else
     echo "🐧 Detected Linux environment (non-Ubuntu)"
-    WORK_DIR="$DEFAULT_PATH/$FLATPACK_NAME/build/$REPO_NAME"
+    WORK_DIR="$DEFAULT_PATH/$FLATPACK_NAME/build/$DEFAULT_REPO_NAME"
   fi
   DEVICE="cpu"
 
@@ -60,7 +60,7 @@ else
   echo "❓ Detected other OS environment"
   # Assume CPU for other environments as a fallback
   DEVICE="cpu"
-  WORK_DIR="$DEFAULT_PATH/$FLATPACK_NAME/build/$REPO_NAME"
+  WORK_DIR="$DEFAULT_PATH/$FLATPACK_NAME/build/$DEFAULT_REPO_NAME"
 
 fi
 
