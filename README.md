@@ -115,6 +115,7 @@ flatpack vector search-text "<search_query>"
   - README.md
   - build.sh
   - device.sh
+  - index.html
 
 ### Code signing
 
