@@ -52,6 +52,7 @@ echo "Determined DEVICE: $DEVICE"
 # Check if the directory exists before changing
 if [[ -d "$WORK_DIR" ]]; then
   cd "$WORK_DIR"
+  echo "Changed to directory $WORK_DIR"
 else
   echo "Error: Failed to change to directory $WORK_DIR" >&2
   exit 1
