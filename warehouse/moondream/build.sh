@@ -25,7 +25,8 @@ if [[ ! " $REQUIRED_DEVICES " =~ " $DEVICE " ]]; then
 fi
 
 # === BEGIN USER CUSTOMIZATION ===
-#"${VENV_PIP}" install -r requirements.txt
-cp ../tiger.png tiger.png
-"${VENV_PYTHON}" sample.py --image "tiger.png" --prompt "Should I pet this dog?"
+source "$SCRIPT_DIR/custom.sh" || {
+  echo "😱 Error: Failed to source custom.sh" >&2
+  exit 1
+}
 # === END USER CUSTOMIZATION ===

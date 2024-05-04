@@ -1,0 +1,1 @@
+"${VENV_PYTHON}" -c "print('Hello, World!')"

@@ -25,11 +25,8 @@ if [[ ! " $REQUIRED_DEVICES " =~ " $DEVICE " ]]; then
 fi
 
 # === BEGIN USER CUSTOMIZATION ===
-"${VENV_PIP}" install --pre torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/nightly/cpu
-
-cp train.py train.py.backup
-sed -i '' "s/device = 'cuda'/device = 'mps'/" train.py
-sed -i '' 's/compile = True/compile = False/' train.py
-"${VENV_PYTHON}" data/shakespeare_char/prepare.py
-"${VENV_PYTHON}" train.py config/train_shakespeare_char.py
+source "$SCRIPT_DIR/custom.sh" || {
+  echo "😱 Error: Failed to source custom.sh" >&2
+  exit 1
+}
 # === END USER CUSTOMIZATION ===

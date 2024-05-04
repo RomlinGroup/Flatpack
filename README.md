@@ -114,6 +114,7 @@ flatpack vector search-text "<search_query>"
   - DATASET.md
   - README.md
   - build.sh
+  - custom.sh
   - device.sh
   - index.html
 

@@ -25,5 +25,8 @@ if [[ ! " $REQUIRED_DEVICES " =~ " $DEVICE " ]]; then
 fi
 
 # === BEGIN USER CUSTOMIZATION ===
-"${VENV_PYTHON}" -c "print('Hello, World!')"
+source "$SCRIPT_DIR/custom.sh" || {
+  echo "😱 Error: Failed to source custom.sh" >&2
+  exit 1
+}
 # === END USER CUSTOMIZATION ===
