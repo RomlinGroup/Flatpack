@@ -341,7 +341,7 @@ def fpk_set_secure_file_permissions(file_path):
     os.chmod(file_path, stat.S_IRUSR | stat.S_IWUSR)
 
 
-def fpk_unbox(directory_name: str, session, verbose: bool = False, local: bool = False):
+def fpk_unbox(directory_name: str, session, local: bool = False):
     """Unbox a flatpack from GitHub or a local directory."""
     flatpack_dir = Path.cwd() / directory_name
     flatpack_dir.mkdir(parents=True, exist_ok=True)
@@ -455,20 +455,17 @@ def setup_arg_parser():
     parser_unbox = subparsers.add_parser('unbox', help='Unbox a flatpack from GitHub or a local directory.')
     parser_unbox.add_argument('input', nargs='?', default=None, help='The name of the flatpack to unbox.')
     parser_unbox.add_argument('--local', action='store_true', help='Unbox from a local directory instead of GitHub.')
-    parser_unbox.add_argument('--verbose', action='store_true', help='Display detailed outputs for debugging.')
     parser_unbox.set_defaults(func=lambda args, session: fpk_cli_handle_unbox(args, session))
 
     # Build commands
     parser_build = subparsers.add_parser('build',
                                          help='Build a model using the building script from the last unboxed flatpack.')
     parser_build.add_argument('directory', nargs='?', default=None, help='The directory of the flatpack to build.')
-    parser_build.add_argument('--verbose', action='store_true', help='Display detailed outputs for debugging.')
     parser_build.set_defaults(func=lambda args, session: fpk_cli_handle_build(args, session))
 
     # Run server
     parser_run = subparsers.add_parser('run', help='Run the FastAPI server.')
     parser_run.add_argument('input', nargs='?', default=None, help='The name of the flatpack to run.')
-    parser_run.add_argument('--verbose', action='store_true', help='Display detailed outputs for debugging.')
     parser_run.set_defaults(func=lambda args, session: fpk_cli_handle_run(args, session))
 
     # Vector database management
@@ -592,7 +589,7 @@ def fpk_cli_handle_run(args, session):
         return
 
     fpk_check_ngrok_auth()
-    
+
     setup_static_directory(app, directory)
 
     try:
@@ -680,9 +677,8 @@ def fpk_cli_handle_unbox(args, session):
             print(f"❌ flatpack.toml not found in the specified directory: '{directory_name}'.")
             return
 
-    print("Verbose mode:", args.verbose)
     print(f"✅ Directory name resolved to: '{directory_name}'")
-    fpk_unbox(directory_name, session, verbose=args.verbose, local=args.local)
+    fpk_unbox(directory_name, session, local=args.local)
 
 
 def fpk_cli_handle_version(args, session):
