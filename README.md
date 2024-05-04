@@ -35,11 +35,6 @@ https://pypi.org/project/flatpack
 **NOTE:** Flatpack is currently experimental. Please refrain from using it in production environments.
 
 ```bash
-# Colab: /content
-# Linux: /home/<username>/flatpacks
-# macOS: /Users/<username>/flatpacks
-# Windows: Use WSL2 and see Linux path
-
 # Install from PyPI
 pip install flatpack
 ```
