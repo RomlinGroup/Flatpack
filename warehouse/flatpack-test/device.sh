@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# Check essential environment variables: DEFAULT_REPO_NAME, FLATPACK_NAME, and SCRIPT_DIR
 for VAR_NAME in DEFAULT_REPO_NAME FLATPACK_NAME SCRIPT_DIR; do
   if [[ -z "${!VAR_NAME}" ]]; then
     echo "Error: $VAR_NAME is not set. Please set the $VAR_NAME environment variable." >&2
@@ -8,14 +7,12 @@ for VAR_NAME in DEFAULT_REPO_NAME FLATPACK_NAME SCRIPT_DIR; do
   fi
 done
 
-# Set the working directory to the current directory
-WORK_DIR="$(pwd)"
-
-# Environment detection
+CURRENT_DIR="$(pwd)"
 OS=$(uname)
 
+WORK_DIR="$CURRENT_DIR/$FLATPACK_NAME/build/$DEFAULT_REPO_NAME"
+
 if [[ -d "/content" ]]; then
-  # Detected Google Colab environment
   if command -v nvidia-smi &> /dev/null; then
     echo "🌀 Detected Colab GPU environment"
     DEVICE="cuda"
@@ -29,7 +26,6 @@ elif [ "$OS" = "Darwin" ]; then
   export VENV_PYTHON="${SCRIPT_DIR}/bin/python"
   DEVICE="mps"
 elif [ "$OS" = "Linux" ]; then
-  # Check for Python version and adjust VENV_PYTHON accordingly
   if [[ -x "$(command -v python3)" ]]; then
     export VENV_PYTHON="python3"
   else
@@ -39,17 +35,14 @@ elif [ "$OS" = "Linux" ]; then
   DEVICE="cpu"
 else
   echo "❓ Detected other OS environment"
-  DEVICE="cpu"  # Assume CPU for other environments as a fallback
+  DEVICE="cpu"
 fi
 
-# Determine the location of 'pip' based on VENV_PYTHON
 export VENV_PIP="$(dirname $VENV_PYTHON)/pip"
 
-# Echo the determined working directory and device
 echo "Determined WORK_DIR: $WORK_DIR"
 echo "Determined DEVICE: $DEVICE"
 
-# Check if the directory exists before changing
 if [[ -d "$WORK_DIR" ]]; then
   cd "$WORK_DIR"
   echo "Changed to directory $WORK_DIR"
