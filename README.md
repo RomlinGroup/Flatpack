@@ -93,22 +93,19 @@ flatpack agents terminate <pid>
 Hierarchical Navigable Small World (HNSW) graphs excel as indexes for vector similarity searches with leading-edge results through high recall rates and rapid search capabilities.
 
 ```bash
-flatpack vector add-texts \
-"Edge computing (edge) reduces latency by processing data near its sources." \
-"Edge artificial intelligence (edge AI) deploys AI near data and on devices."
+flatpack vector add-texts "<text_1>", "<text_2>"
 ```
 
 ```bash
-flatpack vector add-pdf document.pdf
+flatpack vector add-pdf <pdf_filename>
 ```
 
 ```bash
-# https://en.wikipedia.org/wiki/Edge_computing
-flatpack vector add-wikipedia "Edge computing"
+flatpack vector add-wikipedia "<wikipedia_page_title>"
 ```
 
 ```bash
-flatpack vector search-text "edge artificial intelligence"
+flatpack vector search-text "<search_query>"
 ```
 
 ## Flatpack (FPK) 📦
