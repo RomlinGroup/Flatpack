@@ -646,7 +646,7 @@ def fpk_cli_handle_unbox(args, session):
     directory_name = args.input
     existing_dirs = fpk_fetch_github_dirs(session)
 
-    if directory_name not in existing_dirs:
+    if directory_name not in existing_dirs and not args.local:
         print(f"❌ The flatpack '{directory_name}' does not exist.")
         return
 
