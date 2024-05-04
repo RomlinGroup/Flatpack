@@ -85,7 +85,7 @@ flatpack agents list
 ```
 
 ```bash
-flatpack agents terminate PID
+flatpack agents terminate <pid>
 ```
 
 ## VectorManager (HNSW)
