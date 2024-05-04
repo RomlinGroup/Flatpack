@@ -52,7 +52,6 @@ flatpack list
 ```bash
 # Unbox a flatpack of your choice
 # flatpack unbox <flatpack_name> --local
-# moondream is pulled from https://github.com/romlingroup/flatpack/tree/main/warehouse
 flatpack unbox <flatpack_name>
 ```
 
