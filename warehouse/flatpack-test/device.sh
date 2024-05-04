@@ -48,3 +48,11 @@ export VENV_PIP="$(dirname $VENV_PYTHON)/pip"
 # Echo the determined working directory and device
 echo "Determined WORK_DIR: $WORK_DIR"
 echo "Determined DEVICE: $DEVICE"
+
+# Check if the directory exists before changing
+if [[ -d "$WORK_DIR" ]]; then
+  cd "$WORK_DIR"
+else
+  echo "Error: Failed to change to directory $WORK_DIR" >&2
+  exit 1
+fi
