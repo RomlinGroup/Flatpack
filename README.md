@@ -64,15 +64,14 @@ flatpack build moondream
 ## AgentManager
 
 ```bash
-# fast_api_test.py is running microsoft/Phi-3-mini-4k-instruct-gguf (MIT)
+# fast_api_test.py uses microsoft/Phi-3-mini-4k-instruct-gguf (MIT)
 wget https://raw.githubusercontent.com/romlingroup/flatpack/main/agents/fast_api_test.py
 flatpack agents spawn fast_api_test.py
 ```
 
 ```bash
-# Replace the port number with the one you got from the spawn command
 curl -X 'POST' \
-  'http://127.0.0.1:8000/generate-response/' \
+  'http://127.0.0.1:<port>/generate-response/' \
   -H 'accept: application/json' \
   -H 'Content-Type: application/json' \
   -d '{
