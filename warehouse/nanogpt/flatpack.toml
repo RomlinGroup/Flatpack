@@ -4,7 +4,7 @@
 version = "0.0.1"
 
 [environment]
-model_name = "nanogpt-scratch"
+model_name = "nanogpt"
 
 [[port]]
 external = 1337
@@ -37,19 +37,19 @@ to_destination = "nanoGPT"
 branch = "master"
 
 [[file]]
-from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/nanogpt-scratch/index.html"
+from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/nanogpt/index.html"
 to_destination = "index.html"
 
 [[file]]
-from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/nanogpt-scratch/build.sh"
+from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/nanogpt/build.sh"
 to_destination = "build.sh"
 
 [[file]]
-from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/nanogpt-scratch/custom.sh"
+from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/nanogpt/custom.sh"
 to_destination = "custom.sh"
 
 [[file]]
-from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/nanogpt-scratch/device.sh"
+from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/nanogpt/device.sh"
 to_destination = "device.sh"
 
 [[run]]

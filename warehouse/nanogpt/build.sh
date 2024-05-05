@@ -7,7 +7,7 @@ echo -e "🚀 build.sh is running in: $SCRIPT_DIR"
 
 # === BEGIN USER CUSTOMIZATION ===
 export DEFAULT_REPO_NAME=nanoGPT
-export FLATPACK_NAME=nanogpt-scratch
+export FLATPACK_NAME=nanogpt
 # === END USER CUSTOMIZATION ===
 
 source "$SCRIPT_DIR/device.sh" || {
