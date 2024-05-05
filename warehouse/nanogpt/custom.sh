@@ -1,3 +1,6 @@
+# "${VENV_PIP}"
+# "${VENV_PYTHON}"
+
 "${VENV_PIP}" install --pre torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/nightly/cpu
 
 cp train.py train.py.backup
