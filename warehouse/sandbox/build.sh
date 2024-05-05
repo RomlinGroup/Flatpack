@@ -6,8 +6,8 @@ export SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 echo -e "🚀 build.sh is running in: $SCRIPT_DIR"
 
 # === BEGIN USER CUSTOMIZATION ===
-export DEFAULT_REPO_NAME=notebook
-export FLATPACK_NAME=notebook
+export DEFAULT_REPO_NAME=sandbox
+export FLATPACK_NAME=sandbox
 # === END USER CUSTOMIZATION ===
 
 source "$SCRIPT_DIR/device.sh" || {

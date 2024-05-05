@@ -4,7 +4,7 @@
 version = "0.0.1"
 
 [environment]
-model_name = "notebook"
+model_name = "sandbox"
 
 [[port]]
 external = 1337
@@ -37,19 +37,19 @@ tqdm = "4.66.2"
 # branch = "{{branch_name}}"
 
 [[file]]
-from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/notebook/index.html"
+from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/sandbox/index.html"
 to_destination = "index.html"
 
 [[file]]
-from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/notebook/build.sh"
+from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/sandbox/build.sh"
 to_destination = "build.sh"
 
 [[file]]
-from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/notebook/custom.sh"
+from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/sandbox/custom.sh"
 to_destination = "custom.sh"
 
 [[file]]
-from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/notebook/device.sh"
+from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/sandbox/device.sh"
 to_destination = "device.sh"
 
 [[run]]
