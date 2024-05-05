@@ -3,13 +3,7 @@
 # "${VENV_PIP}"
 # "${VENV_PYTHON}"
 
-if [[ -z "$VENV_PYTHON" ]]; then
-    echo "Error: The VENV_PYTHON environment variable is not set."
-    exit 1
-fi
-
 TEMP_PYTHON_SCRIPT=$(mktemp /tmp/python_script.XXXXXX.py)
-
 trap "rm -f $TEMP_PYTHON_SCRIPT" EXIT
 
 python_block() {
