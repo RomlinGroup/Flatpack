@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# "${VENV_PIP}"
+# "${VENV_PYTHON}"
+
 if [[ -z "$VENV_PYTHON" ]]; then
     echo "Error: The VENV_PYTHON environment variable is not set."
     exit 1
@@ -10,12 +13,12 @@ TEMP_PYTHON_SCRIPT=$(mktemp /tmp/python_script.XXXXXX.py)
 trap "rm -f $TEMP_PYTHON_SCRIPT" EXIT
 
 python_block() {
-    cat <<EOPYTHON >> "$TEMP_PYTHON_SCRIPT"
+    cat <<EOF >> "$TEMP_PYTHON_SCRIPT"
 $1
-EOPYTHON
+EOF
 }
 
-python_block """print("Python script execution started...")
+python_block """print(\"Python script execution started...\")
 def compute_average(numbers):
     return sum(numbers) / len(numbers)"""
 
