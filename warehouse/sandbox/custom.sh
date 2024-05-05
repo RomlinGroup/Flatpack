@@ -20,14 +20,17 @@ EOF
 
 python_block """
 print(\"Python script execution started...\")
+
 def compute_average(numbers):
     return sum(numbers) / len(numbers)
 """
 
 python_block """
 import math
+
 def compute_factorial(num):
     return math.factorial(num)
+
 print('Factorial of 5 is:', compute_factorial(5))
 """
 
