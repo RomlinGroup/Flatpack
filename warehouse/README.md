@@ -8,12 +8,6 @@
 
 Flatpack is experimental; please avoid using it for production.
 
-| Name                                                                                            | Type     | Requires |
-|-------------------------------------------------------------------------------------------------|----------|----------|
-| [llama-cpp](https://github.com/romlingroup/flatpack-ai/tree/main/warehouse/llama-cpp)           | Flatpack | GPU      |
-| [moondream](https://github.com/romlingroup/flatpack-ai/tree/main/warehouse/moondream)           | Flatpack | GPU      |
-| [nanogpt](https://github.com/romlingroup/flatpack-ai/tree/main/warehouse/nanogpt) | Flatpack | GPU      |
-
 ## Friendly notice ❤️
 
 The [logo or symbol](https://romlin.com/wp-content/uploads/2023/05/flatpack_ai_logo.svg) associated with Flatpack is a
