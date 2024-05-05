@@ -43,10 +43,16 @@ export VENV_PIP="$(dirname $VENV_PYTHON)/pip"
 echo "Determined WORK_DIR: $WORK_DIR"
 echo "Determined DEVICE: $DEVICE"
 
-if [[ -d "$WORK_DIR" ]]; then
-  cd "$WORK_DIR"
-  echo "Changed to directory $WORK_DIR"
-else
-  echo "Error: Failed to change to directory $WORK_DIR" >&2
-  exit 1
+if [[ ! -d "$WORK_DIR" ]]; then
+  echo "Directory $WORK_DIR does not exist. Creating it..."
+  mkdir -p "$WORK_DIR"
+  if [[ $? -eq 0 ]]; then
+    echo "Successfully created directory $WORK_DIR"
+  else
+    echo "Error: Failed to create directory $WORK_DIR" >&2
+    exit 1
+  fi
 fi
+
+cd "$WORK_DIR"
+echo "Changed to directory $WORK_DIR"
