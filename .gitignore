@@ -4,8 +4,6 @@
 
 __pycache__/
 
-target/
-
 /package/flatpack/build
 /package/flatpack/dist
 /package/flatpack/flatpack.egg-info
