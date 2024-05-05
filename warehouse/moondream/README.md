@@ -8,4 +8,4 @@
 
 We have no official affiliation or association with vik, nor are we endorsed or authorised by him. For the official GitHub profile of vik, please visit [https://github.com/vikhyat](https://github.com/vikhyat).
 
-Flatpack is experimental; please avoid using it for production.
+Flatpack is currently experimental. Please refrain from using it in production environments.

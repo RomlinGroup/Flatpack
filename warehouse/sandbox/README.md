@@ -6,4 +6,4 @@
 
 `sandbox` is our experimental flatpack for development and testing.
 
-Flatpack is experimental; please avoid using it for production.
+Flatpack is currently experimental. Please refrain from using it in production environments.

@@ -8,7 +8,7 @@
 
 We have no official affiliation or association with Andrej Karpathy, nor are we endorsed or authorised by him. For the official Andrej Karpathy website, please visit [https://karpathy.ai](https://karpathy.ai).
 
-Flatpack is experimental; please avoid using it for production.
+Flatpack is currently experimental. Please refrain from using it in production environments.
 
 ## build.sh
 

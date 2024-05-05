@@ -8,4 +8,4 @@
 
 We have no official affiliation or association with Georgi Gerganov, nor are we endorsed or authorised by him. For the official Georgi Gerganov website, please visit [https://ggerganov.com](https://ggerganov.com).
 
-Flatpack is experimental; please avoid using it for production.
+Flatpack is currently experimental. Please refrain from using it in production environments.
