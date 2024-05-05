@@ -111,7 +111,6 @@ flatpack vector search-text "<search_query>"
 
 - [template](warehouse/template)
   - flatpack.toml
-  - DATASET.md
   - README.md
   - build.sh
   - custom.sh
@@ -161,14 +160,6 @@ python bulk_compress_and_sign_fpk.py -p private_key.pem --passphrase $PASSPHRASE
 python bulk_verify_signed_data_with_cli.py --public_key public_key.pem
 ```
 
-## DATASET.md 📖
-
-[DATASET.md](https://github.com/romlingroup/flatpack-ai/blob/main/datasets/DATASET.md) is our meticulously crafted Markdown template (under development), established to act as a standard for encapsulating the essentials of any dataset. By streamlining the documentation process, this template ensures that all relevant details about the dataset are easily accessible, facilitating seamless collaboration and utilization.
-
-Markdown is ideal for documenting datasets as it is lightweight and easy to archive. Its format helps keep data and documentation in sync, essential for research integrity and reproducibility. Markdown files and datasets can also be version-controlled, ensuring a cohesive historical record.
-
-Once completed, it will be a mandatory component in all flatpacks.
-
 ## Micro language models 🤏
 
 [Micro language models](http://microlanguagemodels.com) with around 100M to 10B parameters, offer a compelling alternative to the deployment and scalability challenges associated with traditional large language models (LLMs). Their smaller size allows for rapid pre-training and fine-tuning, enabling organisations to adapt quickly to market changes or specific requirements. Micro language models can be deployed in edge-adjacent environments like laptops, microprocessors, or smartphones, benefiting from [edge computing](https://en.wikipedia.org/wiki/Edge_computing) (computation and storage closer to data sources) to facilitate low-latency and privacy-conscious applications. These characteristics make micro language models broadly accessible, energy-efficient, and specialized, even to smaller teams or individual developers.
@@ -192,19 +183,6 @@ Overall, micro language models represent a logical step in the evolution of lang
 > **Raspberry Pi Foundation:** "The Raspberry Pi Foundation is a UK-based charity with the mission to enable young people to realise their full potential through the power of computing and digital technologies." ([Raspberry Pi Foundation 2023](https://www.raspberrypi.org/about/))
 
 > **Standardisation:** "Without standards, there can be no improvement." (Taiichi Ohno)
-
-## Navformer 🧭
-
-We are developing [Navformer](http://navformer.com), an AI-powered navigation system for robots that avoids obstacles and executes commands efficiently. It will be a standard component in Flatpack.
-
-* **CPU-friendly:** Optimised for CPU usage, ensuring compatibility and efficiency across various edge computing without requiring specialised hardware.
-* **Monocular navigation:** Utilises a single-lens system for spatial awareness, providing a compact and cost-effective solution for 3D environment mapping.
-* **Real-time inference:** Capable of processing and reacting to environmental data in real-time, crucial for dynamic and unpredictable settings.
-* **Transformer-based:** Incorporates the latest in transformer neural network technology, enabling interpretation of complex spatial data and superior understanding.
-
-## Hello Higgs 🤖
-
-Our conceptual robot, [Higgs](http://hellohiggs.com), is named after the narrator in ["Erewhon"](https://en.wikipedia.org/wiki/Erewhon) (1872) by Samuel Butler.
 
 ## License
 
