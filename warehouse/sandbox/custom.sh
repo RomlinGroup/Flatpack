@@ -25,7 +25,6 @@ def compute_average(numbers):
 """
 
 python_block """
-# Another block: compute factorial
 import math
 def compute_factorial(num):
     return math.factorial(num)
@@ -33,7 +32,6 @@ print('Factorial of 5 is:', compute_factorial(5))
 """
 
 python_block """
-# Further usage of previous definitions
 numbers = [10, 20, 30, 40, 50]
 print('The average is:', compute_average(numbers))
 """
