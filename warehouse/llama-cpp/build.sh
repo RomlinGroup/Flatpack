@@ -7,7 +7,7 @@ echo -e "🚀 build.sh is running in: $SCRIPT_DIR"
 
 # === BEGIN USER CUSTOMIZATION ===
 export DEFAULT_REPO_NAME=llama.cpp
-export FLATPACK_NAME=flatpack-test
+export FLATPACK_NAME=llama-cpp
 # === END USER CUSTOMIZATION ===
 
 source "$SCRIPT_DIR/device.sh" || {

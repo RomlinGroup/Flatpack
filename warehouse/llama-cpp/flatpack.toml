@@ -4,7 +4,7 @@
 version = "0.0.1"
 
 [environment]
-model_name = "flatpack-test"
+model_name = "llama-cpp"
 
 [[port]]
 external = 1337
@@ -37,20 +37,20 @@ to_destination = "llama.cpp"
 branch = "master"
 
 [[file]]
-from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/flatpack-test/index.html"
+from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/llama-cpp/index.html"
 to_destination = "index.html"
 
 
 [[file]]
-from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/flatpack-test/build.sh"
+from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/llama-cpp/build.sh"
 to_destination = "build.sh"
 
 [[file]]
-from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/flatpack-test/custom.sh"
+from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/llama-cpp/custom.sh"
 to_destination = "custom.sh"
 
 [[file]]
-from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/flatpack-test/device.sh"
+from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/llama-cpp/device.sh"
 to_destination = "device.sh"
 
 [[run]]
