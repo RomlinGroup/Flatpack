@@ -9,27 +9,26 @@ TEMP_PYTHON_SCRIPT=$(mktemp /tmp/python_script.XXXXXX.py)
 
 trap "rm -f $TEMP_PYTHON_SCRIPT" EXIT
 
-cat << EOF > $TEMP_PYTHON_SCRIPT
-print("Python script execution started...")
+python_block() {
+    cat <<EOPYTHON >> "$TEMP_PYTHON_SCRIPT"
+$1
+EOPYTHON
+}
+
+python_block """print("Python script execution started...")
 def compute_average(numbers):
-    return sum(numbers) / len(numbers)
-EOF
+    return sum(numbers) / len(numbers)"""
 
-cat << EOF >> $TEMP_PYTHON_SCRIPT
-
+python_block """
 # Another block: compute factorial
 import math
 def compute_factorial(num):
     return math.factorial(num)
-print("Factorial of 5 is:", compute_factorial(5))
+print('Factorial of 5 is:', compute_factorial(5))"""
 
-EOF
-
-cat << EOF >> $TEMP_PYTHON_SCRIPT
-
+python_block """
 # Further usage of previous definitions
 numbers = [10, 20, 30, 40, 50]
-print("The average is:", compute_average(numbers))
-EOF
+print('The average is:', compute_average(numbers))"""
 
-"$VENV_PYTHON" $TEMP_PYTHON_SCRIPT
+"$VENV_PYTHON" "$TEMP_PYTHON_SCRIPT"
