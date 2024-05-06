@@ -36,7 +36,7 @@ numbers = [10, 20, 30, 40, 50]
 print('The average is:', compute_average(numbers))
 """
 
-if python3 -m py_compile "$VALIDATOR_SCRIPT"; then
+if "$VENV_PYTHON" -m py_compile "$VALIDATOR_SCRIPT"; then
   echo "✅ Python code is valid. Executing the script..."
   "$VENV_PYTHON" "$TEMP_PYTHON_SCRIPT"
 else
