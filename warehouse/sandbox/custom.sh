@@ -4,20 +4,20 @@ TEMP_PYTHON_SCRIPT=$(mktemp /tmp/python_script.XXXXXX.py)
 
 trap "rm -f $TEMP_PYTHON_SCRIPT" EXIT
 
-python_block() {
+part_python() {
   cat <<EOF >> "$TEMP_PYTHON_SCRIPT"
 $1
 EOF
 }
 
-python_block """
+part_python """
 print(\"Python script execution started...\")
 
 def compute_average(numbers):
   return sum(numbers) / len(numbers)
 """
 
-python_block """
+part_python """
 import math
 
 def compute_factorial(num):
@@ -26,7 +26,7 @@ def compute_factorial(num):
 print('Factorial of 5 is:', compute_factorial(5))
 """
 
-python_block """
+part_python """
 numbers = [10, 20, 30, 40, 50]
 print('The average is:', compute_average(numbers))
 """
