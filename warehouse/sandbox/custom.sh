@@ -6,13 +6,13 @@ VALIDATOR_SCRIPT=$(mktemp /tmp/validator_script.XXXXXX.py)
 trap "rm -f $TEMP_PYTHON_SCRIPT $VALIDATOR_SCRIPT" EXIT
 
 part_python() {
-  cat <<EOF >> "$TEMP_PYTHON_SCRIPT"
-$1
-EOF
+  echo "$1" >> "$TEMP_PYTHON_SCRIPT"
+  echo "$1" >> "$VALIDATOR_SCRIPT"
 
-  cat <<EOF >> "$VALIDATOR_SCRIPT"
-$1
-EOF
+  if ! "$VENV_PYTHON" -m py_compile "$VALIDATOR_SCRIPT"; then
+    echo "❌ Invalid Python code after recent addition. Exiting..."
+    exit 1
+  fi
 }
 
 part_python """
@@ -36,10 +36,5 @@ numbers = [10, 20, 30, 40, 50]
 print('The average is:', compute_average(numbers))
 """
 
-if "$VENV_PYTHON" -m py_compile "$VALIDATOR_SCRIPT"; then
-  echo "✅ Python code is valid. Executing the script..."
-  "$VENV_PYTHON" "$TEMP_PYTHON_SCRIPT"
-else
-  echo "❌ Invalid Python code. Exiting..."
-  exit 1
-fi
+echo "✅ Python code is valid. Executing the script..."
+"$VENV_PYTHON" "$TEMP_PYTHON_SCRIPT"
