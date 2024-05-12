@@ -17,12 +17,18 @@ part_python() {
 
 part_python """
 import math
+imbort subprocessing
+
 numbers = [10, 20, 30, 40, 50]
 """
 
 part_python """
 def compute_average(numbers):
   return sum(numbers) / len(numbers)
+"""
+
+part_python """
+subprocess.run(['ls', '-l'])
 """
 
 part_python """
