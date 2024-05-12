@@ -16,23 +16,22 @@ part_python() {
 }
 
 part_python """
-print(\"Python script execution started...\")
+import math
+numbers = [10, 20, 30, 40, 50]
+"""
 
+part_python """
 def compute_average(numbers):
   return sum(numbers) / len(numbers)
 """
 
 part_python """
-import math
-
 def compute_factorial(num):
   return math.factorial(num)
-
-print('Factorial of 5 is:', compute_factorial(5))
 """
 
 part_python """
-numbers = [10, 20, 30, 40, 50]
+print('Factorial of 5 is:', compute_factorial(5))
 print('The average is:', compute_average(numbers))
 """
 
