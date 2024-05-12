@@ -1,5 +1,5 @@
 #!/bin/bash
-print('📦 Initializing the FPK package')
+echo "📦 Initializing the FPK package"
 
 TEMP_PYTHON_SCRIPT=$(mktemp /tmp/python_script.XXXXXX.py)
 VALIDATOR_SCRIPT=$(mktemp /tmp/validator_script.XXXXXX.py)
