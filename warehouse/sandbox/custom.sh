@@ -6,8 +6,9 @@
 
 init_script="$SCRIPT_DIR/init.sh"
 remote_script_url="https://raw.githubusercontent.com/romlingroup/flatpack/main/warehouse/init.sh"
+cache_buster="?$(date +%s)"
 temp_remote_script=$(mktemp)
-curl -s "$remote_script_url" -o "$temp_remote_script"
+curl -s "${remote_script_url}${cache_buster}" -o "$temp_remote_design"
 local_version=$(grep 'INIT_VERSION' "$init_script" 2>/dev/null | cut -d '"' -f 2 || echo "0.0.0")
 remote_version=$(grep 'INIT_VERSION' "$temp_remote_script" | cut -d '"' -f 2)
 echo "[LOCAL] $local_version"
