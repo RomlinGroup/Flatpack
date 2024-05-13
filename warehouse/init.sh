@@ -1,7 +1,7 @@
 #!/bin/bash
 echo "📦 Initializing the FPK package"
 
-INIT_VERSION="0.0.3"
+INIT_VERSION="0.0.4"
 TEMP_PYTHON_SCRIPT=$(mktemp /tmp/python_script.XXXXXX.py)
 VALIDATOR_SCRIPT=$(mktemp /tmp/validator_script.XXXXXX.py)
 
