@@ -8,11 +8,13 @@ init_script="$SCRIPT_DIR/init.sh"
 remote_script_url="https://raw.githubusercontent.com/romlingroup/flatpack/main/warehouse/init.sh"
 temp_remote_script=$(mktemp)
 curl -s "$remote_script_url" -o "$temp_remote_script"
-remote_version=$(grep 'INIT_VERSION' "$temp_remote_script" | cut -d '"' -f 2)
 local_version=$(grep 'INIT_VERSION' "$init_script" 2>/dev/null | cut -d '"' -f 2 || echo "0.0.0")
+remote_version=$(grep 'INIT_VERSION' "$temp_remote_script" | cut -d '"' -f 2)
+echo "[LOCAL] $local_version"
+echo "[REMOTE] $remote_version"
 
 if [[ "$remote_version" > "$local_version" ]]; then
-    mv "$temp_remote_script" "$init_script" && echo "Updated to $remote_version."
+    mv "$temp_remote_script" "$init_script" && echo "✨ Updated to $remote_version."
 else
     rm "$temp_remote_script"
 fi
