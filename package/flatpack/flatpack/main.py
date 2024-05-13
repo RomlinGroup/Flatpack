@@ -121,7 +121,7 @@ def fpk_decrypt_data(encrypted_data: str, key: bytes) -> str:
     return fernet.decrypt(encrypted_data.encode()).decode()
 
 
-def fpk_display_disclaimer(directory_name: str):
+def fpk_display_disclaimer(directory_name: str, local: bool):
     """Display a disclaimer message with details about a specific flatpack.
 
     Args:
@@ -151,15 +151,18 @@ To accept, type 'YES'. To decline, type 'NO'.
 -----------------------------------------------------
     """
 
-    please_note_content = """
+    if not local:
+        please_note_content = """
 PLEASE NOTE: The flatpack you are about to unbox is
 governed by its own licenses and terms, separate from
 this software. You may find further details at:
 
 https://fpk.ai/w/{}
-    """.format(directory_name)
+            """.format(directory_name)
+        please_note_colored = fpk_colorize(please_note_content, "yellow")
+    else:
+        please_note_colored = ""
 
-    please_note_colored = fpk_colorize(please_note_content, "yellow")
     print(disclaimer_template.format(please_note=please_note_colored))
 
 
@@ -171,36 +174,42 @@ def fpk_encrypt_data(data: str, key: bytes) -> str:
 
 def fpk_fetch_flatpack_toml_from_dir(directory_name: str, session: httpx.Client) -> Optional[str]:
     """Fetch the flatpack TOML configuration from a specific directory.
-
     Args:
         directory_name (str): Name of the flatpack directory.
         session (httpx.Client): HTTP client session for making requests.
-
     Returns:
         Optional[str]: The TOML content if found, otherwise None.
     """
     toml_url = f"{BASE_URL}/{directory_name}/flatpack.toml"
-    response = session.get(toml_url)
-    if response.status_code != 200:
+    try:
+        response = session.get(toml_url)
+        if response.status_code != 200:
+            return None
+        return response.text
+    except httpx.HTTPError as e:
+        print(f"❌ Network error occurred: {e}")
         return None
-    return response.text
 
 
 def fpk_fetch_github_dirs(session: httpx.Client) -> List[str]:
     """Fetch a list of directory names from the GitHub repository.
-
     Args:
         session (httpx.Client): HTTP client session for making requests.
-
     Returns:
         List[str]: List of directory names.
     """
-    response = session.get(GITHUB_REPO_URL + "/contents/warehouse")
-    if response.status_code != 200:
-        return ["❌ Error fetching data from GitHub"]
-    directories = [item['name'] for item in response.json() if
-                   item['type'] == 'dir' and item['name'].lower() != 'legacy' and item['name'].lower() != 'template']
-    return sorted(directories)
+    try:
+        response = session.get(GITHUB_REPO_URL + "/contents/warehouse")
+        if response.status_code == 200:
+            directories = [item['name'] for item in response.json() if
+                           item['type'] == 'dir' and item['name'].lower() != 'legacy' and item[
+                               'name'].lower() != 'template']
+            return sorted(directories)
+        else:
+            return ["❌ Error fetching data from GitHub: HTTP Status Code: " + str(response.status_code)]
+    except httpx.HTTPError as e:
+        print(f"❌ Unable to connect to GitHub")
+        sys.exit(1)
 
 
 def fpk_find_models(directory_path: str = None) -> List[str]:
@@ -339,12 +348,16 @@ def fpk_set_secure_file_permissions(file_path):
 def fpk_unbox(directory_name: str, session, local: bool = False):
     """Unbox a flatpack from GitHub or a local directory."""
     flatpack_dir = Path.cwd() / directory_name
-    flatpack_dir.mkdir(parents=True, exist_ok=True)
     build_dir = flatpack_dir / "build"
+
+    if build_dir.exists():
+        print(f"❌ Error: Build directory already exists.")
+        sys.exit(1)
+
+    flatpack_dir.mkdir(parents=True, exist_ok=True)
     build_dir.mkdir(parents=True, exist_ok=True)
 
     temp_toml_path = build_dir / 'temp_flatpack.toml'
-
     if local:
         local_directory_path = flatpack_dir
         toml_path = local_directory_path / 'flatpack.toml'
@@ -356,24 +369,20 @@ def fpk_unbox(directory_name: str, session, local: bool = False):
         if not fpk_valid_directory_name(directory_name):
             print(f"❌ Invalid directory name: '{directory_name}'.")
             return
-
         toml_content = fpk_fetch_flatpack_toml_from_dir(directory_name, session)
         if not toml_content:
             print(f"❌ Error: Failed to fetch TOML content for '{directory_name}'.")
             return
 
     temp_toml_path.write_text(toml_content)
-
     bash_script_content = parse_toml_to_venv_script(str(temp_toml_path), '3.11.8', directory_name)
     bash_script_path = build_dir / 'flatpack.sh'
     bash_script_path.write_text(bash_script_content)
-
     temp_toml_path.unlink()
 
     print(f"📦 Unboxing {directory_name}...")
     command = f"bash {bash_script_path}"
     result = os.system(command)
-
     if result != 0:
         print("❌ Error: Failed to execute the bash script.")
     else:
@@ -650,7 +659,10 @@ def fpk_cli_handle_unbox(args, session):
         print(f"❌ The flatpack '{directory_name}' does not exist.")
         return
 
-    fpk_display_disclaimer(directory_name)
+    if args.local:
+        fpk_display_disclaimer(directory_name, local=True)
+    else:
+        fpk_display_disclaimer(directory_name, local=False)
 
     while True:
         user_response = input().strip().upper()

@@ -20,8 +20,16 @@ from urllib.parse import urlparse
 # Configure logging
 logging.basicConfig(level=logging.CRITICAL, format='%(asctime)s - %(levelname)s - %(message)s')
 
-with redirect_stdout(open(os.devnull, "w")):
-    nltk.download('punkt', quiet=True)
+
+def download_nltk_data():
+    try:
+        nltk.data.find('tokenizers/punkt')
+    except LookupError:
+        with redirect_stdout(open(os.devnull, "w")):
+            nltk.download('punkt', quiet=True)
+
+
+download_nltk_data()
 
 VECTOR_DIMENSION = 384
 INDEX_FILE = "hnsw_index.bin"
