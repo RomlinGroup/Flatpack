@@ -52,6 +52,10 @@ to_destination = "custom.sh"
 from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/{{model_name}}/device.sh"
 to_destination = "device.sh"
 
+[[file]]
+from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/{{model_name}}/init.sh"
+to_destination = "init.sh"
+
 [[run]]
 command = "chmod +x"
 file = "build.sh"
@@ -63,6 +67,10 @@ file = "custom.sh"
 [[run]]
 command = "chmod +x"
 file = "device.sh"
+
+[[run]]
+command = "chmod +x"
+file = "init.sh"
 
 [[cmd]]
 command = "bash"
