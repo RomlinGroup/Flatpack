@@ -1,36 +1,8 @@
 #!/bin/bash
 
 init_script="$SCRIPT_DIR/init.sh"
-temp_remote_script=$(mktemp)
-
-is_online() {
-    curl -s --head https://fpk.ai > /dev/null
-}
-
-if [ ! -f "$init_script" ]; then
-    echo "Initial boot, downloading init script."
-    curl -so "$init_script" -H "Cache-Control: no-cache, Pragma: no-cache" "https://raw.githubusercontent.com/romlingroup/flatpack/main/warehouse/init.sh"
-elif is_online; then
-    curl -so "$temp_remote_script" -H "Cache-Control: no-cache, Pragma: no-cache" "https://raw.githubusercontent.com/romlingroup/flatpack/main/warehouse/init.sh?$(date +%s%N)"
-    local_version=$(grep 'INIT_VERSION' "$init_script" | cut -d '"' -f 2 || echo "0.0.0")
-    remote_version=$(grep 'INIT_VERSION' "$temp_remote_script" | cut -d '"' -f 2)
-    if [[ "$remote_version" > "$local_version" ]]; then
-        mv "$temp_remote_script" "$init_script"
-        echo "Updated to $remote_version."
-    else
-        echo "No update needed."
-        rm "$temp_remote_release_script"
-    fi
-else
-    echo "Offline mode: Update check skipped."
-fi
-
-source "$init_script" || echo "Failed to load init.sh."
-
-# Source the init script, handle failure
-if ! source "$init_script"; then
-    echo "Failed to load init.sh."
-fi
+[ -f "$init_script" ] || { echo "init.sh not found, exiting."; exit 1; }
+source "$init_script" || { echo "Failed to load init.sh."; exit 1; }
 
 # DO NOT EDIT ABOVE THIS LINE
 

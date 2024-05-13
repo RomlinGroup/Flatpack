@@ -1,4 +1,5 @@
 #!/bin/bash
+
 echo "📦 Initializing the FPK package"
 
 INIT_VERSION="0.0.7"
