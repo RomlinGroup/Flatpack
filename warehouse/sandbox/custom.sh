@@ -33,5 +33,4 @@ print('(5) Factorial of 5 is:', compute_factorial(5))
 print('(6) The average is:', compute_average(numbers))
 """
 
-echo "✅ Python code is valid. Executing the script..."
-"$VENV_PYTHON" "$TEMP_PYTHON_SCRIPT"
+build_python
