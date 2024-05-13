@@ -1,8 +1,23 @@
 #!/bin/bash
 
+#init_script="$SCRIPT_DIR/init.sh"
+#[ ! -f "$init_script" ] && curl -s "https://raw.githubusercontent.com/romlingroup/flatpack/main/warehouse/init.sh" -o "$init_script"
+#source "$init_script"
+
 init_script="$SCRIPT_DIR/init.sh"
-[ ! -f "$init_script" ] && curl -s "https://raw.githubusercontent.com/romlingroup/flatpack/main/warehouse/init.sh" -o "$init_script"
-source "$init_script"
+remote_script_url="https://raw.githubusercontent.com/romlingroup/flatpack/main/warehouse/init.sh"
+temp_remote_script=$(mktemp)
+curl -s "$remote_script_url" -o "$temp_remote_script"
+remote_version=$(grep 'INIT_VERSION' "$temp_remote_script" | cut -d '"' -f 2)
+local_version=$(grep 'INIT_VERSION' "$init_script" 2>/dev/null | cut -d '"' -f 2 || echo "0.0.0")
+
+if [[ "$remote_version" > "$local_version" ]]; then
+    mv "$temp_remote_script" "$init_script" && echo "Updated to $remote_version."
+else
+    rm "$temp_remote_script"
+fi
+
+source "$init_script" 2>/dev/null || echo "❌ Failed to load init.sh."
 
 part_python """
 import math
