@@ -2,10 +2,10 @@
 
 echo "📦 Initializing the FPK package"
 
-INIT_VERSION="0.0.7"
 TEMP_PYTHON_SCRIPT=$(mktemp /tmp/python_script.XXXXXX.py)
 VALIDATOR_SCRIPT=$(mktemp /tmp/validator_script.XXXXXX.py)
 
+rm -f $TEMP_PYTHON_SCRIPT $VALIDATOR_HOST_SCRIPT
 trap "rm -f $TEMP_PYTHON_SCRIPT $VALIDATOR_SCRIPT" EXIT
 
 # build_python
