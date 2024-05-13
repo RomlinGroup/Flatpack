@@ -2,12 +2,17 @@
 
 init_script="$SCRIPT_DIR/init.sh"
 temp_remote_script=$(mktemp)
-curl -so "$temp_remote_script" "https://raw.githubusercontent.com/romlingroup/flatpack/main/warehouse/init.sh?$(date +%s)"
+
+curl -s -o "$temp_remote_script" "https://raw.githubusercontent.com/romlingroup/flatpack/main/warehouse/init.sh?$(date +%s)"
+
 local_version=$(grep 'INIT_VERSION' "$init_script" | cut -d '"' -f 2 || echo "0.0.0")
 remote_version=$(grep 'INIT_VERSION' "$temp_remote_script" | cut -d '"' -f 2)
+echo "LOCAL VERSION: $local_version"
+echo "REMOTE VERSION: $remote_version"
 
 if [[ "$remote_version" > "$local_version" ]]; then
-    mv "$temp_remote_script" "$init_script" && echo "Updated to $remote_version."
+    mv "$temp_remote_script" "$init_script"
+    echo "Updated to $remote_version."
 else
     rm "$temp_remote_script"
 fi
