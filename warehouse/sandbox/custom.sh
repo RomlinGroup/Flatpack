@@ -3,7 +3,7 @@
 init_script="$SCRIPT_DIR/init.sh"
 temp_remote_script=$(mktemp)
 
-curl -s -o "$temp_remote_script" "https://raw.githubusercontent.com/romlingroup/flatpack/main/warehouse/init.sh?$(date +%s)"
+curl -s -o "$temp_remote_script" -H "Cache-Control: no-cache" -H "Pragma: no-cache" "https://raw.githubusercontent.com/romlingroup/flatpack/main/warehouse/init.sh?$(date +%s%N)"
 
 local_version=$(grep 'INIT_VERSION' "$init_script" | cut -d '"' -f 2 || echo "0.0.0")
 remote_version=$(grep 'INIT_VERSION' "$temp_remote_script" | cut -d '"' -f 2)
