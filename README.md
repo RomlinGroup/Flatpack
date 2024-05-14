@@ -35,15 +35,8 @@ https://pypi.org/project/flatpack
 **NOTE:** Flatpack is currently experimental. Please refrain from using it in production environments.
 
 ```bash
-# Colab or macOS
+# Install from PyPI
 pip install flatpack
-```
-
-```bash
-# Ubuntu Server 20.04 LTS
-sudo apt-get install build-essential python3-venv
-# https://github.com/pypa/pipx
-pipx install flatpack
 ```
 
 ```bash
