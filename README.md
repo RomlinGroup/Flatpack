@@ -47,6 +47,12 @@ pip install --upgrade .
 ```
 
 ```bash
+# Ubuntu 20.04 LTS (4 GiB RAM min)
+sudo apt-get install python3 python3-dev python3-pip
+sudo pip3 install flatpack --no-cache-dir
+```
+
+```bash
 # Check version
 flatpack version
 ```
