@@ -35,8 +35,15 @@ https://pypi.org/project/flatpack
 **NOTE:** Flatpack is currently experimental. Please refrain from using it in production environments.
 
 ```bash
-# Install from PyPI
+# Install from PyPI (recommended)
 pip install flatpack
+```
+
+```bash
+# Install from source (optional)
+git clone https://github.com/romlingroup/flatpack.git
+cd flatpack/package/flatpack
+pip install --upgrade .
 ```
 
 ```bash
@@ -45,7 +52,7 @@ flatpack version
 ```
 
 ```bash
-# List all available flatpacks
+# List available flatpacks
 flatpack list
 ```
 
