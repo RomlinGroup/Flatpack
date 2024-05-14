@@ -40,8 +40,8 @@ pip install flatpack
 ```
 
 ```bash
-# Ubuntu 22.04 and above
-sudo apt-get install build-essential
+# Ubuntu Server 20.04 LTS
+sudo apt-get install build-essential python3-venv
 # https://github.com/pypa/pipx
 pipx install flatpack
 ```
