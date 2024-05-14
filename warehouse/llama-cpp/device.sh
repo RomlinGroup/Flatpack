@@ -1,15 +1,14 @@
 #!/bin/bash
 
-for VAR_NAME in DEFAULT_REPO_NAME FLATPACK_NAME SCRIPT_DIR; do
-  if [[ -z "${!VAR_NAME}" ]]; then
-    echo "Error: $VAR_NAME is not set. Please set the $VAR_NAME environment variable." >&2
+for VAR in DEFAULT_REPO_NAME FLATPACK_NAME SCRIPT_DIR; do
+  if [[ -z "${!VAR}" ]]; then
+    echo "Error: $VAR is not set. Please set the $VAR environment variable." >&2
     exit 1
   fi
 done
 
 CURRENT_DIR="$(pwd)"
 OS=$(uname)
-
 WORK_DIR="$CURRENT_DIR/$FLATPACK_NAME/build/$DEFAULT_REPO_NAME"
 
 if [[ -d "/content" ]]; then
@@ -20,17 +19,10 @@ if [[ -d "/content" ]]; then
     echo "🌀 Detected Colab CPU environment"
     DEVICE="cpu"
   fi
-  export VENV_PYTHON="${SCRIPT_DIR}/bin/python"
-elif [ "$OS" = "Darwin" ]; then
+elif [[ "$OS" == "Darwin" ]]; then
   echo "🍎 Detected macOS environment"
-  export VENV_PYTHON="${SCRIPT_DIR}/bin/python"
   DEVICE="mps"
-elif [ "$OS" = "Linux" ]; then
-  if [[ -x "$(command -v python3)" ]]; then
-    export VENV_PYTHON="python3"
-  else
-    export VENV_PYTHON="python"
-  fi
+elif [[ "$OS" == "Linux" ]]; then
   echo "🐧 Detected Linux environment"
   DEVICE="cpu"
 else
@@ -38,21 +30,16 @@ else
   DEVICE="cpu"
 fi
 
-export VENV_PIP="$(dirname $VENV_PYTHON)/pip"
+export VENV_PYTHON="${SCRIPT_DIR}/bin/python"
+export VENV_PIP="$(dirname "$VENV_PYTHON")/pip"
 
 echo "Determined WORK_DIR: $WORK_DIR"
 echo "Determined DEVICE: $DEVICE"
 
 if [[ ! -d "$WORK_DIR" ]]; then
   echo "Directory $WORK_DIR does not exist. Creating it..."
-  mkdir -p "$WORK_DIR"
-  if [[ $? -eq 0 ]]; then
-    echo "Successfully created directory $WORK_DIR"
-  else
-    echo "Error: Failed to create directory $WORK_DIR" >&2
-    exit 1
-  fi
+  mkdir -p "$WORK_DIR" && echo "Successfully created directory $WORK_DIR" || { echo "Error: Failed to create directory $WORK_DIR" >&2; exit 1; }
 fi
 
-cd "$WORK_DIR"
+cd "$WORK_DIR" || { echo "Error: Failed to change to directory $WORK_DIR" >&2; exit 1; }
 echo "Changed to directory $WORK_DIR"
