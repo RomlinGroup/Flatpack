@@ -40,6 +40,13 @@ pip install flatpack
 ```
 
 ```bash
+# Ubuntu 22.04 and above
+# https://pipx.pypa.io/stable/installation/
+sudo apt-get install build-essential
+pipx install flatpack
+```
+
+```bash
 # Check version
 flatpack version
 ```
