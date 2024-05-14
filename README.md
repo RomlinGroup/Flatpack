@@ -35,7 +35,7 @@ https://pypi.org/project/flatpack
 **NOTE:** Flatpack is currently experimental. Please refrain from using it in production environments.
 
 ```bash
-# Install from PyPI
+# Colab or macOS
 pip install flatpack
 ```
 
