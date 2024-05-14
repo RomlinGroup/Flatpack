@@ -91,10 +91,14 @@ handle_error() {{
 
 if [[ $IS_COLAB -ne 0 ]]; then
     apt install python3.10-venv
-fi  
+fi
 
 echo "🐍 Checking for Python"
-PYTHON_CMD=python
+if [[ -x "$(command -v python3)" ]]; then
+    PYTHON_CMD=python3
+else
+    PYTHON_CMD=python
+fi
 
 echo "Python command to be used: $PYTHON_CMD"
 
