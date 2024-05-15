@@ -55,15 +55,15 @@ pip install flatpack
 ```
 
 ```bash
+# Install on Ubuntu
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/romlingroup/flatpack/main/install.sh)"
+```
+
+```bash
 # Install from source (optional)
 git clone https://github.com/romlingroup/flatpack.git
 cd flatpack/package/flatpack
 pip install --upgrade .
-```
-
-```bash
-# Installer for Ubuntu
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/romlingroup/flatpack/main/install.sh)"
 ```
 
 ```bash
