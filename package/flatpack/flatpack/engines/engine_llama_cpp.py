@@ -15,7 +15,11 @@ class LlamaCPPEngine:
         )
 
     def generate_response(self, context, question):
-        prompt = f"Context: {context} \nQuestion: {question}\nPlease provide your response in one complete sentence."
+        prompt = f"""
+        Context: {context}
+        Question: {question}
+        You are an assistant. Answer the question based only on the context.
+        """
         output = self.model(
             f"<|user|>\n{prompt}<|end|>\n<|assistant|>",
             max_tokens=256,
