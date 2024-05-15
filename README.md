@@ -56,7 +56,7 @@ pip install flatpack
 
 ```bash
 # Install on Ubuntu
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/romlingroup/flatpack/main/install.sh)"
+/bin/bash -c "$(curl -fsSL https://github.com/romlingroup/flatpack/raw/main/install.sh)"
 ```
 
 ```bash
