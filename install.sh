@@ -30,26 +30,28 @@ if [[ "$OS" == "Ubuntu" ]]; then
     exit 1
   fi
 
-  # Ensure pipx is in PATH
   if ! pipx ensurepath; then
     echo "❌ Failed to ensure pipx is in PATH."
     exit 1
   fi
 
-  # Manually add pipx binary path to the current session
   export PATH="$PATH:~/.local/bin"
 
-  # Source the updated profile to reflect PATH changes immediately
   if [ -f ~/.bashrc ]; then
     source ~/.bashrc
   elif [ -f ~/.zshrc ]; then
     source ~/.zshrc
   fi
 
-  # Install flatpack using pipx with Python 3.11
   if ! pipx install flatpack --python python3.11; then
     echo "❌ Failed to install flatpack using pipx with Python 3.11."
     exit 1
+  fi
+
+  if [ -f ~/.bashrc ]; then
+    source ~/.bashrc
+  elif [ -f ~/.zshrc ]; then
+    source ~/.zshrc
   fi
 
   echo "✅ Setup completed successfully."
