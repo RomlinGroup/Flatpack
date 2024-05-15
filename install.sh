@@ -36,6 +36,9 @@ if [[ "$OS" == "Ubuntu" ]]; then
     exit 1
   fi
 
+  # Manually add pipx binary path to the current session
+  export PATH="$PATH:~/.local/bin"
+
   # Source the updated profile to reflect PATH changes immediately
   if [ -f ~/.bashrc ]; then
     source ~/.bashrc
