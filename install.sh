@@ -43,19 +43,6 @@ if [[ "$OS" == "Ubuntu" ]]; then
     source ~/.zshrc
   fi
 
-  # Optional: ensure pipx actions can be performed with --global argument
-  if ! sudo pipx ensurepath --global; then
-    echo "❌ Failed to ensure global pipx path."
-    exit 1
-  fi
-
-  # Source the updated profile again for global path changes
-  if [ -f ~/.bashrc ]; then
-    source ~/.bashrc
-  elif [ -f ~/.zshrc ]; then
-    source ~/.zshrc
-  fi
-
   # Install flatpack using pipx with Python 3.11
   if ! pipx install flatpack --python python3.11; then
     echo "❌ Failed to install flatpack using pipx with Python 3.11."
