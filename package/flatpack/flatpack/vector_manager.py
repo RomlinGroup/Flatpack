@@ -8,6 +8,7 @@ import numpy as np
 import os
 import re
 import requests
+import warnings
 
 from bs4 import BeautifulSoup
 from contextlib import redirect_stdout
@@ -16,6 +17,9 @@ from pypdf import PdfReader
 from sentence_transformers import SentenceTransformer
 from typing import List
 from urllib.parse import urlparse
+
+# Suppress FutureWarning
+warnings.filterwarnings('ignore', category=FutureWarning)
 
 # Configure logging
 logging.basicConfig(level=logging.CRITICAL, format='%(asctime)s - %(levelname)s - %(message)s')

@@ -16,8 +16,8 @@ class LlamaCPPEngine:
 
     def generate_response(self, context, question):
         prompt = f"""
-        Context: {context}
-        Question: {question}
+        Context: {context}\n
+        Question: {question}\n
         """
         output = self.model(
             f"<|user|>\n{prompt}<|end|>\n<|assistant|>",
