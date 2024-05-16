@@ -107,6 +107,10 @@ flatpack vector add-pdf <pdf_filename>
 ```
 
 ```bash
+flatpack vector add-url <url>
+```
+
+```bash
 flatpack vector add-wikipedia "<wikipedia_page_title>"
 ```
 
