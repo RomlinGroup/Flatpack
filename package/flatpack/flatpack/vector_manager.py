@@ -11,6 +11,7 @@ import requests
 import warnings
 
 from bs4 import BeautifulSoup
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from contextlib import redirect_stdout
 from nltk.tokenize import sent_tokenize
 from pypdf import PdfReader
@@ -18,10 +19,8 @@ from sentence_transformers import SentenceTransformer
 from typing import List
 from urllib.parse import urlparse
 
-# Suppress FutureWarning
 warnings.filterwarnings('ignore', category=FutureWarning)
 
-# Configure logging
 logging.basicConfig(level=logging.CRITICAL, format='%(asctime)s - %(levelname)s - %(message)s')
 
 
@@ -39,6 +38,8 @@ VECTOR_DIMENSION = 384
 INDEX_FILE = "hnsw_index.bin"
 METADATA_FILE = "metadata.json"
 SENTENCE_CHUNK_SIZE = 5
+BATCH_SIZE = 64
+MAX_ELEMENTS = 100000
 
 
 class VectorManager:
@@ -54,9 +55,10 @@ class VectorManager:
 
     def _initialize_index(self):
         if os.path.exists(self.index_file):
-            self.index.load_index(self.index_file, max_elements=0)
+            self.index.load_index(self.index_file, max_elements=MAX_ELEMENTS)
         else:
-            self.index.init_index(max_elements=10000, ef_construction=200, M=16)
+            self.index.init_index(max_elements=MAX_ELEMENTS, ef_construction=400, M=32)
+        self.index.set_ef(200)
 
     def is_index_ready(self):
         return self.index.get_current_count() > 0
@@ -126,9 +128,9 @@ class VectorManager:
             logging.error(f"_process_text_and_add expected a string but got {type(text)}. Value: {text}")
             return
         sentences = sent_tokenize(text)
-        for i in range(0, len(sentences), SENTENCE_CHUNK_SIZE):
-            chunk_text = " ".join(sentences[i:i + SENTENCE_CHUNK_SIZE]).strip()
-            self.add_texts([chunk_text], source_reference)
+        chunks = [" ".join(sentences[i:i + SENTENCE_CHUNK_SIZE]).strip() for i in
+                  range(0, len(sentences), SENTENCE_CHUNK_SIZE)]
+        self.add_texts(chunks, source_reference)
 
     def add_pdf(self, pdf_path: str):
         with open(pdf_path, 'rb') as file:
