@@ -3,7 +3,7 @@ from llama_cpp import Llama
 
 
 class LlamaCPPEngine:
-    def __init__(self, repo_id, filename, n_ctx=4096, n_threads=8, verbose=False):
+    def __init__(self, repo_id, filename, n_ctx=4096, n_threads=6, verbose=False):
         self.model = Llama.from_pretrained(
             repo_id=repo_id,
             filename=filename,
