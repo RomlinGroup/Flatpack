@@ -18,7 +18,6 @@ class LlamaCPPEngine:
         prompt = f"""
         Context: {context}
         Question: {question}
-        You are an assistant. Answer the question based only on the context.
         """
         output = self.model(
             f"<|user|>\n{prompt}<|end|>\n<|assistant|>",
