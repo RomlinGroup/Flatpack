@@ -105,6 +105,9 @@ Check out the [JLA - Compatibility Checker](https://joinup.ec.europa.eu/collecti
 - **[toml](https://pypi.org/project/toml/)**\
   MIT License (MIT) ([LICENSE](https://github.com/uiri/toml/blob/master/LICENSE))
 
+- **[transformers](https://pypi.org/project/transformers/)**\
+  Apache Software License (Apache 2.0 License) ([LICENSE](https://github.com/huggingface/transformers/blob/main/LICENSE))
+
 - **[uvicorn](https://pypi.org/project/uvicorn/)**\
   BSD License ([LICENSE](https://github.com/encode/uvicorn/blob/master/LICENSE.md))
 

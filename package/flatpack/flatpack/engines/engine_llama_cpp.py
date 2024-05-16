@@ -1,4 +1,3 @@
-# llama_cpp.py
 from llama_cpp import Llama
 
 
