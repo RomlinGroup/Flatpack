@@ -1,4 +1,5 @@
 from transformers import AutoModelForCausalLM, AutoTokenizer
+import argparse
 
 
 class OpenELMEngine:
@@ -18,16 +19,26 @@ class OpenELMEngine:
         self.n_ctx = n_ctx
         self.verbose = verbose
 
-    def generate_response(self, context, question):
+        self.device = "cuda" if self.model.device == 'cuda' else "cpu"
+        self.model.to(self.device)
+
+    def generate_response(self, context, question, generate_kwargs=None):
         prompt = f"Context: {context}\nQuestion: {question}\n"
         inputs = self.tokenizer(prompt, return_tensors='pt')
 
+        input_ids = inputs['input_ids'].to(self.model.device)
+        attention_mask = inputs['attention_mask'].to(self.model.device)
+
+        if generate_kwargs is None:
+            generate_kwargs = {}
+
         output = self.model.generate(
-            input_ids=inputs['input_ids'],
-            attention_mask=inputs['attention_mask'],
+            input_ids=input_ids,
+            attention_mask=attention_mask,
             max_length=self.n_ctx,
             repetition_penalty=1.0,
-            pad_token_id=self.tokenizer.eos_token_id
+            pad_token_id=self.tokenizer.eos_token_id,
+            **generate_kwargs
         )
 
         response = self.tokenizer.decode(output[0], skip_special_tokens=True)
