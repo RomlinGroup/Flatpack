@@ -3,7 +3,6 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 
 class OpenELMEngine:
     def __init__(self, model_name, n_ctx=4096, n_threads=6, verbose=False):
-        os.environ["OMP_NUM_THREADS"] = str(n_threads)  # Set the number of threads
         self.model = AutoModelForCausalLM.from_pretrained(model_name, trust_remote_code=True)
         self.tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
         self.n_ctx = n_ctx
