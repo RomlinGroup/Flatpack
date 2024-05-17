@@ -5,7 +5,7 @@ with open("README.md", "r") as f:
 
 setup(
     name="flatpack",
-    version="3.4.52",
+    version="3.4.53",
     license="Apache Software License (Apache-2.0)",
     packages=find_packages(),
     install_requires=[
@@ -20,13 +20,13 @@ setup(
         "ngrok==1.2.0",
         "nltk==3.8.1",
         "olefile==0.47",
+        "onnxruntime==1.17.3",
         "psutil==5.9.5",
         "pydantic==2.7.1",
         "pypdf==4.2.0",
         "requests==2.31.0",
         "sentence-transformers==2.7.0",
         "toml==0.10.2",
-        "transformers==4.40.2",
         "uvicorn==0.29.0"
     ],
     author="Romlin Group AB",

@@ -87,6 +87,9 @@ Check out the [JLA - Compatibility Checker](https://joinup.ec.europa.eu/collecti
 - **[olefile](https://pypi.org/project/olefile/)**\
   BSD License (BSD) ([LICENSE](https://github.com/decalage2/olefile/blob/master/LICENSE.txt))
 
+- **[onnxruntime](https://pypi.org/project/onnxruntime/)**\
+  MIT License (MIT License) ([LICENSE](https://github.com/microsoft/onnxruntime/blob/main/LICENSE))
+
 - **[psutil](https://pypi.org/project/psutil/)**\
   BSD License (BSD-3-Clause) ([LICENSE](https://github.com/giampaolo/psutil/blob/master/LICENSE))
 
@@ -104,9 +107,6 @@ Check out the [JLA - Compatibility Checker](https://joinup.ec.europa.eu/collecti
 
 - **[toml](https://pypi.org/project/toml/)**\
   MIT License (MIT) ([LICENSE](https://github.com/uiri/toml/blob/master/LICENSE))
-
-- **[transformers](https://pypi.org/project/transformers/)**\
-  Apache Software License (Apache 2.0 License) ([LICENSE](https://github.com/huggingface/transformers/blob/main/LICENSE))
 
 - **[uvicorn](https://pypi.org/project/uvicorn/)**\
   BSD License ([LICENSE](https://github.com/encode/uvicorn/blob/master/LICENSE.md))
