@@ -1,5 +1,4 @@
 from transformers import AutoModelForCausalLM, AutoTokenizer
-import argparse
 
 
 class OpenELMEngine:
@@ -11,7 +10,7 @@ class OpenELMEngine:
         )
 
         self.tokenizer = AutoTokenizer.from_pretrained(
-            model_name,
+            "meta-llama/Llama-2-7b-hf",
             use_auth_token=hf_access_token,
             trust_remote_code=True
         )
@@ -26,8 +25,8 @@ class OpenELMEngine:
         prompt = f"Context: {context}\nQuestion: {question}\n"
         inputs = self.tokenizer(prompt, return_tensors='pt')
 
-        input_ids = inputs['input_ids'].to(self.model.device)
-        attention_mask = inputs['attention_mask'].to(self.model.device)
+        input_ids = inputs['input_ids'].to(self.device)
+        attention_mask = inputs['attention_mask'].to(self.device)
 
         if generate_kwargs is None:
             generate_kwargs = {}
