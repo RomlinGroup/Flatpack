@@ -2,20 +2,27 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 
 
 class OpenELMEngine:
-    def __init__(self, model_name, n_ctx=4096, n_threads=6, verbose=False):
-        self.model = AutoModelForCausalLM.from_pretrained(model_name, trust_remote_code=True)
-        self.tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
+    def __init__(self, model_name, n_ctx=4096, n_threads=6, verbose=False, hf_access_token=None):
+        self.model = AutoModelForCausalLM.from_pretrained(
+            model_name,
+            use_auth_token=hf_access_token,
+            trust_remote_code=True
+        )
+
+        self.tokenizer = AutoTokenizer.from_pretrained(
+            model_name,
+            use_auth_token=hf_access_token,
+            trust_remote_code=True
+        )
+
         self.n_ctx = n_ctx
         self.verbose = verbose
 
-        if verbose:
-            logging.basicConfig(level=logging.DEBUG)
-        else:
-            logging.basicConfig(level=logging.WARNING)
-
     def generate_response(self, context, question):
-        logging.debug(f"Generating response for context: {context} and question: {question}")
-        prompt = f"Context: {context}\nQuestion: {question}\n"
+        prompt = f"""
+        Context: {context}\n
+        Question: {question}\n
+        """
         inputs = self.tokenizer(prompt, return_tensors='pt')
         output = self.model.generate(
             input_ids=inputs['input_ids'],
@@ -24,5 +31,4 @@ class OpenELMEngine:
             repetition_penalty=1.0
         )
         response = self.tokenizer.decode(output[0], skip_special_tokens=True)
-        logging.debug(f"Generated response: {response}")
         return response
