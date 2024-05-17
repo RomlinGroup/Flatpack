@@ -34,7 +34,7 @@ class OpenELMEngine:
         output = self.model.generate(
             input_ids=input_ids,
             attention_mask=attention_mask,
-            max_length=self.n_ctx,
+            max_length=self.n_ctx + len(input_ids[0]),
             repetition_penalty=1.0,
             pad_token_id=self.tokenizer.eos_token_id,
             **generate_kwargs
