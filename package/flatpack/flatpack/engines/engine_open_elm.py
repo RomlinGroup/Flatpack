@@ -21,8 +21,7 @@ class OpenELMEngine:
         self.n_ctx = n_ctx
         self.verbose = verbose
 
-    def generate_response(self, context, question, generate_kwargs=None):
-        prompt = f"Context: {context}\nQuestion: {question}\n"
+    def generate_response(self, prompt, generate_kwargs=None):
         inputs = self.tokenizer(prompt, return_tensors='pt', padding=True, truncation=True, max_length=self.n_ctx)
 
         input_ids = inputs['input_ids']
@@ -37,7 +36,7 @@ class OpenELMEngine:
         output = self.model.generate(
             input_ids=input_ids,
             attention_mask=attention_mask,
-            max_new_tokens=self.n_ctx,
+            max_length=self.n_ctx,
             repetition_penalty=1.0,
             pad_token_id=self.tokenizer.pad_token_id,
             **generate_kwargs
