@@ -1,5 +1,5 @@
-import onnxruntime as ort
 import numpy as np
+import onnxruntime as ort
 
 
 class ONNXRuntimeEngine:
@@ -10,12 +10,8 @@ class ONNXRuntimeEngine:
     def generate_response(self, context, question):
         prompt = f"Context: {context}\nQuestion: {question}\n"
 
-        # Assuming the model takes a single string input and outputs a string
         inputs = {self.session.get_inputs()[0].name: np.array([prompt], dtype=np.str_)}
-
-        # Run the model
         outputs = self.session.run(None, inputs)
 
-        # Assuming the output is the first output node
         response = outputs[0][0]
         return response
