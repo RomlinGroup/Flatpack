@@ -15,18 +15,21 @@ class OpenELMEngine:
             trust_remote_code=True
         )
 
+        if self.tokenizer.pad_token is None:
+            self.tokenizer.pad_token = self.tokenizer.eos_token
+
         self.n_ctx = n_ctx
         self.verbose = verbose
-
-        self.device = "cuda:0" if self.model.device == 'cuda' else "cpu"
-        self.model.to(self.device)
 
     def generate_response(self, context, question, generate_kwargs=None):
         prompt = f"Context: {context}\nQuestion: {question}\n"
         inputs = self.tokenizer(prompt, return_tensors='pt', padding=True, truncation=True, max_length=self.n_ctx)
 
-        input_ids = inputs['input_ids'].to(self.device)
-        attention_mask = inputs['attention_mask'].to(self.device)
+        input_ids = inputs['input_ids']
+        attention_mask = inputs['attention_mask']
+
+        print(f"input_ids shape: {input_ids.shape}")
+        print(f"attention_mask shape: {attention_mask.shape}")
 
         if generate_kwargs is None:
             generate_kwargs = {}
@@ -36,7 +39,7 @@ class OpenELMEngine:
             attention_mask=attention_mask,
             max_new_tokens=self.n_ctx,
             repetition_penalty=1.0,
-            pad_token_id=self.tokenizer.eos_token_id,
+            pad_token_id=self.tokenizer.pad_token_id,
             **generate_kwargs
         )
 
