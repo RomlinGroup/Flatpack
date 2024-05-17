@@ -2,7 +2,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 
 
 class OpenELMEngine:
-    def __init__(self, model_name, n_ctx=4096, verbose=False, hf_access_token=None):
+    def __init__(self, model_name, n_ctx=1024, verbose=False, hf_access_token=None):
         self.model = AutoModelForCausalLM.from_pretrained(
             model_name,
             use_auth_token=hf_access_token,
@@ -34,7 +34,7 @@ class OpenELMEngine:
         output = self.model.generate(
             input_ids=input_ids,
             attention_mask=attention_mask,
-            max_length=self.n_ctx + len(input_ids[0]),
+            max_length=self.n_ctx,
             repetition_penalty=1.0,
             pad_token_id=self.tokenizer.eos_token_id,
             **generate_kwargs
