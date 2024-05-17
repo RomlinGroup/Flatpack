@@ -18,12 +18,12 @@ class OpenELMEngine:
         self.n_ctx = n_ctx
         self.verbose = verbose
 
-        self.device = "cuda" if self.model.device == 'cuda' else "cpu"
+        self.device = "cuda:0" if self.model.device == 'cuda' else "cpu"
         self.model.to(self.device)
 
     def generate_response(self, context, question, generate_kwargs=None):
         prompt = f"Context: {context}\nQuestion: {question}\n"
-        inputs = self.tokenizer(prompt, return_tensors='pt')
+        inputs = self.tokenizer(prompt, return_tensors='pt', padding=True, truncation=True, max_length=self.n_ctx)
 
         input_ids = inputs['input_ids'].to(self.device)
         attention_mask = inputs['attention_mask'].to(self.device)
@@ -34,7 +34,7 @@ class OpenELMEngine:
         output = self.model.generate(
             input_ids=input_ids,
             attention_mask=attention_mask,
-            max_length=self.n_ctx,
+            max_new_tokens=self.n_ctx,
             repetition_penalty=1.0,
             pad_token_id=self.tokenizer.eos_token_id,
             **generate_kwargs
