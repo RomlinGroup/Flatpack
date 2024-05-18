@@ -87,9 +87,6 @@ Check out the [JLA - Compatibility Checker](https://joinup.ec.europa.eu/collecti
 - **[olefile](https://pypi.org/project/olefile/)**\
   BSD License (BSD) ([LICENSE](https://github.com/decalage2/olefile/blob/master/LICENSE.txt))
 
-- **[onnxruntime](https://pypi.org/project/onnxruntime/)**\
-  MIT License (MIT License) ([LICENSE](https://github.com/microsoft/onnxruntime/blob/main/LICENSE))
-
 - **[psutil](https://pypi.org/project/psutil/)**\
   BSD License (BSD-3-Clause) ([LICENSE](https://github.com/giampaolo/psutil/blob/master/LICENSE))
 
