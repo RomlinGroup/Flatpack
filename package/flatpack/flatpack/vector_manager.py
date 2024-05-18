@@ -43,12 +43,12 @@ MAX_ELEMENTS = 100000
 
 
 class VectorManager:
-    def __init__(self, model_name='all-MiniLM-L6-v2', directory='./data'):
+    def __init__(self, model_id='all-MiniLM-L6-v2', directory='./data'):
         self.directory = directory
         self.index_file = os.path.join(self.directory, INDEX_FILE)
         self.metadata_file = os.path.join(self.directory, METADATA_FILE)
 
-        self.model = SentenceTransformer(model_name)
+        self.model = SentenceTransformer(model_id)
         self.index = hnswlib.Index(space='l2', dim=VECTOR_DIMENSION)
         self.metadata, self.hash_set = self._load_metadata()
         self._initialize_index()

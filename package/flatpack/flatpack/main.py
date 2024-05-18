@@ -9,15 +9,18 @@ import requests
 import select
 import shlex
 import signal
+import subprocess
 import sys
 import toml
 import uvicorn
+import venv
 
 from .agent_manager import AgentManager
 from cryptography.fernet import Fernet
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from huggingface_hub import snapshot_download
 from importlib.metadata import version
 from .parsers import parse_toml_to_venv_script
 from pathlib import Path
@@ -527,6 +530,12 @@ def setup_arg_parser():
     parser_terminate.add_argument('pid', type=int, help='Process ID of the agent to terminate')
     parser_terminate.set_defaults(func=fpk_cli_handle_terminate_agent)
 
+    # Model compression
+    parser_compress = subparsers.add_parser('compress', help='Compress a model for deployment.')
+    parser_compress.add_argument('model_id', type=str,
+                                 help='The name of the Hugging Face repository (format: username/repo_name).')
+    parser_compress.set_defaults(func=lambda args, session: fpk_cli_handle_compress(args, session))
+
     return parser
 
 
@@ -553,6 +562,102 @@ def fpk_cli_handle_add_url(url, vm):
 def fpk_cli_handle_build(args, session):
     directory_name = args.directory
     fpk_build(directory_name)
+
+
+def create_venv(venv_dir):
+    subprocess.run(["python3", "-m", "venv", venv_dir])
+
+
+def fpk_cli_handle_compress(args, session):
+    model_id = args.model_id
+    if not re.match(r'^[\w-]+/[\w-]+$', model_id):
+        print("❌ Please specify a valid Hugging Face repository in the format 'username/repo_name'.")
+        return
+
+    repo_name = model_id.split('/')[-1]
+    local_dir = repo_name
+
+    if os.path.exists(local_dir):
+        print(f"📂 The model '{model_id}' is already downloaded in the directory '{local_dir}'.")
+    else:
+        snapshot_download(repo_id=model_id, local_dir=local_dir, revision="main")
+        print(f"🤗 Finished downloading {model_id} into the directory '{local_dir}'")
+
+    llama_cpp_dir = "llama.cpp"
+    ready_file = os.path.join(llama_cpp_dir, "ready")
+    venv_dir = os.path.join(llama_cpp_dir, "venv")
+    venv_activate = os.path.join(venv_dir, "bin", "activate")
+    requirements_file = os.path.join(llama_cpp_dir, "requirements.txt")
+
+    if not os.path.exists(llama_cpp_dir):
+        print(f"📥 Cloning llama.cpp repository...")
+        clone_result = subprocess.run(["git", "clone", "https://github.com/ggerganov/llama.cpp", llama_cpp_dir])
+        if clone_result.returncode != 0:
+            print("❌ Failed to clone the llama.cpp repository. Please check your internet connection and try again.")
+            return
+        print(f"📥 Finished cloning llama.cpp repository into '{llama_cpp_dir}'")
+
+    if not os.path.exists(ready_file):
+        print(f"🔨 Running 'make' in the llama.cpp directory...")
+        make_result = subprocess.run(["make"], cwd=llama_cpp_dir)
+        if make_result.returncode != 0:
+            print(f"❌ Failed to run 'make' in the llama.cpp directory. Please check the logs for more details.")
+            return
+        print(f"🔨 Finished running 'make' in the llama.cpp directory")
+
+        if not os.path.exists(venv_dir):
+            print(f"🐍 Creating virtual environment in '{venv_dir}'...")
+            create_venv(venv_dir)
+            print(f"🐍 Virtual environment created.")
+        else:
+            print(f"📂 Virtual environment already exists in '{venv_dir}'")
+
+        print(f"📦 Installing llama.cpp dependencies in virtual environment...")
+        pip_result = subprocess.run([f"source {venv_activate} && pip install -r {requirements_file}"], shell=True,
+                                    executable="/bin/bash")
+        if pip_result.returncode != 0:
+            print(f"❌ Failed to install dependencies. Please check the logs for more details.")
+            return
+        print(f"📦 Finished installing llama.cpp dependencies")
+
+        with open(ready_file, 'w') as f:
+            f.write("Ready")
+
+    output_file = f"{local_dir}/{repo_name}-v2-fp16.bin"
+    quantized_output_file = f"{local_dir}/{repo_name}-v2-Q5_K_M.gguf"
+    outtype = "f16"
+
+    if not os.path.exists(output_file):
+        print(f"🛠 Converting the model using llama.cpp...")
+        convert_result = subprocess.run(
+            [
+                f"source {venv_activate} && python {os.path.join(llama_cpp_dir, 'convert-hf-to-gguf.py')} {local_dir} --outfile {output_file} --outtype {outtype}"
+            ],
+            shell=True, executable="/bin/bash"
+        )
+
+        if convert_result.returncode == 0:
+            print(f"✅ Conversion complete. The model has been compressed and saved as '{output_file}'.")
+        else:
+            print(f"❌ Conversion failed. Please check the logs for more details.")
+            return
+    else:
+        print(f"📂 The model has already been converted and saved as '{output_file}'.")
+
+    if os.path.exists(output_file):
+        print(f"🛠 Quantizing the model...")
+        quantize_command = f"./{llama_cpp_dir}/quantize {output_file} {quantized_output_file} q5_k_m"
+        quantize_result = subprocess.run(quantize_command, shell=True, executable="/bin/bash")
+
+        if quantize_result.returncode == 0:
+            print(f"✅ Quantization complete. The quantized model has been saved as '{quantized_output_file}'.")
+            print(f"🗑 Deleting the original .bin file '{output_file}'...")
+            os.remove(output_file)
+            print(f"🗑 Deleted the original .bin file '{output_file}'.")
+        else:
+            print(f"❌ Quantization failed. Please check the logs for more details.")
+    else:
+        print(f"❌ The original model file '{output_file}' does not exist.")
 
 
 def fpk_cli_handle_find(args, session):
@@ -695,7 +800,7 @@ def fpk_cli_handle_version(args, session):
 def fpk_cli_handle_vector_commands(args, session):
     print("Handling vector commands...")
 
-    vm = VectorManager(model_name='all-MiniLM-L6-v2', directory=getattr(args, 'data_dir', '.'))
+    vm = VectorManager(model_id='all-MiniLM-L6-v2', directory=getattr(args, 'data_dir', '.'))
 
     if args.vector_command == 'add-texts':
         vm.add_texts(args.texts, "manual")
