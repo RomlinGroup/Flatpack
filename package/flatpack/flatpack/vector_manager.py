@@ -108,6 +108,10 @@ class VectorManager:
             self._save_metadata()
 
     def search_vectors(self, query_text: str, top_k=5):
+        if not self.is_index_ready():
+            logging.error("Index is not ready. No elements in the index.")
+            return []
+
         query_embedding = self.model.encode([query_text])[0]
         labels, distances = self.index.knn_query(query_embedding, k=top_k)
         results = []
