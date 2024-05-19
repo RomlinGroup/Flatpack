@@ -16,7 +16,7 @@ from contextlib import redirect_stdout
 from nltk.tokenize import sent_tokenize
 from pypdf import PdfReader
 from sentence_transformers import SentenceTransformer
-from typing import List
+from typing import List, Dict
 from urllib.parse import urlparse
 
 warnings.filterwarnings('ignore', category=FutureWarning)
@@ -66,14 +66,15 @@ class VectorManager:
     def _load_metadata(self):
         if os.path.exists(self.metadata_file):
             with open(self.metadata_file, 'r') as file:
-                metadata = [json.loads(line) for line in file]
-            hash_set = {entry['hash'] for entry in metadata}
-            return metadata, hash_set
-        return [], set()
+                metadata_list = [json.loads(line) for line in file]
+            metadata_dict = {entry['hash']: entry for entry in metadata_list}
+            hash_set = set(metadata_dict.keys())
+            return metadata_dict, hash_set
+        return {}, set()
 
     def _save_metadata(self):
         with open(self.metadata_file, 'w') as file:
-            for entry in self.metadata:
+            for entry in self.metadata.values():
                 json.dump(entry, file)
                 file.write('\n')
         self.index.save_index(self.index_file)
@@ -85,7 +86,7 @@ class VectorManager:
     def add_texts(self, texts, source_reference):
         embeddings = []
         ids = []
-        new_entries = []
+        new_entries = {}
         for text in texts:
             text_hash = self._generate_positive_hash(text)
             if text_hash not in self.hash_set:
@@ -95,16 +96,16 @@ class VectorManager:
                 self.hash_set.add(text_hash)
                 now = datetime.datetime.now()
                 date_added = now.strftime("%Y-%m-%d %H:%M:%S")
-                new_entries.append({
+                new_entries[text_hash] = {
                     "hash": text_hash,
                     "source": source_reference,
                     "date": date_added,
                     "text": text
-                })
+                }
         if embeddings:
             embeddings = np.array(embeddings)
             self.index.add_items(embeddings, ids)
-            self.metadata.extend(new_entries)
+            self.metadata.update(new_entries)
             self._save_metadata()
 
     def search_vectors(self, query_text: str, top_k=5):
@@ -116,7 +117,7 @@ class VectorManager:
         labels, distances = self.index.knn_query(query_embedding, k=top_k)
         results = []
         for label, distance in zip(labels[0], distances[0]):
-            entry = next((item for item in self.metadata if item['hash'] == label), None)
+            entry = self.metadata.get(label)
             if entry:
                 results.append({
                     "id": entry['hash'],
