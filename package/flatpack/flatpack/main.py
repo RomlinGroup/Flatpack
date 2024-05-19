@@ -672,7 +672,7 @@ def fpk_cli_handle_compress(args, session):
     if os.path.exists(output_file):
         try:
             print(f"🛠 Quantizing the model...")
-            quantize_command = f"./{llama_cpp_dir}/quantize {output_file} {quantized_output_file} q4_k_m"
+            quantize_command = f"./{llama_cpp_dir}/quantize {output_file} {quantized_output_file} Q4_K_M"
             quantize_result = subprocess.run(quantize_command, shell=True, executable="/bin/bash")
 
             if quantize_result.returncode == 0:
@@ -686,6 +686,23 @@ def fpk_cli_handle_compress(args, session):
             print(f"❌ An error occurred during the quantization process. Error: {e}")
     else:
         print(f"❌ The original model file '{output_file}' does not exist.")
+
+    if os.path.exists(quantized_output_file):
+        try:
+            print(f"🧪 Testing the quantized model with inference...")
+
+            test_command = f"./{llama_cpp_dir}/main -m {quantized_output_file} -p 'Write a two-line poem about rain.'"
+            test_result = subprocess.run([f"source {venv_activate} && {test_command}"], shell=True,
+                                         executable="/bin/bash", capture_output=True, text=True)
+
+            if test_result.returncode == 0:
+                print(f"✅ Inference test passed. The quantized model is working correctly.")
+                print(test_result.stdout)
+            else:
+                print(f"❌ Inference test failed. Please check the logs for more details.")
+                print(test_result.stderr)
+        except Exception as e:
+            print(f"❌ An error occurred during the inference test. Error: {e}")
 
 
 def fpk_cli_handle_find(args, session):
