@@ -19,13 +19,14 @@ engine = load_engines.LlamaCPPEngine(
 class Query(BaseModel):
     context: str
     question: str
+    max_tokens: int
 
 
 @app.post("/generate-response/")
 async def generate_response(query: Query):
     try:
-        response = engine.generate_response(context=query.context, question=query.question)
-        return {"response": response}
+        response = engine.generate_response(context=query.context, question=query.question, max_tokens=query.max_tokens)
+        return {"context": query.context, "response": response, "max_tokens": query.max_tokens}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
