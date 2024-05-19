@@ -14,7 +14,7 @@ class LlamaCPPEngine:
                 verbose=verbose
             )
         else:
-            self.model = Llama.from_local(
+            self.model = Llama(
                 model_path=filename,
                 n_ctx=n_ctx,
                 n_threads=n_threads,
