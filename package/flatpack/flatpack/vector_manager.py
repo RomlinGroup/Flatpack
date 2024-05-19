@@ -1,13 +1,13 @@
 import datetime
 import hashlib
 import hnswlib
+import json
 import logging
 import nltk
 import numpy as np
 import os
 import re
 import requests
-import sqlite3
 import warnings
 
 from bs4 import BeautifulSoup
@@ -36,7 +36,7 @@ download_nltk_data()
 
 VECTOR_DIMENSION = 384
 INDEX_FILE = "hnsw_index.bin"
-DATABASE_FILE = "metadata.db"
+METADATA_FILE = "metadata.json"
 SENTENCE_CHUNK_SIZE = 5
 BATCH_SIZE = 64
 MAX_ELEMENTS = 100000
@@ -46,40 +46,36 @@ class VectorManager:
     def __init__(self, model_id='all-MiniLM-L6-v2', directory='./data'):
         self.directory = directory
         self.index_file = os.path.join(self.directory, INDEX_FILE)
-        self.database_file = os.path.join(self.directory, DATABASE_FILE)
+        self.metadata_file = os.path.join(self.directory, METADATA_FILE)
 
         self.model = SentenceTransformer(model_id)
         self.index = hnswlib.Index(space='l2', dim=VECTOR_DIMENSION)
-        self.hash_set = set()
-        self.conn = sqlite3.connect(self.database_file)
-        self._create_metadata_table()
+        self.metadata, self.hash_set = self._load_metadata()
         self._initialize_index()
-        self._load_metadata()
-
-    def _create_metadata_table(self):
-        with self.conn:
-            self.conn.execute('''CREATE TABLE IF NOT EXISTS metadata
-                                 (hash INTEGER PRIMARY KEY, source TEXT, date TEXT, text TEXT)''')
 
     def _initialize_index(self):
         if os.path.exists(self.index_file):
             self.index.load_index(self.index_file, max_elements=MAX_ELEMENTS)
         else:
-            self.index.init_index(max_elements=MAX_ELEMENTS, ef_construction=800, M=64)
-        self.index.set_ef(400)
+            self.index.init_index(max_elements=MAX_ELEMENTS, ef_construction=400, M=32)
+        self.index.set_ef(200)
 
     def is_index_ready(self):
         return self.index.get_current_count() > 0
 
     def _load_metadata(self):
-        with self.conn:
-            cursor = self.conn.execute('SELECT hash FROM metadata')
-            self.hash_set = {row[0] for row in cursor.fetchall()}
+        if os.path.exists(self.metadata_file):
+            with open(self.metadata_file, 'r') as file:
+                metadata = [json.loads(line) for line in file]
+            hash_set = {entry['hash'] for entry in metadata}
+            return metadata, hash_set
+        return [], set()
 
-    def _save_metadata(self, entries):
-        with self.conn:
-            self.conn.executemany('''INSERT OR REPLACE INTO metadata (hash, source, date, text) VALUES (?, ?, ?, ?)''',
-                                  [(entry['hash'], entry['source'], entry['date'], entry['text']) for entry in entries])
+    def _save_metadata(self):
+        with open(self.metadata_file, 'w') as file:
+            for entry in self.metadata:
+                json.dump(entry, file)
+                file.write('\n')
         self.index.save_index(self.index_file)
 
     def _generate_positive_hash(self, text):
@@ -87,11 +83,15 @@ class VectorManager:
         return int(hash_object.hexdigest()[:16], 16)
 
     def add_texts(self, texts, source_reference):
-        embeddings = self.model.encode(texts, batch_size=BATCH_SIZE)
-        ids = [self._generate_positive_hash(text) for text in texts]
+        embeddings = []
+        ids = []
         new_entries = []
-        for text, embedding, text_hash in zip(texts, embeddings, ids):
+        for text in texts:
+            text_hash = self._generate_positive_hash(text)
             if text_hash not in self.hash_set:
+                embedding = self.model.encode([text])[0]
+                embeddings.append(embedding)
+                ids.append(text_hash)
                 self.hash_set.add(text_hash)
                 now = datetime.datetime.now()
                 date_added = now.strftime("%Y-%m-%d %H:%M:%S")
@@ -101,25 +101,26 @@ class VectorManager:
                     "date": date_added,
                     "text": text
                 })
-        if embeddings.any():
-            self.index.add_items(np.array(embeddings), ids)
-            self._save_metadata(new_entries)
+        if embeddings:
+            embeddings = np.array(embeddings)
+            self.index.add_items(embeddings, ids)
+            self.metadata.extend(new_entries)
+            self._save_metadata()
 
     def search_vectors(self, query_text: str, top_k=5):
         query_embedding = self.model.encode([query_text])[0]
         labels, distances = self.index.knn_query(query_embedding, k=top_k)
         results = []
-        with self.conn:
-            for label, distance in zip(labels[0], distances[0]):
-                entry = self.conn.execute('SELECT * FROM metadata WHERE hash = ?', (label,)).fetchone()
-                if entry:
-                    results.append({
-                        "id": entry[0],
-                        "distance": distance,
-                        "source": entry[1],
-                        "date": entry[2],
-                        "text": entry[3]
-                    })
+        for label, distance in zip(labels[0], distances[0]):
+            entry = next((item for item in self.metadata if item['hash'] == label), None)
+            if entry:
+                results.append({
+                    "id": entry['hash'],
+                    "distance": distance,
+                    "source": entry['source'],
+                    "date": entry['date'],
+                    "text": entry['text']
+                })
         return results
 
     def _process_text_and_add(self, text, source_reference):

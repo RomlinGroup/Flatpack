@@ -99,23 +99,23 @@ flatpack agents terminate <pid>
 Hierarchical Navigable Small World (HNSW) graphs excel as indexes for vector similarity searches with leading-edge results through high recall rates and rapid search capabilities.
 
 ```bash
-flatpack vector add-texts "<text_1>", "<text_2>"
+flatpack vector add-texts "<text_1>", "<text_2>" --data-dir <data_dir>
 ```
 
 ```bash
-flatpack vector add-pdf <pdf_filename>
+flatpack vector add-pdf <pdf_filename> --data-dir <data_dir>
 ```
 
 ```bash
-flatpack vector add-url <url>
+flatpack vector add-url <url> --data-dir <data_dir>
 ```
 
 ```bash
-flatpack vector add-wikipedia "<wikipedia_page_title>"
+flatpack vector add-wikipedia "<wikipedia_page_title>" --data-dir <data_dir>
 ```
 
 ```bash
-flatpack vector search-text "<search_query>"
+flatpack vector search-text "<search_query>" --data-dir <data_dir>
 ```
 
 ## Flatpack (FPK) 📦
