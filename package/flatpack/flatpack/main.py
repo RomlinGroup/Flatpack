@@ -534,6 +534,7 @@ def setup_arg_parser():
     parser_compress = subparsers.add_parser('compress', help='Compress a model for deployment.')
     parser_compress.add_argument('model_id', type=str,
                                  help='The name of the Hugging Face repository (format: username/repo_name).')
+    parser_compress.add_argument('--token', type=str, help='Hugging Face token for private repositories.', default=None)
     parser_compress.set_defaults(func=lambda args, session: fpk_cli_handle_compress(args, session))
 
     return parser
@@ -570,7 +571,9 @@ def create_venv(venv_dir):
 
 def fpk_cli_handle_compress(args, session):
     model_id = args.model_id
-    if not re.match(r'^[\w-]+/[\w-]+$', model_id):
+    token = args.token
+
+    if not re.match(r'^[\w-]+/[\w.-]+$', model_id):
         print("❌ Please specify a valid Hugging Face repository in the format 'username/repo_name'.")
         return
 
@@ -580,8 +583,17 @@ def fpk_cli_handle_compress(args, session):
     if os.path.exists(local_dir):
         print(f"📂 The model '{model_id}' is already downloaded in the directory '{local_dir}'.")
     else:
-        snapshot_download(repo_id=model_id, local_dir=local_dir, revision="main")
-        print(f"🤗 Finished downloading {model_id} into the directory '{local_dir}'")
+        try:
+            if token:
+                print(f"📥 Downloading private model '{model_id}' with provided token...")
+                snapshot_download(repo_id=model_id, local_dir=local_dir, revision="main", token=token)
+            else:
+                print(f"📥 Downloading public model '{model_id}'...")
+                snapshot_download(repo_id=model_id, local_dir=local_dir, revision="main")
+            print(f"🤗 Finished downloading {model_id} into the directory '{local_dir}'")
+        except Exception as e:
+            print(f"❌ Failed to download the model. Please check your internet connection and try again. Error: {e}")
+            return
 
     llama_cpp_dir = "llama.cpp"
     ready_file = os.path.join(llama_cpp_dir, "ready")
@@ -590,72 +602,88 @@ def fpk_cli_handle_compress(args, session):
     requirements_file = os.path.join(llama_cpp_dir, "requirements.txt")
 
     if not os.path.exists(llama_cpp_dir):
-        print(f"📥 Cloning llama.cpp repository...")
-        clone_result = subprocess.run(["git", "clone", "https://github.com/ggerganov/llama.cpp", llama_cpp_dir])
-        if clone_result.returncode != 0:
-            print("❌ Failed to clone the llama.cpp repository. Please check your internet connection and try again.")
+        try:
+            print(f"📥 Cloning llama.cpp repository...")
+            clone_result = subprocess.run(["git", "clone", "https://github.com/ggerganov/llama.cpp", llama_cpp_dir])
+            if clone_result.returncode != 0:
+                print(
+                    "❌ Failed to clone the llama.cpp repository. Please check your internet connection and try again.")
+                return
+            print(f"📥 Finished cloning llama.cpp repository into '{llama_cpp_dir}'")
+        except Exception as e:
+            print(f"❌ Failed to clone the llama.cpp repository. Error: {e}")
             return
-        print(f"📥 Finished cloning llama.cpp repository into '{llama_cpp_dir}'")
 
     if not os.path.exists(ready_file):
-        print(f"🔨 Running 'make' in the llama.cpp directory...")
-        make_result = subprocess.run(["make"], cwd=llama_cpp_dir)
-        if make_result.returncode != 0:
-            print(f"❌ Failed to run 'make' in the llama.cpp directory. Please check the logs for more details.")
+        try:
+            print(f"🔨 Running 'make' in the llama.cpp directory...")
+            make_result = subprocess.run(["make"], cwd=llama_cpp_dir)
+            if make_result.returncode != 0:
+                print(f"❌ Failed to run 'make' in the llama.cpp directory. Please check the logs for more details.")
+                return
+            print(f"🔨 Finished running 'make' in the llama.cpp directory")
+
+            if not os.path.exists(venv_dir):
+                print(f"🐍 Creating virtual environment in '{venv_dir}'...")
+                create_venv(venv_dir)
+                print(f"🐍 Virtual environment created.")
+            else:
+                print(f"📂 Virtual environment already exists in '{venv_dir}'")
+
+            print(f"📦 Installing llama.cpp dependencies in virtual environment...")
+            pip_result = subprocess.run([f"source {venv_activate} && pip install -r {requirements_file}"], shell=True,
+                                        executable="/bin/bash")
+            if pip_result.returncode != 0:
+                print(f"❌ Failed to install dependencies. Please check the logs for more details.")
+                return
+            print(f"📦 Finished installing llama.cpp dependencies")
+
+            with open(ready_file, 'w') as f:
+                f.write("Ready")
+        except Exception as e:
+            print(f"❌ An error occurred during the setup of llama.cpp. Error: {e}")
             return
-        print(f"🔨 Finished running 'make' in the llama.cpp directory")
-
-        if not os.path.exists(venv_dir):
-            print(f"🐍 Creating virtual environment in '{venv_dir}'...")
-            create_venv(venv_dir)
-            print(f"🐍 Virtual environment created.")
-        else:
-            print(f"📂 Virtual environment already exists in '{venv_dir}'")
-
-        print(f"📦 Installing llama.cpp dependencies in virtual environment...")
-        pip_result = subprocess.run([f"source {venv_activate} && pip install -r {requirements_file}"], shell=True,
-                                    executable="/bin/bash")
-        if pip_result.returncode != 0:
-            print(f"❌ Failed to install dependencies. Please check the logs for more details.")
-            return
-        print(f"📦 Finished installing llama.cpp dependencies")
-
-        with open(ready_file, 'w') as f:
-            f.write("Ready")
 
     output_file = f"{local_dir}/{repo_name}-v2-fp16.bin"
     quantized_output_file = f"{local_dir}/{repo_name}-v2-Q5_K_M.gguf"
     outtype = "f16"
 
     if not os.path.exists(output_file):
-        print(f"🛠 Converting the model using llama.cpp...")
-        convert_result = subprocess.run(
-            [
-                f"source {venv_activate} && python {os.path.join(llama_cpp_dir, 'convert-hf-to-gguf.py')} {local_dir} --outfile {output_file} --outtype {outtype}"
-            ],
-            shell=True, executable="/bin/bash"
-        )
+        try:
+            print(f"🛠 Converting the model using llama.cpp...")
+            convert_result = subprocess.run(
+                [
+                    f"source {venv_activate} && python {os.path.join(llama_cpp_dir, 'convert-hf-to-gguf.py')} {local_dir} --outfile {output_file} --outtype {outtype}"
+                ],
+                shell=True, executable="/bin/bash"
+            )
 
-        if convert_result.returncode == 0:
-            print(f"✅ Conversion complete. The model has been compressed and saved as '{output_file}'.")
-        else:
-            print(f"❌ Conversion failed. Please check the logs for more details.")
+            if convert_result.returncode == 0:
+                print(f"✅ Conversion complete. The model has been compressed and saved as '{output_file}'.")
+            else:
+                print(f"❌ Conversion failed. Please check the logs for more details.")
+                return
+        except Exception as e:
+            print(f"❌ An error occurred during the model conversion. Error: {e}")
             return
     else:
         print(f"📂 The model has already been converted and saved as '{output_file}'.")
 
     if os.path.exists(output_file):
-        print(f"🛠 Quantizing the model...")
-        quantize_command = f"./{llama_cpp_dir}/quantize {output_file} {quantized_output_file} q5_k_m"
-        quantize_result = subprocess.run(quantize_command, shell=True, executable="/bin/bash")
+        try:
+            print(f"🛠 Quantizing the model...")
+            quantize_command = f"./{llama_cpp_dir}/quantize {output_file} {quantized_output_file} q5_k_m"
+            quantize_result = subprocess.run(quantize_command, shell=True, executable="/bin/bash")
 
-        if quantize_result.returncode == 0:
-            print(f"✅ Quantization complete. The quantized model has been saved as '{quantized_output_file}'.")
-            print(f"🗑 Deleting the original .bin file '{output_file}'...")
-            os.remove(output_file)
-            print(f"🗑 Deleted the original .bin file '{output_file}'.")
-        else:
-            print(f"❌ Quantization failed. Please check the logs for more details.")
+            if quantize_result.returncode == 0:
+                print(f"✅ Quantization complete. The quantized model has been saved as '{quantized_output_file}'.")
+                print(f"🗑 Deleting the original .bin file '{output_file}'...")
+                os.remove(output_file)
+                print(f"🗑 Deleted the original .bin file '{output_file}'.")
+            else:
+                print(f"❌ Quantization failed. Please check the logs for more details.")
+        except Exception as e:
+            print(f"❌ An error occurred during the quantization process. Error: {e}")
     else:
         print(f"❌ The original model file '{output_file}' does not exist.")
 
