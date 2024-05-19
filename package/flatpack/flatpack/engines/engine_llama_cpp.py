@@ -23,14 +23,14 @@ class LlamaCPPEngine:
                 verbose=verbose
             )
 
-    def generate_response(self, context, question):
+    def generate_response(self, context, question, max_tokens):
         prompt = f"""
         Context: {context}\n
         Question: {question}\n
         """
         output = self.model(
             f"<|user|>\n{prompt}<|end|>\n<|assistant|>",
-            max_tokens=256,
+            max_tokens=max_tokens,
             stop=["<|end|>"],
             echo=False
         )
