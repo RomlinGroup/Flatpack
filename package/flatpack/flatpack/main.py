@@ -644,8 +644,8 @@ def fpk_cli_handle_compress(args, session):
             print(f"❌ An error occurred during the setup of llama.cpp. Error: {e}")
             return
 
-    output_file = f"{local_dir}/{repo_name}-v2-fp16.bin"
-    quantized_output_file = f"{local_dir}/{repo_name}-v2-Q5_K_M.gguf"
+    output_file = f"{local_dir}/{repo_name}-fp16.bin"
+    quantized_output_file = f"{local_dir}/{repo_name}-Q4_K_M.gguf"
     outtype = "f16"
 
     if not os.path.exists(output_file):
@@ -672,7 +672,7 @@ def fpk_cli_handle_compress(args, session):
     if os.path.exists(output_file):
         try:
             print(f"🛠 Quantizing the model...")
-            quantize_command = f"./{llama_cpp_dir}/quantize {output_file} {quantized_output_file} q5_k_m"
+            quantize_command = f"./{llama_cpp_dir}/quantize {output_file} {quantized_output_file} q4_k_m"
             quantize_result = subprocess.run(quantize_command, shell=True, executable="/bin/bash")
 
             if quantize_result.returncode == 0:
