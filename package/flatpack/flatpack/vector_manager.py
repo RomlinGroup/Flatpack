@@ -11,7 +11,6 @@ import requests
 import warnings
 
 from bs4 import BeautifulSoup
-from concurrent.futures import ThreadPoolExecutor, as_completed
 from contextlib import redirect_stdout
 from nltk.tokenize import sent_tokenize
 from pypdf import PdfReader
@@ -39,7 +38,7 @@ INDEX_FILE = "hnsw_index.bin"
 METADATA_FILE = "metadata.json"
 SENTENCE_CHUNK_SIZE = 5
 BATCH_SIZE = 64
-MAX_ELEMENTS = 100000
+MAX_ELEMENTS = 10000
 
 
 class VectorManager:
@@ -57,7 +56,7 @@ class VectorManager:
         if os.path.exists(self.index_file):
             self.index.load_index(self.index_file, max_elements=MAX_ELEMENTS)
         else:
-            self.index.init_index(max_elements=MAX_ELEMENTS, ef_construction=400, M=32)
+            self.index.init_index(max_elements=MAX_ELEMENTS, ef_construction=200, M=16)
         self.index.set_ef(200)
 
     def is_index_ready(self):
@@ -66,17 +65,14 @@ class VectorManager:
     def _load_metadata(self):
         if os.path.exists(self.metadata_file):
             with open(self.metadata_file, 'r') as file:
-                metadata_list = [json.loads(line) for line in file]
-            metadata_dict = {entry['hash']: entry for entry in metadata_list}
+                metadata_dict = json.load(file)
             hash_set = set(metadata_dict.keys())
             return metadata_dict, hash_set
         return {}, set()
 
     def _save_metadata(self):
         with open(self.metadata_file, 'w') as file:
-            for entry in self.metadata.values():
-                json.dump(entry, file)
-                file.write('\n')
+            json.dump(self.metadata, file)
         self.index.save_index(self.index_file)
 
     def _generate_positive_hash(self, text):
@@ -117,7 +113,7 @@ class VectorManager:
         labels, distances = self.index.knn_query(query_embedding, k=top_k)
         results = []
         for label, distance in zip(labels[0], distances[0]):
-            entry = self.metadata.get(label)
+            entry = self.metadata.get(str(label))  # Use str(label) to ensure key consistency
             if entry:
                 results.append({
                     "id": entry['hash'],
