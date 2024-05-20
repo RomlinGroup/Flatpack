@@ -7,6 +7,7 @@ import nltk
 import numpy as np
 import os
 import requests
+import time
 import warnings
 
 from bs4 import BeautifulSoup
@@ -47,20 +48,22 @@ class VectorManager:
         self.metadata_file = os.path.join(self.directory, METADATA_FILE)
         self.embeddings_file = os.path.join(self.directory, EMBEDDINGS_FILE)
 
+        start_time = time.time()
         self.model = SentenceTransformer(model_id)
+        print(f"Model loaded in {time.time() - start_time:.2f} seconds")
+
         self.index = hnswlib.Index(space='cosine', dim=VECTOR_DIMENSION)
         self.metadata, self.hash_set, self.embeddings, self.ids = self._load_metadata_and_embeddings()
         self._initialize_index()
 
     def _initialize_index(self):
-        """Initialize the index with preloaded embeddings or from saved index file."""
         if os.path.exists(self.index_file):
             self.index.load_index(self.index_file, max_elements=MAX_ELEMENTS)
         else:
             self.index.init_index(max_elements=MAX_ELEMENTS, ef_construction=200, M=16)
             if self.embeddings is not None and len(self.embeddings) > 0:
                 self.index.add_items(self.embeddings, self.ids)
-        self.index.set_ef(50)
+        self.index.set_ef(200)
 
     def is_index_ready(self):
         """Check if the index is ready for search operations."""
@@ -130,24 +133,32 @@ class VectorManager:
             self._save_metadata_and_embeddings()
 
     def search_vectors(self, query_text: str, top_k=5):
-        """Search for the top_k vectors similar to the query text."""
         if not self.is_index_ready():
             logging.error("Index is not ready. No elements in the index.")
             return []
 
+        start_time = time.time()
         query_embedding = self.model.encode([query_text])[0]
+        print(f"Text encoded in {time.time() - start_time:.2f} seconds")
+
+        start_time = time.time()
         labels, distances = self.index.knn_query(query_embedding, k=top_k)
+        print(f"Search completed in {time.time() - start_time:.2f} seconds")
+
         results = []
         for label, distance in zip(labels[0], distances[0]):
             entry = self.metadata.get(str(label))
             if entry:
-                results.append({
+                result = {
                     "id": entry['hash'],
                     "distance": distance,
                     "source": entry['source'],
                     "date": entry['date'],
                     "text": entry['text']
-                })
+                }
+                results.append(result)
+                print(json.dumps(result, indent=2))
+
         return results
 
     def _process_text_and_add(self, text, source_reference):
