@@ -11,7 +11,6 @@ class LlamaCPPEngine:
         self.n_ctx = n_ctx
         self.n_threads = n_threads
         self.verbose = verbose
-
         self.setup_llama_cpp()
 
     def setup_llama_cpp(self):
@@ -49,12 +48,7 @@ class LlamaCPPEngine:
                 print(
                     f"❌ Makefile not found in the llama.cpp directory. Please ensure the repository is cloned correctly.")
 
-    def generate_response(self, context, question, max_tokens):
-        prompt = f"""
-Context: {context}
-Question: {question}
-        """
-
+    def generate_response(self, prompt, max_tokens):
         with tempfile.NamedTemporaryFile(delete=False, mode='w', encoding='utf-8') as prompt_file:
             prompt_file.write(prompt)
             prompt_file_path = prompt_file.name
@@ -87,12 +81,5 @@ Question: {question}
 
         # Remove the prompt from the output
         response = content.replace(prompt.strip(), '', 1).strip()
-
-        # List of tags to remove
-        tags_to_remove = ['<|assistant|>', '<|end|>', '<s>']
-
-        # Remove specific tags from the content
-        for tag in tags_to_remove:
-            response = response.replace(tag, '').strip()
 
         return response
