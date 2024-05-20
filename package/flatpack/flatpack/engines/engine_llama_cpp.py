@@ -2,36 +2,46 @@ from llama_cpp import Llama
 
 
 class LlamaCPPEngine:
-    def __init__(self, repo_id=None, filename=None, n_ctx=4096, n_threads=6, verbose=False):
+    def __init__(self, repo_id=None, filename=None, n_ctx=4096, n_threads=8, verbose=False):
         if repo_id:
             self.model = Llama.from_pretrained(
-                repo_id=repo_id,
+                echo=False,
                 filename=filename,
                 n_ctx=n_ctx,
                 n_threads=n_threads,
-                temp=1.0,
                 repeat_penalty=1.0,
+                repo_id=repo_id,
+                seed=-1,
+                streaming=True,
+                temp=1.0,
                 verbose=verbose
             )
         else:
             self.model = Llama(
+                echo=False,
                 model_path=filename,
                 n_ctx=n_ctx,
                 n_threads=n_threads,
-                temp=1.0,
                 repeat_penalty=1.0,
+                seed=-1,
+                streaming=True,
+                temp=1.0,
                 verbose=verbose
             )
 
     def generate_response(self, context, question, max_tokens):
-        prompt = f"""
-        Context: {context}\n
-        Question: {question}\n
-        """
-        output = self.model(
-            f"<|user|>\n{prompt}<|end|>\n<|assistant|>",
+        messages = [
+            {"role": "system", "content": context},
+            {"role": "user", "content": question}
+        ]
+
+        response_chunks = self.model.create_chat_completion(
             max_tokens=max_tokens,
-            stop=["<|end|>"],
-            echo=False
+            messages=messages,
+            stream=True
         )
-        return output['choices'][0]['text']
+
+        for chunk in response_chunks:
+            delta = chunk['choices'][0]['delta']
+            if 'content' in delta:
+                yield delta['content']
