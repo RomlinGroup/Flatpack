@@ -484,33 +484,34 @@ def setup_arg_parser():
     parser_add_text.add_argument('texts', nargs='+', help='Texts to add.')
     parser_add_text.add_argument('--data-dir', type=str, default='.',
                                  help='Directory path for storing the vector database and metadata files.')
-    parser_add_text.set_defaults(func=lambda args, session: fpk_cli_handle_vector_commands(args, session))
+    parser_add_text.set_defaults(func=lambda args, session, vm: fpk_cli_handle_vector_commands(args, session, vm))
 
     parser_search_text = vector_subparsers.add_parser('search-text',
                                                       help='Search for texts similar to the given query.')
     parser_search_text.add_argument('query', help='Text query to search for.')
     parser_search_text.add_argument('--data-dir', type=str, default='.',
                                     help='Directory path for storing the vector database and metadata files.')
-    parser_search_text.set_defaults(func=lambda args, session: fpk_cli_handle_vector_commands(args, session))
+    parser_search_text.set_defaults(func=lambda args, session, vm: fpk_cli_handle_vector_commands(args, session, vm))
 
     parser_add_pdf = vector_subparsers.add_parser('add-pdf', help='Add text from a PDF file to the vector database.')
     parser_add_pdf.add_argument('pdf_path', help='Path to the PDF file to add.')
     parser_add_pdf.add_argument('--data-dir', type=str, default='.',
                                 help='Directory path for storing the vector database and metadata files.')
-    parser_add_pdf.set_defaults(func=lambda args, session: fpk_cli_handle_vector_commands(args, session))
+    parser_add_pdf.set_defaults(func=lambda args, session, vm: fpk_cli_handle_vector_commands(args, session, vm))
 
     parser_add_url = vector_subparsers.add_parser('add-url', help='Add text from a URL to the vector database.')
     parser_add_url.add_argument('url', help='URL to add.')
     parser_add_url.add_argument('--data-dir', type=str, default='.',
                                 help='Directory path for storing the vector database and metadata files.')
-    parser_add_url.set_defaults(func=lambda args, session: fpk_cli_handle_vector_commands(args, session))
+    parser_add_url.set_defaults(func=lambda args, session, vm: fpk_cli_handle_vector_commands(args, session, vm))
 
     parser_add_wikipedia_page = vector_subparsers.add_parser('add-wikipedia',
                                                              help='Add text from a Wikipedia page to the vector database.')
     parser_add_wikipedia_page.add_argument('page_title', help='The title of the Wikipedia page to add.')
     parser_add_wikipedia_page.add_argument('--data-dir', type=str, default='.',
                                            help='Directory path for storing the vector database and metadata files.')
-    parser_add_wikipedia_page.set_defaults(func=lambda args, session: fpk_cli_handle_vector_commands(args, session))
+    parser_add_wikipedia_page.set_defaults(
+        func=lambda args, session, vm: fpk_cli_handle_vector_commands(args, session, vm))
 
     # Add commands for agents
     parser_agents = subparsers.add_parser('agents', help='Manage agents')
@@ -842,10 +843,13 @@ def fpk_cli_handle_version(args, session):
     print(VERSION)
 
 
-def fpk_cli_handle_vector_commands(args, session):
-    print("Handling vector commands...")
+def fpk_initialize_vector_manager(args):
+    # Initialize VectorManager once
+    return VectorManager(model_id='all-MiniLM-L6-v2', directory=getattr(args, 'data_dir', '.'))
 
-    vm = VectorManager(model_id='all-MiniLM-L6-v2', directory=getattr(args, 'data_dir', '.'))
+
+def fpk_cli_handle_vector_commands(args, session, vm):
+    print("Handling vector commands...")
 
     if args.vector_command == 'add-texts':
         vm.add_texts(args.texts, "manual")
@@ -874,8 +878,11 @@ def main():
             parser = setup_arg_parser()
             args = parser.parse_args()
 
+            # Initialize VectorManager once
+            vm = fpk_initialize_vector_manager(args)
+
             if hasattr(args, 'func'):
-                args.func(args, session)
+                args.func(args, session, vm)
             else:
                 parser.print_help()
 
