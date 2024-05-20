@@ -15,8 +15,8 @@ vm = VectorManager(directory="vector")
 engine = load_engines.LlamaCPPEngine(
     filename="./Phi-3-mini-4k-instruct-Q4_K_M.gguf",
     n_ctx=4096,
-    n_threads=6,
-    verbose=False
+    n_threads=8,
+    verbose=True
 )
 
 origins = [
@@ -48,10 +48,13 @@ async def generate_response(query: Query):
             if vm.is_index_ready():
                 results = vm.search_vectors(query.question)
                 if results:
-                    context = "\n".join(result['text'] for result in results[:10])
+                    context = "\n".join(result['text'] for result in results[:5])
 
-            for chunk in engine.generate_response(context=context, question=query.question,
-                                                  max_tokens=query.max_tokens):
+            for chunk in engine.generate_response(
+                    context=context,
+                    question=query.question,
+                    max_tokens=query.max_tokens
+            ):
                 yield chunk
 
         return StreamingResponse(response_generator(), media_type="text/plain")
