@@ -105,4 +105,4 @@ Check out the [JLA - Compatibility Checker](https://joinup.ec.europa.eu/collecti
 - **[uvicorn](https://pypi.org/project/uvicorn/)**\
   BSD License ([LICENSE](https://github.com/encode/uvicorn/blob/master/LICENSE.md))
 
-Last updated: 2024-04-27
+Last updated: 2024-05-20
