@@ -4,7 +4,7 @@ from llama_cpp import Llama
 class LlamaCPPEngine:
     def __init__(self, repo_id=None, filename=None, n_ctx=4096, n_threads=8, verbose=False):
         if repo_id:
-            print(f"Model: {repo_id}")
+            print(repo_id)
             self.model = Llama.from_pretrained(
                 echo=False,
                 filename=filename,
@@ -18,7 +18,7 @@ class LlamaCPPEngine:
                 verbose=verbose
             )
         else:
-            print(f"Model: {filename}")
+            print(filename)
             self.model = Llama(
                 echo=False,
                 model_path=filename,
