@@ -30,14 +30,20 @@ class LlamaCPPEngine:
             )
 
     def generate_response(self, context, question, max_tokens):
+        prompt = f"""
+        Context: {context}\n
+        Question: {question}\n
+        """
+
         messages = [
-            {"role": "system", "content": context},
-            {"role": "user", "content": question}
+            {"role": "user", "content": prompt}
         ]
 
         response_chunks = self.model.create_chat_completion(
+            echo=False,
             max_tokens=max_tokens,
             messages=messages,
+            stop=["<|end|>"],
             stream=True
         )
 
