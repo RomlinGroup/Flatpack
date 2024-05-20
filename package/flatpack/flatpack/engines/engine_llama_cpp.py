@@ -96,20 +96,3 @@ Question: {question}
             response = response.replace(tag, '').strip()
 
         return response
-
-
-# Example usage
-engine = LlamaCPPEngine(
-    model_path="./Phi-3-mini-4k-instruct-Q4_K_M.gguf",
-    n_ctx=4096,
-    n_threads=8,
-    verbose=False
-)
-
-response = engine.generate_response(
-    context="You are a helpful assistant.",
-    question="What is the capital of Sweden?",
-    max_tokens=256
-)
-
-print(response)
