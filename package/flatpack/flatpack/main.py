@@ -440,10 +440,10 @@ def setup_arg_parser():
     parser_find.set_defaults(func=lambda args, session: fpk_cli_handle_find(args, session))
 
     parser_help = subparsers.add_parser('help', help='Display help for commands.')
-    parser_help.set_defaults(func=fpk_cli_handle_help)
+    parser_help.set_defaults(func=lambda args: fpk_cli_handle_help(args))
 
     parser_version = subparsers.add_parser('version', help='Display the version of flatpack.')
-    parser_version.set_defaults(func=fpk_cli_handle_version)
+    parser_version.set_defaults(func=lambda args: fpk_cli_handle_version(args))
 
     # API Key management
     parser_api_key = subparsers.add_parser('api-key', help='API key management commands')
@@ -520,16 +520,16 @@ def setup_arg_parser():
     # Add command to spawn an agent
     parser_spawn = agent_subparsers.add_parser('spawn', help='Spawn a new agent with a script')
     parser_spawn.add_argument('script_path', type=str, help='Path to the script to execute')
-    parser_spawn.set_defaults(func=fpk_cli_handle_spawn_agent)
+    parser_spawn.set_defaults(func=lambda args, session: fpk_cli_handle_spawn_agent(args, session))
 
     # Add command to list active agents
     parser_list = agent_subparsers.add_parser('list', help='List active agents')
-    parser_list.set_defaults(func=fpk_cli_handle_list_agents)
+    parser_list.set_defaults(func=lambda args, session: fpk_cli_handle_list_agents(args, session))
 
     # Add command to terminate an agent
     parser_terminate = agent_subparsers.add_parser('terminate', help='Terminate an active agent')
     parser_terminate.add_argument('pid', type=int, help='Process ID of the agent to terminate')
-    parser_terminate.set_defaults(func=fpk_cli_handle_terminate_agent)
+    parser_terminate.set_defaults(func=lambda args, session: fpk_cli_handle_terminate_agent(args, session))
 
     # Model compression
     parser_compress = subparsers.add_parser('compress', help='Compress a model for deployment.')
@@ -878,11 +878,16 @@ def main():
             parser = setup_arg_parser()
             args = parser.parse_args()
 
-            # Initialize VectorManager once
-            vm = fpk_initialize_vector_manager(args)
+            # Initialize VectorManager only if needed
+            vm = None
+            if args.command == 'vector':
+                vm = fpk_initialize_vector_manager(args)
 
             if hasattr(args, 'func'):
-                args.func(args, session, vm)
+                if args.command == 'vector' and 'vector_command' in args:
+                    args.func(args, session, vm)
+                else:
+                    args.func(args, session)
             else:
                 parser.print_help()
 
