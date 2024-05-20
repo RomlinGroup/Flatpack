@@ -151,7 +151,7 @@ class VectorManager:
             if entry:
                 result = {
                     "id": entry['hash'],
-                    "distance": distance,
+                    "distance": float(distance),
                     "source": entry['source'],
                     "date": entry['date'],
                     "text": entry['text']
