@@ -75,9 +75,6 @@ Check out the [JLA - Compatibility Checker](https://joinup.ec.europa.eu/collecti
 - **[huggingface-hub](https://pypi.org/project/huggingface-hub/)**\
   Apache Software License (Apache) ([LICENSE](https://github.com/huggingface/huggingface_hub/blob/main/LICENSE))
 
-- **[llama-cpp-python](https://pypi.org/project/llama-cpp-python/)**\
-  MIT ([LICENSE](https://github.com/abetlen/llama-cpp-python/blob/main/LICENSE.md))
-
 - **[ngrok](https://pypi.org/project/ngrok/)**\
   MIT License (MIT OR Apache-2.0) ([LICENSE](https://github.com/ngrok/ngrok-python/blob/main/LICENSE-APACHE))
 
