@@ -40,7 +40,6 @@ class LlamaCPPEngine:
         ]
 
         response_chunks = self.model.create_chat_completion(
-            echo=False,
             max_tokens=max_tokens,
             messages=messages,
             stop=["<|end|>"],
