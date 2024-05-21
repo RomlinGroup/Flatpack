@@ -1,22 +1,21 @@
 import os
+import re
 import uvicorn
-
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
-from flatpack.vector_manager import VectorManager
 from flatpack import load_engines
+from flatpack.vector_manager import VectorManager
 from pydantic import BaseModel
 
 app = FastAPI()
 vm = VectorManager(directory="vector")
 
-# Load the LlamaCPPEngine
+# Initialize the LlamaCPPEngine once and reuse it
 engine = load_engines.LlamaCPPEngine(
-    filename="./Phi-3-mini-4k-instruct-Q4_K_M.gguf",
-    n_ctx=4096,
+    model_path="./gemma-1.1-2b-it-Q4_K_M.gguf",
+    n_ctx=8192,
     n_threads=8,
-    verbose=True
+    verbose=False
 )
 
 origins = [
@@ -34,30 +33,36 @@ app.add_middleware(
 
 
 class Query(BaseModel):
-    context: str
-    question: str
+    prompt: str
     max_tokens: int
 
 
 @app.post("/generate-response/")
 async def generate_response(query: Query):
     try:
-        async def response_generator():
-            context = query.context
+        context = ""
+        if vm.is_index_ready():
+            results = vm.search_vectors(query.prompt)
+            if results:
+                context = "\n".join(result['text'] for result in results[:5])
 
-            if vm.is_index_ready():
-                results = vm.search_vectors(query.question)
-                if results:
-                    context = "\n".join(result['text'] for result in results[:5])
+        # Generate the full response using the preloaded engine
+        response = engine.generate_response(
+            prompt=(f"""
+            Context: {context}\n
+            Question: {query.prompt}\n
+            Answer:
+            """),
+            max_tokens=query.max_tokens
+        )
 
-            for chunk in engine.generate_response(
-                    context=context,
-                    question=query.question,
-                    max_tokens=query.max_tokens
-            ):
-                yield chunk
+        # Accumulate the chunks into a full response
+        full_response = "".join(response)
 
-        return StreamingResponse(response_generator(), media_type="text/plain")
+        # Clean the response by removing any \n\n, stripping tags, and leading/trailing whitespace
+        cleaned_response = re.sub(r'<[^>]+>', '', full_response).replace('\n\n', ' ').strip()
+
+        return {"response": cleaned_response}
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
