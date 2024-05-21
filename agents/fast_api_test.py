@@ -11,7 +11,6 @@ from pydantic import BaseModel
 app = FastAPI()
 vm = VectorManager(directory="vector")
 
-# Initialize the LlamaCPPEngine once and reuse it
 engine = load_engines.LlamaCPPEngine(
     model_path="./gemma-1.1-2b-it-Q4_K_M.gguf",
     n_ctx=8192,
@@ -47,7 +46,6 @@ async def generate_response(query: Query):
             if results:
                 context = "\n".join(result['text'] for result in results[:5])
 
-        # Generate the full response using the preloaded engine
         response = engine.generate_response(
             prompt=(f"""
             Context: {context}\n
@@ -57,7 +55,6 @@ async def generate_response(query: Query):
             max_tokens=query.max_tokens
         )
 
-        # Clean the response by removing any \n\n, stripping tags, and leading/trailing whitespace
         cleaned_response = re.sub(r'<[^>]+>', '', response).replace('\n\n', ' ').strip()
 
         return {"response": cleaned_response}
