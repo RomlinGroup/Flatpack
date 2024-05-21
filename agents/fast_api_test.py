@@ -57,11 +57,8 @@ async def generate_response(query: Query):
             max_tokens=query.max_tokens
         )
 
-        # Accumulate the chunks into a full response
-        full_response = "".join(response)
-
         # Clean the response by removing any \n\n, stripping tags, and leading/trailing whitespace
-        cleaned_response = re.sub(r'<[^>]+>', '', full_response).replace('\n\n', ' ').strip()
+        cleaned_response = re.sub(r'<[^>]+>', '', response).replace('\n\n', ' ').strip()
 
         return {"response": cleaned_response}
 
