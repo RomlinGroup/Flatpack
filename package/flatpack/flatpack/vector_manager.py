@@ -90,7 +90,7 @@ class VectorManager:
     def _save_metadata_and_embeddings(self):
         """Save metadata and embeddings to their respective files."""
         with open(self.metadata_file, 'w') as file:
-            json.dump(self.metadata, file)
+            json.dump(self.metadata, file, indent=2)
         np.save(self.embeddings_file, self.embeddings)
         self.index.save_index(self.index_file)
 
