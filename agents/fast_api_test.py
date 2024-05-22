@@ -50,7 +50,7 @@ async def generate_response(query: Query):
             prompt=(f"""
             Context: {context}\n
             Question: {query.prompt}\n
-            Answer in one short sentence using only the context:
+            Answer in one short sentence using only the provided context:
             """),
             max_tokens=query.max_tokens
         )
