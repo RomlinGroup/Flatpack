@@ -132,7 +132,7 @@ class VectorManager:
             self.metadata.update(new_entries)
             self._save_metadata_and_embeddings()
 
-    def search_vectors(self, query_text: str, top_k=10):
+    def search_vectors(self, query_text: str, top_k=5):
         if not self.is_index_ready():
             logging.error("Index is not ready. No elements in the index.")
             return []
