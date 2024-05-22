@@ -1,9 +1,11 @@
+import asyncio
 import ngrok
 import os
 import re
 import sys
 import uvicorn
 
+from concurrent.futures import ThreadPoolExecutor, TimeoutError as FuturesTimeoutError
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from flatpack import load_engines
@@ -24,7 +26,7 @@ else:
 engine = load_engines.LlamaCPPEngine(
     model_path="./gemma-1.1-2b-it-Q4_K_M.gguf",
     n_ctx=8192,
-    n_threads=8,
+    n_threads=16,
     verbose=False
 )
 
@@ -42,6 +44,14 @@ class Query(BaseModel):
     max_tokens: int
 
 
+executor = ThreadPoolExecutor(max_workers=4)
+
+
+async def generate_response_async(engine, prompt, max_tokens):
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(executor, engine.generate_response, prompt, max_tokens)
+
+
 @app.post("/generate-response/")
 async def generate_response(query: Query):
     try:
@@ -51,19 +61,25 @@ async def generate_response(query: Query):
             if results:
                 context = "\n".join(result['text'] for result in results[:5])
 
-        response = engine.generate_response(
-            prompt=(f"""
-            Context: {context}\n
-            Question: {query.prompt}\n
-            Answer in one short sentence using only the provided context:
-            """),
-            max_tokens=query.max_tokens
-        )
+        prompt = f"""
+        Context: {context}\n
+        Question: {query.prompt}\n
+        Answer in one short sentence using only the provided context:
+        """
+        try:
+            response = await asyncio.wait_for(
+                generate_response_async(engine, prompt, query.max_tokens),
+                timeout=30.0
+            )
+        except FuturesTimeoutError:
+            raise HTTPException(status_code=504, detail="Request timed out. Please try again.")
 
         cleaned_response = re.sub(r'<[^>]+>', '', response).replace('\n\n', ' ').strip()
 
         return {"response": cleaned_response}
 
+    except HTTPException as he:
+        raise he
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
