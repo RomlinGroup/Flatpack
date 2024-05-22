@@ -1,5 +1,7 @@
+import ngrok
 import os
 import re
+import sys
 import uvicorn
 
 from fastapi import FastAPI, HTTPException
@@ -11,6 +13,14 @@ from pydantic import BaseModel
 app = FastAPI()
 vm = VectorManager(directory="vector")
 
+ngrok_auth_token = os.environ.get('NGROK_AUTHTOKEN')
+if not ngrok_auth_token:
+    print("❌ Error: NGROK_AUTHTOKEN is not set. Please set it using:")
+    print("export NGROK_AUTHTOKEN='your_ngrok_auth_token'")
+    sys.exit(1)
+else:
+    print("NGROK_AUTHTOKEN is set.")
+
 engine = load_engines.LlamaCPPEngine(
     model_path="./gemma-1.1-2b-it-Q4_K_M.gguf",
     n_ctx=8192,
@@ -18,14 +28,9 @@ engine = load_engines.LlamaCPPEngine(
     verbose=False
 )
 
-origins = [
-    "http://127.0.0.1:8080",
-    "http://localhost:8080"
-]
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -70,5 +75,14 @@ async def read_root():
 
 
 if __name__ == "__main__":
-    port = int(os.environ.get("AGENT_PORT", 8000))
-    uvicorn.run(app, host="0.0.0.0", port=port)
+    try:
+        port = int(os.environ.get("AGENT_PORT", 8000))
+        listener = ngrok.forward(port, authtoken_from_env=True)
+        print(f"Ingress established at {listener.url()}")
+        uvicorn.run(app, host="0.0.0.0", port=port)
+    except KeyboardInterrupt:
+        print("❌ FastAPI server has been stopped.")
+    except Exception as e:
+        print(f"❌ An unexpected error occurred during server run: {e}")
+    finally:
+        ngrok.disconnect(listener.url())
