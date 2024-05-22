@@ -36,7 +36,7 @@ VECTOR_DIMENSION = 384
 INDEX_FILE = "hnsw_index.bin"
 METADATA_FILE = "metadata.json"
 EMBEDDINGS_FILE = "embeddings.npy"
-SENTENCE_CHUNK_SIZE = 5
+SENTENCE_CHUNK_SIZE = 10
 BATCH_SIZE = 64
 MAX_ELEMENTS = 10000
 
@@ -132,7 +132,7 @@ class VectorManager:
             self.metadata.update(new_entries)
             self._save_metadata_and_embeddings()
 
-    def search_vectors(self, query_text: str, top_k=5):
+    def search_vectors(self, query_text: str, top_k=10):
         if not self.is_index_ready():
             logging.error("Index is not ready. No elements in the index.")
             return []
