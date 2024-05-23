@@ -118,6 +118,12 @@ flatpack vector add-wikipedia "<wikipedia_page_title>" --data-dir <data_dir>
 flatpack vector search-text "<search_query>" --data-dir <data_dir>
 ```
 
+## Model Compression
+
+```bash
+flatpack compress <hf_model_name> --token <hf_token>
+```
+
 ## Flatpack (FPK) 📦
 
 - [template](warehouse/template)
