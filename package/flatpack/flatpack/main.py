@@ -443,7 +443,7 @@ def setup_arg_parser():
     parser_help.set_defaults(func=lambda args: fpk_cli_handle_help(args))
 
     parser_version = subparsers.add_parser('version', help='Display the version of flatpack.')
-    parser_version.set_defaults(func=lambda args: fpk_cli_handle_version(args))
+    parser_version.set_defaults(func=lambda args, session: fpk_cli_handle_version(args, session))
 
     # API Key management
     parser_api_key = subparsers.add_parser('api-key', help='API key management commands')
