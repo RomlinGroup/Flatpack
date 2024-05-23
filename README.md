@@ -120,6 +120,8 @@ flatpack vector search-text "<search_query>" --data-dir <data_dir>
 
 ## Model Compression
 
+Compress models compatible with [llama.cpp](https://github.com/ggerganov/llama.cpp) to Q4_K_M and GGUF.
+
 ```bash
 flatpack compress <hf_model_name> --token <hf_token>
 ```
