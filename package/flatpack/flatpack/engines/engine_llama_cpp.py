@@ -59,7 +59,7 @@ class LlamaCPPEngine:
         # Build and run the command
         command = (
             f"{os.path.join(self.llama_cpp_dir, 'main')} -m {self.model_path} -n {max_tokens} "
-            f"--ctx-size {self.n_ctx} --temp 1.0 --repeat-penalty 1.0 "
+            f"--ctx-size {self.n_ctx} --temp 1.0 --repeat-penalty 1.0 --no-penalize-nl --log-disable "
             f"--file {prompt_file_path} > {output_file_path} 2>/dev/null"
         )
 
