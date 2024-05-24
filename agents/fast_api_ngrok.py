@@ -62,10 +62,11 @@ async def generate_response(query: Query):
                 context = "\n".join(result['text'] for result in results[:5])
 
         prompt = f"""
-        Context: {context}\n
         Question: {query.prompt}\n
-        Answer in one short sentence using only the provided context:
+        Context: {context}\n
+        Answer:
         """
+
         try:
             response = await asyncio.wait_for(
                 generate_response_async(engine, prompt, query.max_tokens),
