@@ -53,8 +53,8 @@ async def generate_response(query: Query):
                 context = "\n".join(result['text'] for result in results[:5])
 
         prompt = f"""
-        Question: {query.prompt}\n
         Context: {context}\n
+        Question: {query.prompt}\n
         Answer:
         """
 
