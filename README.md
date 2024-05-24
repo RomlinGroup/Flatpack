@@ -71,8 +71,8 @@ flatpack build <flatpack_name>
 
 ```bash
 # fast_api_test.py uses microsoft/Phi-3-mini-4k-instruct-gguf (MIT)
-wget https://raw.githubusercontent.com/romlingroup/flatpack/main/agents/fast_api_test.py
-flatpack agents spawn fast_api_test.py
+wget https://raw.githubusercontent.com/romlingroup/flatpack/main/agents/fast_api_local.py
+flatpack agents spawn fast_api_local.py
 ```
 
 ```bash

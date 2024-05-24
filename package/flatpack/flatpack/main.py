@@ -1,19 +1,15 @@
 import argparse
 import atexit
-import faiss
 import httpx
 import ngrok
 import os
 import re
 import requests
-import select
 import shlex
-import signal
 import subprocess
 import sys
 import toml
 import uvicorn
-import venv
 
 from .agent_manager import AgentManager
 from cryptography.fernet import Fernet
@@ -24,7 +20,6 @@ from huggingface_hub import snapshot_download
 from importlib.metadata import version
 from .parsers import parse_toml_to_venv_script
 from pathlib import Path
-from sentence_transformers import SentenceTransformer
 from .session_manager import SessionManager
 from typing import List, Optional
 from .vector_manager import VectorManager
