@@ -43,6 +43,11 @@ if [[ "$OS" == "Ubuntu" ]]; then
     source ~/.zshrc
   fi
 
+  if ! pipx install flatpack --python python3.11; then
+    echo "❌ Failed to install flatpack using pipx with Python 3.11."
+    exit 1
+  fi
+
   echo "✅ Setup completed successfully."
 else
   echo "❌ The installer currently only supports Ubuntu."
