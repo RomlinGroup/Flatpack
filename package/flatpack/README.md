@@ -78,9 +78,6 @@ Check out the [JLA - Compatibility Checker](https://joinup.ec.europa.eu/collecti
 - **[nltk](https://pypi.org/project/nltk/)**\
   Apache Software License (Apache License, Version 2.0) ([LICENSE](https://github.com/nltk/nltk/blob/develop/LICENSE.txt))
 
-- **[olefile](https://pypi.org/project/olefile/)**\
-  BSD License (BSD) ([LICENSE](https://github.com/decalage2/olefile/blob/master/LICENSE.txt))
-
 - **[psutil](https://pypi.org/project/psutil/)**\
   BSD License (BSD-3-Clause) ([LICENSE](https://github.com/giampaolo/psutil/blob/master/LICENSE))
 
@@ -92,6 +89,9 @@ Check out the [JLA - Compatibility Checker](https://joinup.ec.europa.eu/collecti
 
 - **[requests](https://pypi.org/project/requests/)**\
   Apache Software License (Apache 2.0) ([LICENSE](https://github.com/psf/requests/blob/main/LICENSE))
+
+- **[sentence-transformers](https://pypi.org/project/sentence-transformers/)**\
+  Apache Software License (Apache License 2.0) ([LICENSE](https://github.com/UKPLab/sentence-transformers/blob/master/LICENSE))
 
 - **[toml](https://pypi.org/project/toml/)**\
   MIT License (MIT) ([LICENSE](https://github.com/uiri/toml/blob/master/LICENSE))
