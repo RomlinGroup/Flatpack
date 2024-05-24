@@ -20,7 +20,7 @@ if [[ "$OS" == "Ubuntu" ]]; then
     exit 1
   fi
 
-  if ! sudo apt-get install -y build-essential python3.11 python3.11-dev python3.11-venv; then
+  if ! sudo apt-get install -y build-essential python3-dev python3.11 python3.11-dev python3.11-venv; then
     echo "❌ Failed to install necessary packages."
     exit 1
   fi
