@@ -37,7 +37,7 @@ INDEX_FILE = "hnsw_index.bin"
 METADATA_FILE = "metadata.json"
 EMBEDDINGS_FILE = "embeddings.npy"
 SENTENCE_CHUNK_SIZE = 128
-BATCH_SIZE = 256
+BATCH_SIZE = 64
 MAX_ELEMENTS = 100000
 
 
