@@ -26,7 +26,7 @@ else:
 engine = load_engines.LlamaCPPEngine(
     model_path="./gemma-1.1-2b-it-Q4_K_M.gguf",
     n_ctx=8192,
-    n_threads=16,
+    n_threads=8,
     verbose=False
 )
 
