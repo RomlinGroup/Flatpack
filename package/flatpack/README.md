@@ -50,15 +50,16 @@ This project is released under [Apache-2.0](https://github.com/romlingroup/flatp
 
 ## install_requires
 
-**DISCLAIMER:** This information is only a technical reference, not an endorsement or legal advice. Before using any software for commercial purposes, perform compatibility checks and seek legal advice. You are responsible for ensuring compliance with licensing requirements.
+**DISCLAIMER:** This information is only a technical reference, not an endorsement or legal advice. Before using any
+software for commercial purposes, perform compatibility checks and seek legal advice. You are responsible for ensuring
+compliance with licensing requirements.
 
-Check out the [JLA - Compatibility Checker](https://joinup.ec.europa.eu/collection/eupl/solution/joinup-licensing-assistant/jla-compatibility-checker) (European Commission 2023).
+Check out
+the [JLA - Compatibility Checker](https://joinup.ec.europa.eu/collection/eupl/solution/joinup-licensing-assistant/jla-compatibility-checker) (
+European Commission 2023).
 
 - **[beautifulsoup4](https://pypi.org/project/beautifulsoup4/)**\
   MIT License (MIT License) ([LICENSE](https://pypi.org/project/beautifulsoup4/))
-
-- **[cryptography](https://pypi.org/project/cryptography/)**\
-  Apache Software License, BSD License (Apache-2.0 OR BSD-3-Clause) ([LICENSE](https://github.com/pyca/cryptography/blob/main/LICENSE.APACHE))
 
 - **[fastapi](https://pypi.org/project/fastapi/)**\
   MIT License ([LICENSE](https://github.com/tiangolo/fastapi/blob/master/LICENSE))
@@ -76,7 +77,8 @@ Check out the [JLA - Compatibility Checker](https://joinup.ec.europa.eu/collecti
   MIT License (MIT OR Apache-2.0) ([LICENSE](https://github.com/ngrok/ngrok-python/blob/main/LICENSE-APACHE))
 
 - **[nltk](https://pypi.org/project/nltk/)**\
-  Apache Software License (Apache License, Version 2.0) ([LICENSE](https://github.com/nltk/nltk/blob/develop/LICENSE.txt))
+  Apache Software License (Apache License, Version
+  2.0) ([LICENSE](https://github.com/nltk/nltk/blob/develop/LICENSE.txt))
 
 - **[psutil](https://pypi.org/project/psutil/)**\
   BSD License (BSD-3-Clause) ([LICENSE](https://github.com/giampaolo/psutil/blob/master/LICENSE))
@@ -91,7 +93,8 @@ Check out the [JLA - Compatibility Checker](https://joinup.ec.europa.eu/collecti
   Apache Software License (Apache 2.0) ([LICENSE](https://github.com/psf/requests/blob/main/LICENSE))
 
 - **[sentence-transformers](https://pypi.org/project/sentence-transformers/)**\
-  Apache Software License (Apache License 2.0) ([LICENSE](https://github.com/UKPLab/sentence-transformers/blob/master/LICENSE))
+  Apache Software License (Apache License
+  2.0) ([LICENSE](https://github.com/UKPLab/sentence-transformers/blob/master/LICENSE))
 
 - **[toml](https://pypi.org/project/toml/)**\
   MIT License (MIT) ([LICENSE](https://github.com/uiri/toml/blob/master/LICENSE))

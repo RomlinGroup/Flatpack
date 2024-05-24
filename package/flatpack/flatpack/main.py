@@ -12,7 +12,6 @@ import toml
 import uvicorn
 
 from .agent_manager import AgentManager
-from cryptography.fernet import Fernet
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -34,11 +33,6 @@ VERSION = version("flatpack")
 config = {
     "api_key": None
 }
-
-
-class FPKEncryptionKeyError(Exception):
-    """Custom exception for missing encryption key."""
-    pass
 
 
 def fpk_build(directory: str):
@@ -113,12 +107,6 @@ def fpk_colorize(text, color):
     return colors[color] + text + colors["default"]
 
 
-def fpk_decrypt_data(encrypted_data: str, key: bytes) -> str:
-    """Decrypt data using the provided key."""
-    fernet = Fernet(key)
-    return fernet.decrypt(encrypted_data.encode()).decode()
-
-
 def fpk_display_disclaimer(directory_name: str, local: bool):
     """Display a disclaimer message with details about a specific flatpack.
 
@@ -162,12 +150,6 @@ https://fpk.ai/w/{}
         please_note_colored = ""
 
     print(disclaimer_template.format(please_note=please_note_colored))
-
-
-def fpk_encrypt_data(data: str, key: bytes) -> str:
-    """Encrypt data using the provided key."""
-    fernet = Fernet(key)
-    return fernet.encrypt(data.encode()).decode()
 
 
 def fpk_fetch_flatpack_toml_from_dir(directory_name: str, session: httpx.Client) -> Optional[str]:
@@ -233,20 +215,17 @@ def fpk_find_models(directory_path: str = None) -> List[str]:
 
 
 def fpk_get_api_key() -> Optional[str]:
-    """Retrieve and decrypt the API key from the configuration file."""
+    """Retrieve the API key from the configuration file."""
     if not os.path.exists(CONFIG_FILE_PATH):
         return None
 
     try:
         with open(CONFIG_FILE_PATH, 'r') as config_file:
             loaded_config = toml.load(config_file)
-        encrypted_api_key = loaded_config.get('api_key')
-
-        if encrypted_api_key:
-            encryption_key = fpk_get_or_create_encryption_key()
-            return fpk_decrypt_data(encrypted_api_key, encryption_key)
+        api_key = loaded_config.get('api_key')
+        return api_key
     except Exception as e:
-        print(f"Error decrypting API key: {e}")
+        print(f"Error retrieving API key: {e}")
 
     return None
 
@@ -257,20 +236,6 @@ def fpk_get_last_flatpack(directory_name: str) -> Optional[str]:
     if cache_file_path.exists():
         return cache_file_path.read_text().strip()
     return None
-
-
-def fpk_get_or_create_encryption_key() -> bytes:
-    """Retrieve or generate and save an encryption key."""
-    try:
-        with open(KEY_FILE_PATH, "rb") as key_file:
-            key = key_file.read()
-    except FileNotFoundError:
-        print("No encryption key found. Generating a new key for persistent use.")
-        key = Fernet.generate_key()
-        with open(KEY_FILE_PATH, "wb") as key_file:
-            key_file.write(key)
-        os.chmod(KEY_FILE_PATH, 0o600)
-    return key
 
 
 def fpk_is_raspberry_pi():
@@ -318,10 +283,7 @@ def fpk_set_api_key(api_key: str):
     """Set the API key in the configuration file."""
     global config
 
-    """Set and encrypt the API key."""
-    encryption_key = fpk_get_or_create_encryption_key()
-    encrypted_api_key = fpk_encrypt_data(api_key, encryption_key)
-    config = {'api_key': encrypted_api_key}
+    config = {'api_key': api_key}
 
     with open(CONFIG_FILE_PATH, "w") as config_file:
         toml.dump(config, config_file)
@@ -331,9 +293,9 @@ def fpk_set_api_key(api_key: str):
     try:
         test_key = fpk_get_api_key()
         if test_key == api_key:
-            print("Verification successful: API key can be decrypted correctly.")
+            print("Verification successful: API key matches.")
         else:
-            print("Verification failed: Decrypted key does not match the original.")
+            print("Verification failed: API key does not match.")
     except Exception as e:
         print(f"Error during API key verification: {e}")
 
@@ -760,24 +722,13 @@ def fpk_cli_handle_set_api_key(args, session):
     global config
     api_key = args.api_key
 
-    """Set and encrypt the API key."""
-    encryption_key = fpk_get_or_create_encryption_key()
-    encrypted_api_key = fpk_encrypt_data(api_key, encryption_key)
-    config = {'api_key': encrypted_api_key}
+    # Set the API key directly
+    config = {'api_key': api_key}
 
     with open(CONFIG_FILE_PATH, "w") as config_file:
         toml.dump(config, config_file)
     os.chmod(CONFIG_FILE_PATH, 0o600)
     print("API key set successfully!")
-
-    try:
-        test_key = fpk_get_api_key()
-        if test_key == api_key:
-            print("Verification successful: API key can be decrypted correctly.")
-        else:
-            print("Verification failed: Decrypted key does not match the original.")
-    except Exception as e:
-        print(f"Error during API key verification: {e}")
 
 
 def fpk_cli_handle_spawn_agent(args, session):
