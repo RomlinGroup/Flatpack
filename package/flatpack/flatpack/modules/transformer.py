@@ -1,3 +1,4 @@
+from flatpack.datasets import TextDataset
 from torch.utils.data import DataLoader
 from transformers import BertModel, BertConfig
 
@@ -10,12 +11,11 @@ import torch.optim as optim
 
 
 class Transformer(nn.Module):
-    def __init__(self, embed_size, num_heads, num_layers, vocab_size):
+    def __init__(self, embed_size, num_heads, num_layers, vocab_size=None):
         super(Transformer, self).__init__()
         self.embed_size = embed_size
         self.num_heads = num_heads
         self.num_layers = num_layers
-        self.vocab_size = vocab_size
 
         config = BertConfig(
             vocab_size=vocab_size,
@@ -26,15 +26,23 @@ class Transformer(nn.Module):
             max_position_embeddings=512
         )
         self.transformer = BertModel(config)
-        self.fc = nn.Linear(embed_size, vocab_size)
+        self.fc = nn.Linear(embed_size, vocab_size) if vocab_size is not None else None
 
     @staticmethod
     def load_torch_model(model_path):
         return torch.load(model_path)
 
-    def forward(self, x):
-        attention_mask = (x != 0).long()
+    def load_vocab_size(self, save_dir):
+        with open(os.path.join(save_dir, 'char_to_index.json'), 'r') as f:
+            char_to_index = json.load(f)
+        self.vocab_size = len(char_to_index)
+        self.fc = nn.Linear(self.embed_size, self.vocab_size)
 
+    def forward(self, x):
+        if self.fc is None:
+            raise ValueError("vocab_size is not loaded")
+
+        attention_mask = (x != 0).long()
         outputs = self.transformer(input_ids=x, attention_mask=attention_mask)
         out = self.fc(outputs.last_hidden_state)
         return out
@@ -42,8 +50,6 @@ class Transformer(nn.Module):
     @classmethod
     def train_model(cls, indexed_text, vocab_size, seq_length, embed_size, num_heads, num_layers, epochs, batch_size,
                     device):
-        from flatpack.datasets import TextDataset
-
         dataset = TextDataset(indexed_text, seq_length=seq_length)
         dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
@@ -56,6 +62,7 @@ class Transformer(nn.Module):
         total_loss = 0.0
         total_accuracy = 0.0
         total_batches = 0
+
         for epoch in range(epochs):
             for batch, (inputs, targets) in enumerate(dataloader):
                 inputs, targets = inputs.to(device), targets.to(device)
