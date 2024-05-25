@@ -43,7 +43,6 @@ class Transformer(nn.Module):
         if self.fc is None:
             raise ValueError("vocab_size is not loaded")
 
-        # Create attention mask
         attention_mask = (x != 0).long()
 
         outputs = self.transformer(input_ids=x, attention_mask=attention_mask)
