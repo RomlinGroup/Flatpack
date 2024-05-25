@@ -1,13 +1,10 @@
-from flatpack.datasets import TextDataset
-from torch.utils.data import DataLoader, Dataset
+from torch.utils.data import DataLoader
+from transformers import BertModel, BertConfig
 
-import json
-import os
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-from transformers import BertModel, BertConfig
 
 
 class Transformer(nn.Module):
@@ -42,7 +39,11 @@ class Transformer(nn.Module):
     def forward(self, x):
         if self.fc is None:
             raise ValueError("vocab_size is not loaded")
-        outputs = self.transformer(input_ids=x)
+
+        # Create attention mask
+        attention_mask = (x != 0).long()
+
+        outputs = self.transformer(input_ids=x, attention_mask=attention_mask)
         out = self.fc(outputs.last_hidden_state)
         return out
 
@@ -61,7 +62,6 @@ class Transformer(nn.Module):
         total_loss = 0.0
         total_accuracy = 0.0
         total_batches = 0
-
         for epoch in range(epochs):
             for batch, (inputs, targets) in enumerate(dataloader):
                 inputs, targets = inputs.to(device), targets.to(device)
