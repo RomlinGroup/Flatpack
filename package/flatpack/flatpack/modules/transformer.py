@@ -1,6 +1,8 @@
-from transformers import BertModel, BertConfig
 from torch.utils.data import DataLoader
+from transformers import BertModel, BertConfig
 
+import json
+import os
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -24,7 +26,8 @@ class Transformer(nn.Module):
             max_position_embeddings=512
         )
         self.transformer = BertModel(config)
-        self.fc = nn.Linear(embed_size, vocab_size) if vocab_size is not None else None
+        if vocab_size is not None:
+            self.fc = nn.Linear(embed_size, vocab_size)
 
     @staticmethod
     def load_torch_model(model_path):
