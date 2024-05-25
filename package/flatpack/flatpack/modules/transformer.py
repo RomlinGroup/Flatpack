@@ -10,7 +10,7 @@ import torch.optim as optim
 
 
 class Transformer(nn.Module):
-    def __init__(self, embed_size, num_heads, num_layers, vocab_size=None):
+    def __init__(self, embed_size, num_heads, num_layers, vocab_size):
         super(Transformer, self).__init__()
         self.embed_size = embed_size
         self.num_heads = num_heads
@@ -26,23 +26,13 @@ class Transformer(nn.Module):
             max_position_embeddings=512
         )
         self.transformer = BertModel(config)
-        if vocab_size is not None:
-            self.fc = nn.Linear(embed_size, vocab_size)
+        self.fc = nn.Linear(embed_size, vocab_size)
 
     @staticmethod
     def load_torch_model(model_path):
         return torch.load(model_path)
 
-    def load_vocab_size(self, save_dir):
-        with open(os.path.join(save_dir, 'char_to_index.json'), 'r') as f:
-            char_to_index = json.load(f)
-        self.vocab_size = len(char_to_index)
-        self.fc = nn.Linear(self.embed_size, self.vocab_size)
-
     def forward(self, x):
-        if self.fc is None:
-            raise ValueError("vocab_size is not loaded")
-
         attention_mask = (x != 0).long()
 
         outputs = self.transformer(input_ids=x, attention_mask=attention_mask)
