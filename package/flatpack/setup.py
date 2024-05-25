@@ -22,6 +22,7 @@ setup(
         "requests==2.31.0",
         "sentence-transformers==2.7.0",
         "toml==0.10.2",
+        "torch==2.3.0",
         "uvicorn==0.29.0"
     ],
     author="Romlin Group AB",

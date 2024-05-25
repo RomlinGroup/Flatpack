@@ -93,7 +93,10 @@ Check out the [JLA - Compatibility Checker](https://joinup.ec.europa.eu/collecti
 - **[toml](https://pypi.org/project/toml/)**\
   MIT License (MIT) ([LICENSE](https://github.com/uiri/toml/blob/master/LICENSE))
 
+- **[torch](https://pypi.org/project/torch/)**\
+  BSD License (BSD-3) ([LICENSE](https://github.com/pytorch/pytorch/blob/main/LICENSE))
+
 - **[uvicorn](https://pypi.org/project/uvicorn/)**\
   BSD License ([LICENSE](https://github.com/encode/uvicorn/blob/master/LICENSE.md))
 
-Last updated: 2024-05-24
+Last updated: 2024-05-25
