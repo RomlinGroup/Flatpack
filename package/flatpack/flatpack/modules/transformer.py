@@ -1,5 +1,5 @@
-from torch.utils.data import DataLoader
 from transformers import BertModel, BertConfig
+from torch.utils.data import DataLoader
 
 import torch
 import torch.nn as nn
@@ -50,6 +50,8 @@ class Transformer(nn.Module):
     @classmethod
     def train_model(cls, indexed_text, vocab_size, seq_length, embed_size, num_heads, num_layers, epochs, batch_size,
                     device):
+        from flatpack.datasets import TextDataset
+
         dataset = TextDataset(indexed_text, seq_length=seq_length)
         dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
