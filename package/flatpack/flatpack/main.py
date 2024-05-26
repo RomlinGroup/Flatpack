@@ -577,12 +577,12 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
     else:
         try:
             if token:
-                print(f"📥 Downloading private model '{model_id}' with provided token...")
+                print(f"📥 Downloading model '{model_id}' with provided token...")
                 snapshot_download(
                     repo_id=model_id, local_dir=local_dir, revision="main", token=token
                 )
             else:
-                print(f"📥 Downloading public model '{model_id}'...")
+                print(f"📥 Downloading model '{model_id}'...")
                 snapshot_download(repo_id=model_id, local_dir=local_dir, revision="main")
             print(f"🤗 Finished downloading {model_id} into the directory '{local_dir}'")
         except Exception as e:
