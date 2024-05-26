@@ -13,20 +13,18 @@ class LlamaCPPEngine:
         self.n_threads = n_threads
         self.verbose = verbose
         self.setup_llama_cpp()
+        os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
     def setup_llama_cpp(self):
         if not os.path.exists(self.llama_cpp_dir):
             try:
                 print(f"📥 Cloning llama.cpp repository...")
                 clone_result = subprocess.run(
-                    ["git", "clone", "https://github.com/ggerganov/llama.cpp", self.llama_cpp_dir]
+                    ["git", "clone", "https://github.com/ggerganov/llama.cpp", self.llama_cpp_dir],
+                    check=True
                 )
-                if clone_result.returncode != 0:
-                    print(
-                        "❌ Failed to clone the llama.cpp repository. Please check your internet connection and try again.")
-                    return
                 print(f"📥 Finished cloning llama.cpp repository into '{self.llama_cpp_dir}'")
-            except Exception as e:
+            except subprocess.CalledProcessError as e:
                 print(f"❌ Failed to clone the llama.cpp repository. Error: {e}")
                 return
 
@@ -36,13 +34,9 @@ class LlamaCPPEngine:
             if os.path.exists(makefile_path):
                 try:
                     print(f"🔨 Running 'make' in the llama.cpp directory...")
-                    make_result = subprocess.run(["make"], cwd=self.llama_cpp_dir)
-                    if make_result.returncode != 0:
-                        print(
-                            f"❌ Failed to run 'make' in the llama.cpp directory. Please check the logs for more details.")
-                        return
+                    make_result = subprocess.run(["make"], cwd=self.llama_cpp_dir, check=True)
                     print(f"🔨 Finished running 'make' in the llama.cpp directory")
-                except Exception as e:
+                except subprocess.CalledProcessError as e:
                     print(f"❌ Failed to run 'make' in the llama.cpp directory. Error: {e}")
                     return
             else:
@@ -57,21 +51,26 @@ class LlamaCPPEngine:
         with tempfile.NamedTemporaryFile(delete=False, mode='r', encoding='utf-8') as output_file:
             output_file_path = output_file.name
 
-        # Build and run the command
-        command = (
-            f"{os.path.join(self.llama_cpp_dir, 'main')} -m {self.model_path} -n {max_tokens} "
-            f"--ctx-size {self.n_ctx} --temp 1.0 --repeat-penalty 1.0 --log-disable "
-            f"--file {prompt_file_path} > {output_file_path} 2>/dev/null"
-        )
+        # Build the command as a list
+        command = [
+            os.path.join(self.llama_cpp_dir, 'main'),
+            '-m', self.model_path,
+            '-n', str(max_tokens),
+            '--ctx-size', str(self.n_ctx),
+            '--temp', '1.0',
+            '--repeat-penalty', '1.0',
+            '--log-disable',
+            '--file', prompt_file_path
+        ]
 
         if self.verbose:
-            print(f"Executing command: {command}")
+            print(f"Executing command: {' '.join(shlex.quote(arg) for arg in command)}")
 
-        quoted_command = shlex.quote(command)
-        result = subprocess.run(quoted_command, shell=True, stderr=subprocess.PIPE)
-
-        if result.returncode != 0:
-            print("Error running model:", result.stderr.decode())
+        try:
+            with open(output_file_path, 'w') as out_file:
+                result = subprocess.run(command, stdout=out_file, stderr=subprocess.PIPE, check=True)
+        except subprocess.CalledProcessError as e:
+            print("Error running model:", e.stderr.decode())
             return "I'm sorry, I don't have a response for that."
 
         # Read the output from the temporary file
