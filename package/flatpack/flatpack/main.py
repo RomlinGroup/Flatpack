@@ -431,7 +431,7 @@ def setup_arg_parser():
     parser_find.set_defaults(func=lambda args, session: fpk_cli_handle_find(args, session))
 
     parser_help = subparsers.add_parser('help', help='Display help for commands.')
-    parser_help.set_defaults(func=lambda args: fpk_cli_handle_help(args, session))
+    parser_help.set_defaults(func=lambda args, session: fpk_cli_handle_help(args, session))
 
     parser_version = subparsers.add_parser('version', help='Display the version of flatpack.')
     parser_version.set_defaults(func=lambda args, session: fpk_cli_handle_version(args, session))
