@@ -347,7 +347,7 @@ def fpk_unbox(directory_name: str, session, local: bool = False):
     build_dir = flatpack_dir / "build"
 
     if build_dir.exists():
-        print(f"❌ Error: Build directory already exists.")
+        print("❌ Error: Build directory already exists.")
         return
 
     flatpack_dir.mkdir(parents=True, exist_ok=True)
@@ -597,7 +597,7 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
 
     if not os.path.exists(llama_cpp_dir):
         try:
-            print(f"📥 Cloning llama.cpp repository...")
+            print("📥 Cloning llama.cpp repository...")
             subprocess.run(
                 ["git", "clone", "https://github.com/ggerganov/llama.cpp", llama_cpp_dir],
                 check=True
@@ -611,18 +611,18 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
 
     if not os.path.exists(ready_file):
         try:
-            print(f"🔨 Running 'make' in the llama.cpp directory...")
+            print("🔨 Running 'make' in the llama.cpp directory...")
             subprocess.run(["make"], cwd=llama_cpp_dir, check=True)
-            print(f"🔨 Finished running 'make' in the llama.cpp directory")
+            print("🔨 Finished running 'make' in the llama.cpp directory")
 
             if not os.path.exists(venv_dir):
                 print(f"🐍 Creating virtual environment in '{venv_dir}'...")
                 create_venv(venv_dir)
-                print(f"🐍 Virtual environment created.")
+                print("🐍 Virtual environment created.")
             else:
                 print(f"📂 Virtual environment already exists in '{venv_dir}'")
 
-            print(f"📦 Installing llama.cpp dependencies in virtual environment...")
+            print("📦 Installing llama.cpp dependencies in virtual environment...")
 
             pip_command = [
                 "/bin/bash", "-c",
@@ -633,7 +633,7 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
             ]
             subprocess.run(pip_command, check=True)
 
-            print(f"📦 Finished installing llama.cpp dependencies")
+            print("📦 Finished installing llama.cpp dependencies")
 
             with open(ready_file, 'w') as f:
                 f.write("Ready")
@@ -650,7 +650,7 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
 
     if not os.path.exists(output_file):
         try:
-            print(f"🛠 Converting the model using llama.cpp...")
+            print("🛠 Converting the model using llama.cpp...")
 
             venv_activate = os.path.join(venv_dir, "bin", "activate")
             script_path = os.path.join(llama_cpp_dir, 'convert-hf-to-gguf.py')
@@ -677,7 +677,7 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
 
     if os.path.exists(output_file):
         try:
-            print(f"🛠 Quantizing the model...")
+            print("🛠 Quantizing the model...")
 
             quantize_command = [
                 os.path.join(llama_cpp_dir, 'quantize'),

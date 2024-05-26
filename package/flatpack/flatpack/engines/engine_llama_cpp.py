@@ -18,7 +18,7 @@ class LlamaCPPEngine:
     def setup_llama_cpp(self):
         if not os.path.exists(self.llama_cpp_dir):
             try:
-                print(f"📥 Cloning llama.cpp repository...")
+                print("📥 Cloning llama.cpp repository...")
                 clone_result = subprocess.run(
                     ["git", "clone", "https://github.com/ggerganov/llama.cpp", self.llama_cpp_dir],
                     check=True
@@ -33,15 +33,15 @@ class LlamaCPPEngine:
             makefile_path = os.path.join(self.llama_cpp_dir, "Makefile")
             if os.path.exists(makefile_path):
                 try:
-                    print(f"🔨 Running 'make' in the llama.cpp directory...")
+                    print("🔨 Running 'make' in the llama.cpp directory...")
                     make_result = subprocess.run(["make"], cwd=self.llama_cpp_dir, check=True)
-                    print(f"🔨 Finished running 'make' in the llama.cpp directory")
+                    print("🔨 Finished running 'make' in the llama.cpp directory")
                 except subprocess.CalledProcessError as e:
                     print(f"❌ Failed to run 'make' in the llama.cpp directory. Error: {e}")
                     return
             else:
                 print(
-                    f"❌ Makefile not found in the llama.cpp directory. Please ensure the repository is cloned correctly.")
+                    "❌ Makefile not found in the llama.cpp directory. Please ensure the repository is cloned correctly.")
 
     def generate_response(self, prompt, max_tokens):
         with tempfile.NamedTemporaryFile(delete=False, mode='w', encoding='utf-8') as prompt_file:
