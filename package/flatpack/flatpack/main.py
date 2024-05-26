@@ -6,6 +6,7 @@ import os
 import re
 import requests
 import shlex
+import stat
 import subprocess
 import sys
 import toml
