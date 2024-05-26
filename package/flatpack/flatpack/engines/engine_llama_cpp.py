@@ -1,5 +1,6 @@
 import os
 import re
+import shlex
 import subprocess
 import tempfile
 
@@ -66,7 +67,9 @@ class LlamaCPPEngine:
         if self.verbose:
             print(f"Executing command: {command}")
 
-        result = subprocess.run(command, shell=True, stderr=subprocess.PIPE)
+        quoted_command = shlex.quote(command)
+        result = subprocess.run(quoted_command, shell=True, stderr=subprocess.PIPE)
+
         if result.returncode != 0:
             print("Error running model:", result.stderr.decode())
             return "I'm sorry, I don't have a response for that."

@@ -618,8 +618,10 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
                 print(f"📂 Virtual environment already exists in '{venv_dir}'")
 
             print(f"📦 Installing llama.cpp dependencies in virtual environment...")
-            pip_result = subprocess.run([f"source {venv_activate} && pip install -r {requirements_file}"], shell=True,
-                                        executable="/bin/bash", check=True)
+
+            pip_command = f"source {shlex.quote(venv_activate)} && pip install -r {shlex.quote(requirements_file)}"
+            pip_result = subprocess.run(pip_command, shell=True, executable="/bin/bash", check=True)
+
             print(f"📦 Finished installing llama.cpp dependencies")
 
             with open(ready_file, 'w') as f:
@@ -638,8 +640,13 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
     if not os.path.exists(output_file):
         try:
             print(f"🛠 Converting the model using llama.cpp...")
-            convert_command = f"source {venv_activate} && python {os.path.join(llama_cpp_dir, 'convert-hf-to-gguf.py')} {local_dir} --outfile {output_file} --outtype {outtype}"
-            convert_result = subprocess.run([convert_command], shell=True, executable="/bin/bash", check=True)
+
+            venv_activate = os.path.join(venv_dir, "bin", "activate")
+            script_path = os.path.join(llama_cpp_dir, 'convert-hf-to-gguf.py')
+
+            convert_command = f"source {shlex.quote(venv_activate)} && {shlex.quote(venv_python)} {shlex.quote(script_path)} {shlex.quote(local_dir)} --outfile {shlex.quote(output_file)} --outtype {shlex.quote(outtype)}"
+            convert_result = subprocess.run(convert_command, shell=True, executable="/bin/bash", check=True)
+
             print(f"✅ Conversion complete. The model has been compressed and saved as '{output_file}'.")
         except subprocess.CalledProcessError as e:
             print(f"❌ Conversion failed. Error: {e}")
@@ -653,8 +660,10 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
     if os.path.exists(output_file):
         try:
             print(f"🛠 Quantizing the model...")
-            quantize_command = f"./{llama_cpp_dir}/quantize {output_file} {quantized_output_file} Q4_K_M"
-            quantize_result = subprocess.run([quantize_command], shell=True, executable="/bin/bash", check=True)
+
+            quantize_command = f"./{shlex.quote(llama_cpp_dir)}/quantize {shlex.quote(output_file)} {shlex.quote(quantized_output_file)} Q4_K_M"
+            quantize_result = subprocess.run(quantize_command, shell=True, executable="/bin/bash", check=True)
+
             print(f"✅ Quantization complete. The quantized model has been saved as '{quantized_output_file}'.")
             print(f"🗑 Deleting the original .bin file '{output_file}'...")
             os.remove(output_file)
