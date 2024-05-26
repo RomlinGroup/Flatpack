@@ -24,10 +24,11 @@ from typing import List, Optional, Union
 from .vector_manager import VectorManager
 
 HOME_DIR = Path.home()
-CONFIG_FILE_PATH = HOME_DIR / ".fpk_config.toml"
-KEY_FILE_PATH = HOME_DIR / ".fpk_encryption_key"
-GITHUB_REPO_URL = "https://api.github.com/repos/romlingroup/flatpack"
+
 BASE_URL = "https://raw.githubusercontent.com/romlingroup/flatpack/main/warehouse"
+CONFIG_FILE_PATH = HOME_DIR / ".fpk_config.toml"
+GITHUB_REPO_URL = "https://api.github.com/repos/romlingroup/flatpack"
+KEY_FILE_PATH = HOME_DIR / ".fpk_encryption_key"
 VERSION = version("flatpack")
 
 config = {

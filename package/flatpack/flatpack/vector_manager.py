@@ -15,7 +15,7 @@ from contextlib import redirect_stdout
 from nltk.tokenize import sent_tokenize
 from pypdf import PdfReader
 from sentence_transformers import SentenceTransformer
-from typing import List, Dict
+from typing import Dict, List
 
 warnings.filterwarnings('ignore', category=FutureWarning)
 
@@ -32,13 +32,13 @@ def download_nltk_data():
 
 download_nltk_data()
 
-VECTOR_DIMENSION = 384
-INDEX_FILE = "hnsw_index.bin"
-METADATA_FILE = "metadata.json"
-EMBEDDINGS_FILE = "embeddings.npy"
-SENTENCE_CHUNK_SIZE = 5
 BATCH_SIZE = 64
+EMBEDDINGS_FILE = "embeddings.npy"
+INDEX_FILE = "hnsw_index.bin"
 MAX_ELEMENTS = 10000
+METADATA_FILE = "metadata.json"
+SENTENCE_CHUNK_SIZE = 5
+VECTOR_DIMENSION = 384
 
 
 class VectorManager:
@@ -173,6 +173,9 @@ class VectorManager:
 
     def add_pdf(self, pdf_path: str):
         """Extract text from a PDF and add to the index."""
+        if not os.path.isfile(pdf_path) or not pdf_path.lower().endswith('.pdf'):
+            logging.error(f"Invalid PDF path provided: {pdf_path}")
+            return
         with open(pdf_path, 'rb') as file:
             pdf = PdfReader(file)
             all_text = " ".join(page.extract_text() or "" for page in pdf.pages)
@@ -181,16 +184,17 @@ class VectorManager:
     def add_url(self, url: str):
         """Fetch text from a URL and add to the index."""
         logging.info(f"Fetching URL: {url}")
-        response = requests.get(url)
-        if response.status_code == 200:
+        try:
+            response = requests.get(url, timeout=10)  # Add a timeout to the request
+            response.raise_for_status()  # This will raise an HTTPError for bad responses
             logging.debug("URL fetched successfully.")
             soup = BeautifulSoup(response.content, 'html.parser')
             text = soup.get_text(separator=' ', strip=True)
             logging.debug("Extracted text from HTML.")
             self._process_text_and_add(text, url)
             logging.info("Text added successfully.")
-        else:
-            logging.error(f"Failed to fetch {url}: Status code {response.status_code}")
+        except requests.RequestException as e:
+            logging.error(f"Failed to fetch {url}: {e}")
 
     def get_wikipedia_text(self, page_title):
         """Fetch text from a Wikipedia page."""
@@ -206,12 +210,16 @@ class VectorManager:
             "format": "json"
         }
 
-        response = requests.get(base_url, params=params)
-        response.raise_for_status()
+        try:
+            response = requests.get(base_url, params=params, timeout=10)  # Add a timeout to the request
+            response.raise_for_status()
 
-        data = response.json()
-        page = next(iter(data["query"]["pages"].values()))
-        return page.get("extract", "")
+            data = response.json()
+            page = next(iter(data["query"]["pages"].values()))
+            return page.get("extract", "")
+        except requests.RequestException as e:
+            logging.error(f"Failed to fetch Wikipedia page: {page_title}. HTTPError: {e}")
+            return ""
 
     def add_wikipedia_page(self, page_title):
         """Fetch and add a Wikipedia page to the index."""
@@ -223,5 +231,5 @@ class VectorManager:
                 logging.info("Wikipedia text added successfully.")
             else:
                 logging.error(f"No text found for Wikipedia page: {page_title}")
-        except requests.HTTPError as e:
+        except requests.RequestException as e:
             logging.error(f"Failed to fetch Wikipedia page: {page_title}. HTTPError: {e}")
