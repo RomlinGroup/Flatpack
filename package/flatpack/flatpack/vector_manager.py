@@ -185,8 +185,8 @@ class VectorManager:
         """Fetch text from a URL and add to the index."""
         logging.info(f"Fetching URL: {url}")
         try:
-            response = requests.get(url, timeout=10)  # Add a timeout to the request
-            response.raise_for_status()  # This will raise an HTTPError for bad responses
+            response = requests.get(url, timeout=10)
+            response.raise_for_status()
             logging.debug("URL fetched successfully.")
             soup = BeautifulSoup(response.content, 'html.parser')
             text = soup.get_text(separator=' ', strip=True)
@@ -211,14 +211,14 @@ class VectorManager:
         }
 
         try:
-            response = requests.get(base_url, params=params, timeout=10)  # Add a timeout to the request
+            response = requests.get(base_url, params=params, timeout=10)
             response.raise_for_status()
 
             data = response.json()
             page = next(iter(data["query"]["pages"].values()))
             return page.get("extract", "")
         except requests.RequestException as e:
-            logging.error(f"Failed to fetch Wikipedia page: {page_title}. HTTPError: {e}")
+            logging.error(f"Failed to fetch {url}: {e}")
             return ""
 
     def add_wikipedia_page(self, page_title):
@@ -232,4 +232,4 @@ class VectorManager:
             else:
                 logging.error(f"No text found for Wikipedia page: {page_title}")
         except requests.RequestException as e:
-            logging.error(f"Failed to fetch Wikipedia page: {page_title}. HTTPError: {e}")
+            logging.error(f"Failed to fetch {url}: {e}")
