@@ -199,7 +199,7 @@ def fpk_fetch_github_dirs(session: httpx.Client) -> List[str]:
     """
     try:
         response = session.get(f"{GITHUB_REPO_URL}/contents/warehouse")
-        response.raise_for_status()  # Raise an HTTPError for bad responses
+        response.raise_for_status()
         json_data = response.json()
 
         if isinstance(json_data, list):
@@ -590,7 +590,7 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
     llama_cpp_dir = "llama.cpp"
     ready_file = os.path.join(llama_cpp_dir, "ready")
     venv_dir = os.path.join(llama_cpp_dir, "venv")
-    venv_activate = os.path.join(venv_dir, "bin", "activate")
+    venv_python = os.path.join(venv_dir, "bin", "python")
     requirements_file = os.path.join(llama_cpp_dir, "requirements.txt")
 
     if not os.path.exists(llama_cpp_dir):
@@ -619,7 +619,7 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
 
             print(f"📦 Installing llama.cpp dependencies in virtual environment...")
 
-            pip_command = f"source {shlex.quote(venv_activate)} && pip install -r {shlex.quote(requirements_file)}"
+            pip_command = f"source {shlex.quote(os.path.join(venv_dir, 'bin', 'activate'))} && pip install -r {shlex.quote(requirements_file)}"
             pip_result = subprocess.run(pip_command, shell=True, executable="/bin/bash", check=True)
 
             print(f"📦 Finished installing llama.cpp dependencies")
@@ -723,7 +723,7 @@ def fpk_cli_handle_run(args, session):
         port = 8000
         listener = ngrok.forward(port, authtoken_from_env=True)
         print(f"Ingress established at {listener.url()}")
-        uvicorn.run(app, host="0.0.0.0", port=port)
+        uvicorn.run(app, host="127.0.0.1", port=port)
     except KeyboardInterrupt:
         print("❌ FastAPI server has been stopped.")
     except Exception as e:
@@ -737,7 +737,6 @@ def fpk_cli_handle_set_api_key(args, session):
     global config
     api_key = args.api_key
 
-    # Set the API key directly
     config = {'api_key': api_key}
 
     with open(CONFIG_FILE_PATH, "w") as config_file:
@@ -805,7 +804,6 @@ def fpk_cli_handle_version(args, session):
 
 
 def fpk_initialize_vector_manager(args):
-    # Initialize VectorManager once
     return VectorManager(model_id='all-MiniLM-L6-v2', directory=getattr(args, 'data_dir', '.'))
 
 
@@ -839,7 +837,6 @@ def main():
             parser = setup_arg_parser()
             args = parser.parse_args()
 
-            # Initialize VectorManager only if needed
             vm = None
             if args.command == 'vector':
                 vm = fpk_initialize_vector_manager(args)
