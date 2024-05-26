@@ -218,7 +218,7 @@ class VectorManager:
             page = next(iter(data["query"]["pages"].values()))
             return page.get("extract", "")
         except requests.RequestException as e:
-            logging.error(f"Failed to fetch {url}: {e}")
+            logging.error(f"Failed to fetch {page_title}: {e}")
             return ""
 
     def add_wikipedia_page(self, page_title):
@@ -232,4 +232,4 @@ class VectorManager:
             else:
                 logging.error(f"No text found for Wikipedia page: {page_title}")
         except requests.RequestException as e:
-            logging.error(f"Failed to fetch {url}: {e}")
+            logging.error(f"Failed to fetch {page_title}: {e}")
