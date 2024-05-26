@@ -578,7 +578,9 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
         try:
             if token:
                 print(f"📥 Downloading private model '{model_id}' with provided token...")
-                snapshot_download(repo_id=model_id, local_dir=local_dir, revision="main", token=token)
+                snapshot_download(
+                    repo_id=model_id, local_dir=local_dir, revision="main", token=token
+                )
             else:
                 print(f"📥 Downloading public model '{model_id}'...")
                 snapshot_download(repo_id=model_id, local_dir=local_dir, revision="main")
@@ -596,11 +598,15 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
     if not os.path.exists(llama_cpp_dir):
         try:
             print(f"📥 Cloning llama.cpp repository...")
-            subprocess.run(["git", "clone", "https://github.com/ggerganov/llama.cpp", llama_cpp_dir], check=True)
+            subprocess.run(
+                ["git", "clone", "https://github.com/ggerganov/llama.cpp", llama_cpp_dir],
+                check=True
+            )
             print(f"📥 Finished cloning llama.cpp repository into '{llama_cpp_dir}'")
         except subprocess.CalledProcessError as e:
             print(
-                f"❌ Failed to clone the llama.cpp repository. Please check your internet connection and try again. Error: {e}")
+                f"❌ Failed to clone the llama.cpp repository. Please check your internet connection and try again. Error: {e}"
+            )
             return
 
     if not os.path.exists(ready_file):
@@ -618,8 +624,13 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
 
             print(f"📦 Installing llama.cpp dependencies in virtual environment...")
 
-            pip_command = ["/bin/bash", "-c",
-                           f"source {shlex.quote(os.path.join(venv_dir, 'bin', 'activate'))} && pip install -r {shlex.quote(requirements_file)}"]
+            pip_command = [
+                "/bin/bash", "-c",
+                (
+                    f"source {shlex.quote(os.path.join(venv_dir, 'bin', 'activate'))} && "
+                    f"pip install -r {shlex.quote(requirements_file)}"
+                )
+            ]
             subprocess.run(pip_command, check=True)
 
             print(f"📦 Finished installing llama.cpp dependencies")
@@ -644,8 +655,14 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
             venv_activate = os.path.join(venv_dir, "bin", "activate")
             script_path = os.path.join(llama_cpp_dir, 'convert-hf-to-gguf.py')
 
-            convert_command = ["/bin/bash", "-c",
-                               f"source {shlex.quote(venv_activate)} && {shlex.quote(venv_python)} {shlex.quote(script_path)} {shlex.quote(local_dir)} --outfile {shlex.quote(output_file)} --outtype {shlex.quote(outtype)}"]
+            convert_command = [
+                "/bin/bash", "-c",
+                (
+                    f"source {shlex.quote(venv_activate)} && {shlex.quote(venv_python)} "
+                    f"{shlex.quote(script_path)} {shlex.quote(local_dir)} --outfile "
+                    f"{shlex.quote(output_file)} --outtype {shlex.quote(outtype)}"
+                )
+            ]
             subprocess.run(convert_command, check=True)
 
             print(f"✅ Conversion complete. The model has been compressed and saved as '{output_file}'.")
@@ -662,7 +679,12 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
         try:
             print(f"🛠 Quantizing the model...")
 
-            quantize_command = [os.path.join(llama_cpp_dir, 'quantize'), output_file, quantized_output_file, "Q4_K_M"]
+            quantize_command = [
+                os.path.join(llama_cpp_dir, 'quantize'),
+                output_file,
+                quantized_output_file,
+                "Q4_K_M"
+            ]
             subprocess.run(quantize_command, check=True)
 
             print(f"✅ Quantization complete. The quantized model has been saved as '{quantized_output_file}'.")
