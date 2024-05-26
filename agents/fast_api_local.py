@@ -21,9 +21,14 @@ engine = load_engines.LlamaCPPEngine(
     verbose=False
 )
 
+origins = [
+    "http://127.0.0.1:8080",
+    "http://localhost:8080"
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -53,6 +58,7 @@ async def generate_response(query: Query):
                 context = "\n".join(result['text'] for result in results[:5])
 
         prompt = f"""
+        You are a question-answering assistant. Keep answers brief and factual. Use only the provided context.\n
         Context: {context}\n
         Question: {query.prompt}\n
         Answer:
@@ -85,7 +91,7 @@ async def read_root():
 if __name__ == "__main__":
     try:
         port = int(os.environ.get("AGENT_PORT", 8000))
-        uvicorn.run(app, host="0.0.0.0", port=port)
+        uvicorn.run(app, host="127.0.0.1", port=port)
     except KeyboardInterrupt:
         print("❌ FastAPI server has been stopped.")
     except Exception as e:

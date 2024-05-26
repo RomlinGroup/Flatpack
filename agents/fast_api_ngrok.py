@@ -62,6 +62,7 @@ async def generate_response(query: Query):
                 context = "\n".join(result['text'] for result in results[:5])
 
         prompt = f"""
+        You are a question-answering assistant. Keep answers brief and factual. Use only the provided context.\n
         Context: {context}\n
         Question: {query.prompt}\n
         Answer:
@@ -96,7 +97,7 @@ if __name__ == "__main__":
         port = int(os.environ.get("AGENT_PORT", 8000))
         listener = ngrok.forward(port, authtoken_from_env=True)
         print(f"Ingress established at {listener.url()}")
-        uvicorn.run(app, host="0.0.0.0", port=port)
+        uvicorn.run(app, host="127.0.0.1", port=port)
     except KeyboardInterrupt:
         print("❌ FastAPI server has been stopped.")
     except Exception as e:

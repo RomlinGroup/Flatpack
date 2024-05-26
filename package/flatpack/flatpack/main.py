@@ -20,7 +20,7 @@ from importlib.metadata import version
 from .parsers import parse_toml_to_venv_script
 from pathlib import Path
 from .session_manager import SessionManager
-from typing import List, Optional
+from typing import List, Optional, Union
 from .vector_manager import VectorManager
 
 HOME_DIR = Path.home()
@@ -35,34 +35,42 @@ config = {
 }
 
 
-def fpk_build(directory: str):
+def fpk_build(directory: Union[str, None]):
     """Build a model using a building script from the last unboxed flatpack."""
     cache_file_path = HOME_DIR / ".fpk_unbox.cache"
     print(f"Looking for cached flatpack in {cache_file_path}.")
 
+    last_unboxed_flatpack = None
+
     if directory and fpk_valid_directory_name(directory):
         print(f"Using provided directory: {directory}")
         last_unboxed_flatpack = directory
-        building_script_path = Path(last_unboxed_flatpack) / 'build' / 'build.sh'
     elif cache_file_path.exists():
         print(f"Found cached flatpack in {cache_file_path}.")
         last_unboxed_flatpack = cache_file_path.read_text().strip()
-        building_script_path = Path(last_unboxed_flatpack) / 'build' / 'build.sh'
     else:
         print("❌ No cached flatpack found, and no valid directory provided.")
         return
 
-    if not building_script_path.exists():
+    if not last_unboxed_flatpack:
+        print("❌ No valid flatpack directory found.")
+        return
+
+    building_script_path = Path(last_unboxed_flatpack) / 'build' / 'build.sh'
+
+    if not building_script_path.exists() or not building_script_path.is_file():
         print(f"❌ Building script not found in {last_unboxed_flatpack}.")
         return
 
-    safe_script_path = shlex.quote(str(building_script_path))
+    safe_script_path = shlex.quote(str(building_script_path.resolve()))
 
-    result = os.system(f"bash -u {safe_script_path}")
-    if result != 0:
-        print("❌ An error occurred while executing the build script.")
-    else:
+    try:
+        result = subprocess.run(['bash', '-u', safe_script_path], check=True)
         print("✅ Build script executed successfully.")
+    except subprocess.CalledProcessError as e:
+        print(f"❌ An error occurred while executing the build script: {e}")
+    except Exception as e:
+        print(f"❌ An unexpected error occurred: {e}")
 
 
 def fpk_cache_unbox(directory_name: str):
@@ -160,14 +168,23 @@ def fpk_fetch_flatpack_toml_from_dir(directory_name: str, session: httpx.Client)
     Returns:
         Optional[str]: The TOML content if found, otherwise None.
     """
+    if not fpk_valid_directory_name(directory_name):
+        print(f"❌ Invalid directory name: '{directory_name}'.")
+        return None
+
     toml_url = f"{BASE_URL}/{directory_name}/flatpack.toml"
     try:
         response = session.get(toml_url)
-        if response.status_code != 200:
-            return None
+        response.raise_for_status()
         return response.text
-    except httpx.HTTPError as e:
+    except httpx.HTTPStatusError as e:
+        print(f"❌ HTTP error occurred: {e.response.status_code} - {e.response.text}")
+        return None
+    except httpx.RequestError as e:
         print(f"❌ Network error occurred: {e}")
+        return None
+    except Exception as e:
+        print(f"❌ An unexpected error occurred: {e}")
         return None
 
 
@@ -179,17 +196,26 @@ def fpk_fetch_github_dirs(session: httpx.Client) -> List[str]:
         List[str]: List of directory names.
     """
     try:
-        response = session.get(GITHUB_REPO_URL + "/contents/warehouse")
-        if response.status_code == 200:
-            directories = [item['name'] for item in response.json() if
-                           item['type'] == 'dir' and item['name'].lower() != 'legacy' and item[
-                               'name'].lower() != 'template']
+        response = session.get(f"{GITHUB_REPO_URL}/contents/warehouse")
+        response.raise_for_status()  # Raise an HTTPError for bad responses
+        json_data = response.json()
+
+        if isinstance(json_data, list):
+            directories = [
+                item['name'] for item in json_data
+                if isinstance(item, dict) and item.get('type') == 'dir' and
+                   item.get('name', '').lower() not in {'template'}
+            ]
             return sorted(directories)
         else:
-            return ["❌ Error fetching data from GitHub: HTTP Status Code: " + str(response.status_code)]
+            print(f"❌ Unexpected response format from GitHub: {json_data}")
+            return []
     except httpx.HTTPError as e:
-        print(f"❌ Unable to connect to GitHub")
+        print(f"❌ Unable to connect to GitHub: {e}")
         sys.exit(1)
+    except (ValueError, KeyError) as e:
+        print(f"❌ Error processing the response from GitHub: {e}")
+        return []
 
 
 def fpk_find_models(directory_path: str = None) -> List[str]:
@@ -233,8 +259,12 @@ def fpk_get_api_key() -> Optional[str]:
 def fpk_get_last_flatpack(directory_name: str) -> Optional[str]:
     """Retrieve the last unboxed flatpack's directory name from the cache file within the correct build directory."""
     cache_file_path = HOME_DIR / ".fpk_unbox.cache"
-    if cache_file_path.exists():
-        return cache_file_path.read_text().strip()
+    try:
+        if cache_file_path.exists():
+            with cache_file_path.open('r') as cache_file:
+                return cache_file.read().strip()
+    except (OSError, IOError) as e:
+        print(f"❌ An error occurred while accessing the cache file: {e}")
     return None
 
 
@@ -307,28 +337,28 @@ def fpk_set_secure_file_permissions(file_path):
 
 def fpk_unbox(directory_name: str, session, local: bool = False):
     """Unbox a flatpack from GitHub or a local directory."""
+    if not fpk_valid_directory_name(directory_name):
+        print(f"❌ Invalid directory name: '{directory_name}'.")
+        return
+
     flatpack_dir = Path.cwd() / directory_name
     build_dir = flatpack_dir / "build"
 
     if build_dir.exists():
         print(f"❌ Error: Build directory already exists.")
-        sys.exit(1)
+        return
 
     flatpack_dir.mkdir(parents=True, exist_ok=True)
     build_dir.mkdir(parents=True, exist_ok=True)
 
     temp_toml_path = build_dir / 'temp_flatpack.toml'
     if local:
-        local_directory_path = flatpack_dir
-        toml_path = local_directory_path / 'flatpack.toml'
+        toml_path = flatpack_dir / 'flatpack.toml'
         if not toml_path.exists():
             print(f"❌ flatpack.toml not found in the specified directory: '{directory_name}'.")
             return
         toml_content = toml_path.read_text()
     else:
-        if not fpk_valid_directory_name(directory_name):
-            print(f"❌ Invalid directory name: '{directory_name}'.")
-            return
         toml_content = fpk_fetch_flatpack_toml_from_dir(directory_name, session)
         if not toml_content:
             print(f"❌ Error: Failed to fetch TOML content for '{directory_name}'.")
@@ -341,13 +371,15 @@ def fpk_unbox(directory_name: str, session, local: bool = False):
     temp_toml_path.unlink()
 
     print(f"📦 Unboxing {directory_name}...")
-    command = f"bash {bash_script_path}"
-    result = os.system(command)
-    if result != 0:
-        print("❌ Error: Failed to execute the bash script.")
-    else:
-        fpk_cache_unbox(str(flatpack_dir))
+    safe_script_path = shlex.quote(str(bash_script_path.resolve()))
+    try:
+        result = subprocess.run(['bash', safe_script_path], check=True)
         print("🎉 All done!")
+        fpk_cache_unbox(str(flatpack_dir))
+    except subprocess.CalledProcessError as e:
+        print(f"❌ Error: Failed to execute the bash script: {e}")
+    except Exception as e:
+        print(f"❌ An unexpected error occurred: {e}")
 
 
 def fpk_valid_directory_name(name: str) -> bool:
@@ -527,7 +559,7 @@ def create_venv(venv_dir):
     subprocess.run(["python3", "-m", "venv", venv_dir])
 
 
-def fpk_cli_handle_compress(args, session):
+def fpk_cli_handle_compress(args, session: httpx.Client):
     model_id = args.model_id
     token = args.token
 
@@ -562,23 +594,18 @@ def fpk_cli_handle_compress(args, session):
     if not os.path.exists(llama_cpp_dir):
         try:
             print(f"📥 Cloning llama.cpp repository...")
-            clone_result = subprocess.run(["git", "clone", "https://github.com/ggerganov/llama.cpp", llama_cpp_dir])
-            if clone_result.returncode != 0:
-                print(
-                    "❌ Failed to clone the llama.cpp repository. Please check your internet connection and try again.")
-                return
+            clone_result = subprocess.run(["git", "clone", "https://github.com/ggerganov/llama.cpp", llama_cpp_dir],
+                                          check=True)
             print(f"📥 Finished cloning llama.cpp repository into '{llama_cpp_dir}'")
-        except Exception as e:
-            print(f"❌ Failed to clone the llama.cpp repository. Error: {e}")
+        except subprocess.CalledProcessError as e:
+            print(
+                f"❌ Failed to clone the llama.cpp repository. Please check your internet connection and try again. Error: {e}")
             return
 
     if not os.path.exists(ready_file):
         try:
             print(f"🔨 Running 'make' in the llama.cpp directory...")
-            make_result = subprocess.run(["make"], cwd=llama_cpp_dir)
-            if make_result.returncode != 0:
-                print(f"❌ Failed to run 'make' in the llama.cpp directory. Please check the logs for more details.")
-                return
+            make_result = subprocess.run(["make"], cwd=llama_cpp_dir, check=True)
             print(f"🔨 Finished running 'make' in the llama.cpp directory")
 
             if not os.path.exists(venv_dir):
@@ -590,14 +617,14 @@ def fpk_cli_handle_compress(args, session):
 
             print(f"📦 Installing llama.cpp dependencies in virtual environment...")
             pip_result = subprocess.run([f"source {venv_activate} && pip install -r {requirements_file}"], shell=True,
-                                        executable="/bin/bash")
-            if pip_result.returncode != 0:
-                print(f"❌ Failed to install dependencies. Please check the logs for more details.")
-                return
+                                        executable="/bin/bash", check=True)
             print(f"📦 Finished installing llama.cpp dependencies")
 
             with open(ready_file, 'w') as f:
                 f.write("Ready")
+        except subprocess.CalledProcessError as e:
+            print(f"❌ Failed to run 'make' or install dependencies in the llama.cpp directory. Error: {e}")
+            return
         except Exception as e:
             print(f"❌ An error occurred during the setup of llama.cpp. Error: {e}")
             return
@@ -609,18 +636,12 @@ def fpk_cli_handle_compress(args, session):
     if not os.path.exists(output_file):
         try:
             print(f"🛠 Converting the model using llama.cpp...")
-            convert_result = subprocess.run(
-                [
-                    f"source {venv_activate} && python {os.path.join(llama_cpp_dir, 'convert-hf-to-gguf.py')} {local_dir} --outfile {output_file} --outtype {outtype}"
-                ],
-                shell=True, executable="/bin/bash"
-            )
-
-            if convert_result.returncode == 0:
-                print(f"✅ Conversion complete. The model has been compressed and saved as '{output_file}'.")
-            else:
-                print(f"❌ Conversion failed. Please check the logs for more details.")
-                return
+            convert_command = f"source {venv_activate} && python {os.path.join(llama_cpp_dir, 'convert-hf-to-gguf.py')} {local_dir} --outfile {output_file} --outtype {outtype}"
+            convert_result = subprocess.run([convert_command], shell=True, executable="/bin/bash", check=True)
+            print(f"✅ Conversion complete. The model has been compressed and saved as '{output_file}'.")
+        except subprocess.CalledProcessError as e:
+            print(f"❌ Conversion failed. Error: {e}")
+            return
         except Exception as e:
             print(f"❌ An error occurred during the model conversion. Error: {e}")
             return
@@ -631,36 +652,19 @@ def fpk_cli_handle_compress(args, session):
         try:
             print(f"🛠 Quantizing the model...")
             quantize_command = f"./{llama_cpp_dir}/quantize {output_file} {quantized_output_file} Q4_K_M"
-            quantize_result = subprocess.run(quantize_command, shell=True, executable="/bin/bash")
-
-            if quantize_result.returncode == 0:
-                print(f"✅ Quantization complete. The quantized model has been saved as '{quantized_output_file}'.")
-                print(f"🗑 Deleting the original .bin file '{output_file}'...")
-                os.remove(output_file)
-                print(f"🗑 Deleted the original .bin file '{output_file}'.")
-            else:
-                print(f"❌ Quantization failed. Please check the logs for more details.")
+            quantize_result = subprocess.run([quantize_command], shell=True, executable="/bin/bash", check=True)
+            print(f"✅ Quantization complete. The quantized model has been saved as '{quantized_output_file}'.")
+            print(f"🗑 Deleting the original .bin file '{output_file}'...")
+            os.remove(output_file)
+            print(f"🗑 Deleted the original .bin file '{output_file}'.")
+        except subprocess.CalledProcessError as e:
+            print(f"❌ Quantization failed. Error: {e}")
+            return
         except Exception as e:
             print(f"❌ An error occurred during the quantization process. Error: {e}")
+            return
     else:
         print(f"❌ The original model file '{output_file}' does not exist.")
-
-    if os.path.exists(quantized_output_file):
-        try:
-            print(f"🧪 Testing the quantized model with inference...")
-
-            test_command = f"./{llama_cpp_dir}/main -m {quantized_output_file} -p 'Write a two-line poem about rain.'"
-            test_result = subprocess.run([f"source {venv_activate} && {test_command}"], shell=True,
-                                         executable="/bin/bash", capture_output=True, text=True)
-
-            if test_result.returncode == 0:
-                print(f"✅ Inference test passed. The quantized model is working correctly.")
-                print(test_result.stdout)
-            else:
-                print(f"❌ Inference test failed. Please check the logs for more details.")
-                print(test_result.stderr)
-        except Exception as e:
-            print(f"❌ An error occurred during the inference test. Error: {e}")
 
 
 def fpk_cli_handle_find(args, session):
