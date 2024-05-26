@@ -40,8 +40,7 @@ class LlamaCPPEngine:
                     print(f"❌ Failed to run 'make' in the llama.cpp directory. Error: {e}")
                     return
             else:
-                print(
-                    "❌ Makefile not found in the llama.cpp directory. Please ensure the repository is cloned correctly.")
+                print("❌ Makefile not found in the llama.cpp directory.")
 
     def generate_response(self, prompt, max_tokens):
         with tempfile.NamedTemporaryFile(delete=False, mode='w', encoding='utf-8') as prompt_file:
