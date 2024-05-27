@@ -64,10 +64,6 @@ pip install --upgrade .
 ### Getting Started with Flatpack
 
 ```bash
-flatpack version
-```
-
-```bash
 flatpack list
 ```
 
