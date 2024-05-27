@@ -64,23 +64,19 @@ pip install --upgrade .
 ### Getting Started with Flatpack
 
 ```bash
-# Check version
 flatpack version
 ```
 
 ```bash
-# List available flatpacks
 flatpack list
 ```
 
 ```bash
-# Unbox a flatpack of your choice
 # flatpack unbox <flatpack_name> --local
 flatpack unbox <flatpack_name>
 ```
 
 ```bash
-# And last, but not least
 flatpack build <flatpack_name>
 ```
 
