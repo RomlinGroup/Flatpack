@@ -56,8 +56,7 @@ pip install flatpack
 Use this method if you want to install flatpack directly from the source code.
 
 ```bash
-git clone https://github.com/romlingroup/flatpack.git
-cd flatpack/package/flatpack
+git clone https://github.com/romlingroup/flatpack && cd flatpack/package/flatpack
 pip install --upgrade .
 ```
 
