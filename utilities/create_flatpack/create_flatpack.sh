@@ -9,6 +9,11 @@ fi
 
 FLATPACK_NAME=$(echo $1 | tr '[:upper:]' '[:lower:]' | sed 's/ /-/g')
 
+if [[ ! "$FLATPACK_NAME" =~ ^[a-z0-9-]+$ ]]; then
+  echo "Error: Invalid name format. Only lowercase letters, numbers, and hyphens are allowed."
+  exit 1
+fi
+
 cd ../..
 
 if [ ! -d "warehouse/template" ]; then
