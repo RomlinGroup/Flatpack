@@ -1,0 +1,4 @@
+services:
+  hello-world:
+    build: .
+    container_name: hello-world-container
