@@ -60,7 +60,7 @@ git clone https://github.com/romlingroup/flatpack && cd flatpack/package/flatpac
 pip install --upgrade .
 ```
 
-### Getting Started with Flatpack
+### Getting started with Flatpack
 
 ```bash
 flatpack list
@@ -73,6 +73,12 @@ flatpack unbox <flatpack_name>
 
 ```bash
 flatpack build <flatpack_name>
+```
+
+### Creating your first flatpack (FPK)
+
+```bash
+# TODO
 ```
 
 ## AgentManager
