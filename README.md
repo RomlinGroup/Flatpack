@@ -30,7 +30,7 @@ Edge artificial intelligence uses local devices to enhance decision-making near 
 
 https://pypi.org/project/flatpack
 
-## Quick start
+## How to use Flatpack
 
 **NOTE:** Flatpack is currently experimental. Please refrain from using it in production environments.
 
@@ -60,6 +60,8 @@ git clone https://github.com/romlingroup/flatpack.git
 cd flatpack/package/flatpack
 pip install --upgrade .
 ```
+
+### Getting Started with Flatpack
 
 ```bash
 # Check version
