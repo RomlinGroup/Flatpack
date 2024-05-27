@@ -54,7 +54,7 @@ https://pypi.org/project/flatpack
 This method ensures a consistent environment and is the easiest way to get started.
 
 ```bash
-git clone https://github.com/romlingroup/flatpack && cd flatpack/docker
+git clone https://github.com/RomlinGroup/Flatpack && cd Flatpack/docker
 docker-compose up --build
 ```
 
@@ -71,7 +71,7 @@ pip install flatpack
 Use this method if you want to install flatpack directly from the source code.
 
 ```bash
-git clone https://github.com/romlingroup/flatpack && cd flatpack/package/flatpack
+git clone https://github.com/RomlinGroup/Flatpack && cd Flatpack/package/flatpack
 pip install --upgrade .
 ```
 
@@ -93,7 +93,7 @@ flatpack build <flatpack_name>
 ### Create a flatpack
 
 ```bash
-git clone https://github.com/romlingroup/flatpack && cd flatpack/utilities
+git clone https://github.com/RomlinGroup/Flatpack && cd Flatpack/utilities
 chmod +x create_flatpack.sh && ./create_flatpack.sh <flatpack_name>
 ```
 

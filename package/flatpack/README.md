@@ -15,6 +15,9 @@ electronic components, and robots.
 *Aglaonice, an ancient Greek astronomer from the 2nd or 1st century BC, was celebrated for her precise lunar eclipse
 predictions. Her mastery inspired the Greek proverb: "As the moon obeys Aglaonice," signifying unwavering certainty.*
 
+`3.5.0` (2024-05-27)\
+*Initial support for model compression in GGUF using [llama.cpp](https://github.com/ggerganov/llama.cpp).*
+
 `3.4.0` (2024-04-30)\
 *Added support for spawning agents with micro APIs.*
 
@@ -42,11 +45,11 @@ of changes. With the introduction of version 3.0.0, we are embracing a predictab
 This move is not merely about [semantic versioning](https://semver.org/). It is a pledge for clear communication and
 trust with our users. We invite you to explore our new release strategy and appreciate your patience as we evolve.
 
-[Explore the Project on GitHub](https://github.com/romlingroup/flatpack-ai)
+[Explore the Project on GitHub](https://github.com/RomlinGroup/Flatpack)
 
 ## License
 
-This project is released under [Apache-2.0](https://github.com/romlingroup/flatpack-ai/blob/main/LICENSE).
+This project is released under [Apache-2.0](https://github.com/RomlinGroup/Flatpack/blob/main/LICENSE).
 
 ## install_requires
 
@@ -99,4 +102,4 @@ Check out the [JLA - Compatibility Checker](https://joinup.ec.europa.eu/collecti
 - **[uvicorn](https://pypi.org/project/uvicorn/)**\
   BSD License ([LICENSE](https://github.com/encode/uvicorn/blob/master/LICENSE.md))
 
-Last updated: 2024-05-25
+Last updated: 2024-05-27
