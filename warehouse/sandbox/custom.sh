@@ -4,8 +4,6 @@ init_script="$SCRIPT_DIR/init.sh"
 [ -f "$init_script" ] || { echo "init.sh not found, exiting."; exit 1; }
 source "$init_script" || { echo "Failed to load init.sh."; exit 1; }
 
-# DO NOT EDIT ABOVE THIS LINE
-
 part_python """
 import math
 import subprocess
@@ -34,7 +32,5 @@ part_python """
 print('(5) Factorial of 5 is:', compute_factorial(5))
 print('(6) The average is:', compute_average(numbers))
 """
-
-# DO NOT EDIT BELOW THIS LINE
 
 build_python
