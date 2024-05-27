@@ -4,6 +4,4 @@
 
 > :warning: **DISCLAIMER:** This repository contains our research. Verify the information and do your own research (DYOR). We assume no responsibility for accuracy or completeness.
 
-`sandbox` is our experimental flatpack for development and testing.
-
 Flatpack is currently experimental. Please refrain from using it in production environments.
