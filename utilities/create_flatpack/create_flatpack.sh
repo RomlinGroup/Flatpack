@@ -3,7 +3,7 @@ set -e
 set -u
 
 if [ "$#" -ne 1 ]; then
-  echo "Usage: $0 MY_FLATPACK_NAME"
+  echo "Usage: $0 <flatpack_name>"
   exit 1
 fi
 
