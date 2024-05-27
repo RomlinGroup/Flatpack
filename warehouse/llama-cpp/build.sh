@@ -16,7 +16,7 @@ source "$SCRIPT_DIR/device.sh" || {
 
 REQUIRED_DEVICES="cpu cuda mps"
 
-if [[ ! " $REQUIRED_DEVICES " =~ " $DEVICE " ]]; then
+if [[ ! $REQUIRED_DEVICES =~ (^|[[:space:]])$DEVICE($|[[:space:]]) ]]; then
   echo "😱 Error: This script requires one of the following devices: $REQUIRED_DEVICES." >&2
   exit 1
 fi

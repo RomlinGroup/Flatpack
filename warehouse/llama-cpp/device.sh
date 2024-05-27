@@ -38,8 +38,17 @@ echo "Determined DEVICE: $DEVICE"
 
 if [[ ! -d "$WORK_DIR" ]]; then
   echo "Directory $WORK_DIR does not exist. Creating it..."
-  mkdir -p "$WORK_DIR" && echo "Successfully created directory $WORK_DIR" || { echo "Error: Failed to create directory $WORK_DIR" >&2; exit 1; }
+  if mkdir -p "$WORK_DIR"; then
+    echo "Successfully created directory $WORK_DIR"
+  else
+    echo "Error: Failed to create directory $WORK_DIR" >&2
+    exit 1
+  fi
 fi
 
-cd "$WORK_DIR" || { echo "Error: Failed to change to directory $WORK_DIR" >&2; exit 1; }
-echo "Changed to directory $WORK_DIR"
+if cd "$WORK_DIR"; then
+  echo "Changed to directory $WORK_DIR"
+else
+  echo "Error: Failed to change to directory $WORK_DIR" >&2
+  exit 1
+fi

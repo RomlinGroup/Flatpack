@@ -2,13 +2,13 @@
 
 echo "📦 Initializing the FPK package"
 
-TEMP_PYTHON_SCRIPT="/tmp/python_script.py"
-VALIDATOR_SCRIPT="/tmp/validator_script.py"
+TEMP_PYTHON_SCRIPT='/tmp/python_script.py'
+VALIDATOR_SCRIPT='/tmp/validator_script.py'
 
 rm -f "$TEMP_PYTHON_SCRIPT" "$VALIDATOR_SCRIPT"
 
 touch "$TEMP_PYTHON_SCRIPT" "$VALIDATOR_SCRIPT"
-trap "rm -f '$TEMP_PYTHON_SCRIPT' '$VALIDATOR_SCRIPT'" EXIT
+trap 'rm -f "$TEMP_PYTHON_SCRIPT" "$VALIDATOR_SCRIPT"' EXIT
 
 # build_python
 build_python() {
