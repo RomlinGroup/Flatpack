@@ -90,7 +90,7 @@ flatpack unbox <flatpack_name>
 flatpack build <flatpack_name>
 ```
 
-### Creating a flatpack
+### Create a flatpack
 
 ```bash
 git clone https://github.com/romlingroup/flatpack && cd flatpack/utilities
