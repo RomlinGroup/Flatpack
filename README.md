@@ -75,10 +75,10 @@ flatpack unbox <flatpack_name>
 flatpack build <flatpack_name>
 ```
 
-### Creating your first flatpack (FPK)
+### Creating a flatpack
 
 ```bash
-# TODO
+git clone https://github.com/romlingroup/flatpack && cd flatpack/utilities
 ```
 
 ## AgentManager

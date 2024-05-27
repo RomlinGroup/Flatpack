@@ -1,5 +1,6 @@
 import argparse
 import os
+
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives import serialization, hashes
 from cryptography.hazmat.primitives.asymmetric import padding
@@ -18,22 +19,17 @@ def verify_signed_data(signed_file_path, public_pem_path):
         bool: True if the signature is valid, False otherwise.
     """
     try:
-        # Read the public key
         with open(public_pem_path, 'rb') as f:
             public_pem = f.read()
 
-        # Read the signed file
         with open(signed_file_path, 'rb') as f:
             signed_data = f.read()
 
-        # Separate the original data and the signature
         separator = b"---SIGNATURE_SEPARATOR---"
         original_data, signature = signed_data.split(separator)
 
-        # Load the public key from PEM format
         public_key = serialization.load_pem_public_key(public_pem, backend=default_backend())
 
-        # Verify the signature
         public_key.verify(
             signature,
             original_data,
@@ -59,14 +55,11 @@ def verify_bulk_signed_data(directory_path, public_pem_path):
     valid_signatures = 0
     invalid_signatures = 0
 
-    # Iterate over each subdirectory in the given directory
     for subdir in os.listdir(directory_path):
         subdir_path = os.path.join(directory_path, subdir)
         if os.path.isdir(subdir_path):
-            # Assuming the .fpk file is the only or the first .fpk file in each directory
             fpk_files = [f for f in os.listdir(subdir_path) if f.endswith('.fpk')]
             if fpk_files:
-                # Verify the first .fpk file found
                 fpk_file_path = os.path.join(subdir_path, fpk_files[0])
                 result = verify_signed_data(fpk_file_path, public_pem_path)
                 if result:
@@ -87,6 +80,5 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    # Assuming the script is run from a directory two levels down from /warehouse
     directory_path = os.path.join(os.getcwd(), '..', '..', 'warehouse')
     verify_bulk_signed_data(directory_path, args.public_key)

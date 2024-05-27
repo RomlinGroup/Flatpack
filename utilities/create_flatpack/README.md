@@ -5,5 +5,5 @@ chmod +x create_flatpack.sh
 ```
 
 ```bash
-./create_flatpack.sh MY_FLATPACK_NAME
+./create_flatpack.sh <flatpack_name>
 ```
