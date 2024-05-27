@@ -67,7 +67,7 @@ flatpack list
 ```
 
 ```bash
-# flatpack unbox <flatpack_name> --local
+# Use the --local flag for local flatpacks
 flatpack unbox <flatpack_name>
 ```
 
