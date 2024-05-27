@@ -36,17 +36,20 @@ https://pypi.org/project/flatpack
 
 ```bash
 # Install with Docker (recommended)
+# This method ensures a consistent environment and is the easiest way to get started.
 git clone https://github.com/romlingroup/flatpack && cd flatpack/docker
 docker-compose up --build
 ```
 
 ```bash
 # Install from PyPI
+# Use this method if you prefer to install flatpack using pip from the Python Package Index.
 pip install flatpack
 ```
 
 ```bash
 # Install from source
+# Use this method if you want to install flatpack directly from the source code.
 git clone https://github.com/romlingroup/flatpack.git
 cd flatpack/package/flatpack
 pip install --upgrade .
