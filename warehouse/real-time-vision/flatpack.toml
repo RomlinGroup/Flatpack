@@ -34,6 +34,11 @@ tqdm = "4.66.2"
 transformers = "4.40.2"
 
 [[git]]
+from_source = "https://github.com/ggerganov/llama.cpp"
+to_destination = "llama.cpp"
+branch = "master"
+
+[[git]]
 from_source = "https://github.com/vikhyat/moondream"
 to_destination = "moondream"
 branch = "main"
