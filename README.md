@@ -35,19 +35,19 @@ https://pypi.org/project/flatpack
 **NOTE:** Flatpack is currently experimental. Please refrain from using it in production environments.
 
 ```bash
-# Run in Docker with Ubuntu 24.04
+# Run in Docker (recommended)
 # https://ubuntu.com/about/release-cycle
 git clone https://github.com/romlingroup/flatpack && cd flatpack/docker
 docker-compose up --build
 ```
 
 ```bash
-# Install from PyPI (recommended)
+# Install from PyPI
 pip install flatpack
 ```
 
 ```bash
-# Install from source (optional)
+# Install from source
 git clone https://github.com/romlingroup/flatpack.git
 cd flatpack/package/flatpack
 pip install --upgrade .
