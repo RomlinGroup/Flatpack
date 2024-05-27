@@ -34,22 +34,28 @@ https://pypi.org/project/flatpack
 
 **NOTE:** Flatpack is currently experimental. Please refrain from using it in production environments.
 
+### Install with Docker (recommended)
+
+This method ensures a consistent environment and is the easiest way to get started.
+
 ```bash
-# Install with Docker (recommended)
-# This method ensures a consistent environment and is the easiest way to get started.
 git clone https://github.com/romlingroup/flatpack && cd flatpack/docker
 docker-compose up --build
 ```
 
+### Install from PyPI
+
+Use this method if you prefer to install flatpack using pip from the Python Package Index.
+
 ```bash
-# Install from PyPI
-# Use this method if you prefer to install flatpack using pip from the Python Package Index.
 pip install flatpack
 ```
 
+### Install from source
+
+Use this method if you want to install flatpack directly from the source code.
+
 ```bash
-# Install from source
-# Use this method if you want to install flatpack directly from the source code.
 git clone https://github.com/romlingroup/flatpack.git
 cd flatpack/package/flatpack
 pip install --upgrade .
