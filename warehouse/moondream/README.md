@@ -6,6 +6,6 @@
 
 `moondream` offers a Flatpack adaptation of [moondream](https://github.com/vikhyat/moondream) by vik, licensed under the [Apache License 2.0](https://github.com/vikhyat/moondream/blob/main/LICENSE).
 
-We have no official affiliation or association with vik, nor are we endorsed or authorised by him. For the official GitHub profile of vik, please visit [https://github.com/vikhyat](https://github.com/vikhyat).
+We have no official affiliation or association with vik, nor are we authorised or endorsed by him. For the official GitHub profile of vik, please visit [https://github.com/vikhyat](https://github.com/vikhyat).
 
 Flatpack is currently experimental. Please refrain from using it in production environments.
