@@ -34,11 +34,6 @@ tqdm = "4.66.2"
 transformers = "4.40.2"
 
 [[git]]
-from_source = "https://github.com/ggerganov/llama.cpp"
-to_destination = "llama.cpp"
-branch = "master"
-
-[[git]]
 from_source = "https://github.com/vikhyat/moondream"
 to_destination = "moondream"
 branch = "main"
@@ -62,6 +57,10 @@ to_destination = "device.sh"
 [[file]]
 from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/real-time-vision/init.sh"
 to_destination = "init.sh"
+
+[[file]]
+from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/real-time-vision/real-time-vision.py"
+to_destination = "real-time-vision.py"
 
 [[run]]
 command = "chmod +x"

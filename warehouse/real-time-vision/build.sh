@@ -5,7 +5,7 @@ export SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 echo -e "🚀 build.sh is running in: $SCRIPT_DIR"
 
 # === BEGIN USER CUSTOMIZATION ===
-export DEFAULT_REPO_NAME=llama.cpp
+export DEFAULT_REPO_NAME=moondream
 export FLATPACK_NAME=real-time-vision
 # === END USER CUSTOMIZATION ===
 
