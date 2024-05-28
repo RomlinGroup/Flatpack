@@ -168,17 +168,60 @@ def main():
         finally:
             cleanup(cap)
 
+
+    elif args.mode == "webcam":
+
+        cap = cv2.VideoCapture(0)
+
+        if not cap.isOpened():
+            print("❌ Error: Could not open webcam.")
+
+            return
+
+        try:
+
+            while True:
+
+                start_time = time.time()
+
+                img = capture_webcam_frame(cap)
+
+                if img is None:
+                    break
+
+                frame_count += 1
+                width, height = img.size
+                print(f"📷 Captured frame {frame_count}: resolution {width}x{height}")
+
+                response = answer_question(img, prompt)
+                print(f"🌙 Moondream analysis: {response}")
+
+                elapsed_time = time.time() - start_time
+                time.sleep(max(0, capture_interval - elapsed_time))
+        finally:
+            cleanup(cap)
+
+
     elif args.mode == "youtube":
+
         if not args.url:
             print("❌ Error: YouTube URL is required for youtube mode.")
+
             return
 
         video_path = download_youtube_video(args.url)
-        frames = extract_frames(video_path, frame_interval=10)
+        cap = cv2.VideoCapture(video_path)
+        fps = cap.get(cv2.CAP_PROP_FPS)
+        frame_interval = int(fps)
+        cap.release()
+
+        frames = extract_frames(video_path, frame_interval)
 
         try:
+
             for frame_count, img in enumerate(frames, start=1):
                 start_time = time.time()
+
                 width, height = img.size
                 print(f"📷 Captured frame {frame_count}: resolution {width}x{height}")
 
