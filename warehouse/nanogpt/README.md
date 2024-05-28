@@ -6,7 +6,7 @@
 
 `nanogpt` offers a Flatpack adaptation of [nanoGPT](https://github.com/karpathy/nanoGPT) by Andrej Karpathy, licensed under the [MIT License](https://github.com/karpathy/nanoGPT/blob/master/LICENSE).
 
-We have no official affiliation or association with Andrej Karpathy, nor are we authorised or endorsed by him. For the official Andrej Karpathy website, please visit [https://karpathy.ai](https://karpathy.ai).
+We have no association or official affiliation with Andrej Karpathy, nor are we authorised or endorsed by him. For the official Andrej Karpathy website, please visit [https://karpathy.ai](https://karpathy.ai).
 
 Flatpack is currently experimental. Please refrain from using it in production environments.
 

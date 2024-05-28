@@ -6,6 +6,6 @@
 
 `llama-cpp` offers a Flatpack adaptation of [llama.cpp](https://github.com/ggerganov/llama.cpp) by Georgi Gerganov, licensed under the [MIT License](https://github.com/ggerganov/llama.cpp/blob/master/LICENSE).
 
-We have no official affiliation or association with Georgi Gerganov, nor are we authorised or endorsed by him. For the official Georgi Gerganov website, please visit [https://ggerganov.com](https://ggerganov.com).
+We have no association or official affiliation with Georgi Gerganov, nor are we authorised or endorsed by him. For the official Georgi Gerganov website, please visit [https://ggerganov.com](https://ggerganov.com).
 
 Flatpack is currently experimental. Please refrain from using it in production environments.
