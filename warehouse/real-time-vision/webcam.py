@@ -8,7 +8,6 @@ from PIL import Image
 from threading import Thread
 from transformers import TextIteratorStreamer, AutoTokenizer, AutoModelForCausalLM
 
-# Attempt to import detect_device and LATEST_REVISION from moondream
 try:
     from moondream import detect_device, LATEST_REVISION
 except ImportError:
