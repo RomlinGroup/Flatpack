@@ -28,7 +28,7 @@ parser.add_argument("--cpu", action="store_true")
 parser.add_argument("--mode", choices=["screenshot", "webcam", "youtube"], required=True,
                     help="Capture mode: 'screenshot', 'webcam' or 'youtube'")
 parser.add_argument("--url", type=str, help="YouTube video URL (required for youtube mode)")
-args = parser.parseArgs()
+args = parser.parse_args()  # Corrected function name
 
 if args.cpu:
     device = torch.device("cpu")
