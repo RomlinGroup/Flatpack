@@ -1,5 +1,7 @@
 import argparse
+import cv2
 import mss
+import numpy as np
 import signal
 import time
 import torch
@@ -27,9 +29,11 @@ except ImportError:
 
     LATEST_REVISION = "main"
 
-# Argument parser for CPU option
+# Argument parser for CPU option and capture mode
 parser = argparse.ArgumentParser()
 parser.add_argument("--cpu", action="store_true")
+parser.add_argument("--mode", choices=["screenshot", "webcam"], required=True,
+                    help="Capture mode: 'screenshot' or 'webcam'")
 args = parser.parse_args()
 
 # Determine device
@@ -52,10 +56,16 @@ moondream = AutoModelForCausalLM.from_pretrained(
 moondream.eval()
 
 
-def cleanup():
+def cleanup(camera=None):
     """
     Perform any necessary cleanup.
+
+    Args:
+        camera (cv2.VideoCapture, optional): The webcam capture object to be released, if using webcam.
     """
+    if camera and camera.isOpened():
+        camera.release()
+    cv2.destroyAllWindows()
     print("Cleanup complete.")
 
 
@@ -105,18 +115,56 @@ def answer_question(img, prompt):
     return buffer.strip()
 
 
+def capture_screenshot(sct, monitor):
+    screenshot = sct.grab(monitor)
+    return Image.frombytes("RGB", (screenshot.width, screenshot.height), screenshot.rgb)
+
+
+def capture_webcam_frame(cap):
+    ret, frame = cap.read()
+    if not ret:
+        print("Error: Could not read frame.")
+        return None
+    return Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+
+
 def main():
-    """Main function to capture screenshots."""
+    """Main function to capture frames based on the selected mode."""
     frame_count = 0
     prompt = "What's going on? Respond with a single sentence."
+    capture_interval = 5  # seconds
 
-    with mss.mss() as sct:
-        monitor = sct.monitors[0]  # Use the first monitor
+    if args.mode == "screenshot":
+        with mss.mss() as sct:
+            monitor = sct.monitors[0]  # Use the first monitor
+            try:
+                while True:
+                    start_time = time.time()
+                    img = capture_screenshot(sct, monitor)
+
+                    frame_count += 1
+                    width, height = img.size
+                    print(f"Captured frame {frame_count}: resolution {width}x{height}")
+
+                    response = answer_question(img, prompt)
+                    print(f"Moondream analysis: {response}")
+
+                    elapsed_time = time.time() - start_time
+                    time.sleep(max(0, capture_interval - elapsed_time))
+            finally:
+                cleanup()
+    elif args.mode == "webcam":
+        cap = cv2.VideoCapture(0)
+        if not cap.isOpened():
+            print("Error: Could not open webcam.")
+            return
 
         try:
             while True:
-                screenshot = sct.grab(monitor)
-                img = Image.frombytes("RGB", (screenshot.width, screenshot.height), screenshot.rgb)
+                start_time = time.time()
+                img = capture_webcam_frame(cap)
+                if img is None:
+                    break
 
                 frame_count += 1
                 width, height = img.size
@@ -125,9 +173,10 @@ def main():
                 response = answer_question(img, prompt)
                 print(f"Moondream analysis: {response}")
 
-                time.sleep(5)  # Capture one frame every fifth second
+                elapsed_time = time.time() - start_time
+                time.sleep(max(0, capture_interval - elapsed_time))
         finally:
-            cleanup()
+            cleanup(cap)
 
 
 if __name__ == "__main__":

@@ -61,12 +61,8 @@ from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/wa
 to_destination = "init.sh"
 
 [[file]]
-from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/real-time-vision/screenshot.py"
-to_destination = "screenshot.py"
-
-[[file]]
-from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/real-time-vision/webcam.py"
-to_destination = "webcam.py"
+from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/real-time-vision/capture.py"
+to_destination = "capture.py"
 
 [[run]]
 command = "chmod +x"
