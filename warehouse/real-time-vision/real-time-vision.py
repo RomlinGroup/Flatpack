@@ -16,7 +16,7 @@ except ImportError:
     # Define a custom detect_device function if import fails
     def detect_device():
         """
-        Detect the appropriate device (CUDA, MPS, or CPU) and data type for computations.
+        Detect the appropriate device (CUDA, MPS, or CPU).
         Returns:
             tuple: A tuple containing the device and the corresponding data type.
         """
@@ -69,20 +69,19 @@ def cleanup(camera):
     print("Webcam and OpenCV windows have been released cleanly.")
 
 
-def signal_handler(cap):
+def signal_handler(camera):
     """
     Handle termination signals to perform cleanup.
 
     Args:
         cap (cv2.VideoCapture): The webcam capture object to be released.
     """
-    cleanup(cap)
-    sys.exit
+    cleanup(camera)
 
 
 # Register signal handler for graceful termination
-signal.signal(signal.SIGINT, lambda signum, frame: signal_handler(signum, frame, cap))
-signal.signal(signal.SIGTERM, lambda signum, frame: signal_handler(signum, frame, cap))
+signal.signal(signal.SIGINT, signal_handler)
+signal.signal(signal.SIGTERM, signal_handler)
 
 
 def answer_question(img, prompt):
@@ -117,7 +116,7 @@ def answer_question(img, prompt):
 
 def main():
     """
-    Main function to capture frames from the webcam and process them using the Moondream model.
+    Main function to capture frames from the webcam.
     """
     if not cap.isOpened():
         print("Error: Could not open webcam.")
