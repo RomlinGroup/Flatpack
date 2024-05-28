@@ -153,6 +153,7 @@ def main():
             while True:
                 start_time = time.time()
                 img = capture_webcam_frame(cap)
+
                 if img is None:
                     break
 
@@ -181,9 +182,7 @@ def main():
         try:
 
             while True:
-
                 start_time = time.time()
-
                 img = capture_webcam_frame(cap)
 
                 if img is None:
