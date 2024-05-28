@@ -60,8 +60,8 @@ from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/wa
 to_destination = "init.sh"
 
 [[file]]
-from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/real-time-vision/real-time-vision.py"
-to_destination = "real-time-vision.py"
+from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/real-time-vision/webcam.py"
+to_destination = "webcam.py"
 
 [[run]]
 command = "chmod +x"

@@ -11,4 +11,4 @@ source "$init_script" || { echo "Failed to load init.sh."; exit 1; }
 
 cd ..
 
-"${VENV_PYTHON}" real-time-vision.py
+"${VENV_PYTHON}" webcam.py
