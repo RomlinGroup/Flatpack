@@ -26,7 +26,6 @@ except ImportError:
             return torch.device("mps"), torch.float16
         return torch.device("cpu"), torch.float32
 
-
     LATEST_REVISION = "main"
 
 # Argument parser for CPU option and capture mode
@@ -123,7 +122,7 @@ def capture_screenshot(sct, monitor):
 def capture_webcam_frame(cap):
     ret, frame = cap.read()
     if not ret:
-        print("Error: Could not read frame.")
+        print("❌ Error: Could not read frame.")
         return None
     return Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
 
@@ -144,10 +143,10 @@ def main():
 
                     frame_count += 1
                     width, height = img.size
-                    print(f"Captured frame {frame_count}: resolution {width}x{height}")
+                    print(f"📷 Captured frame {frame_count}: resolution {width}x{height}")
 
                     response = answer_question(img, prompt)
-                    print(f"Moondream analysis: {response}")
+                    print(f"🌙 Moondream analysis: {response}")
 
                     elapsed_time = time.time() - start_time
                     time.sleep(max(0, capture_interval - elapsed_time))
@@ -156,7 +155,7 @@ def main():
     elif args.mode == "webcam":
         cap = cv2.VideoCapture(0)
         if not cap.isOpened():
-            print("Error: Could not open webcam.")
+            print("❌ Error: Could not open webcam.")
             return
 
         try:
@@ -168,10 +167,10 @@ def main():
 
                 frame_count += 1
                 width, height = img.size
-                print(f"Captured frame {frame_count}: resolution {width}x{height}")
+                print(f"📷 Captured frame {frame_count}: resolution {width}x{height}")
 
                 response = answer_question(img, prompt)
-                print(f"Moondream analysis: {response}")
+                print(f"🌙 Moondream analysis: {response}")
 
                 elapsed_time = time.time() - start_time
                 time.sleep(max(0, capture_interval - elapsed_time))
