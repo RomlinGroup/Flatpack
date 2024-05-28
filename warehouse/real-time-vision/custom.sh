@@ -11,4 +11,4 @@ source "$init_script" || { echo "Failed to load init.sh."; exit 1; }
 
 cd ..
 
-"${VENV_PYTHON}" capture.py --mode screenshot
+"${VENV_PYTHON}" capture.py --mode webcam
