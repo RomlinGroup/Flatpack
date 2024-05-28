@@ -62,6 +62,10 @@ to_destination = "init.sh"
 from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/weather-types/thunderstorm.png"
 to_destination = "thunderstorm.png"
 
+[[file]]
+from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/weather-types/weather-types.py"
+to_destination = "weather-types.py"
+
 [[run]]
 command = "chmod +x"
 file = "build.sh"
