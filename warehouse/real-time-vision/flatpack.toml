@@ -29,6 +29,7 @@ wget = "*"
 [packages.python]
 einops = "0.8.0"
 numpy = "1.25.2"
+opencv-python = "4.9.0.80"
 tiktoken = "0.6.0"
 tqdm = "4.66.2"
 transformers = "4.40.2"
