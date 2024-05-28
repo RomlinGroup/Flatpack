@@ -143,7 +143,8 @@ def main():
 
                     frame_count += 1
                     width, height = img.size
-                    print(f"📷 Captured frame {frame_count}: resolution {width}x{height}")
+                    print(f"📷 Captured frame {frame_count}: "
+                          f"resolution {width}x{height}")
 
                     response = answer_question(img, prompt)
                     print(f"🌙 Moondream analysis: {response}")
