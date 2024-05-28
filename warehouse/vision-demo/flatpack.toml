@@ -4,7 +4,7 @@
 version = "0.0.1"
 
 [environment]
-model_name = "real-vision"
+model_name = "vision-demo"
 
 [[port]]
 external = 1337
@@ -41,27 +41,27 @@ to_destination = "moondream"
 branch = "main"
 
 [[file]]
-from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/real-vision/index.html"
+from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/vision-demo/index.html"
 to_destination = "index.html"
 
 [[file]]
-from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/real-vision/build.sh"
+from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/vision-demo/build.sh"
 to_destination = "build.sh"
 
 [[file]]
-from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/real-vision/custom.sh"
+from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/vision-demo/custom.sh"
 to_destination = "custom.sh"
 
 [[file]]
-from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/real-vision/device.sh"
+from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/vision-demo/device.sh"
 to_destination = "device.sh"
 
 [[file]]
-from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/real-vision/init.sh"
+from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/vision-demo/init.sh"
 to_destination = "init.sh"
 
 [[file]]
-from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/real-vision/capture.py"
+from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/vision-demo/capture.py"
 to_destination = "capture.py"
 
 [[run]]
