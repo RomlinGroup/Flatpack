@@ -1,7 +1,6 @@
 import argparse
 import cv2
 import signal
-import sys
 import time
 import torch
 
@@ -115,9 +114,7 @@ def answer_question(img, prompt):
 
 
 def main():
-    """
-    Main function to capture frames from the webcam.
-    """
+    """Main function to capture frames from the webcam."""
     if not cap.isOpened():
         print("Error: Could not open webcam.")
         return
