@@ -28,7 +28,9 @@ wget = "*"
 
 [packages.python]
 numpy = "1.25.2"
+opencv-python = "4.9.0.80"
 tiktoken = "0.6.0"
+transformers = "4.41.1"
 tqdm = "4.66.2"
 
 # [[git]]
@@ -55,6 +57,10 @@ to_destination = "device.sh"
 [[file]]
 from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/weather-types/init.sh"
 to_destination = "init.sh"
+
+[[file]]
+from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/weather-types/thunderstorm.png"
+to_destination = "thunderstorm.png"
 
 [[run]]
 command = "chmod +x"

@@ -7,4 +7,4 @@ init_script="$SCRIPT_DIR/init.sh"
 [ -f "$init_script" ] || { echo "init.sh not found, exiting."; exit 1; }
 source "$init_script" || { echo "Failed to load init.sh."; exit 1; }
 
-"${VENV_PYTHON}" -c "print('Hello, World!')"
+"${VENV_PYTHON}" weather-types.py
