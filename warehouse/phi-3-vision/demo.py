@@ -15,25 +15,6 @@ phi3_suffix = "<|end|>\n"
 phi3_user = '<|user|>\n'
 
 model_dir = snapshot_download(repo_id=phi3_model_name)
-modeling_file_path = os.path.join(model_dir, "modeling_phi3_v.py")
-
-with open(modeling_file_path, "r") as file:
-    lines = file.readlines()
-
-with open(modeling_file_path, "w") as file:
-    for line in lines:
-        if re.match(r"if is_flash_attn_2_available\(\):", line):
-            file.write("# " + line)
-        elif re.match(r"from flash_attn import flash_attn_func, flash_attn_varlen_func", line):
-            file.write("# " + line)
-        elif re.match(r"from flash_attn.bert_padding import index_first_axis, pad_input, unpad_input", line):
-            file.write("# " + line)
-        elif re.match(
-                r'_flash_supports_window_size = "window_size" in list\(inspect.signature\(flash_attn_func\).parameters\)',
-                line):
-            file.write("# " + line)
-        else:
-            file.write(line)
 
 phi3_processor = AutoProcessor.from_pretrained(
     model_dir,
