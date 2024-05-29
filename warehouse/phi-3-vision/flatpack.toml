@@ -27,14 +27,18 @@ python3-pip = "*"
 wget = "*"
 
 [packages.python]
-numpy = "1.25.2"
+gradio = "4.31.5"
+numpy = "1.24.4"
+Pillow = "10.3.0"
+Requests = "2.31.0"
 tiktoken = "0.6.0"
+transformers = "4.40.2"
 tqdm = "4.66.2"
 
-# [[git]]
-# from_source = "{{git_source_url}}"
-# to_destination = "{{git_destination_dir}}"
-# branch = "{{branch_name}}"
+[[git]]
+from_source = "microsoft/Phi-3-vision-128k-instruct"
+to_destination = "Phi-3-vision-128k-instruct"
+branch = "main"
 
 [[file]]
 from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/phi-3-vision/index.html"
