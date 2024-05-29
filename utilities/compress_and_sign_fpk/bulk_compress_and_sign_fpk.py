@@ -27,15 +27,34 @@ def delete_existing_fpk_files(folder_path):
     for file in os.listdir(folder_path):
         if file.endswith(".fpk"):
             os.remove(os.path.join(folder_path, file))
-            logging.info(f"Deleted existing .fpk file: {file}")
+            logging.info(f"Deleted existing .fpk file: {file}.")
 
 
 def main():
     parser = argparse.ArgumentParser(
         description='Automatically compress, sign, and then only keep the signed folders found directly within /warehouse, excluding the "template" directory, which is two levels up from the script location.')
-    parser.add_argument('-p', '--private_key', type=str, required=True, help='Path to the private key for signing.')
-    parser.add_argument('--hash_size', type=int, default=256, help='Hash size for signing.')
-    parser.add_argument('--passphrase', type=str, default=None, help='Passphrase for the private key.')
+
+    parser.add_argument(
+        '-p', '--private_key',
+        type=str,
+        required=True,
+        help='Path to the private key for signing.'
+    )
+
+    parser.add_argument(
+        '--hash_size',
+        type=int,
+        default=256,
+        help='Hash size for signing.'
+    )
+
+    parser.add_argument(
+        '--passphrase',
+        type=str,
+        default=None,
+        help='Passphrase for the private key.'
+    )
+
     args = parser.parse_args()
 
     setup_logging()
@@ -54,14 +73,14 @@ def main():
         signed_path = os.path.join(folder, f"{folder_name}.fpk")
 
         compress_and_sign.compress_data(folder, output_path)
-        logging.info(f"Compression complete for {folder}. Compressed file saved at {output_path}")
+        logging.info(f"Compressed file saved at {output_path}.")
 
         compress_and_sign.sign_data(output_path, signed_path, args.private_key, hash_size=args.hash_size,
                                     passphrase=args.passphrase)
-        logging.info(f"Signed file saved at {signed_path}")
+        logging.info(f"Signed file saved at {signed_path}.")
 
         os.remove(output_path)
-        logging.info(f"Uncompressed file {output_path} deleted")
+        logging.info(f"Uncompressed file {output_path} deleted.")
 
 
 if __name__ == "__main__":
