@@ -47,11 +47,11 @@ docker-compose up --build
 ```
 
 ```bash
-docker exec -it docker-flatpack-1 /bin/bash
-```
-
-```bash
-chmod +x ./venv/bin/activate && source ./venv/bin/activate
+docker exec -it docker-flatpack-1 /bin/bash -c "\
+chmod +x ./venv/bin/activate && \
+source ./venv/bin/activate && \
+flatpack version && \
+bash"
 ```
 
 ### Install from PyPI
