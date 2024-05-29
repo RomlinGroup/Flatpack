@@ -75,6 +75,12 @@ flatpack unbox <flatpack_name>
 flatpack build <flatpack_name>
 ```
 
+### Creating a flatpack
+
+```bash
+flatpack create <flatpack_name>
+```
+
 ## AgentManager
 
 ```bash
