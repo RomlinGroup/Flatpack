@@ -15,6 +15,7 @@ phi3_suffix = "<|end|>\n"
 phi3_user = '<|user|>\n'
 
 model_dir = snapshot_download(repo_id=phi3_model_name)
+print(f"[DEBUG] model_dir: {model_dir}")
 
 phi3_processor = AutoProcessor.from_pretrained(
     model_dir,
