@@ -31,4 +31,4 @@ done
 
 rm -rf "${TEMP_DIR}"
 
-echo "👏 Update completed."
+echo "👏 Sync with template completed."
