@@ -75,13 +75,6 @@ flatpack unbox <flatpack_name>
 flatpack build <flatpack_name>
 ```
 
-### Create a flatpack
-
-```bash
-git clone https://github.com/RomlinGroup/Flatpack && cd Flatpack/utilities
-chmod +x create_flatpack.sh && ./create_flatpack.sh <flatpack_name>
-```
-
 ## AgentManager
 
 ```bash
