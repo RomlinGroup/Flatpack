@@ -34,7 +34,7 @@ https://pypi.org/project/flatpack
 
 **NOTE:** Flatpack is currently experimental. Please refrain from using it in production environments.
 
-### Install with Docker (recommended) ⭐
+### Install with Docker (recommended) 👍
 
 This method ensures a consistent environment and is the easiest way to get started.
 
