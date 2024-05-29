@@ -120,7 +120,7 @@ def extract_frames(video_path, frame_interval=10):
 
 def main():
     frame_count = 0
-    prompt = "What's going on? Respond with a single sentence."
+    prompt = "What is going on? Respond with a single sentence."
     capture_interval = 5
 
     if args.mode == "screenshot":
