@@ -36,7 +36,7 @@ transformers = "4.40.2"
 tqdm = "4.66.2"
 
 [[git]]
-from_source = "microsoft/Phi-3-vision-128k-instruct"
+from_source = "https://huggingface.co/microsoft/Phi-3-vision-128k-instruct"
 to_destination = "Phi-3-vision-128k-instruct"
 branch = "main"
 
