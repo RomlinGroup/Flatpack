@@ -77,7 +77,7 @@ flatpack build <flatpack_name>
 
 ### Creating a flatpack
 
-This is how you create a flatpack based on https://github.com/RomlinGroup/template.
+Here is how to create a new local flatpack using [RomlinGroup/template](https://github.com/RomlinGroup/template).
 
 ```bash
 flatpack create <flatpack_name>
