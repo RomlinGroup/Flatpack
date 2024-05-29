@@ -3,16 +3,20 @@ set -e
 set -u
 
 BASE_DIR="$(dirname $(dirname $(dirname $(realpath $0))))"
-DEVICE_SOURCE_FILE="${BASE_DIR}/warehouse/template/device.sh"
-INIT_SOURCE_FILE="${BASE_DIR}/warehouse/template/init.sh"
+TEMP_DIR=$(mktemp -d)
+
+git clone https://github.com/RomlinGroup/template.git "${TEMP_DIR}"
+
+DEVICE_SOURCE_FILE="${TEMP_DIR}/device.sh"
+INIT_SOURCE_FILE="${TEMP_DIR}/init.sh"
 
 if [[ ! -f ${DEVICE_SOURCE_FILE} ]]; then
-  echo "Error: Source file ${DEVICE_SOURCE_FILE} does not exist."
+  echo "❌ Error: Source file ${DEVICE_SOURCE_FILE} does not exist."
   exit 1
 fi
 
 if [[ ! -f ${INIT_SOURCE_FILE} ]]; then
-  echo "Error: Source file ${INIT_SOURCE_FILE} does not exist."
+  echo "❌ Error: Source file ${INIT_SOURCE_FILE} does not exist."
   exit 1
 fi
 
@@ -25,4 +29,6 @@ for dir in ${BASE_DIR}/warehouse/*/; do
   fi
 done
 
-echo "Update completed."
+rm -rf "${TEMP_DIR}"
+
+echo "👏 Update completed."
