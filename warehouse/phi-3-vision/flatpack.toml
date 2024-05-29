@@ -35,10 +35,10 @@ tiktoken = "0.6.0"
 transformers = "4.40.2"
 tqdm = "4.66.2"
 
-[[git]]
-from_source = "https://huggingface.co/microsoft/Phi-3-vision-128k-instruct"
-to_destination = "Phi-3-vision-128k-instruct"
-branch = "main"
+# [[git]]
+# from_source = "{{git_source_url}}"
+# to_destination = "{{git_destination_dir}}"
+# branch = "{{branch_name}}"
 
 [[file]]
 from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/phi-3-vision/index.html"
