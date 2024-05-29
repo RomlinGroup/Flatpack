@@ -58,10 +58,10 @@ def main():
 
         compress_and_sign.sign_data(output_path, signed_path, args.private_key, hash_size=args.hash_size,
                                     passphrase=args.passphrase)
-        logging.info(f"Signing complete for {output_path}. Signed file saved at {signed_path}")
+        logging.info(f"Signed file saved at {signed_path}")
 
         os.remove(output_path)
-        logging.info(f"Uncompressed file {output_path} deleted (signed version is kept).")
+        logging.info(f"Uncompressed file {output_path} deleted")
 
 
 if __name__ == "__main__":
