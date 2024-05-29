@@ -17,6 +17,30 @@ phi3_user = '<|user|>\n'
 model_dir = snapshot_download(repo_id=phi3_model_name)
 print(f"[DEBUG] model_dir: {model_dir}")
 
+modeling_file_path = os.path.join(model_dir, "modeling_phi3_v.py")
+if os.path.exists(modeling_file_path):
+    print("[DEBUG] modeling_phi3_v.py exists in the directory.")
+
+    with open(modeling_file_path, "r") as file:
+        lines = file.readlines()
+
+    with open(modeling_file_path, "r") as file:
+        lines = file.readlines()
+
+    start_line = 51
+    end_line = 56
+
+    for i in range(start_line, end_line + 1):
+        lines[i] = "# " + lines[i]
+
+    with open(modeling_file_path, "w") as file:
+        file.writelines(lines)
+
+    print("[DEBUG] Specified lines have been commented out.")
+
+else:
+    print("[DEBUG] modeling_phi3_v.py does NOT exist in the directory.")
+
 phi3_processor = AutoProcessor.from_pretrained(
     model_dir,
     trust_remote_code=True
