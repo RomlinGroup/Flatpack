@@ -61,7 +61,7 @@ def main():
         logging.info(f"Signing complete for {output_path}. Signed file saved at {signed_path}")
 
         os.remove(output_path)
-        logging.info(f"Uncompressed file {output_path} deleted, only the signed version is kept.")
+        logging.info(f"Uncompressed file {output_path} deleted.")
 
 
 if __name__ == "__main__":
