@@ -55,28 +55,40 @@ phi3_model = AutoModelForCausalLM.from_pretrained(
 
 
 def inference(input_text, input_image):
-    prompt = f"{phi3_user}\n{input_text}{phi3_suffix}{phi3_assistant}"
+    prompt = f"{phi3_user}"
+    images = None
 
-    images = [Image.fromarray(input_image)] if isinstance(input_image, np.ndarray) else [input_image] if isinstance(
-        input_image, Image.Image) else None
+    if isinstance(input_image, np.ndarray):
+        prompt += f"<|image_1|>\n"
+        images = [Image.fromarray(input_image)]
+    elif isinstance(input_image, Image.Image):
+        prompt += f"<|image_1|>\n"
+        images = [input_image]
 
+    if input_text != "":
+        prompt += f"{input_text}"
+
+    prompt += f"{phi3_suffix}{phi3_assistant}"
     print(f"Prompt\n{prompt}")
 
     inputs = phi3_processor(prompt, images=images, return_tensors="pt").to(phi3_device)
 
-    inference_ids = phi3_model.generate(
+    generate_ids = phi3_model.generate(
         **inputs,
         max_new_tokens=1000,
-        eos_token_id=phi3_processor.tokenizer.eos_token_id
-    )[:, inputs['input_ids'].shape[1]:]
+        eos_token_id=phi3_processor.tokenizer.eos_token_id,
+    )
+
+    generate_ids = generate_ids[:, inputs['input_ids'].shape[1]:]
 
     response = phi3_processor.batch_decode(
-        inference_ids,
+        generate_ids,
         skip_special_tokens=True,
         clean_up_tokenization_spaces=False
     )[0]
 
     print(f'Response\n{response}')
+
     return response
 
 
