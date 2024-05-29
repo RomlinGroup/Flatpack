@@ -43,7 +43,11 @@ git clone https://github.com/RomlinGroup/Flatpack && cd Flatpack/docker
 ```
 
 ```bash
-docker-compose up --build && docker exec -it docker-flatpack-1 /bin/bash
+docker-compose up --build
+```
+
+```bash
+docker exec -it docker-flatpack-1 /bin/bash
 ```
 
 ```bash
