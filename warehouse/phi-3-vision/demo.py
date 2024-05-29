@@ -10,7 +10,7 @@ from transformers import AutoModelForCausalLM, AutoProcessor
 
 phi3_assistant = '<|assistant|>\n'
 phi3_device = torch.device('mps')
-phi3_model_name = "./"
+phi3_model_name = "microsoft/Phi-3-vision-128k-instruct"
 phi3_suffix = "<|end|>\n"
 phi3_user = '<|user|>\n'
 
