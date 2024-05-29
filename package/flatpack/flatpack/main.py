@@ -344,11 +344,16 @@ def fpk_unbox(directory_name: str, session, local: bool = False):
         return
 
     flatpack_dir = Path.cwd() / directory_name
-    build_dir = flatpack_dir / "build"
 
-    if build_dir.exists():
-        print("❌ Error: Build directory already exists.")
+    if flatpack_dir.exists():
+        print("❌ Error: Flatpack directory already exists.")
         return
+    else:
+        build_dir = flatpack_dir / "build"
+
+        if build_dir.exists():
+            print("❌ Error: Build directory already exists.")
+            return
 
     flatpack_dir.mkdir(parents=True, exist_ok=True)
     build_dir.mkdir(parents=True, exist_ok=True)
