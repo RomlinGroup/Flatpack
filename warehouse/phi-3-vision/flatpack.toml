@@ -61,8 +61,8 @@ from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/wa
 to_destination = "init.sh"
 
 [[file]]
-from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/phi-3-vision/gradio.py"
-to_destination = "gradio.py"
+from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/phi-3-vision/demo.py"
+to_destination = "demo.py"
 
 [[run]]
 command = "chmod +x"
