@@ -259,7 +259,7 @@ def fpk_fetch_github_dirs(session: httpx.Client) -> List[str]:
             directories = [
                 item['name'] for item in json_data
                 if isinstance(item, dict) and item.get('type') == 'dir' and
-                   item.get('name', '').lower() not in {'template'}
+                   item.get('name', '').lower()
             ]
             return sorted(directories)
         else:

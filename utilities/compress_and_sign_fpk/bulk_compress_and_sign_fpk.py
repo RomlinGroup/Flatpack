@@ -17,8 +17,6 @@ def find_folders_to_compress(base_dir):
     folders = []
 
     for entry in os.listdir(base_dir):
-        if entry == "template":
-            continue
         full_path = os.path.join(base_dir, entry)
         if os.path.isdir(full_path):
             folders.append(full_path)
