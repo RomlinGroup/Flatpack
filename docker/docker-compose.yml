@@ -1,4 +1,15 @@
 services:
   flatpack:
-    build: .
-    container_name: flatpack-container
+    build:
+      context: .
+      dockerfile: Dockerfile
+    networks:
+      no-outgoing:
+    cap_add:
+      - NET_ADMIN
+
+networks:
+  no-outgoing:
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.name: br-no-outgoing

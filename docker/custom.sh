@@ -1,11 +1,13 @@
 #!/bin/bash
-# custom.sh
 
-# Activate the virtual environment
 source venv/bin/activate
 
-# Check and display the flatpack version
 flatpack version
 
-# Your original script functionality
-echo "Welcome, brave explorer!"
+echo "👋 Welcome, brave explorer!"
+
+./network.sh
+
+while :; do
+  sleep 3600
+done

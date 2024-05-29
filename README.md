@@ -40,6 +40,9 @@ This method ensures a consistent environment and is the easiest way to get start
 
 ```bash
 git clone https://github.com/RomlinGroup/Flatpack && cd Flatpack/docker
+```
+
+```bash
 docker-compose up --build
 ```
 
@@ -57,6 +60,9 @@ Use this method if you want to install flatpack directly from the source code.
 
 ```bash
 git clone https://github.com/RomlinGroup/Flatpack && cd Flatpack/package/flatpack
+```
+
+```bash
 pip install --upgrade .
 ```
 
