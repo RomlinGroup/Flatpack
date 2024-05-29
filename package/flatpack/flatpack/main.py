@@ -160,7 +160,7 @@ def fpk_create(flatpack_name, repo_url="https://github.com/RomlinGroup/template"
 
     shutil.rmtree(template_dir)
 
-    print(f"Successfully created {flatpack_name}.")
+    print(f"✨ Successfully created {flatpack_name}.")
 
 
 def fpk_display_disclaimer(directory_name: str, local: bool):
