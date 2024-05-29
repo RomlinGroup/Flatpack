@@ -6,6 +6,7 @@ import os
 import re
 import requests
 import shlex
+import shutil
 import stat
 import subprocess
 import sys
@@ -18,11 +19,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from huggingface_hub import snapshot_download
 from importlib.metadata import version
+from io import BytesIO
 from .parsers import parse_toml_to_venv_script
 from pathlib import Path
 from .session_manager import SessionManager
 from typing import List, Optional, Union
 from .vector_manager import VectorManager
+from zipfile import ZipFile
 
 HOME_DIR = Path.home()
 
@@ -117,6 +120,47 @@ def fpk_colorize(text, color):
     return colors[color] + text + colors["default"]
 
 
+def fpk_create(flatpack_name, repo_url="https://github.com/RomlinGroup/template"):
+    if not re.match(r'^[a-z0-9-]+$', flatpack_name):
+        raise ValueError("Error: Invalid name format. Only lowercase letters, numbers, and hyphens are allowed.")
+
+    flatpack_name = flatpack_name.lower().replace(' ', '-')
+
+    current_dir = os.getcwd()
+    template_dir = fpk_download_and_extract_template(repo_url, current_dir)
+
+    flatpack_dir = os.path.join(current_dir, flatpack_name)
+    os.makedirs(flatpack_dir, exist_ok=True)
+
+    for item in os.listdir(template_dir):
+        s = os.path.join(template_dir, item)
+        d = os.path.join(flatpack_dir, item)
+        if os.path.isdir(s):
+            shutil.copytree(s, d, dirs_exist_ok=True)
+        else:
+            shutil.copy2(s, d)
+
+    files_to_edit = [
+        (os.path.join(flatpack_dir, "README.md"), r"# template", f"# {flatpack_name}"),
+        (os.path.join(flatpack_dir, "flatpack.toml"), r"{{model_name}}", flatpack_name),
+        (os.path.join(flatpack_dir, "build.sh"), r"export DEFAULT_REPO_NAME=template",
+         f"export DEFAULT_REPO_NAME={flatpack_name}"),
+        (os.path.join(flatpack_dir, "build.sh"), r"export FLATPACK_NAME=template",
+         f"export FLATPACK_NAME={flatpack_name}")
+    ]
+
+    for file_path, pattern, replacement in files_to_edit:
+        with open(file_path, 'r') as file:
+            filedata = file.read()
+
+        newdata = re.sub(pattern, replacement, filedata)
+
+        with open(file_path, 'w') as file:
+            file.write(newdata)
+
+    print(f"Contents of template copied to {flatpack_name}.")
+
+
 def fpk_display_disclaimer(directory_name: str, local: bool):
     """Display a disclaimer message with details about a specific flatpack.
 
@@ -160,6 +204,13 @@ https://fpk.ai/w/{}
         please_note_colored = ""
 
     print(disclaimer_template.format(please_note=please_note_colored))
+
+
+def fpk_download_and_extract_template(repo_url, dest_dir):
+    response = requests.get(f"{repo_url}/archive/refs/heads/main.zip")
+    with ZipFile(BytesIO(response.content)) as zip_ref:
+        zip_ref.extractall(dest_dir)
+    return os.path.join(dest_dir, "template-main")
 
 
 def fpk_fetch_flatpack_toml_from_dir(directory_name: str, session: httpx.Client) -> Optional[str]:
@@ -345,7 +396,7 @@ def fpk_unbox(directory_name: str, session, local: bool = False):
 
     flatpack_dir = Path.cwd() / directory_name
 
-    if flatpack_dir.exists():
+    if flatpack_dir.exists() and not local:
         print("❌ Error: Flatpack directory already exists.")
         return
     else:
@@ -454,6 +505,11 @@ def setup_arg_parser():
     parser_get_api = api_key_subparsers.add_parser('get', help='Get the current API key')
     parser_get_api.set_defaults(func=lambda args, session: fpk_cli_handle_get_api_key(args, session))
 
+    # Create flatpack
+    parser_create = subparsers.add_parser('create', help='Create a new flatpack.')
+    parser_create.add_argument('input', nargs='?', default=None, help='The name of the flatpack to create.')
+    parser_create.set_defaults(func=lambda args, session: fpk_cli_handle_create(args, session))
+
     # Unbox commands
     parser_unbox = subparsers.add_parser('unbox', help='Unbox a flatpack from GitHub or a local directory.')
     parser_unbox.add_argument('input', nargs='?', default=None, help='The name of the flatpack to unbox.')
@@ -560,6 +616,15 @@ def fpk_cli_handle_add_url(url, vm):
 def fpk_cli_handle_build(args, session):
     directory_name = args.directory
     fpk_build(directory_name)
+
+
+def fpk_cli_handle_create(args, session):
+    if not args.input:
+        print("❌ Please specify a name for the new flatpack.")
+        return
+
+    flatpack_name = args.input
+    fpk_create(flatpack_name)
 
 
 def create_venv(venv_dir):
