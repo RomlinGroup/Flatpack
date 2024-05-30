@@ -108,7 +108,7 @@ echo "Python command to be used: $PYTHON_CMD"
 
 echo "🦄 Creating the virtual environment at {env_name}/{build_prefix}"
 
-if ! $PYTHON_CMD -m venv "{env_name}/{build_prefix}"; then
+if ! $PYTHON_CMD -m venv --clear --copies "{env_name}/{build_prefix}"; then
     echo "❌ Failed to create the virtual environment using $PYTHON_CMD"
     handle_error
 else
