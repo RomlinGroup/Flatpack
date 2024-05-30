@@ -5,6 +5,7 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y \
     curl \
     dnsutils \
+    git \
     iproute2 \
     iptables \
     iputils-ping \
