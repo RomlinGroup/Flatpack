@@ -53,4 +53,4 @@ fi
 
 echo "🌐 DNS queries are allowed on port 53 (both UDP and TCP)."
 echo "🔒 All outgoing HTTPS traffic is allowed (only port 443)."
-echo "🔥 Blocked outgoing traffic except for DNS and HTTPS."
+echo "🔥 Blocked all outgoing traffic except for DNS and HTTPS."
