@@ -1,4 +1,4 @@
-FROM ubuntu:24.04
+FROM ubuntu:22.04
 
 WORKDIR /app
 
@@ -10,7 +10,6 @@ RUN apt-get update && apt-get install -y \
     iptables \
     iputils-ping \
     python3 \
-    python3-distutils \
     python3-pip \
     python3-venv \
     wget \
