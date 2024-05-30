@@ -24,7 +24,7 @@ fi
 
 EXTERNAL_TEST=$(curl -s --connect-timeout 5 http://8.8.8.8)
 if [ $? -ne 0 ]; then
-    echo "✅ Outgoing traffic is blocked as expected."
+    echo "✅ Outgoing traffic is blocked (except for DNS and HTTPS)."
 else
     echo "❌ Outgoing traffic is NOT blocked."
 fi
