@@ -10,6 +10,7 @@ RUN apt-get update && apt-get install -y \
     iptables \
     iputils-ping \
     python3 \
+    python3-distutils \
     python3-pip \
     python3-venv \
     wget \
