@@ -4,7 +4,6 @@ WORKDIR /app
 
 RUN apt-get update && apt-get install -y \
     curl \
-    distutils \
     dnsutils \
     git \
     iproute2 \
