@@ -527,7 +527,7 @@ def setup_arg_parser():
     # Run server
     parser_run = subparsers.add_parser('run', help='Run the FastAPI server.')
     parser_run.add_argument('input', nargs='?', default=None, help='The name of the flatpack to run.')
-    parser_run.add_argument('--share', action='store_true', help='Public share link using ngrok.')
+    parser_run.add_argument('--share', action='store_true', help='Share link using ngrok.')
     parser_run.set_defaults(func=lambda args, session: fpk_cli_handle_run(args, session))
 
     # Vector database management
