@@ -27,7 +27,6 @@ python3-pip = "*"
 wget = "*"
 
 [packages.python]
-bitsandbytes = "0.43.1"
 einops = "0.8.0"
 numpy = "1.25.2"
 tiktoken = "0.6.0"
