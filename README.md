@@ -34,27 +34,7 @@ https://pypi.org/project/flatpack
 
 **NOTE:** Flatpack is currently experimental. Please refrain from using it in production environments.
 
-### Install with Docker (recommended) 👍
-
-This method ensures a consistent environment and is the easiest way to get started.
-
-```bash
-git clone https://github.com/RomlinGroup/Flatpack && cd Flatpack/docker
-```
-
-```bash
-docker-compose up --build
-```
-
-```bash
-docker exec -it docker-flatpack-1 /bin/bash -c "\
-chmod +x ./venv/bin/activate && \
-source ./venv/bin/activate && \
-flatpack version && \
-bash"
-```
-
-### Install from PyPI
+### Install from PyPI (recommended)
 
 Use this method if you prefer to install flatpack using pip from the Python Package Index.
 
@@ -72,6 +52,24 @@ git clone https://github.com/RomlinGroup/Flatpack && cd Flatpack/package/flatpac
 
 ```bash
 pip install --upgrade .
+```
+
+### Install with Docker
+
+```bash
+git clone https://github.com/RomlinGroup/Flatpack && cd Flatpack/docker
+```
+
+```bash
+docker-compose up --build
+```
+
+```bash
+docker exec -it docker-flatpack-1 /bin/bash -c "\
+chmod +x ./venv/bin/activate && \
+source ./venv/bin/activate && \
+flatpack version && \
+bash"
 ```
 
 ### Getting started with Flatpack
