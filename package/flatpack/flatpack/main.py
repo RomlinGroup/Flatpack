@@ -527,6 +527,7 @@ def setup_arg_parser():
     # Run server
     parser_run = subparsers.add_parser('run', help='Run the FastAPI server.')
     parser_run.add_argument('input', nargs='?', default=None, help='The name of the flatpack to run.')
+    parser_run.add_argument('--share', action='store_true', help='Public share link created using ngrok.')
     parser_run.set_defaults(func=lambda args, session: fpk_cli_handle_run(args, session))
 
     # Vector database management
@@ -810,21 +811,26 @@ def fpk_cli_handle_run(args, session):
         print(f"❌ The flatpack '{directory}' does not exist.")
         return
 
-    fpk_check_ngrok_auth()
+    if args.share:
+        fpk_check_ngrok_auth()
 
     setup_static_directory(app, directory)
 
     try:
         port = 8000
-        listener = ngrok.forward(port, authtoken_from_env=True)
-        print(f"Ingress established at {listener.url()}")
+
+        if args.share:
+            listener = ngrok.forward(port, authtoken_from_env=True)
+            print(f"Ingress established at {listener.url()}")
+
         uvicorn.run(app, host="127.0.0.1", port=port)
     except KeyboardInterrupt:
         print("❌ FastAPI server has been stopped.")
     except Exception as e:
         print(f"❌ An unexpected error occurred during server run: {e}")
     finally:
-        ngrok.disconnect(listener.url())
+        if args.share:
+            ngrok.disconnect(listener.url())
 
 
 def fpk_cli_handle_set_api_key(args, session):
