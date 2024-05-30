@@ -8,7 +8,7 @@ else
 fi
 
 # List of allowed domains
-ALLOWED_DOMAINS=("api.github.com", "raw.githubusercontent.com")
+ALLOWED_DOMAINS=("api.github.com" "raw.githubusercontent.com")
 
 # Block all outgoing traffic by default
 $IPTABLES_CMD -P OUTPUT DROP
