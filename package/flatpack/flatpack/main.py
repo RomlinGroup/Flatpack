@@ -14,14 +14,16 @@ import toml
 import uvicorn
 
 from .agent_manager import AgentManager
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from huggingface_hub import snapshot_download
 from importlib.metadata import version
 from io import BytesIO
 from .parsers import parse_toml_to_venv_script
 from pathlib import Path
+from pydantic import BaseModel
 from .session_manager import SessionManager
 from typing import List, Optional, Union
 from .vector_manager import VectorManager
@@ -457,24 +459,6 @@ def fpk_valid_directory_name(name: str) -> bool:
 
 atexit.register(fpk_safe_cleanup)
 
-app = FastAPI()
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-
-def setup_static_directory(app, directory: str):
-    if os.path.exists(directory) and os.path.isdir(directory):
-        app.mount("/", StaticFiles(directory=f"{directory}/build", html=True), name="static")
-        print(f"Static files will be served from: {directory}")
-    else:
-        print(f"The directory '{directory}' does not exist or is not a directory.")
-
 
 def setup_arg_parser():
     # Create the top-level parser
@@ -798,6 +782,67 @@ def fpk_cli_handle_list_agents(args, session):
     agent_manager.list_agents()
 
 
+app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+class SaveFileRequest(BaseModel):
+    filename: str
+    content: str
+
+
+flatpack_directory = None
+
+
+@app.get("/load_file")
+async def load_file(filename: str):
+    if not flatpack_directory:
+        raise HTTPException(status_code=500, detail="Flatpack directory is not set")
+
+    file_path = os.path.join(flatpack_directory, 'build', filename)
+    if os.path.commonpath([flatpack_directory, file_path]) != flatpack_directory:
+        raise HTTPException(status_code=403, detail="Access to the requested file is forbidden")
+
+    if os.path.exists(file_path):
+        return FileResponse(file_path)
+    else:
+        raise HTTPException(status_code=404, detail="File not found")
+
+
+@app.post("/save_file")
+async def save_file(request: SaveFileRequest):
+    if not flatpack_directory:
+        raise HTTPException(status_code=500, detail="Flatpack directory is not set")
+
+    file_path = os.path.join(flatpack_directory, 'build', request.filename)
+    if os.path.commonpath([flatpack_directory, file_path]) != flatpack_directory:
+        raise HTTPException(status_code=403, detail="Access to the requested file is forbidden")
+
+    try:
+        with open(file_path, 'w') as file:
+            file.write(request.content)
+        return JSONResponse(content={"message": "File saved successfully!"})
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to save file: {e}")
+
+
+def setup_static_directory(app, directory: str):
+    global flatpack_directory
+    flatpack_directory = os.path.abspath(directory)
+    if os.path.exists(flatpack_directory) and os.path.isdir(flatpack_directory):
+        app.mount("/", StaticFiles(directory=f"{flatpack_directory}/build", html=True), name="static")
+        print(f"Static files will be served from: {flatpack_directory}/build")
+    else:
+        print(f"The directory '{flatpack_directory}' does not exist or is not a directory.")
+
+
 def fpk_cli_handle_run(args, session):
     if not args.input:
         print("❌ Please specify a flatpack for the run command.")
@@ -821,7 +866,7 @@ def fpk_cli_handle_run(args, session):
 
         if args.share:
             listener = ngrok.forward(port, authtoken_from_env=True)
-            print(f"Ingress established at {listener.url()}")
+            print(f"Ingress established at {listener.public_url}")
 
         uvicorn.run(app, host="127.0.0.1", port=port)
     except KeyboardInterrupt:
@@ -830,7 +875,7 @@ def fpk_cli_handle_run(args, session):
         print(f"❌ An unexpected error occurred during server run: {e}")
     finally:
         if args.share:
-            ngrok.disconnect(listener.url())
+            ngrok.disconnect(listener.public_url)
 
 
 def fpk_cli_handle_set_api_key(args, session):
