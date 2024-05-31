@@ -866,7 +866,8 @@ def fpk_cli_handle_run(args, session):
 
         if args.share:
             listener = ngrok.forward(port, authtoken_from_env=True)
-            print(f"Ingress established at {listener.public_url}")
+            public_url = listener.url()  # Call the url method
+            print(f"Ingress established at {public_url}")
 
         uvicorn.run(app, host="127.0.0.1", port=port)
     except KeyboardInterrupt:
@@ -875,7 +876,7 @@ def fpk_cli_handle_run(args, session):
         print(f"❌ An unexpected error occurred during server run: {e}")
     finally:
         if args.share:
-            ngrok.disconnect(listener.public_url)
+            ngrok.disconnect(public_url)
 
 
 def fpk_cli_handle_set_api_key(args, session):
