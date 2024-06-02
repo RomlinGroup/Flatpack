@@ -804,9 +804,9 @@ def unescape_special_chars(content: str) -> str:
 
 
 def escape_content_parts(content: str) -> str:
-    escaped_content = ''
     parts = content.split('part_')
-    for part in parts:
+    escaped_content = parts[0]
+    for part in parts[1:]:
         if part.startswith('bash """') or part.startswith('python """'):
             type_and_content = part.split('"""', 1)
             if len(type_and_content) > 1:
@@ -821,9 +821,9 @@ def escape_content_parts(content: str) -> str:
 
 
 def unescape_content_parts(content: str) -> str:
-    unescaped_content = ''
     parts = content.split('part_')
-    for part in parts:
+    unescaped_content = parts[0]
+    for part in parts[1:]:
         if part.startswith('bash """') or part.startswith('python """'):
             type_and_content = part.split('"""', 1)
             if len(type_and_content) > 1:
