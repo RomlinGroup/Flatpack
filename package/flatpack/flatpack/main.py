@@ -812,11 +812,11 @@ def escape_content_parts(content: str) -> str:
             if len(type_and_content) > 1:
                 type_and_header, code = type_and_content
                 code, footer = code.rsplit('"""', 1)
-                escaped_content += 'part_' + type_and_header + '"""' + escape_special_chars(code) + '"""' + footer
+                escaped_content += f'part_{type_and_header}"""{escape_special_chars(code)}"""{footer}'
             else:
-                escaped_content += 'part_' + part
+                escaped_content += f'part_{part}'
         else:
-            escaped_content += 'part_' + part
+            escaped_content += f'part_{part}'
     return escaped_content
 
 
@@ -829,11 +829,11 @@ def unescape_content_parts(content: str) -> str:
             if len(type_and_content) > 1:
                 type_and_header, code = type_and_content
                 code, footer = code.rsplit('"""', 1)
-                unescaped_content += 'part_' + type_and_header + '"""' + unescape_special_chars(code) + '"""' + footer
+                unescaped_content += f'part_{type_and_header}"""{unescape_special_chars(code)}"""{footer}'
             else:
-                unescaped_content += 'part_' + part
+                unescaped_content += f'part_{part}'
         else:
-            unescaped_content += 'part_' + part
+            unescaped_content += f'part_{part}'
     return unescaped_content
 
 
