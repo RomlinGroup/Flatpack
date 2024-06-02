@@ -923,6 +923,25 @@ def fpk_cli_handle_run(args, session):
             ngrok.disconnect(public_url)
 
 
+def run_script(file_path):
+    with open(file_path, 'r') as file:
+        content = file.read()
+
+    parts = content.split('part_')[1:]
+    for part in parts:
+        header, code = part.split('"""', 1)
+        code, _ = code.rsplit('"""', 1)
+        if header.startswith('bash'):
+            print(f"Executing bash part:\n{code}")
+            result = subprocess.run(code, shell=True, capture_output=True, text=True)
+            print(result.stdout)
+            if result.stderr:
+                print(result.stderr)
+        elif header.startswith('python'):
+            print(f"Executing python part:\n{code}")
+            exec(code, globals())
+
+
 def fpk_cli_handle_set_api_key(args, session):
     print(f"Setting API key: {args.api_key}")
     global config
