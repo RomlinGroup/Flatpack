@@ -877,6 +877,13 @@ async def save_file(filename: str = Form(...), content: str = Form(...)):
         raise HTTPException(status_code=500, detail=f"Failed to save file: {e}")
 
 
+@app.post("/api/build")
+async def build_flatpack():
+    if not flatpack_directory:
+        raise HTTPException(status_code=500, detail="Flatpack directory is not set")
+    fpk_build(flatpack_directory)
+
+
 def setup_static_directory(app, directory: str):
     global flatpack_directory
     flatpack_directory = os.path.abspath(directory)
@@ -921,25 +928,6 @@ def fpk_cli_handle_run(args, session):
     finally:
         if args.share:
             ngrok.disconnect(public_url)
-
-
-def run_script(file_path):
-    with open(file_path, 'r') as file:
-        content = file.read()
-
-    parts = content.split('part_')[1:]
-    for part in parts:
-        header, code = part.split('"""', 1)
-        code, _ = code.rsplit('"""', 1)
-        if header.startswith('bash'):
-            print(f"Executing bash part:\n{code}")
-            result = subprocess.run(code, shell=True, capture_output=True, text=True)
-            print(result.stdout)
-            if result.stderr:
-                print(result.stderr)
-        elif header.startswith('python'):
-            print(f"Executing python part:\n{code}")
-            exec(code, globals())
 
 
 def fpk_cli_handle_set_api_key(args, session):
