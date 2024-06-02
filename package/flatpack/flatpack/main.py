@@ -14,7 +14,7 @@ import toml
 import uvicorn
 
 from .agent_manager import AgentManager
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, Form, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -792,13 +792,49 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
-class SaveFileRequest(BaseModel):
-    filename: str
-    content: str
-
-
 flatpack_directory = None
+
+
+def escape_special_chars(content: str) -> str:
+    return content.replace('"', '\\"')
+
+
+def unescape_special_chars(content: str) -> str:
+    return content.replace('\\"', '"')
+
+
+def escape_content_parts(content: str) -> str:
+    escaped_content = ''
+    parts = content.split('part_')
+    for part in parts:
+        if part.startswith('bash """') or part.startswith('python """'):
+            type_and_content = part.split('"""', 1)
+            if len(type_and_content) > 1:
+                type_and_header, code = type_and_content
+                code, footer = code.rsplit('"""', 1)
+                escaped_content += 'part_' + type_and_header + '"""' + escape_special_chars(code) + '"""' + footer
+            else:
+                escaped_content += 'part_' + part
+        else:
+            escaped_content += 'part_' + part
+    return escaped_content
+
+
+def unescape_content_parts(content: str) -> str:
+    unescaped_content = ''
+    parts = content.split('part_')
+    for part in parts:
+        if part.startswith('bash """') or part.startswith('python """'):
+            type_and_content = part.split('"""', 1)
+            if len(type_and_content) > 1:
+                type_and_header, code = type_and_content
+                code, footer = code.rsplit('"""', 1)
+                unescaped_content += 'part_' + type_and_header + '"""' + unescape_special_chars(code) + '"""' + footer
+            else:
+                unescaped_content += 'part_' + part
+        else:
+            unescaped_content += 'part_' + part
+    return unescaped_content
 
 
 @app.get("/load_file")
@@ -811,23 +847,31 @@ async def load_file(filename: str):
         raise HTTPException(status_code=403, detail="Access to the requested file is forbidden")
 
     if os.path.exists(file_path):
-        return FileResponse(file_path)
+        try:
+            with open(file_path, 'r') as file:
+                content = file.read()
+                unescaped_content = unescape_content_parts(content)
+                return JSONResponse(content={"content": unescaped_content})
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Error reading file: {e}")
     else:
         raise HTTPException(status_code=404, detail="File not found")
 
 
 @app.post("/save_file")
-async def save_file(request: SaveFileRequest):
+async def save_file(filename: str = Form(...), content: str = Form(...)):
     if not flatpack_directory:
         raise HTTPException(status_code=500, detail="Flatpack directory is not set")
 
-    file_path = os.path.join(flatpack_directory, 'build', request.filename)
+    file_path = os.path.join(flatpack_directory, 'build', filename)
     if os.path.commonpath([flatpack_directory, file_path]) != flatpack_directory:
         raise HTTPException(status_code=403, detail="Access to the requested file is forbidden")
 
     try:
-        with open(file_path, 'w') as file:
-            file.write(request.content)
+        normalized_content = content.replace('\r\n', '\n').replace('\r', '\n')
+        escaped_content = escape_content_parts(normalized_content)
+        with open(file_path, 'w', newline='\n') as file:
+            file.write(escaped_content)
         return JSONResponse(content={"message": "File saved successfully!"})
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to save file: {e}")
@@ -866,7 +910,7 @@ def fpk_cli_handle_run(args, session):
 
         if args.share:
             listener = ngrok.forward(port, authtoken_from_env=True)
-            public_url = listener.url()  # Call the url method
+            public_url = listener.url()
             print(f"Ingress established at {public_url}")
 
         uvicorn.run(app, host="127.0.0.1", port=port)
