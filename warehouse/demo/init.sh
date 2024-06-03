@@ -1,32 +1,66 @@
 #!/bin/bash
-
 echo "📦 Initializing the FPK package"
 
-TEMP_PYTHON_SCRIPT='/tmp/python_script.py'
-VALIDATOR_SCRIPT='/tmp/validator_script.py'
+CONTEXT_PYTHON_SCRIPT='/tmp/context_python_script.py'
+VENV_PYTHON="python3"
 
-rm -f "$TEMP_PYTHON_SCRIPT" "$VALIDATOR_SCRIPT"
+rm -f "$CONTEXT_PYTHON_SCRIPT"
+touch "$CONTEXT_PYTHON_SCRIPT"
 
-touch "$TEMP_PYTHON_SCRIPT" "$VALIDATOR_SCRIPT"
-trap 'rm -f "$TEMP_PYTHON_SCRIPT" "$VALIDATOR_SCRIPT"' EXIT
+trap 'rm -f "$CONTEXT_PYTHON_SCRIPT"' EXIT
 
-# build_python
-build_python() {
-    if [ -f "$TEMP_PYTHON_SCRIPT" ]; then
-        echo "✅ Python code is valid. Building the script..."
-        "$VENV_PYTHON" "$TEMP_PYTHON_SCRIPT"
-    else
-        echo "❌ Python script file does not exist."
-    fi
+log_error() {
+  echo "❌ $1"
+  exit 1
 }
 
-# part_python
-part_python() {
-  echo "$1" >> "$TEMP_PYTHON_SCRIPT"
-  echo "$1" >> "$VALIDATOR_SCRIPT"
+strip_html_tags() {
+  echo "$1" | sed 's/<[^>]*>//g'
+}
 
-  if ! "$VENV_PYTHON" -m py_compile "$VALIDATOR_SCRIPT"; then
-    echo "❌ Invalid Python code after recent addition. Exiting..."
-    exit 1
+part_python() {
+  local code="$1"
+  local exec_script='/tmp/exec_python_script.py'
+
+  code=$(strip_html_tags "$code")
+  code=$(echo "$code" | sed "s/&#39;/'/g" | sed "s/&quot;/\"/g" | sed "s/&gt;/>/g" | sed "s/&lt;/</g" | sed "s/&amp;/&/g")
+
+  if [[ -z "$code" ]]; then
+    log_error "Python code block is empty."
+  fi
+
+  context_code=$(echo "$code" | grep -vE 'print\(|subprocess\.run')
+  execution_code=$(echo "$code" | grep -E 'print\(|subprocess\.run')
+
+  echo "$context_code" >>"$CONTEXT_PYTHON_SCRIPT"
+
+  echo "try:" >"$exec_script"
+  cat "$CONTEXT_PYTHON_SCRIPT" | sed 's/^/    /' >>"$exec_script"
+  echo "$execution_code" | sed 's/^/    /' >>"$exec_script"
+  echo "except Exception as e:" >>"$exec_script"
+  echo "    print(e)" >>"$exec_script"
+
+  if ! "$VENV_PYTHON" -m py_compile "$exec_script"; then
+    log_error "Invalid Python code. Exiting..."
+  fi
+
+  if ! "$VENV_PYTHON" "$exec_script"; then
+    log_error "Error executing Python script."
+  fi
+}
+
+part_bash() {
+  local code="$1"
+
+  code=$(strip_html_tags "$code")
+
+  if [[ -z "$code" ]]; then
+    log_error "Bash code block is empty."
+  fi
+
+  code=$(echo "$code" | sed 's/\\\$/\$/g')
+
+  if ! source /dev/stdin <<<"$code"; then
+    log_error "Error executing Bash script."
   fi
 }

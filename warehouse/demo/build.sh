@@ -22,6 +22,16 @@ if [[ ! $REQUIRED_DEVICES =~ (^|[[:space:]])$DEVICE($|[[:space:]]) ]]; then
 fi
 
 # === BEGIN USER CUSTOMIZATION ===
+init_script="$SCRIPT_DIR/init.sh"
+[ -f "$init_script" ] || {
+  echo "init.sh not found, exiting."
+  exit 1
+}
+source "$init_script" || {
+  echo "Failed to load init.sh."
+  exit 1
+}
+
 source "$SCRIPT_DIR/custom.sh" || {
   echo "😱 Error: Failed to source custom.sh" >&2
   exit 1

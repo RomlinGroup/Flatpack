@@ -1,11 +1,734 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Flatpack</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FPK Editor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            text-rendering: optimizeLegibility;
+            -ms-text-size-adjust: 100%;
+            -webkit-text-size-adjust: 100%;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: #fff;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+        }
+
+        a {
+            color: #5865f2;
+            text-decoration: none;
+        }
+
+        h2 {
+            margin-bottom: 20px;
+            font-size: 24px;
+            color: #5865f2;
+        }
+
+        #add-python-button, #add-bash-button {
+            background: #000;
+        }
+
+        #button-container {
+            display: flex;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        #file-content {
+            margin-bottom: 20px;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        #file-content.loaded {
+            opacity: 1;
+        }
+
+        #filter {
+            position: absolute;
+            font-size: 12px;
+            background: #fff;
+            border: 1px solid #5865f2;
+            color: #5865f2;
+            padding: 5px;
+            padding-left: 10px;
+            padding-right: 10px;
+            right: 20px;
+            top: 20px;
+        }
+
+        #footer {
+            font-size: 14px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        #hooks, #terminal, #wrapper {
+            position: relative;
+            max-width: 800px;
+            padding: 20px;
+            margin: 0 auto 20px;
+            background: #fff;
+            border: 1px solid #5865f2;
+            border-top: 0;
+            width: 100%;
+        }
+
+        #save-button, #add-python-button, #add-bash-button {
+            background: #5865f2;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            padding: 10px 20px;
+            margin-right: 20px;
+            font-size: 14px;
+            transition: background 0.3s ease, opacity 0.3s ease;
+        }
+
+        #add-python-button, #add-bash-button {
+            background: #000;
+        }
+
+        #save-button {
+            margin-left: auto;
+            margin-right: 0px;
+        }
+
+        #save-button.loading, #add-python-button.loading, #add-bash-button.loading {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        #server-time {
+            font-size: 14px;
+        }
+
+        #status-bar {
+            display: none;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        #status-bar.success {
+            background: #31efb8;
+            color: #000;
+        }
+
+        #status-bar.error {
+            background: #ff8d80;
+            color: #000;
+        }
+
+        #toolbar {
+            width: 100%;
+            background: #5865f2;
+            color: #fff;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        #toolbar h1 {
+            font-size: 24px;
+            line-height: 1;
+        }
+
+        #toolbar a {
+            color: #fff;
+        }
+
+        .active-highlight {
+            background: #222 !important;
+        }
+
+        .delete-button, .move-up, .move-down {
+            width: 28px;
+            height: 28px;
+            color: #fff;
+            text-align: center;
+            line-height: 28px;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid;
+        }
+
+        .delete-button {
+            color: #5865f2;
+            background: #fff;
+            border-color: #fff;
+        }
+
+        .editor[data-placeholder]:empty:before {
+            content: attr(data-placeholder);
+            color: #888;
+            display: block;
+            font-style: italic;
+        }
+
+        .handle {
+            color: #5865f2;
+            background: #f0f2ff;
+            font-size: 12px;
+            height: 28px;
+            text-align: center;
+            line-height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-left: 1px solid #5865f2;
+            border-right: 1px solid #5865f2;
+            padding: 0 10px;
+        }
+
+        .highlight-comment {
+            color: #777;
+        }
+
+        .highlight-function {
+            color: #ff8d80;
+        }
+
+        .highlight-output {
+            color: #f5e342;
+        }
+
+        .highlight-string {
+            color: #31efb8;
+        }
+
+        .highlight-variable {
+            color: #5865f2;
+        }
+
+        .move-up, .move-down {
+            color: #5865f2;
+            background: #fff;
+            border: 0px;
+            border-right: 1px solid #5865f2;
+            font-size: 12px;
+        }
+
+        .part-python, .part-bash {
+            border: 1px solid #5865f2;
+            background: #000;
+            color: #fff;
+            margin: 20px 0;
+            position: relative;
+            word-break: break-all;
+            white-space: pre-wrap;
+            overflow-wrap: break-word;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .part-python .controls, .part-bash .controls {
+            border-bottom: 1px solid #5865f2;
+            position: absolute;
+            top: 0;
+            right: 0;
+            display: flex;
+        }
+
+        .part-python .editor, .part-bash .editor {
+            color: #fff;
+            width: 100%;
+            min-height: 50px;
+            padding: 20px;
+            border: none;
+            font-family: monospace;
+            font-size: 14px;
+            line-height: 1.5em;
+            background: none;
+            overflow: hidden;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            height: auto;
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #5865f2;
+            border-left: 1px solid #5865f2;
+            margin-top: 20px;
+            width: 100%;
+        }
+
+        .tab {
+            font-size: 14px;
+            padding: 10px 20px;
+            cursor: pointer;
+            color: #5865f2;
+            background: #f0f2ff;
+            border-top: 1px solid #5865f2;
+            border-right: 1px solid #5865f2;
+        }
+
+        .tab.active {
+            background: #fff;
+            border-bottom: none;
+            top: -1px;
+            height: calc(100% + 1px);
+        }
+
+        .tabs-container {
+            max-width: 800px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: flex-start;
+            width: 100%;
+        }
+
+        .tab-content {
+            display: none;
+            max-width: 800px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @media (max-width: 800px) {
+            #hooks, #terminal, #wrapper {
+                border-left: 0px;
+                border-right: 0px;
+            }
+
+            .tabs {
+                border-left: 0px;
+            }
+        }
+    </style>
 </head>
 <body>
-    <p>Hello, World!</p>
+<div id="toolbar">
+    <a href="index.html"><h1>FPK Editor</h1></a>
+    <div id="server-time"></div>
+</div>
+
+<div class="tabs-container">
+    <div class="tabs">
+        <div class="tab active" data-tab="editor">Editor</div>
+        <div class="tab" data-tab="hooks">Hooks</div>
+        <div class="tab" data-tab="terminal">Terminal</div>
+    </div>
+</div>
+
+<div class="tab-content active" id="editor-content">
+    <div id="wrapper">
+        <select id="filter" onchange="filterContent()" autocomplete="off">
+            <option value="all">Show all</option>
+            <option value="bash">Bash</option>
+            <option value="python">Python</option>
+        </select>
+
+        <h2>custom.sh</h2>
+        <div id="status-bar"></div>
+        <div id="file-content"></div>
+        <div id="button-container">
+            <button id="add-bash-button" onclick="addBashBlock()">Bash</button>
+            <button id="add-python-button" onclick="addPythonBlock()">Python</button>
+            <button id="save-button" onclick="saveFile()">Save</button>
+        </div>
+    </div>
+</div>
+
+<div class="tab-content" id="hooks-content">
+    <div id="hooks">
+        <h2>Hooks</h2>
+        [PLACEHOLDER]
+    </div>
+</div>
+
+<div class="tab-content" id="terminal-content">
+    <div id="terminal">
+        <h2>Terminal</h2>
+        [PLACEHOLDER]
+    </div>
+</div>
+
+<div id="footer">
+    Powered by <a href="https://fpk.ai">Flatpack</a>
+</div>
+
+<script>
+    let originalContent = '';
+
+    async function fetchServerTime() {
+        try {
+            const response = await fetch('http://127.0.0.1:8000/api/heartbeat');
+            if (response.ok) {
+                const data = await response.json();
+                const serverTimeElement = document.getElementById('server-time');
+                serverTimeElement.textContent = `${new Date(data.server_time).toLocaleString()}`;
+            } else {
+                console.error('Failed to fetch server time:', response.statusText);
+            }
+        } catch (error) {
+            console.error('Error fetching server time:', error);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        fetchServerTime();
+        setInterval(fetchServerTime, 600);
+    });
+
+    function logActiveInputArea(editor) {
+        console.log(`Active input area: ${editor.parentNode.className}`);
+        document.querySelectorAll('.part-python, .part-bash').forEach(part => {
+            part.classList.remove('active-highlight');
+        });
+        editor.parentNode.classList.add('active-highlight');
+    }
+
+    function logCharacter(event) {
+        if (event.data !== null) {
+            console.log(`Character typed: ${event.data}`);
+        }
+        const editor = event.target;
+        const type = editor.closest('.part-python') ? 'python' : 'bash';
+    }
+
+    function detectEnterKey(event, editor) {
+        if (event.key === 'Enter') {
+            console.log('Enter key pressed');
+        }
+    }
+
+    function resizeEditor(editor) {
+        editor.style.height = 'auto';
+        editor.style.height = `${editor.scrollHeight}px`;
+    }
+
+    function addEventListenersToEditor(editor) {
+        editor.addEventListener('focus', () => logActiveInputArea(editor));
+        editor.addEventListener('input', (event) => {
+            logCharacter(event);
+            resizeEditor(event.target);
+        });
+        editor.addEventListener('keydown', (event) => detectEnterKey(event, editor));
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const tabs = document.querySelectorAll('.tab');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        function setActiveTab(tab) {
+            const tabId = tab.dataset.tab;
+            tabs.forEach(t => t.classList.toggle('active', t === tab));
+            tabContents.forEach(tc => tc.classList.toggle('active', tc.id === `${tabId}-content`));
+            window.location.hash = tabId;
+            resizeAllTextareas();
+        }
+
+        tabs.forEach(tab => tab.addEventListener('click', () => setActiveTab(tab)));
+
+        const hash = window.location.hash.substring(1);
+        const initialTab = hash ? document.querySelector(`.tab[data-tab="${hash}"]`) : tabs[0];
+        if (initialTab) {
+            setActiveTab(initialTab);
+        }
+
+        document.querySelectorAll('.editor').forEach(editor => {
+            addEventListenersToEditor(editor);
+            resizeEditor(editor);
+        });
+
+        loadDefaultFile();
+    });
+
+    async function loadDefaultFile() {
+        try {
+            const response = await fetch(`/load_file?filename=custom.sh&_=${Date.now()}`);
+            if (response.ok) {
+                const json = await response.json();
+                originalContent = json.content;
+                renderFileContents(originalContent);
+                resizeAllTextareas();
+
+                document.querySelectorAll('.editor').forEach(editor => {
+                    addEventListenersToEditor(editor);
+                });
+            } else {
+                console.error('Error loading file:', response.statusText);
+            }
+        } catch (error) {
+            console.error('Error loading file:', error);
+        }
+    }
+
+    const languagePatterns = {
+        python: {
+            comment: /(#.*?$)/gm,
+            function: /\b(def\s+[a-zA-Z_][a-zA-Z0-9_]*)\s*(?=\()/gm,
+            string: /("""[\s\S]*?"""|'''[\s\S]*?'''|"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*')/gm,
+            output: /\b(print)\b/gm,
+            variable: /(?<!\.)\b([a-zA-Z_][a-zA-Z0-9_]*)\b(?=\s*=)/gm
+        },
+        bash: {
+            comment: /(#.*?$)/gm,
+            function: /\bfunction\s+([a-zA-Z_][a-zA-Z0-9_]*)\b|\b([a-zA-Z_][a-zA-Z0-9_]*)\s*\(\s*\)\s*\{/gm,
+            string: /"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'/gm,
+            output: /\b(echo|exit|export|pwd)\b/gm,
+            variable: /(?<!\.)\b([a-zA-Z_][a-zA-Z0-9_]*)\b(?=\s*=)|\b\$([a-zA-Z_][a-zA-Z0-9_]*)\b/gm
+        }
+    };
+
+    function applySyntaxHighlighting(editor, language) {
+        const patterns = languagePatterns[language];
+        if (patterns) {
+            let html = editor.innerText.replace(/\$/g, '__DOLLAR__');
+
+            const stringMatches = [];
+            html = html.replace(patterns.string, (match) => {
+                stringMatches.push(match);
+                return `__STRING_PLACEHOLDER_${stringMatches.length - 1}__`;
+            });
+
+            const sortedPatterns = Object.entries(patterns).sort(([a], [b]) => a.localeCompare(b));
+            for (const [type, pattern] of sortedPatterns) {
+                if (type === 'comment') {
+                    html = html.replace(pattern, (match) => {
+                        return `[HIGHLIGHT-COMMENT]${match}[/HIGHLIGHT-COMMENT]`;
+                    });
+                } else if (type === 'function') {
+                    html = html.replace(pattern, (match, p1) => {
+                        return `[HIGHLIGHT-FUNCTION]${p1}[/HIGHLIGHT-FUNCTION]`;
+                    });
+                } else if (type === 'output') {
+                    html = html.replace(pattern, (match, p1) => {
+                        return `[HIGHLIGHT-OUTPUT]${p1}[/HIGHLIGHT-OUTPUT]`;
+                    });
+                } else if (type === 'variable') {
+                    html = html.replace(pattern, (match, p1) => {
+                        return `[HIGHLIGHT-VARIABLE]${p1}[/HIGHLIGHT-VARIABLE]`;
+                    });
+                }
+            }
+
+            html = html.replace(/__STRING_PLACEHOLDER_(\d+)__/g, (match, index) => {
+                return stringMatches[parseInt(index, 10)];
+            });
+
+            html = html.replace(patterns.string, (match) => {
+                return `[HIGHLIGHT-STRING]${match}[/HIGHLIGHT-STRING]`;
+            });
+
+            html = html.replace(/\[HIGHLIGHT-COMMENT\]/g, '<span class="highlight-comment">')
+                .replace(/\[\/HIGHLIGHT-COMMENT\]/g, '</span>')
+                .replace(/\[HIGHLIGHT-STRING\]/g, '<span class="highlight-string">')
+                .replace(/\[\/HIGHLIGHT-STRING\]/g, '</span>')
+                .replace(/\[HIGHLIGHT-FUNCTION\]/g, '<span class="highlight-function">')
+                .replace(/\[\/HIGHLIGHT-FUNCTION\]/g, '</span>')
+                .replace(/\[HIGHLIGHT-OUTPUT\]/g, '<span class="highlight-output">')
+                .replace(/\[\/HIGHLIGHT-OUTPUT\]/g, '</span>')
+                .replace(/\[HIGHLIGHT-VARIABLE\]/g, '<span class="highlight-variable">')
+                .replace(/\[\/HIGHLIGHT-VARIABLE\]/g, '</span>');
+
+            html = html.replace(/__DOLLAR__/g, '$');
+            editor.innerHTML = html;
+        }
+    }
+
+    function renderFileContents(contents) {
+        const fileContentElement = document.getElementById('file-content');
+        fileContentElement.innerHTML = '';
+
+        const parts = contents.split(/(part_[a-z]+ """[\s\S]*?""")/).filter(Boolean);
+        parts.forEach(part => {
+            const match = part.match(/(part_[a-z]+) """([\s\S]*?)"""/);
+            if (match) {
+                const type = match[1];
+                let code = match[2].trim();
+
+                if (type === 'part_bash') {
+                    code = code.replace(/\\\$/g, '$');
+                }
+
+                const block = document.createElement('div');
+                block.className = type.replace('_', '-');
+
+                const editor = document.createElement('div');
+                editor.className = 'editor';
+                editor.contentEditable = true;
+
+                code = code.replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#39;');
+
+                editor.innerHTML = code;
+
+                block.appendChild(editor);
+
+                const controls = document.createElement('div');
+                controls.className = 'controls';
+                controls.appendChild(createControlElement('handle', type.replace('part_', '')));
+                controls.appendChild(createControlElement('move-up', '&#x25B2;', () => moveBlockUp(block)));
+                controls.appendChild(createControlElement('move-down', '&#x25BC;', () => moveBlockDown(block)));
+                controls.appendChild(createControlElement('delete-button', '&times;', () => block.remove()));
+
+                block.appendChild(controls);
+                fileContentElement.appendChild(block);
+
+                applySyntaxHighlighting(editor, type.split('_')[1]);
+            }
+        });
+
+        document.getElementById('file-content').classList.add('loaded');
+    }
+
+    function createControlElement(className, innerHTML, onClick) {
+        const element = document.createElement('div');
+        element.className = className;
+        element.innerHTML = innerHTML;
+        if (onClick) {
+            element.onclick = onClick;
+        }
+        return element;
+    }
+
+    function addBlock(type) {
+        const block = document.createElement('div');
+        block.className = `part-${type}`;
+
+        const editor = document.createElement('div');
+        editor.className = 'editor';
+        editor.contentEditable = true;
+        editor.setAttribute('data-placeholder', `Enter your ${type} code here...`);
+
+        addEventListenersToEditor(editor);
+
+        block.appendChild(editor);
+
+        const controls = document.createElement('div');
+        controls.className = 'controls';
+
+        controls.appendChild(createControlElement('handle', type));
+        controls.appendChild(createControlElement('move-up', '&#x25B2;', () => moveBlockUp(block)));
+        controls.appendChild(createControlElement('move-down', '&#x25BC;', () => moveBlockDown(block)));
+        controls.appendChild(createControlElement('delete-button', '&times;', () => block.remove()));
+
+        block.appendChild(controls);
+        document.getElementById('file-content').appendChild(block);
+
+        applySyntaxHighlighting(editor, type);
+    }
+
+    function addPythonBlock() {
+        addBlock('python');
+    }
+
+    function addBashBlock() {
+        addBlock('bash');
+    }
+
+    function moveBlockUp(block) {
+        const prev = block.previousElementSibling;
+        if (prev) {
+            block.parentNode.insertBefore(block, prev);
+        }
+    }
+
+    function moveBlockDown(block) {
+        const next = block.nextElementSibling;
+        if (next) {
+            block.parentNode.insertBefore(next, block);
+        }
+    }
+
+    async function saveFile() {
+        const saveButton = document.getElementById('save-button');
+        saveButton.classList.add('loading');
+
+        const parts = Array.from(document.querySelectorAll('.part-python, .part-bash')).map(part => {
+            const editor = part.querySelector('.editor');
+
+            let code = editor.innerHTML.trim();
+            code = code.replace(/<\/?span[^>]*>/g, '');
+
+            const type = part.classList.contains('part-python') ? 'part_python' : 'part_bash';
+            code = code.replace(/\n{3,}/g, '\n\n');
+
+            if (type === 'part_bash') {
+                code = code.replace(/\$/g, '\\$');
+            }
+
+            return `${type} """\n${code}\n"""`;
+        });
+
+        const formData = new FormData();
+        formData.append('filename', 'custom.sh');
+        formData.append('content', parts.join('\n'));
+
+        try {
+            const response = await fetch('/save_file', {method: 'POST', body: formData});
+            const responseText = await response.text();
+            console.log('Server response:', response.status, response.statusText, responseText);
+            showStatus(response.ok ? 'Saved successfully!' : 'Save failed!', response.ok);
+            if (response.ok) {
+                window.scrollTo(0, 0);
+            }
+        } catch (error) {
+            console.error('Error saving file:', error);
+            showStatus('Error saving file!', false);
+        } finally {
+            saveButton.classList.remove('loading');
+        }
+    }
+
+    function showStatus(message, isSuccess = true) {
+        const statusBar = document.getElementById('status-bar');
+        statusBar.textContent = message;
+        statusBar.style.display = 'block';
+        statusBar.className = isSuccess ? 'success' : 'error';
+        setTimeout(() => {
+            statusBar.style.display = 'none';
+            statusBar.className = '';
+        }, 3000);
+    }
+
+    function resizeAllTextareas() {
+        const editors = document.querySelectorAll('.editor');
+        editors.forEach(editor => {
+            editor.style.height = 'auto';
+            editor.style.height = `${editor.scrollHeight}px`;
+        });
+    }
+
+    window.addEventListener('resize', resizeAllTextareas);
+
+    function filterContent() {
+        const filter = document.getElementById('filter').value;
+        const blocks = document.querySelectorAll('.part-python, .part-bash');
+        blocks.forEach(block => {
+            const isPython = block.classList.contains('part-python');
+            const isBash = block.classList.contains('part-bash');
+            const shouldShow = filter === 'all' || (filter === 'python' && isPython) || (filter === 'bash' && isBash);
+            block.style.display = shouldShow ? 'block' : 'none';
+        });
+    }
+</script>
 </body>
 </html>
