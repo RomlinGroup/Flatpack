@@ -14,6 +14,7 @@ import toml
 import uvicorn
 
 from .agent_manager import AgentManager
+from datetime import datetime
 from fastapi import FastAPI, Form, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
@@ -882,6 +883,12 @@ async def build_flatpack():
     if not flatpack_directory:
         raise HTTPException(status_code=500, detail="Flatpack directory is not set")
     fpk_build(flatpack_directory)
+
+
+@app.get("/api/heartbeat")
+async def heartbeat():
+    current_time = datetime.utcnow().isoformat()
+    return JSONResponse(content={"server_time": current_time})
 
 
 def setup_static_directory(app, directory: str):
