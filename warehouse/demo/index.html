@@ -379,7 +379,16 @@
             if (response.ok) {
                 const data = await response.json();
                 const serverTimeElement = document.getElementById('server-time');
-                serverTimeElement.textContent = `${new Date(data.server_time).toLocaleString()}`;
+                const date = new Date(data.server_time);
+                const formattedDate = date.toLocaleString('sv-SE', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: false
+                });
+                serverTimeElement.textContent = `${formattedDate}`;
             } else {
                 console.error('Failed to fetch server time:', response.statusText);
             }
@@ -387,11 +396,6 @@
             console.error('Error fetching server time:', error);
         }
     }
-
-    document.addEventListener('DOMContentLoaded', () => {
-        fetchServerTime();
-        setInterval(fetchServerTime, 60000);
-    });
 
     function logActiveInputArea(editor) {
         console.log(`Active input area: ${editor.parentNode.className}`);
