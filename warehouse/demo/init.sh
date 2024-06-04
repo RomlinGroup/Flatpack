@@ -1,7 +1,8 @@
 #!/bin/bash
 echo "📦 Initializing the FPK package"
 
-CONTEXT_PYTHON_SCRIPT='/tmp/context_python_script.py'
+CONTEXT_PYTHON_SCRIPT="/tmp/context_python_script.py"
+VERIFY_MODE=${VERIFY_MODE:-false}
 VENV_PYTHON="python3"
 
 rm -f "$CONTEXT_PYTHON_SCRIPT"
@@ -29,23 +30,40 @@ part_python() {
     log_error "Python code block is empty."
   fi
 
-  context_code=$(echo "$code" | grep -vE 'print\(|subprocess\.run')
-  execution_code=$(echo "$code" | grep -E 'print\(|subprocess\.run')
+  if [[ "$VERIFY_MODE" != "true" ]]; then
 
-  echo "$context_code" >>"$CONTEXT_PYTHON_SCRIPT"
+    context_code=$(echo "$code" | grep -vE 'print\(|subprocess\.run')
+    execution_code=$(echo "$code" | grep -E 'print\(|subprocess\.run')
 
-  echo "try:" >"$exec_script"
-  cat "$CONTEXT_PYTHON_SCRIPT" | sed 's/^/    /' >>"$exec_script"
-  echo "$execution_code" | sed 's/^/    /' >>"$exec_script"
-  echo "except Exception as e:" >>"$exec_script"
-  echo "    print(e)" >>"$exec_script"
+    echo "$context_code" >>"$CONTEXT_PYTHON_SCRIPT"
 
-  if ! "$VENV_PYTHON" -m py_compile "$exec_script"; then
-    log_error "Invalid Python code. Exiting..."
+    echo "try:" >"$exec_script"
+    cat "$CONTEXT_PYTHON_SCRIPT" | sed 's/^/    /' >>"$exec_script"
+    echo "$execution_code" | sed 's/^/    /' >>"$exec_script"
+    echo "except Exception as e:" >>"$exec_script"
+    echo "    print(e)" >>"$exec_script"
+
+  else
+
+    echo "Verifying Python code..."
+    if "$VENV_PYTHON" -m py_compile "$exec_script"; then
+      echo "✅ OK"
+    else
+      echo "❌ Fail"
+    fi
+
   fi
 
-  if ! "$VENV_PYTHON" "$exec_script"; then
-    log_error "Error executing Python script."
+  #if ! "$VENV_PYTHON" -m py_compile "$exec_script"; then
+  #  log_error "Invalid Python code. Exiting..."
+  #fi
+
+  if ! output=$("$VENV_PYTHON" "$exec_script" 2>&1); then
+    log_error "Error executing Python script: $output"
+  else
+    if [[ "$VERIFY_MODE" != "true" ]]; then
+      echo "$output"
+    fi
   fi
 }
 
@@ -58,9 +76,24 @@ part_bash() {
     log_error "Bash code block is empty."
   fi
 
-  code=$(echo "$code" | sed 's/\\\$/\$/g')
+  if [[ "$VERIFY_MODE" != "true" ]]; then
+    code=$(echo "$code" | sed 's/\\\$/\$/g')
 
-  if ! source /dev/stdin <<<"$code"; then
-    log_error "Error executing Bash script."
+    if ! source /dev/stdin <<<"$code"; then
+      log_error "Error executing Bash script."
+    fi
+  else
+
+    echo "Verifying Bash code..."
+    if bash -n <<<"$code"; then
+      echo "✅ OK"
+    else
+      echo "❌ Fail"
+    fi
+
   fi
 }
+
+if [[ "$VERIFY_MODE" == "true" ]]; then
+  echo "🔍 Verification mode enabled"
+fi
