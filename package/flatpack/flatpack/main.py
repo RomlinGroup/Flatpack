@@ -482,7 +482,7 @@ def fpk_verify(directory: Union[str, None]):
         print("❌ No valid flatpack directory found.")
         return
 
-    verification_script_path = Path(last_unboxed_flatpack) / 'build' / 'verify.sh'
+    verification_script_path = Path(last_unboxed_flatpack) / 'build' / 'build.sh'
 
     if not verification_script_path.exists() or not verification_script_path.is_file():
         print(f"❌ Verification script not found in {last_unboxed_flatpack}.")
@@ -491,7 +491,8 @@ def fpk_verify(directory: Union[str, None]):
     safe_script_path = shlex.quote(str(verification_script_path.resolve()))
 
     try:
-        result = subprocess.run(['bash', '-u', safe_script_path], check=True)
+        env_vars = {'VERIFY_MODE': 'true'}
+        result = subprocess.run(['bash', '-u', safe_script_path], check=True, env={**env_vars, **os.environ})
         print("✅ Verification script executed successfully.")
     except subprocess.CalledProcessError as e:
         print(f"❌ An error occurred while executing the verification script: {e}")
