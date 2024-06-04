@@ -44,7 +44,7 @@ config = {
 
 
 def fpk_build(directory: Union[str, None]):
-    """Build a model using a building script from the last unboxed flatpack."""
+    """Build a flatpack."""
     cache_file_path = HOME_DIR / ".fpk_unbox.cache"
     print(f"Looking for cached flatpack in {cache_file_path}.")
 
@@ -461,6 +461,44 @@ def fpk_valid_directory_name(name: str) -> bool:
 atexit.register(fpk_safe_cleanup)
 
 
+def fpk_verify(directory: Union[str, None]):
+    """Verify a flatpack."""
+    cache_file_path = HOME_DIR / ".fpk_unbox.cache"
+    print(f"Looking for cached flatpack in {cache_file_path}.")
+
+    last_unboxed_flatpack = None
+
+    if directory and fpk_valid_directory_name(directory):
+        print(f"Using provided directory: {directory}")
+        last_unboxed_flatpack = directory
+    elif cache_file_path.exists():
+        print(f"Found cached flatpack in {cache_file_path}.")
+        last_unboxed_flatpack = cache_file_path.read_text().strip()
+    else:
+        print("❌ No cached flatpack found, and no valid directory provided.")
+        return
+
+    if not last_unboxed_flatpack:
+        print("❌ No valid flatpack directory found.")
+        return
+
+    verification_script_path = Path(last_unboxed_flatpack) / 'build' / 'verify.sh'
+
+    if not verification_script_path.exists() or not verification_script_path.is_file():
+        print(f"❌ Verification script not found in {last_unboxed_flatpack}.")
+        return
+
+    safe_script_path = shlex.quote(str(verification_script_path.resolve()))
+
+    try:
+        result = subprocess.run(['bash', '-u', safe_script_path], check=True)
+        print("✅ Verification script executed successfully.")
+    except subprocess.CalledProcessError as e:
+        print(f"❌ An error occurred while executing the verification script: {e}")
+    except Exception as e:
+        print(f"❌ An unexpected error occurred: {e}")
+
+
 def setup_arg_parser():
     # Create the top-level parser
     parser = argparse.ArgumentParser(description='Flatpack command line interface')
@@ -504,10 +542,14 @@ def setup_arg_parser():
     parser_unbox.set_defaults(func=lambda args, session: fpk_cli_handle_unbox(args, session))
 
     # Build commands
-    parser_build = subparsers.add_parser('build',
-                                         help='Build a model using the building script from the last unboxed flatpack.')
+    parser_build = subparsers.add_parser('build', help='Build a flatpack.')
     parser_build.add_argument('directory', nargs='?', default=None, help='The directory of the flatpack to build.')
     parser_build.set_defaults(func=lambda args, session: fpk_cli_handle_build(args, session))
+
+    # Verify commands
+    parser_build = subparsers.add_parser('verify', help='Verify a flatpack.')
+    parser_build.add_argument('directory', nargs='?', default=None, help='The directory of the flatpack to verify.')
+    parser_build.set_defaults(func=lambda args, session: fpk_cli_handle_verify(args, session))
 
     # Run server
     parser_run = subparsers.add_parser('run', help='Run the FastAPI server.')
@@ -885,6 +927,13 @@ async def build_flatpack():
     fpk_build(flatpack_directory)
 
 
+@app.post("/api/verify")
+async def verify_flatpack():
+    if not flatpack_directory:
+        raise HTTPException(status_code=500, detail="Flatpack directory is not set")
+    fpk_verify(flatpack_directory)
+
+
 @app.get("/api/heartbeat")
 async def heartbeat():
     current_time = datetime.utcnow().isoformat()
@@ -1002,6 +1051,11 @@ def fpk_cli_handle_unbox(args, session):
 
     print(f"✅ Directory name resolved to: '{directory_name}'")
     fpk_unbox(directory_name, session, local=args.local)
+
+
+def fpk_cli_handle_verify(args, session):
+    directory_name = args.directory
+    fpk_verify(directory_name)
 
 
 def fpk_cli_handle_version(args, session):

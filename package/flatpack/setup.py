@@ -5,7 +5,7 @@ with open("README.md", "r") as f:
 
 setup(
     name="flatpack",
-    version="3.5.22",
+    version="3.5.23",
     license="Apache Software License (Apache-2.0)",
     packages=find_packages(),
     install_requires=[
