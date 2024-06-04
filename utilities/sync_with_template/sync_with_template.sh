@@ -8,10 +8,16 @@ TEMP_DIR=$(mktemp -d)
 git clone https://github.com/RomlinGroup/template.git "${TEMP_DIR}"
 
 DEVICE_SOURCE_FILE="${TEMP_DIR}/device.sh"
+INDEX_SOURCE_FILE="${TEMP_DIR}/index.html"
 INIT_SOURCE_FILE="${TEMP_DIR}/init.sh"
 
 if [[ ! -f ${DEVICE_SOURCE_FILE} ]]; then
   echo "❌ Error: Source file ${DEVICE_SOURCE_FILE} does not exist."
+  exit 1
+fi
+
+if [[ ! -f ${INDEX_SOURCE_FILE} ]]; then
+  echo "❌ Error: Source file ${INDEX_SOURCE_FILE} does not exist."
   exit 1
 fi
 
@@ -24,6 +30,8 @@ for dir in ${BASE_DIR}/warehouse/*/; do
   if [[ "${dir}" != "${BASE_DIR}/warehouse/template/" ]]; then
     echo "Copying ${DEVICE_SOURCE_FILE} to ${dir}"
     cp "${DEVICE_SOURCE_FILE}" "${dir}"
+    echo "Copying ${INDEX_SOURCE_FILE} to ${dir}"
+    cp "${INDEX_SOURCE_FILE}" "${dir}"
     echo "Copying ${INIT_SOURCE_FILE} to ${dir}"
     cp "${INIT_SOURCE_FILE}" "${dir}"
   fi
