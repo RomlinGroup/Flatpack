@@ -12,7 +12,7 @@ touch "$CONTEXT_PYTHON_SCRIPT" "$EXEC_SCRIPT"
 trap 'rm -f "$CONTEXT_PYTHON_SCRIPT" "$EXEC_SCRIPT"' EXIT
 
 log_error() {
-  echo "❌ $1"
+  echo "❌ $1" >&2
   exit 1
 }
 
@@ -52,10 +52,14 @@ part_python() {
     fi
   else
     echo "Verifying Python code..."
-    if "$VENV_PYTHON" -m py_compile "$EXEC_SCRIPT"; then
-      echo "✅ OK"
+    if "$VENV_PYTHON" -m py_compile "$CONTEXT_PYTHON_SCRIPT"; then
+      if "$VENV_PYTHON" -m py_compile "$EXEC_SCRIPT"; then
+        echo "✅ OK"
+      else
+        log_error "❌ Fail: Execution script verification failed"
+      fi
     else
-      log_error "❌ Fail"
+      log_error "❌ Fail: Context script verification failed"
     fi
   fi
 }
@@ -76,10 +80,10 @@ part_bash() {
     fi
   else
     echo "Verifying Bash code..."
-    if bash -n <<<"$code"; then
+    if echo "$code" | bash -n; then
       echo "✅ OK"
     else
-      log_error "❌ Fail"
+      log_error "❌ Fail: Bash script verification failed"
     fi
   fi
 }
