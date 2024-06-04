@@ -2,6 +2,7 @@ part_bash """
 # Part 1: Bash
 PRESENT=\"Part 1: Hello from the present!\"
 echo \$PRESENT
+
 PAST=\"Part 10: Hello from the past!\"
 """
 part_bash """
@@ -32,6 +33,7 @@ def compute_average(numbers):
 part_python """
 # Part 6: Python - Subprocess Example
 print(\"Part 6: Running subprocess to check directory\")
+
 result = subprocess.run(['pwd'], capture_output=True, text=True)
 print(result.stdout.strip())
 """
