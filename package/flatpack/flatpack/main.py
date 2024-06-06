@@ -75,7 +75,7 @@ def fpk_build(directory: Union[str, None]):
     try:
         result = subprocess.run(['bash', '-u', safe_script_path], check=True)
     except subprocess.CalledProcessError as e:
-        print(f"❌ An error occurred while executing the build script: {e}")
+        print(f"❌ An error occurred while executing the build script.")
     except Exception as e:
         print(f"❌ An unexpected error occurred: {e}")
 
