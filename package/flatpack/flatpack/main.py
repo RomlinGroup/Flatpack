@@ -924,14 +924,22 @@ async def save_file(filename: str = Form(...), content: str = Form(...)):
 async def build_flatpack():
     if not flatpack_directory:
         raise HTTPException(status_code=500, detail="Flatpack directory is not set")
-    fpk_build(flatpack_directory)
+    try:
+        fpk_build(flatpack_directory)
+        return JSONResponse(content={"message": "Build process completed successfully."}, status_code=200)
+    except Exception as e:
+        return JSONResponse(content={"message": f"Build process failed: {e}"}, status_code=500)
 
 
 @app.post("/api/verify")
 async def verify_flatpack():
     if not flatpack_directory:
         raise HTTPException(status_code=500, detail="Flatpack directory is not set")
-    fpk_verify(flatpack_directory)
+    try:
+        fpk_verify(flatpack_directory)
+        return JSONResponse(content={"message": "Verification process completed successfully."}, status_code=200)
+    except Exception as e:
+        return JSONResponse(content={"message": f"Verification process failed: {e}"}, status_code=500)
 
 
 @app.get("/api/heartbeat")
