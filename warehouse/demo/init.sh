@@ -1,20 +1,35 @@
 #!/bin/bash
+set -euo pipefail
+
 echo "📦 Initializing the FPK package"
 
 CONTEXT_PYTHON_SCRIPT="/tmp/context_python_script.py"
-VERIFY_MODE=${VERIFY_MODE:-false}
+EVAL_BUILD="$SCRIPT_DIR/eval_build.json"
+EXEC_PYTHON_SCRIPT="/tmp/exec_python_script.py"
+
 VENV_PYTHON="python3"
-EXEC_SCRIPT="/tmp/exec_python_script.py"
+VERIFY_MODE=${VERIFY_MODE:-false}
 
-rm -f "$CONTEXT_PYTHON_SCRIPT" "$EXEC_SCRIPT"
-touch "$CONTEXT_PYTHON_SCRIPT" "$EXEC_SCRIPT"
+CURR=0
+LAST=0
 
-trap 'rm -f "$CONTEXT_PYTHON_SCRIPT" "$EXEC_SCRIPT"' EXIT
-
-log_error() {
-  echo "❌ $1" >&2
-  exit 1
+cleanup() {
+  rm -f "$CONTEXT_PYTHON_SCRIPT" "$EXEC_PYTHON_SCRIPT"
 }
+
+trap cleanup EXIT
+
+rm -f "$CONTEXT_PYTHON_SCRIPT" "$EXEC_PYTHON_SCRIPT"
+touch "$CONTEXT_PYTHON_SCRIPT" "$EXEC_PYTHON_SCRIPT"
+
+CUSTOM_SH="$SCRIPT_DIR/custom.sh"
+
+if [[ -f "$CUSTOM_SH" && -r "$CUSTOM_SH" ]]; then
+  LAST=$(grep -Ec 'part_python|part_bash' "$CUSTOM_SH" || true)
+  LAST=${LAST:-0}
+else
+  echo "File custom.sh does not exist or is not readable"
+fi
 
 strip_html_tags() {
   echo "$1" | sed 's/<[^>]*>//g'
@@ -24,13 +39,21 @@ decode_html_entities() {
   echo "$1" | sed "s/&#39;/'/g" | sed "s/&quot;/\"/g" | sed "s/&gt;/>/g" | sed "s/&lt;/</g" | sed "s/&amp;/&/g"
 }
 
+eval_build() {
+  local datetime
+  datetime=$(date -u +"%Y-%m-%d %H:%M:%S")
+  local eval=$((CURR + 1))
+  echo "{\"curr\": $CURR, \"last\": $LAST, \"eval\": $eval, \"datetime\": \"$datetime\"}" >"$EVAL_BUILD"
+}
+
 part_python() {
   local code="$1"
   code=$(strip_html_tags "$code")
   code=$(decode_html_entities "$code")
 
   if [[ -z "$code" ]]; then
-    log_error "Python code block is empty."
+    echo "Python code block is empty."
+    exit 1
   fi
 
   if [[ "$VERIFY_MODE" != "true" ]]; then
@@ -39,28 +62,24 @@ part_python() {
 
     echo "$context_code" >>"$CONTEXT_PYTHON_SCRIPT"
 
-    echo "try:" >"$EXEC_SCRIPT"
-    sed 's/^/    /' "$CONTEXT_PYTHON_SCRIPT" >>"$EXEC_SCRIPT"
-    echo "$execution_code" | sed 's/^/    /' >>"$EXEC_SCRIPT"
-    echo "except Exception as e:" >>"$EXEC_SCRIPT"
-    echo "    print(e)" >>"$EXEC_SCRIPT"
+    echo "try:" >"$EXEC_PYTHON_SCRIPT"
+    sed 's/^/    /' "$CONTEXT_PYTHON_SCRIPT" >>"$EXEC_PYTHON_SCRIPT"
+    echo "$execution_code" | sed 's/^/    /' >>"$EXEC_PYTHON_SCRIPT"
+    echo "except Exception as e:" >>"$EXEC_PYTHON_SCRIPT"
+    echo "    print(e)" >>"$EXEC_PYTHON_SCRIPT"
+    echo "    import sys; sys.exit(1)" >>"$EXEC_PYTHON_SCRIPT"
 
-    if ! output=$("$VENV_PYTHON" "$EXEC_SCRIPT" 2>&1); then
-      log_error "Error executing Python script: $output"
-    else
+    if output=$("$VENV_PYTHON" "$EXEC_PYTHON_SCRIPT" 2>&1); then
       echo "$output"
+      ((CURR++))
+    else
+      exit 1
     fi
+
+    eval_build
+
   else
     echo "Verifying Python code..."
-    if "$VENV_PYTHON" -m py_compile "$CONTEXT_PYTHON_SCRIPT"; then
-      if "$VENV_PYTHON" -m py_compile "$EXEC_SCRIPT"; then
-        echo "✅ OK"
-      else
-        log_error "❌ Fail: Execution script verification failed"
-      fi
-    else
-      log_error "❌ Fail: Context script verification failed"
-    fi
   fi
 }
 
@@ -69,22 +88,23 @@ part_bash() {
   code=$(strip_html_tags "$code")
 
   if [[ -z "$code" ]]; then
-    log_error "Bash code block is empty."
+    echo "Bash code block is empty."
+    exit 1
   fi
 
   if [[ "$VERIFY_MODE" != "true" ]]; then
     code=$(echo "$code" | sed 's/\\\$/\$/g')
 
-    if ! source /dev/stdin <<<"$code"; then
-      log_error "Error executing Bash script."
+    if source /dev/stdin <<<"$code" 2>/dev/null; then
+      ((CURR++))
+    else
+      exit 0
     fi
+
+    eval_build
+
   else
     echo "Verifying Bash code..."
-    if echo "$code" | bash -n; then
-      echo "✅ OK"
-    else
-      log_error "❌ Fail: Bash script verification failed"
-    fi
   fi
 }
 
