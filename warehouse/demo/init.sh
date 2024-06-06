@@ -42,7 +42,14 @@ decode_html_entities() {
 eval_build() {
   local datetime
   datetime=$(date -u +"%Y-%m-%d %H:%M:%S")
-  local eval=$((CURR + 1))
+  local eval
+
+  if [ "$CURR" -eq "$LAST" ]; then
+    eval="null"
+  else
+    eval=$((CURR + 1))
+  fi
+
   echo "{\"curr\": $CURR, \"last\": $LAST, \"eval\": $eval, \"datetime\": \"$datetime\"}" >"$EVAL_BUILD"
 }
 
