@@ -445,7 +445,7 @@
         <div id="button-container">
             <button id="add-bash-button" onclick="addBashBlock()">Bash</button>
             <button id="add-python-button" onclick="addPythonBlock()">Python</button>
-            <button id="save-button" onclick="saveFile()">Save</button>
+            <button id="save-button" onclick="saveFile(true)">Save</button>
         </div>
     </div>
 </div>
@@ -535,7 +535,7 @@
 
     async function buildProject() {
         try {
-            saveFile(status = false);
+            saveFile(false);
             callAPI('build');
 
             const data = await getEvalJSON();
