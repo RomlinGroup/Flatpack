@@ -530,7 +530,8 @@
     async function showLogFile() {
         try {
             const baseUrl = window.location.origin;
-            const response = await fetch(`${baseUrl}/build.log`);
+            const cacheBuster = new Date().getTime();
+            const response = await fetch(`${baseUrl}/build.log?cb=${cacheBuster}`);
             if (response.ok) {
                 const logContent = await response.text();
                 if (logContent.trim() === "") {
