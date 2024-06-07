@@ -452,17 +452,80 @@
     let originalContent = '';
 
     document.addEventListener('DOMContentLoaded', () => {
-        document.getElementById('save-action').addEventListener('click', saveFile);
+        document.getElementById('save-action').addEventListener('click', () => saveFile(true));
         document.getElementById('verify-action').addEventListener('click', verifyCode);
         document.getElementById('build-action').addEventListener('click', buildProject);
     });
 
-    function buildProject() {
+    function callAPI(endpoint) {
         console.log("buildProject");
+
+        var xhr = new XMLHttpRequest();
+        var url = "http://127.0.0.1:8000/api/" + endpoint;
+
+        xhr.open("POST", url, true);
+        xhr.setRequestHeader("Content-Type", "application/json");
+
+        var data = JSON.stringify({key: 'value'});
+
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4) {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    try {
+                        var json = JSON.parse(xhr.responseText);
+                        console.log('Success:', json);
+                    } catch (e) {
+                        console.error('Parsing error:', e);
+                    }
+                } else {
+                    console.error('HTTP Error:', xhr.status, xhr.statusText);
+                    console.error('Response:', xhr.responseText);
+                }
+            }
+        };
+
+        xhr.onerror = function () {
+            console.error('Network error');
+        };
+
+        try {
+            xhr.send(data);
+        } catch (e) {
+            console.error('Request failed:', e);
+        }
+    }
+
+    async function getEvalJSON() {
+        try {
+            const response = await fetch('eval_build.json');
+
+            if (!response.ok) {
+                throw new Error(`Network response was not ok: ${response.statusText}`);
+            }
+
+            const data = await response.json();
+            return data;
+
+        } catch (error) {
+            console.error('Fetch error:', error);
+            throw error;
+        }
+    }
+
+    async function buildProject() {
+        try {
+            saveFile(status = false)
+            callAPI("build");
+            const data = await getEvalJSON();
+            showStatus(JSON.stringify(data), isSuccess = true);
+        } catch (error) {
+            console.error('Failed to build project:', error);
+            showStatus(`Error: ${error.message}`, isSuccess = false);
+        }
     }
 
     function verifyCode() {
-        console.log("verifyCode");
+        callAPI("verify");
     }
 
     async function checkHeartbeat() {
@@ -767,7 +830,7 @@
         }
     }
 
-    async function saveFile() {
+    async function saveFile(status = false) {
         const saveButton = document.getElementById('save-button');
         saveButton.classList.add('loading');
 
@@ -795,13 +858,17 @@
             const response = await fetch('/save_file', {method: 'POST', body: formData});
             const responseText = await response.text();
             console.log('Server response:', response.status, response.statusText, responseText);
-            showStatus(response.ok ? 'Saved successfully!' : 'Save failed!', response.ok);
+
+            if (status != false)
+                showStatus(response.ok ? 'Saved successfully!' : 'Save failed!', response.ok);
+
             if (response.ok) {
                 window.scrollTo(0, 0);
             }
         } catch (error) {
             console.error('Error saving file:', error);
-            showStatus('Error saving file!', false);
+            if (status != false)
+                showStatus('Error saving file!', false);
         } finally {
             saveButton.classList.remove('loading');
         }
@@ -815,7 +882,7 @@
         setTimeout(() => {
             statusBar.style.display = 'none';
             statusBar.className = '';
-        }, 3000);
+        }, 10000);
     }
 
     function resizeAllTextareas() {
