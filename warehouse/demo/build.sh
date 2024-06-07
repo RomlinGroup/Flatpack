@@ -2,8 +2,8 @@
 
 export SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+echo -e "[DEBUG] $(date +"%Y-%m-%d %H:%M:%S")"
 echo -e "🚀 build.sh is running in: $SCRIPT_DIR"
-echo -e "Building started at $(date)"
 
 # === BEGIN USER CUSTOMIZATION ===
 export DEFAULT_REPO_NAME=demo
