@@ -293,6 +293,26 @@
             flex-direction: column;
         }
 
+        .color-label {
+            height: 5px;
+            width: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        .part-python .color-label {
+            background-color: #5865f2;
+        }
+
+        .part-bash .color-label {
+            background-color: #5865f2;
+        }
+
+        .part-bash .eval-label {
+            background-color: #ff8d80;
+        }
+
         .part-python .controls, .part-bash .controls {
             border-bottom: 1px solid #5865f2;
             position: absolute;
@@ -449,6 +469,7 @@
 </div>
 
 <script>
+    let currentPart = 1;
     let originalContent = '';
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -514,18 +535,49 @@
 
     async function buildProject() {
         try {
-            saveFile(status = false)
-            callAPI("build");
+            saveFile(status = false);
+            callAPI('build');
+
             const data = await getEvalJSON();
-            showStatus(JSON.stringify(data), isSuccess = true);
+            const evalPart = data.eval;
+
+            console.log('part-' + evalPart);
+
+            const isSuccess = data.curr === evalPart || evalPart === null;
+            showStatus(JSON.stringify(data), isSuccess);
+
+            const allParts = document.querySelectorAll('.color-label.eval-label');
+            allParts.forEach(label => {
+                label.classList.remove('eval-label');
+            });
+
+            if (evalPart !== null) {
+                const partDiv = document.getElementById('part-' + evalPart);
+                if (partDiv) {
+                    const colorLabelDiv = partDiv.querySelector('.color-label');
+                    if (colorLabelDiv) {
+                        if (isSuccess) {
+                            colorLabelDiv.classList.remove('eval-label');
+                        } else {
+                            colorLabelDiv.classList.add('eval-label');
+                        }
+                    }
+                }
+            }
+
         } catch (error) {
             console.error('Failed to build project:', error);
             showStatus(`Error: ${error.message}`, isSuccess = false);
+
+            const allParts = document.querySelectorAll('.color-label.eval-label');
+            allParts.forEach(label => {
+                label.classList.remove('eval-label');
+            });
         }
     }
 
     function verifyCode() {
-        callAPI("verify");
+        callAPI('verify');
     }
 
     async function checkHeartbeat() {
@@ -739,6 +791,11 @@
 
                 const block = document.createElement('div');
                 block.className = type.replace('_', '-');
+                block.id = `part-${currentPart++}`;
+
+                const colorLabel = document.createElement('div');
+                colorLabel.className = 'color-label';
+                block.appendChild(colorLabel);
 
                 const editor = document.createElement('div');
                 editor.className = 'editor';
@@ -784,6 +841,11 @@
     function addBlock(type) {
         const block = document.createElement('div');
         block.className = `part-${type}`;
+        block.id = `part-${currentPart++}`;
+
+        const colorLabel = document.createElement('div');
+        colorLabel.className = 'color-label';
+        block.appendChild(colorLabel);
 
         const editor = document.createElement('div');
         editor.className = 'editor';
@@ -876,13 +938,24 @@
 
     function showStatus(message, isSuccess = true) {
         const statusBar = document.getElementById('status-bar');
+        if (!statusBar) {
+            console.error('Status bar element not found');
+            return;
+        }
+
+        if (statusBar.hideTimeout) {
+            clearTimeout(statusBar.hideTimeout);
+        }
+
         statusBar.textContent = message;
         statusBar.style.display = 'block';
-        statusBar.className = isSuccess ? 'success' : 'error';
-        setTimeout(() => {
+        statusBar.classList.remove('success', 'error');
+        statusBar.classList.add(isSuccess ? 'success' : 'error');
+
+        statusBar.hideTimeout = setTimeout(() => {
             statusBar.style.display = 'none';
-            statusBar.className = '';
-        }, 10000);
+            statusBar.classList.remove('success', 'error');
+        }, 5000);
     }
 
     function resizeAllTextareas() {

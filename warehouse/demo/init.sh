@@ -31,6 +31,12 @@ else
   echo "File custom.sh does not exist or is not readable"
 fi
 
+eval_build_initial() {
+  local datetime
+  datetime=$(date -u +"%Y-%m-%d %H:%M:%S")
+  echo "{\"curr\": $CURR, \"last\": $LAST, \"eval\": 1, \"datetime\": \"$datetime\"}" >"$EVAL_BUILD"
+}
+
 strip_html_tags() {
   echo "$1" | sed 's/<[^>]*>//g'
 }
@@ -118,3 +124,5 @@ part_bash() {
 if [[ "$VERIFY_MODE" == "true" ]]; then
   echo "🔍 Verification mode enabled"
 fi
+
+eval_build_initial
