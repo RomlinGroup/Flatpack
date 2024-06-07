@@ -1,6 +1,7 @@
 import argparse
 import atexit
 import httpx
+import logging
 import ngrok
 import os
 import re
@@ -30,12 +31,14 @@ from typing import List, Optional, Union
 from .vector_manager import VectorManager
 from zipfile import ZipFile
 
-HOME_DIR = Path.home()
+HOME_DIR = Path.home() / ".fpk"
+HOME_DIR.mkdir(exist_ok=True)
 
 BASE_URL = "https://raw.githubusercontent.com/romlingroup/flatpack/main/warehouse"
 CONFIG_FILE_PATH = HOME_DIR / ".fpk_config.toml"
 GITHUB_REPO_URL = "https://api.github.com/repos/romlingroup/flatpack"
 KEY_FILE_PATH = HOME_DIR / ".fpk_encryption_key"
+LOG_FILE_PATH = HOME_DIR / ".fpk_build_log"
 VERSION = version("flatpack")
 
 config = {
@@ -73,7 +76,19 @@ def fpk_build(directory: Union[str, None]):
     safe_script_path = shlex.quote(str(building_script_path.resolve()))
 
     try:
-        result = subprocess.run(['bash', '-u', safe_script_path], check=True)
+        with open(LOG_FILE_PATH, 'w') as log_file:
+            process = subprocess.Popen(
+                ['bash', '-u', safe_script_path],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True
+            )
+
+            for line in process.stdout:
+                print(line, end='')
+                log_file.write(line)
+
+            process.wait()
     except subprocess.CalledProcessError as e:
         print(f"❌ An error occurred while executing the build script.")
     except Exception as e:
@@ -827,6 +842,15 @@ def fpk_cli_handle_list_agents(args, session):
 
 app = FastAPI()
 
+
+class EndpointFilter(logging.Filter):
+    def filter(self, record):
+        return 'GET /api/heartbeat' not in record.getMessage()
+
+
+logger = logging.getLogger("uvicorn.access")
+logger.addFilter(EndpointFilter())
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -944,7 +968,7 @@ async def verify_flatpack():
 
 @app.get("/api/heartbeat")
 async def heartbeat():
-    current_time = datetime.utcnow().isoformat()
+    current_time = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
     return JSONResponse(content={"server_time": current_time})
 
 

@@ -8,6 +8,9 @@ import subprocess
 from datetime import datetime
 from pathlib import Path
 
+HOME_DIR = Path.home() / ".fpk"
+HOME_DIR.mkdir(exist_ok=True)
+
 
 def find_free_port():
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -17,7 +20,7 @@ def find_free_port():
 
 
 class AgentManager:
-    def __init__(self, filepath=os.path.join(os.path.expanduser("~"), ".fpk_agents.json")):
+    def __init__(self, filepath=HOME_DIR / ".fpk_agents.json"):
         self.processes = {}
         self.filepath = Path(filepath)
         self.load_processes()
