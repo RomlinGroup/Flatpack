@@ -38,7 +38,6 @@ BASE_URL = "https://raw.githubusercontent.com/romlingroup/flatpack/main/warehous
 CONFIG_FILE_PATH = HOME_DIR / ".fpk_config.toml"
 GITHUB_REPO_URL = "https://api.github.com/repos/romlingroup/flatpack"
 KEY_FILE_PATH = HOME_DIR / ".fpk_encryption_key"
-LOG_FILE_PATH = HOME_DIR / ".fpk_build_log"
 VERSION = version("flatpack")
 
 config = {
@@ -68,6 +67,7 @@ def fpk_build(directory: Union[str, None]):
         return
 
     building_script_path = Path(last_unboxed_flatpack) / 'build' / 'build.sh'
+    log_file_path = Path(last_unboxed_flatpack) / 'build' / 'build.log'
 
     if not building_script_path.exists() or not building_script_path.is_file():
         print(f"❌ Building script not found in {last_unboxed_flatpack}.")
@@ -76,7 +76,7 @@ def fpk_build(directory: Union[str, None]):
     safe_script_path = shlex.quote(str(building_script_path.resolve()))
 
     try:
-        with open(LOG_FILE_PATH, 'w') as log_file:
+        with open(log_file_path, 'w') as log_file:
             process = subprocess.Popen(
                 ['bash', '-u', safe_script_path],
                 stdout=subprocess.PIPE,
