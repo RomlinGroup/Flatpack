@@ -100,6 +100,16 @@
             width: 100%;
         }
 
+        #log-content {
+            color: #fff;
+            background: #000;
+            border: 1px solid #5865f2;
+            font-family: monospace;
+            font-size: 14px;
+            line-height: 1.5em;
+            padding: 20px;
+        }
+
         #save-button, #add-python-button, #add-bash-button {
             background: #5865f2;
             color: #fff;
@@ -455,7 +465,9 @@
 <div class="tab-content" id="terminal-content">
     <div id="terminal">
         <h2>Terminal</h2>
-        [PLACEHOLDER]
+        <div id="log-content">
+            [PLACEHOLDER]
+        </div>
     </div>
 </div>
 
@@ -474,10 +486,9 @@
     });
 
     function callAPI(endpoint) {
-        console.log("buildProject");
-
         var xhr = new XMLHttpRequest();
-        var url = "http://127.0.0.1:8000/api/" + endpoint;
+        var baseUrl = window.location.origin;
+        var url = `${baseUrl}/api/${endpoint}`;
 
         xhr.open("POST", url, true);
         xhr.setRequestHeader("Content-Type", "application/json");
@@ -511,9 +522,39 @@
         }
     }
 
+    function renderLogContent(content) {
+        const terminalContentElement = document.getElementById('log-content');
+        terminalContentElement.innerText = content;
+    }
+
+    async function showLogFile() {
+        try {
+            const baseUrl = window.location.origin;
+            const response = await fetch(`${baseUrl}/build.log`);
+            if (response.ok) {
+                const logContent = await response.text();
+                if (logContent.trim() === "") {
+                    renderLogContent("Log file is empty.");
+                } else {
+                    renderLogContent(logContent);
+                }
+                console.log(logContent);
+            } else {
+                console.error('Error loading log file:', response.statusText);
+                renderLogContent("Error loading log file or file does not exist.");
+                showStatus('Error loading log file!', false);
+            }
+        } catch (error) {
+            console.error('Error loading log file:', error);
+            renderLogContent("Error loading log file or file does not exist.");
+            showStatus('Error loading log file!', false);
+        }
+    }
+
     async function getEvalJSON() {
         try {
-            const response = await fetch('eval_build.json');
+            const baseUrl = window.location.origin;
+            const response = await fetch(`${baseUrl}/eval_build.json`);
 
             if (!response.ok) {
                 throw new Error(`Network response was not ok: ${response.statusText}`);
@@ -532,6 +573,7 @@
         try {
             saveFile(false);
             callAPI('build');
+            showLogFile();
 
             const data = await getEvalJSON();
             const evalPart = data.eval;
@@ -580,7 +622,8 @@
         const heartbeatTime = document.getElementById('heartbeat-time');
 
         try {
-            const response = await fetch('http://127.0.0.1:8000/api/heartbeat');
+            const baseUrl = window.location.origin;
+            const response = await fetch(`${baseUrl}/api/heartbeat`);
             if (response.ok) {
                 const data = await response.json();
                 const date = new Date(data.server_time);
@@ -968,6 +1011,8 @@
             block.style.display = shouldShow ? 'block' : 'none';
         });
     }
+
+    showLogFile();
 </script>
 </body>
 </html>
