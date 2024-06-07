@@ -120,11 +120,6 @@
             margin-right: 0px;
         }
 
-        #save-button.loading, #add-python-button.loading, #add-bash-button.loading {
-            opacity: 0.7;
-            cursor: not-allowed;
-        }
-
         #server-time {
             font-size: 14px;
         }
@@ -893,9 +888,6 @@
     }
 
     async function saveFile(status = false) {
-        const saveButton = document.getElementById('save-button');
-        saveButton.classList.add('loading');
-
         const parts = Array.from(document.querySelectorAll('.part-python, .part-bash')).map(part => {
             const editor = part.querySelector('.editor');
 
@@ -931,8 +923,6 @@
             console.error('Error saving file:', error);
             if (status != false)
                 showStatus('Error saving file!', false);
-        } finally {
-            saveButton.classList.remove('loading');
         }
     }
 
