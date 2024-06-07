@@ -89,7 +89,7 @@
             margin-right: 5px;
         }
 
-        #hooks, #terminal, #wrapper {
+        #hooks, #log, #wrapper {
             position: relative;
             max-width: 800px;
             padding: 20px;
@@ -386,7 +386,7 @@
         }
 
         @media (max-width: 800px) {
-            #hooks, #terminal, #wrapper {
+            #hooks, #log, #wrapper {
                 border-left: 0px;
                 border-right: 0px;
             }
@@ -414,7 +414,7 @@
     <div class="tabs">
         <div class="tab active" data-tab="editor">Editor</div>
         <div class="tab" data-tab="hooks">Hooks</div>
-        <div class="tab" data-tab="terminal">Terminal</div>
+        <div class="tab" data-tab="log">Log</div>
     </div>
 
     <div class="actions">
@@ -462,9 +462,9 @@
     </div>
 </div>
 
-<div class="tab-content" id="terminal-content">
-    <div id="terminal">
-        <h2>Terminal</h2>
+<div class="tab-content" id="log-content">
+    <div id="log">
+        <h2>Log</h2>
         <div id="log-content">
             [PLACEHOLDER]
         </div>
@@ -523,8 +523,8 @@
     }
 
     function renderLogContent(content) {
-        const terminalContentElement = document.getElementById('log-content');
-        terminalContentElement.innerText = content;
+        const logContentElement = document.getElementById('log-content');
+        logContentElement.innerText = content;
     }
 
     async function showLogFile() {
