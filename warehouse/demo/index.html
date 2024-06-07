@@ -100,7 +100,7 @@
             width: 100%;
         }
 
-        #log-content {
+        #log-output {
             color: #fff;
             background: #000;
             border: 1px solid #5865f2;
@@ -465,7 +465,7 @@
 <div class="tab-content" id="log-content">
     <div id="log">
         <h2>Log</h2>
-        <div id="log-content">
+        <div id="log-output">
             [PLACEHOLDER]
         </div>
     </div>
@@ -523,7 +523,7 @@
     }
 
     function renderLogContent(content) {
-        const logContentElement = document.getElementById('log-content');
+        const logContentElement = document.getElementById('log-output');
         logContentElement.innerText = content;
     }
 
