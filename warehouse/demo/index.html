@@ -42,9 +42,9 @@
         }
 
         #api-key-input {
-            width: 80%;
+            display: block;
             padding: 10px;
-            margin-bottom: 10px;
+            margin-bottom: 20px;
         }
 
         #api-key-modal {
@@ -67,11 +67,11 @@
         }
 
         #api-key-submit {
-            padding: 10px 20px;
             background: #5865f2;
             color: #fff;
             border: none;
             cursor: pointer;
+            padding: 10px 20px;
             font-size: 14px;
         }
 
@@ -152,7 +152,6 @@
             padding: 10px 20px;
             margin-right: 20px;
             font-size: 14px;
-            transition: background 0.3s ease, opacity 0.3s ease;
         }
 
         #add-python-button, #add-bash-button {
@@ -511,8 +510,8 @@
 
 <div id="api-key-modal" style="display: none;">
     <div id="api-key-modal-content">
-        <h2>Enter API Key</h2>
-        <input type="text" id="api-key-input" placeholder="Enter your API key">
+        <h2>Enter API token</h2>
+        <input type="text" id="api-key-input" placeholder="Enter your API token" autocomplete="off">
         <button id="api-key-submit">Submit</button>
     </div>
 </div>
@@ -540,7 +539,7 @@
                 apiKeyModal.style.display = 'none';
                 initializeApp(apiKey);
             } else {
-                alert('Please enter a valid API key.');
+                alert('Please enter a valid API token.');
             }
         });
     });
