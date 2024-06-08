@@ -581,7 +581,14 @@
         document.getElementById('build-action').addEventListener('click', () => buildProject(apiToken));
         checkHeartbeat(apiToken);
         setInterval(() => checkHeartbeat(apiToken), 1000);
-        loadDefaultFile(apiToken);
+        await loadDefaultFile(apiToken);
+        await fetchLatestLogs(apiToken);
+
+        document.querySelector('.tab[data-tab="log"]').addEventListener('click', () => {
+            if (apiToken) {
+                fetchLatestLogs(apiToken);
+            }
+        });
     }
 
     function callAPI(endpoint, apiToken) {
@@ -624,31 +631,28 @@
 
     function renderLogContent(content) {
         const logContentElement = document.getElementById('log-output');
-        logContentElement.innerText = content;
+        logContentElement.innerText = typeof content === 'string' ? content : JSON.stringify(content, null, 2);
     }
 
-    async function showLogFile() {
+    async function fetchLatestLogs(apiToken) {
         try {
-            const baseUrl = window.location.origin;
-            const cacheBuster = new Date().getTime();
-            const response = await fetch(`${baseUrl}/build.log?cb=${cacheBuster}`);
-            if (response.ok) {
-                const logContent = await response.text();
-                if (logContent.trim() === "") {
-                    renderLogContent("Log file is empty.");
-                } else {
-                    renderLogContent(logContent);
+            const response = await fetch('/api/logs/latest', {
+                headers: {
+                    'Authorization': `Bearer ${apiToken}`
                 }
-                console.log(logContent);
+            });
+            if (response.ok) {
+                const data = await response.json();
+                renderLogContent(data.log);
             } else {
-                console.error('Error loading log file:', response.statusText);
-                renderLogContent("Error loading log file or file does not exist.");
-                showStatus('Error loading log file!', false);
+                console.error('Failed to fetch the latest logs:', response.statusText);
+                renderLogContent("Error fetching the latest logs.");
+                showStatus('Error fetching the latest logs!', false);
             }
         } catch (error) {
-            console.error('Error loading log file:', error);
-            renderLogContent("Error loading log file or file does not exist.");
-            showStatus('Error loading log file!', false);
+            console.error('Error fetching the latest logs:', error);
+            renderLogContent("Error fetching the latest logs.");
+            showStatus('Error fetching the latest logs!', false);
         }
     }
 
@@ -676,9 +680,9 @@
 
     async function buildProject(apiToken) {
         try {
-            saveFile(false, apiToken);
+            await saveFile(false, apiToken);
             callAPI('build', apiToken);
-            showLogFile();
+            fetchLatestLogs(apiToken);
 
             const data = await getEvalJSON(apiToken);
             const evalPart = data.eval;
@@ -709,7 +713,7 @@
 
         } catch (error) {
             console.error('Failed to build project:', error);
-            showStatus(`Error: ${error.message}`, isSuccess = false);
+            showStatus(`Error: ${error.message}`, false);
 
             const allParts = document.querySelectorAll('.color-label.eval-label');
             allParts.forEach(label => {
@@ -1151,7 +1155,12 @@
         });
     }
 
-    showLogFile();
+    document.querySelector('.tab[data-tab="log"]').addEventListener('click', () => {
+        const apiToken = localStorage.getItem('apiToken');
+        if (apiToken) {
+            fetchLatestLogs(apiToken);
+        }
+    });
 </script>
 </body>
 </html>
