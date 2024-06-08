@@ -6,9 +6,11 @@ import ngrok
 import os
 import re
 import requests
+import secrets
 import shlex
 import shutil
 import stat
+import string
 import subprocess
 import sys
 import toml
@@ -39,10 +41,6 @@ CONFIG_FILE_PATH = HOME_DIR / ".fpk_config.toml"
 GITHUB_REPO_URL = "https://api.github.com/repos/romlingroup/flatpack"
 KEY_FILE_PATH = HOME_DIR / ".fpk_encryption_key"
 VERSION = version("flatpack")
-
-config = {
-    "api_key": None
-}
 
 
 def fpk_build(directory: Union[str, None]):
@@ -317,18 +315,8 @@ def fpk_find_models(directory_path: str = None) -> List[str]:
 
 def fpk_get_api_key() -> Optional[str]:
     """Retrieve the API key from the configuration file."""
-    if not os.path.exists(CONFIG_FILE_PATH):
-        return None
-
-    try:
-        with open(CONFIG_FILE_PATH, 'r') as config_file:
-            loaded_config = toml.load(config_file)
-        api_key = loaded_config.get('api_key')
-        return api_key
-    except Exception as e:
-        print(f"Error retrieving API key: {e}")
-
-    return None
+    config = load_config()
+    return config.get('api_key')
 
 
 def fpk_get_last_flatpack(directory_name: str) -> Optional[str]:
@@ -384,15 +372,32 @@ def fpk_safe_cleanup():
         print(f"Exception during safe_cleanup: {e}")
 
 
+def load_config():
+    """Load the configuration from the file."""
+    if not os.path.exists(CONFIG_FILE_PATH):
+        return {}
+
+    try:
+        with open(CONFIG_FILE_PATH, 'r') as config_file:
+            return toml.load(config_file)
+    except Exception as e:
+        print(f"Error loading config: {e}")
+        return {}
+
+
+def save_config(config):
+    """Save the configuration to the file, sorting keys alphabetically."""
+    sorted_config = {k: config[k] for k in sorted(config)}
+    with open(CONFIG_FILE_PATH, "w") as config_file:
+        toml.dump(sorted_config, config_file)
+    os.chmod(CONFIG_FILE_PATH, 0o600)
+
+
 def fpk_set_api_key(api_key: str):
     """Set the API key in the configuration file."""
-    global config
-
-    config = {'api_key': api_key}
-
-    with open(CONFIG_FILE_PATH, "w") as config_file:
-        toml.dump(config, config_file)
-    os.chmod(CONFIG_FILE_PATH, 0o600)
+    config = load_config()
+    config['api_key'] = api_key
+    save_config(config)
     print("API key set successfully!")
 
     try:
@@ -975,6 +980,39 @@ async def heartbeat():
     return JSONResponse(content={"server_time": current_time})
 
 
+@app.get("/api/logs/latest")
+async def get_latest_log():
+    cache_file_path = HOME_DIR / ".fpk_unbox.cache"
+    if cache_file_path.exists():
+        last_unboxed_flatpack = cache_file_path.read_text().strip()
+        logs_directory = Path(last_unboxed_flatpack) / 'build' / 'logs'
+    else:
+        raise HTTPException(status_code=500, detail="No cached flatpack directory found")
+
+    try:
+        log_files = sorted(
+            [f for f in os.listdir(logs_directory) if f.startswith("build_") and f.endswith(".log")],
+            key=lambda x: datetime.strptime(x, "build_%Y_%m_%d_%H_%M_%S.log"),
+            reverse=True
+        )
+        if not log_files:
+            raise HTTPException(status_code=404, detail="No log files found")
+
+        latest_log_file = log_files[0]
+        log_path = logs_directory / latest_log_file
+        if log_path.exists() and log_path.is_file():
+            try:
+                with open(log_path, 'r') as file:
+                    content = file.read()
+                return JSONResponse(content={"log": content})
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=f"Error reading log file: {e}")
+        else:
+            raise HTTPException(status_code=404, detail="Latest log file not found")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get the latest log file: {e}")
+
+
 def setup_static_directory(app, directory: str):
     global flatpack_directory
     flatpack_directory = os.path.abspath(directory)
@@ -983,6 +1021,19 @@ def setup_static_directory(app, directory: str):
         print(f"Static files will be served from: {flatpack_directory}/build")
     else:
         print(f"The directory '{flatpack_directory}' does not exist or is not a directory.")
+
+
+def generate_secure_token(length=32):
+    alphabet = string.ascii_letters + string.digits + string.punctuation
+    return ''.join(secrets.choice(alphabet) for i in range(length))
+
+
+def set_token(token: str):
+    """Set the token in the configuration file."""
+    config = load_config()
+    config['token'] = token
+    save_config(config)
+    print("Token set successfully!")
 
 
 def fpk_cli_handle_run(args, session):
@@ -1000,6 +1051,23 @@ def fpk_cli_handle_run(args, session):
 
     if args.share:
         fpk_check_ngrok_auth()
+
+    token = generate_secure_token()
+    print(f"Generated Token: {token}")
+    print("Please save this token securely. You will not be able to retrieve it again.")
+
+    try:
+        while True:
+            confirmation = input("Have you saved the token? Type 'YES' to continue: ").strip().upper()
+            if confirmation == 'YES':
+                break
+            else:
+                print("Please save the token before continuing.")
+    except KeyboardInterrupt:
+        print("\n❌ Process interrupted by user. Please save the token and try again.")
+        sys.exit(1)
+
+    set_token(token)
 
     setup_static_directory(app, directory)
 
@@ -1023,15 +1091,24 @@ def fpk_cli_handle_run(args, session):
 
 def fpk_cli_handle_set_api_key(args, session):
     print(f"Setting API key: {args.api_key}")
-    global config
     api_key = args.api_key
 
-    config = {'api_key': api_key}
-
-    with open(CONFIG_FILE_PATH, "w") as config_file:
-        toml.dump(config, config_file)
-    os.chmod(CONFIG_FILE_PATH, 0o600)
+    # Load existing configuration
+    config = load_config()
+    # Update only the API key
+    config['api_key'] = api_key
+    # Save the updated configuration
+    save_config(config)
     print("API key set successfully!")
+
+    try:
+        test_key = fpk_get_api_key()
+        if test_key == api_key:
+            print("Verification successful: API key matches.")
+        else:
+            print("Verification failed: API key does not match.")
+    except Exception as e:
+        print(f"Error during API key verification: {e}")
 
 
 def fpk_cli_handle_spawn_agent(args, session):
