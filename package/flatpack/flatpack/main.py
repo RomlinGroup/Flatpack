@@ -42,6 +42,9 @@ GITHUB_REPO_URL = "https://api.github.com/repos/romlingroup/flatpack"
 KEY_FILE_PATH = HOME_DIR / ".fpk_encryption_key"
 VERSION = version("flatpack")
 
+MAX_ATTEMPTS = 5
+VALIDATION_ATTEMPTS = 0
+
 
 def fpk_build(directory: Union[str, None]):
     """Build a flatpack."""
@@ -926,11 +929,38 @@ def get_token():
     return config.get('token')
 
 
+def validate_api_token(api_token: str) -> bool:
+    """Validate the API token."""
+    return api_token == get_token()
+
+
 def authenticate_token(request: Request):
     """Authenticate the token."""
+    global VALIDATION_ATTEMPTS
     token = request.headers.get('Authorization')
     if token is None or token != f"Bearer {get_token()}":
+        VALIDATION_ATTEMPTS += 1
+        if VALIDATION_ATTEMPTS >= MAX_ATTEMPTS:
+            shutdown_server()
         raise HTTPException(status_code=403, detail="Invalid or missing token")
+
+
+def shutdown_server():
+    """Shutdown the FastAPI server."""
+    logging.getLogger("uvicorn.error").info("Shutting down the server after maximum validation attempts.")
+    os._exit(0)
+
+
+@app.post("/api/validate_token")
+async def validate_token(request: Request, api_token: str = Form(...)):
+    global VALIDATION_ATTEMPTS
+    if validate_api_token(api_token):
+        return JSONResponse(content={"message": "API token is valid."}, status_code=200)
+    else:
+        VALIDATION_ATTEMPTS += 1
+        if VALIDATION_ATTEMPTS >= MAX_ATTEMPTS:
+            shutdown_server()
+        return JSONResponse(content={"message": "Invalid API token."}, status_code=403)
 
 
 @app.get("/load_file")
@@ -1004,12 +1034,6 @@ async def verify_flatpack(request: Request, token: str = Depends(authenticate_to
         return JSONResponse(content={"message": f"Verification process failed: {e}"}, status_code=500)
 
 
-@app.get("/api/heartbeat")
-async def heartbeat():
-    current_time = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
-    return JSONResponse(content={"server_time": current_time})
-
-
 @app.get("/api/logs/latest")
 async def get_latest_log(request: Request, token: str = Depends(authenticate_token)):
     cache_file_path = HOME_DIR / ".fpk_unbox.cache"
@@ -1041,6 +1065,12 @@ async def get_latest_log(request: Request, token: str = Depends(authenticate_tok
             raise HTTPException(status_code=404, detail="Latest log file not found")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to get the latest log file: {e}")
+
+
+@app.get("/api/heartbeat")
+async def heartbeat():
+    current_time = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
+    return JSONResponse(content={"server_time": current_time})
 
 
 def setup_static_directory(app, directory: str):
@@ -1114,13 +1144,10 @@ def fpk_cli_handle_run(args, session):
 def fpk_cli_handle_set_api_key(args, session):
     print(f"Setting API key: {args.api_key}")
     api_key = args.api_key
-
-    # Load existing configuration
     config = load_config()
-    # Update only the API key
     config['api_key'] = api_key
-    # Save the updated configuration
     save_config(config)
+
     print("API key set successfully!")
 
     try:
