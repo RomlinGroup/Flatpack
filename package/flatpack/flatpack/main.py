@@ -927,13 +927,18 @@ def get_token():
 
 
 def authenticate_token(request: Request):
+    """Authenticate the token."""
     token = request.headers.get('Authorization')
     if token is None or token != f"Bearer {get_token()}":
         raise HTTPException(status_code=403, detail="Invalid or missing token")
 
 
 @app.get("/load_file")
-async def load_file(request: Request, filename: str, token: str = Depends(authenticate_token)):
+async def load_file(
+        request: Request,
+        filename: str,
+        token: str = Depends(authenticate_token)
+):
     if not flatpack_directory:
         raise HTTPException(status_code=500, detail="Flatpack directory is not set")
 
@@ -954,8 +959,12 @@ async def load_file(request: Request, filename: str, token: str = Depends(authen
 
 
 @app.post("/save_file")
-async def save_file(request: Request, filename: str = Form(...), content: str = Form(...),
-                    token: str = Depends(authenticate_token)):
+async def save_file(
+        request: Request,
+        filename: str = Form(...),
+        content: str = Form(...),
+        token: str = Depends(authenticate_token)
+):
     if not flatpack_directory:
         raise HTTPException(status_code=500, detail="Flatpack directory is not set")
 
