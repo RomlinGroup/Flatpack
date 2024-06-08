@@ -800,9 +800,6 @@
     }
 
     function logCharacter(event) {
-        if (event.data !== null) {
-            console.log(`Character typed: ${event.data}`);
-        }
         const editor = event.target;
         const type = editor.closest('.part-python') ? 'python' : 'bash';
     }
@@ -1044,21 +1041,25 @@
     }
 
     async function saveFile(status = false, apiToken) {
-        const parts = Array.from(document.querySelectorAll('.part-python, .part-bash')).map(part => {
-            const editor = part.querySelector('.editor');
+        const parts = Array.from(document.querySelectorAll('.part-python, .part-bash'))
+            .map(part => {
+                const editor = part.querySelector('.editor');
 
-            let code = editor.innerHTML.trim();
-            code = code.replace(/<\/?span[^>]*>/g, '');
+                let code = editor.innerHTML.trim();
+                code = code.replace(/<\/?span[^>]*>/g, '');
 
-            const type = part.classList.contains('part-python') ? 'part_python' : 'part_bash';
-            code = code.replace(/\n{3,}/g, '\n\n');
+                if (code === "") return null;
 
-            if (type === 'part_bash') {
-                code = code.replace(/\$/g, '\\$');
-            }
+                const type = part.classList.contains('part-python') ? 'part_python' : 'part_bash';
+                code = code.replace(/\n{3,}/g, '\n\n');
 
-            return `${type} """\n${code}\n"""`;
-        });
+                if (type === 'part_bash') {
+                    code = code.replace(/\$/g, '\\$');
+                }
+
+                return `${type} """\n${code}\n"""`;
+            })
+            .filter(Boolean);
 
         const formData = new FormData();
         formData.append('filename', 'custom.sh');
@@ -1075,7 +1076,7 @@
             const responseText = await response.text();
             console.log('Server response:', response.status, response.statusText, responseText);
 
-            if (status != false)
+            if (status !== false)
                 showStatus(response.ok ? 'Saved successfully!' : 'Save failed!', response.ok);
 
             if (response.ok) {
@@ -1083,7 +1084,7 @@
             }
         } catch (error) {
             console.error('Error saving file:', error);
-            if (status != false)
+            if (status !== false)
                 showStatus('Error saving file!', false);
         }
     }
