@@ -18,7 +18,7 @@ import uvicorn
 
 from .agent_manager import AgentManager
 from datetime import datetime
-from fastapi import FastAPI, Form, HTTPException, Request
+from fastapi import Depends, FastAPI, Form, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -912,8 +912,28 @@ def unescape_content_parts(content: str) -> str:
     return unescaped_content
 
 
+def set_token(token: str):
+    """Set the token in the configuration file."""
+    config = load_config()
+    config['token'] = token
+    save_config(config)
+    print("Token set successfully!")
+
+
+def get_token():
+    """Retrieve the token from the configuration file."""
+    config = load_config()
+    return config.get('token')
+
+
+def authenticate_token(request: Request):
+    token = request.headers.get('Authorization')
+    if token is None or token != f"Bearer {get_token()}":
+        raise HTTPException(status_code=403, detail="Invalid or missing token")
+
+
 @app.get("/load_file")
-async def load_file(filename: str):
+async def load_file(request: Request, filename: str, token: str = Depends(authenticate_token)):
     if not flatpack_directory:
         raise HTTPException(status_code=500, detail="Flatpack directory is not set")
 
@@ -934,7 +954,8 @@ async def load_file(filename: str):
 
 
 @app.post("/save_file")
-async def save_file(filename: str = Form(...), content: str = Form(...)):
+async def save_file(request: Request, filename: str = Form(...), content: str = Form(...),
+                    token: str = Depends(authenticate_token)):
     if not flatpack_directory:
         raise HTTPException(status_code=500, detail="Flatpack directory is not set")
 
@@ -953,7 +974,7 @@ async def save_file(filename: str = Form(...), content: str = Form(...)):
 
 
 @app.post("/api/build")
-async def build_flatpack():
+async def build_flatpack(request: Request, token: str = Depends(authenticate_token)):
     if not flatpack_directory:
         raise HTTPException(status_code=500, detail="Flatpack directory is not set")
     try:
@@ -964,7 +985,7 @@ async def build_flatpack():
 
 
 @app.post("/api/verify")
-async def verify_flatpack():
+async def verify_flatpack(request: Request, token: str = Depends(authenticate_token)):
     if not flatpack_directory:
         raise HTTPException(status_code=500, detail="Flatpack directory is not set")
     try:
@@ -981,7 +1002,7 @@ async def heartbeat():
 
 
 @app.get("/api/logs/latest")
-async def get_latest_log():
+async def get_latest_log(request: Request, token: str = Depends(authenticate_token)):
     cache_file_path = HOME_DIR / ".fpk_unbox.cache"
     if cache_file_path.exists():
         last_unboxed_flatpack = cache_file_path.read_text().strip()
@@ -1026,14 +1047,6 @@ def setup_static_directory(app, directory: str):
 def generate_secure_token(length=32):
     alphabet = string.ascii_letters + string.digits + string.punctuation
     return ''.join(secrets.choice(alphabet) for i in range(length))
-
-
-def set_token(token: str):
-    """Set the token in the configuration file."""
-    config = load_config()
-    config['token'] = token
-    save_config(config)
-    print("Token set successfully!")
 
 
 def fpk_cli_handle_run(args, session):
