@@ -9,6 +9,7 @@ import requests
 import secrets
 import shlex
 import shutil
+import signal
 import stat
 import string
 import subprocess
@@ -44,6 +45,16 @@ VERSION = version("flatpack")
 
 MAX_ATTEMPTS = 5
 VALIDATION_ATTEMPTS = 0
+
+
+def handle_termination_signal(signal_number, frame):
+    """Handle termination signals for graceful shutdown."""
+    print(f"Received termination signal ({signal_number}), shutting down...")
+    uvicorn_server.should_exit = True
+
+
+signal.signal(signal.SIGINT, handle_termination_signal)
+signal.signal(signal.SIGTERM, handle_termination_signal)
 
 
 def fpk_build(directory: Union[str, None]):
@@ -1131,7 +1142,11 @@ def fpk_cli_handle_run(args, session):
             public_url = listener.url()
             print(f"Ingress established at {public_url}")
 
-        uvicorn.run(app, host="127.0.0.1", port=port)
+        # Set up the Uvicorn server instance for signal handling
+        config = uvicorn.Config(app, host="127.0.0.1", port=port)
+        global uvicorn_server
+        uvicorn_server = uvicorn.Server(config)
+        uvicorn_server.run()
     except KeyboardInterrupt:
         print("❌ FastAPI server has been stopped.")
     except Exception as e:
