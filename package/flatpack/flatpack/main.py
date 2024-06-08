@@ -67,7 +67,10 @@ def fpk_build(directory: Union[str, None]):
         return
 
     building_script_path = Path(last_unboxed_flatpack) / 'build' / 'build.sh'
-    log_file_path = Path(last_unboxed_flatpack) / 'build' / 'build.log'
+
+    log_file_time = datetime.utcnow().strftime('%Y_%m_%d_%H_%M_%S')
+    log_file_path = Path(last_unboxed_flatpack) / 'build' / 'logs' / f"build_{log_file_time}.log"
+    log_file_path.parent.mkdir(parents=True, exist_ok=True)
 
     if not building_script_path.exists() or not building_script_path.is_file():
         print(f"❌ Building script not found in {last_unboxed_flatpack}.")
