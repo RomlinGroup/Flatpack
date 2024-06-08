@@ -41,6 +41,40 @@
             background: #000;
         }
 
+        #api-key-input {
+            width: 80%;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+
+        #api-key-modal {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }
+
+        #api-key-modal-content {
+            background: #fff;
+            padding: 20px;
+            text-align: center;
+        }
+
+        #api-key-submit {
+            padding: 10px 20px;
+            background: #5865f2;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
         #button-container {
             display: flex;
             width: 100%;
@@ -475,23 +509,89 @@
     Powered by <a href="https://fpk.ai">Flatpack</a>
 </div>
 
+<div id="api-key-modal" style="display: none;">
+    <div id="api-key-modal-content">
+        <h2>Enter API Key</h2>
+        <input type="text" id="api-key-input" placeholder="Enter your API key">
+        <button id="api-key-submit">Submit</button>
+    </div>
+</div>
+
 <script>
     let currentPart = 1;
     let originalContent = '';
 
     document.addEventListener('DOMContentLoaded', () => {
-        document.getElementById('save-action').addEventListener('click', () => saveFile(true));
-        document.getElementById('verify-action').addEventListener('click', verifyCode);
-        document.getElementById('build-action').addEventListener('click', buildProject);
+        const apiKeyModal = document.getElementById('api-key-modal');
+        const apiKeyInput = document.getElementById('api-key-input');
+        const apiKeySubmit = document.getElementById('api-key-submit');
+        const apiToken = localStorage.getItem('apiToken');
+
+        if (!apiToken) {
+            apiKeyModal.style.display = 'flex';
+        } else {
+            initializeApp(apiToken);
+        }
+
+        apiKeySubmit.addEventListener('click', () => {
+            const apiKey = apiKeyInput.value.trim();
+            if (apiKey) {
+                localStorage.setItem('apiToken', apiKey);
+                apiKeyModal.style.display = 'none';
+                initializeApp(apiKey);
+            } else {
+                alert('Please enter a valid API key.');
+            }
+        });
     });
 
-    function callAPI(endpoint) {
+    async function validateApiKey(apiToken) {
+        try {
+            const response = await fetch('/api/validate_token', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'Authorization': `Bearer ${apiToken}`
+                },
+                body: new URLSearchParams({
+                    'api_token': apiToken
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error('Invalid API token');
+            }
+            return true;
+        } catch (error) {
+            console.error('Error validating API key:', error);
+            return false;
+        }
+    }
+
+    async function initializeApp(apiToken) {
+        const isValid = await validateApiKey(apiToken);
+        if (!isValid) {
+            localStorage.removeItem('apiToken');
+            document.getElementById('api-key-modal').style.display = 'flex';
+            return;
+        }
+
+        document.getElementById('save-action').addEventListener('click', () => saveFile(true, apiToken));
+        document.getElementById('verify-action').addEventListener('click', () => verifyCode(apiToken));
+        document.getElementById('build-action').addEventListener('click', () => buildProject(apiToken));
+        checkHeartbeat(apiToken);
+        setInterval(() => checkHeartbeat(apiToken), 1000);
+        loadDefaultFile(apiToken);
+    }
+
+    function callAPI(endpoint, apiToken) {
         var xhr = new XMLHttpRequest();
         var baseUrl = window.location.origin;
         var url = `${baseUrl}/api/${endpoint}`;
 
         xhr.open("POST", url, true);
         xhr.setRequestHeader("Content-Type", "application/json");
+        xhr.setRequestHeader("Authorization", `Bearer ${apiToken}`);
 
         var data = JSON.stringify({key: 'value'});
 
@@ -552,10 +652,14 @@
         }
     }
 
-    async function getEvalJSON() {
+    async function getEvalJSON(apiToken) {
         try {
             const baseUrl = window.location.origin;
-            const response = await fetch(`${baseUrl}/eval_build.json`);
+            const response = await fetch(`${baseUrl}/eval_build.json`, {
+                headers: {
+                    'Authorization': `Bearer ${apiToken}`
+                }
+            });
 
             if (!response.ok) {
                 throw new Error(`Network response was not ok: ${response.statusText}`);
@@ -570,13 +674,13 @@
         }
     }
 
-    async function buildProject() {
+    async function buildProject(apiToken) {
         try {
-            saveFile(false);
-            callAPI('build');
+            saveFile(false, apiToken);
+            callAPI('build', apiToken);
             showLogFile();
 
-            const data = await getEvalJSON();
+            const data = await getEvalJSON(apiToken);
             const evalPart = data.eval;
 
             console.log('part-' + evalPart);
@@ -614,17 +718,21 @@
         }
     }
 
-    function verifyCode() {
-        callAPI('verify');
+    function verifyCode(apiToken) {
+        callAPI('verify', apiToken);
     }
 
-    async function checkHeartbeat() {
+    async function checkHeartbeat(apiToken) {
         const heartbeatDot = document.getElementById('heartbeat-dot');
         const heartbeatTime = document.getElementById('heartbeat-time');
 
         try {
             const baseUrl = window.location.origin;
-            const response = await fetch(`${baseUrl}/api/heartbeat`);
+            const response = await fetch(`${baseUrl}/api/heartbeat`, {
+                headers: {
+                    'Authorization': `Bearer ${apiToken}`
+                }
+            });
             if (response.ok) {
                 const data = await response.json();
                 const date = new Date(data.server_time);
@@ -650,11 +758,6 @@
             heartbeatDot.classList.add('disconnected');
         }
     }
-
-    document.addEventListener('DOMContentLoaded', () => {
-        checkHeartbeat();
-        setInterval(checkHeartbeat, 1000);
-    });
 
     function logActiveInputArea(editor) {
         console.log(`Active input area: ${editor.parentNode.className}`);
@@ -692,9 +795,13 @@
         editor.addEventListener('keydown', (event) => detectEnterKey(event, editor));
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', async () => {
         const tabs = document.querySelectorAll('.tab');
         const tabContents = document.querySelectorAll('.tab-content');
+        const apiKeyModal = document.getElementById('api-key-modal');
+        const apiKeyInput = document.getElementById('api-key-input');
+        const apiKeySubmit = document.getElementById('api-key-submit');
+        const apiToken = localStorage.getItem('apiToken');
 
         function setActiveTab(tab) {
             const tabId = tab.dataset.tab;
@@ -717,12 +824,37 @@
             resizeEditor(editor);
         });
 
-        loadDefaultFile();
+        if (!apiToken) {
+            apiKeyModal.style.display = 'flex';
+        } else {
+            await initializeApp(apiToken);
+        }
+
+        apiKeySubmit.addEventListener('click', async () => {
+            const apiKey = apiKeyInput.value.trim();
+            if (apiKey) {
+                const isValid = await validateApiKey(apiKey);
+                if (isValid) {
+                    localStorage.setItem('apiToken', apiKey);
+                    apiKeyModal.style.display = 'none';
+                    await initializeApp(apiKey);
+                } else {
+                    alert('Please enter a valid API key.');
+                }
+            } else {
+                alert('Please enter a valid API key.');
+            }
+        });
     });
 
-    async function loadDefaultFile() {
+    async function loadDefaultFile(apiToken) {
         try {
-            const response = await fetch(`/load_file?filename=custom.sh&_=${Date.now()}`);
+            const response = await fetch(`/load_file?filename=custom.sh&_=${Date.now()}`, {
+                headers: {
+                    'Authorization': `Bearer ${apiToken}`
+                }
+            });
+
             if (response.ok) {
                 const json = await response.json();
                 originalContent = json.content;
@@ -931,7 +1063,7 @@
         }
     }
 
-    async function saveFile(status = false) {
+    async function saveFile(status = false, apiToken) {
         const parts = Array.from(document.querySelectorAll('.part-python, .part-bash')).map(part => {
             const editor = part.querySelector('.editor');
 
@@ -953,7 +1085,13 @@
         formData.append('content', parts.join('\n'));
 
         try {
-            const response = await fetch('/save_file', {method: 'POST', body: formData});
+            const response = await fetch('/save_file', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'Authorization': `Bearer ${apiToken}`
+                }
+            });
             const responseText = await response.text();
             console.log('Server response:', response.status, response.statusText, responseText);
 
