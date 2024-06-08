@@ -1116,18 +1116,18 @@ def fpk_cli_handle_run(args, session):
         fpk_check_ngrok_auth()
 
     token = generate_secure_token()
-    print(f"Generated Token: {token}")
-    print("Please save this token securely. You will not be able to retrieve it again.")
+    print(f"Generated API token: {token}")
+    print("Please save this API token securely. You will not be able to retrieve it again.")
 
     try:
         while True:
-            confirmation = input("Have you saved the token? Type 'YES' to continue: ").strip().upper()
+            confirmation = input("Have you saved the API token? Type 'YES' to continue: ").strip().upper()
             if confirmation == 'YES':
                 break
             else:
-                print("Please save the token before continuing.")
+                print("Please save the API token before continuing.")
     except KeyboardInterrupt:
-        print("\n❌ Process interrupted by user. Please save the token and try again.")
+        print("\n❌ Process interrupted by user. Please save the API token and try again.")
         sys.exit(1)
 
     set_token(token)

@@ -484,7 +484,7 @@
         <div id="button-container">
             <button id="add-bash-button" onclick="addBashBlock()">Bash</button>
             <button id="add-python-button" onclick="addPythonBlock()">Python</button>
-            <button id="save-button" onclick="saveFile(true)">Save</button>
+            <button id="save-button">Save</button>
         </div>
     </div>
 </div>
@@ -543,6 +543,37 @@
                 alert('Please enter a valid API token.');
             }
         });
+
+        const tabs = document.querySelectorAll('.tab');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        function setActiveTab(tab) {
+            const tabId = tab.dataset.tab;
+            tabs.forEach(t => t.classList.toggle('active', t === tab));
+            tabContents.forEach(tc => tc.classList.toggle('active', tc.id === `${tabId}-content`));
+            window.location.hash = tabId;
+            resizeAllTextareas();
+        }
+
+        tabs.forEach(tab => tab.addEventListener('click', () => setActiveTab(tab)));
+
+        const hash = window.location.hash.substring(1);
+        const initialTab = hash ? document.querySelector(`.tab[data-tab="${hash}"]`) : tabs[0];
+        if (initialTab) {
+            setActiveTab(initialTab);
+        }
+
+        document.querySelectorAll('.editor').forEach(editor => {
+            addEventListenersToEditor(editor);
+            resizeEditor(editor);
+        });
+
+        document.querySelector('.tab[data-tab="log"]').addEventListener('click', () => {
+            const apiToken = localStorage.getItem('apiToken');
+            if (apiToken) {
+                fetchLatestLogs(apiToken);
+            }
+        });
     });
 
     async function validateApiKey(apiToken) {
@@ -579,34 +610,30 @@
         document.getElementById('save-action').addEventListener('click', () => saveFile(true, apiToken));
         document.getElementById('verify-action').addEventListener('click', () => verifyCode(apiToken));
         document.getElementById('build-action').addEventListener('click', () => buildProject(apiToken));
+        document.getElementById('save-button').addEventListener('click', () => saveFile(true, apiToken));
+
         checkHeartbeat(apiToken);
         setInterval(() => checkHeartbeat(apiToken), 1000);
         await loadDefaultFile(apiToken);
         await fetchLatestLogs(apiToken);
-
-        document.querySelector('.tab[data-tab="log"]').addEventListener('click', () => {
-            if (apiToken) {
-                fetchLatestLogs(apiToken);
-            }
-        });
     }
 
     function callAPI(endpoint, apiToken) {
-        var xhr = new XMLHttpRequest();
-        var baseUrl = window.location.origin;
-        var url = `${baseUrl}/api/${endpoint}`;
+        const xhr = new XMLHttpRequest();
+        const baseUrl = window.location.origin;
+        const url = `${baseUrl}/api/${endpoint}`;
 
         xhr.open("POST", url, true);
         xhr.setRequestHeader("Content-Type", "application/json");
         xhr.setRequestHeader("Authorization", `Bearer ${apiToken}`);
 
-        var data = JSON.stringify({key: 'value'});
+        const data = JSON.stringify({key: 'value'});
 
         xhr.onreadystatechange = function () {
             if (xhr.readyState === 4) {
                 if (xhr.status >= 200 && xhr.status < 300) {
                     try {
-                        var json = JSON.parse(xhr.responseText);
+                        const json = JSON.parse(xhr.responseText);
                         console.log('Success:', json);
                     } catch (e) {
                         console.error('Parsing error:', e);
@@ -682,7 +709,7 @@
         try {
             await saveFile(false, apiToken);
             callAPI('build', apiToken);
-            fetchLatestLogs(apiToken);
+            await fetchLatestLogs(apiToken);
 
             const data = await getEvalJSON(apiToken);
             const evalPart = data.eval;
@@ -798,58 +825,6 @@
         });
         editor.addEventListener('keydown', (event) => detectEnterKey(event, editor));
     }
-
-    document.addEventListener('DOMContentLoaded', async () => {
-        const tabs = document.querySelectorAll('.tab');
-        const tabContents = document.querySelectorAll('.tab-content');
-        const apiKeyModal = document.getElementById('api-key-modal');
-        const apiKeyInput = document.getElementById('api-key-input');
-        const apiKeySubmit = document.getElementById('api-key-submit');
-        const apiToken = localStorage.getItem('apiToken');
-
-        function setActiveTab(tab) {
-            const tabId = tab.dataset.tab;
-            tabs.forEach(t => t.classList.toggle('active', t === tab));
-            tabContents.forEach(tc => tc.classList.toggle('active', tc.id === `${tabId}-content`));
-            window.location.hash = tabId;
-            resizeAllTextareas();
-        }
-
-        tabs.forEach(tab => tab.addEventListener('click', () => setActiveTab(tab)));
-
-        const hash = window.location.hash.substring(1);
-        const initialTab = hash ? document.querySelector(`.tab[data-tab="${hash}"]`) : tabs[0];
-        if (initialTab) {
-            setActiveTab(initialTab);
-        }
-
-        document.querySelectorAll('.editor').forEach(editor => {
-            addEventListenersToEditor(editor);
-            resizeEditor(editor);
-        });
-
-        if (!apiToken) {
-            apiKeyModal.style.display = 'flex';
-        } else {
-            await initializeApp(apiToken);
-        }
-
-        apiKeySubmit.addEventListener('click', async () => {
-            const apiKey = apiKeyInput.value.trim();
-            if (apiKey) {
-                const isValid = await validateApiKey(apiKey);
-                if (isValid) {
-                    localStorage.setItem('apiToken', apiKey);
-                    apiKeyModal.style.display = 'none';
-                    await initializeApp(apiKey);
-                } else {
-                    alert('Please enter a valid API key.');
-                }
-            } else {
-                alert('Please enter a valid API key.');
-            }
-        });
-    });
 
     async function loadDefaultFile(apiToken) {
         try {
@@ -1154,13 +1129,6 @@
             block.style.display = shouldShow ? 'block' : 'none';
         });
     }
-
-    document.querySelector('.tab[data-tab="log"]').addEventListener('click', () => {
-        const apiToken = localStorage.getItem('apiToken');
-        if (apiToken) {
-            fetchLatestLogs(apiToken);
-        }
-    });
 </script>
 </body>
 </html>
