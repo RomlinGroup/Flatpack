@@ -47,6 +47,8 @@
             padding: 10px;
             margin: 0 auto;
             margin-bottom: 20px;
+            box-sizing: border-box;
+            width: 100%;
         }
 
         #api-key-modal {
@@ -66,9 +68,20 @@
             background: #fff;
             padding: 20px;
             text-align: center;
+            margin-left: 20px;
+            margin-right: 20px;
+            box-sizing: border-box;
+            max-width: 400px;
+            width: 100%;
         }
 
-        #api-key-submit {
+        #api-key-modal-image {
+            color: #5865f2;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        #api-key-authorize {
             background: #5865f2;
             color: #fff;
             border: none;
@@ -171,8 +184,10 @@
 
         #status-bar {
             display: none;
+            width: 100%;
             padding: 20px;
-            margin-bottom: 20px;
+            margin-top: 20px;
+            max-width: 800px;
             text-align: center;
         }
 
@@ -444,6 +459,8 @@
     </div>
 </div>
 
+<div id="status-bar"></div>
+
 <div class="tabs-container">
 
     <div class="tabs">
@@ -480,7 +497,6 @@
         </select>
 
         <h2>custom.sh</h2>
-        <div id="status-bar"></div>
         <div id="file-content"></div>
         <div id="button-container">
             <button id="add-bash-button" onclick="addBashBlock()">Bash</button>
@@ -512,9 +528,14 @@
 
 <div id="api-key-modal" style="display: none;">
     <div id="api-key-modal-content">
+
+        <div id="api-key-modal-image">
+            ¯\_(ツ)_/¯
+        </div>
+
         <h2>Enter API token</h2>
         <input type="text" id="api-key-input" placeholder="Enter your API token" autocomplete="off">
-        <button id="api-key-submit">Submit</button>
+        <button id="api-key-authorize">Authorize</button>
     </div>
 </div>
 
@@ -525,7 +546,7 @@
     document.addEventListener('DOMContentLoaded', () => {
         const apiKeyModal = document.getElementById('api-key-modal');
         const apiKeyInput = document.getElementById('api-key-input');
-        const apiKeySubmit = document.getElementById('api-key-submit');
+        const apiKeySubmit = document.getElementById('api-key-authorize');
         const apiToken = localStorage.getItem('apiToken');
 
         if (!apiToken) {
