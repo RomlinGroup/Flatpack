@@ -565,6 +565,7 @@
             tabs.forEach(t => t.classList.toggle('active', t === tab));
             tabContents.forEach(tc => tc.classList.toggle('active', tc.id === `${tabId}-content`));
             window.location.hash = tabId;
+            window.scrollTo({top: 0});
             resizeAllTextareas();
         }
 
