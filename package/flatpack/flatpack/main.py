@@ -1045,8 +1045,9 @@ async def verify_flatpack(request: Request, token: str = Depends(authenticate_to
         return JSONResponse(content={"message": f"Verification process failed: {e}"}, status_code=500)
 
 
-@app.get("/api/logs/latest")
-async def get_latest_log(request: Request, token: str = Depends(authenticate_token)):
+@app.get("/api/logs")
+async def get_all_logs(request: Request, token: str = Depends(authenticate_token)):
+    """Get a list of all available logs ordered by date."""
     cache_file_path = HOME_DIR / ".fpk_unbox.cache"
     if cache_file_path.exists():
         last_unboxed_flatpack = cache_file_path.read_text().strip()
@@ -1060,22 +1061,30 @@ async def get_latest_log(request: Request, token: str = Depends(authenticate_tok
             key=lambda x: datetime.strptime(x, "build_%Y_%m_%d_%H_%M_%S.log"),
             reverse=True
         )
-        if not log_files:
-            raise HTTPException(status_code=404, detail="No log files found")
-
-        latest_log_file = log_files[0]
-        log_path = logs_directory / latest_log_file
-        if log_path.exists() and log_path.is_file():
-            try:
-                with open(log_path, 'r') as file:
-                    content = file.read()
-                return JSONResponse(content={"log": content})
-            except Exception as e:
-                raise HTTPException(status_code=500, detail=f"Error reading log file: {e}")
-        else:
-            raise HTTPException(status_code=404, detail="Latest log file not found")
+        return JSONResponse(content={"logs": log_files})
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get the latest log file: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to list log files: {e}")
+
+
+@app.get("/api/logs/{log_filename}")
+async def get_log_file(request: Request, log_filename: str, token: str = Depends(authenticate_token)):
+    cache_file_path = HOME_DIR / ".fpk_unbox.cache"
+    if cache_file_path.exists():
+        last_unboxed_flatpack = cache_file_path.read_text().strip()
+        logs_directory = Path(last_unboxed_flatpack) / 'build' / 'logs'
+    else:
+        raise HTTPException(status_code=500, detail="No cached flatpack directory found")
+
+    log_path = logs_directory / log_filename
+    if log_path.exists() and log_path.is_file():
+        try:
+            with open(log_path, 'r') as file:
+                content = file.read()
+            return JSONResponse(content={"log": content})
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Error reading log file: {e}")
+    else:
+        raise HTTPException(status_code=404, detail="Log file not found")
 
 
 @app.get("/api/heartbeat")
