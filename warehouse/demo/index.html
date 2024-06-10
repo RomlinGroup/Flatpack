@@ -143,6 +143,14 @@
             width: 100%;
         }
 
+        #log-dropdown {
+            display: block;
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 1px solid #5865f2;
+            width: 100%;
+        }
+
         #log-output {
             color: #fff;
             background: #000;
@@ -511,6 +519,9 @@
 <div class="tab-content" id="log-content">
     <div id="log">
         <h2>Log</h2>
+        <select id="log-dropdown" onchange="fetchSelectedLog()">
+            <option value="">Select a log file</option>
+        </select>
         <div id="log-output">
             [PLACEHOLDER]
         </div>
@@ -630,6 +641,7 @@
         setInterval(() => checkHeartbeat(apiToken), 1000);
         await loadDefaultFile(apiToken);
         await fetchLatestLogs(apiToken);
+        await fetchLogFiles(apiToken);
     }
 
     function callAPI(endpoint, apiToken) {
@@ -675,9 +687,18 @@
         logContentElement.innerText = typeof content === 'string' ? content : JSON.stringify(content, null, 2);
     }
 
-    async function fetchLatestLogs(apiToken) {
+    async function fetchSelectedLog() {
+        const logDropdown = document.getElementById('log-dropdown');
+        const selectedLog = logDropdown.value;
+        const apiToken = localStorage.getItem('apiToken');
+
+        if (!selectedLog) {
+            renderLogContent('No log file selected.');
+            return;
+        }
+
         try {
-            const response = await fetch('/api/logs/latest', {
+            const response = await fetch(`/api/logs/${selectedLog}`, {
                 headers: {
                     'Authorization': `Bearer ${apiToken}`
                 }
@@ -686,14 +707,91 @@
                 const data = await response.json();
                 renderLogContent(data.log);
             } else {
-                console.error('Failed to fetch the latest logs:', response.statusText);
-                renderLogContent("Error fetching the latest logs.");
-                showStatus('Error fetching the latest logs!', false);
+                if (response.status === 404) {
+                    renderLogContent(`Log file not found: ${selectedLog}`);
+                } else {
+                    console.error('Failed to fetch the selected log:', response.statusText);
+                    renderLogContent("Error fetching the selected log.");
+                    showStatus('Error fetching the selected log!', false);
+                }
             }
         } catch (error) {
-            console.error('Error fetching the latest logs:', error);
-            renderLogContent("Error fetching the latest logs.");
-            showStatus('Error fetching the latest logs!', false);
+            console.error('Error fetching the selected log:', error);
+            renderLogContent("Error fetching the selected log.");
+            showStatus('Error fetching the selected log!', false);
+        }
+    }
+
+    async function fetchLogFiles(apiToken) {
+        try {
+            const response = await fetch('/api/logs', {
+                headers: {
+                    'Authorization': `Bearer ${apiToken}`
+                }
+            });
+            if (response.ok) {
+                const data = await response.json();
+                populateLogDropdown(data.logs);
+            } else {
+                console.error('Failed to fetch log files:', response.statusText);
+                showStatus('Error fetching log files!', false);
+            }
+        } catch (error) {
+            console.error('Error fetching log files:', error);
+            showStatus('Error fetching log files!', false);
+        }
+    }
+
+    function populateLogDropdown(logs) {
+        const logDropdown = document.getElementById('log-dropdown');
+        logDropdown.innerHTML = '<option value="">Select a log file</option>';
+        logs.forEach(log => {
+            const option = document.createElement('option');
+            option.value = log;
+            option.textContent = log;
+            logDropdown.appendChild(option);
+        });
+    }
+
+    async function fetchLatestLogs(apiToken) {
+        try {
+            const response = await fetch('/api/logs', {
+                headers: {
+                    'Authorization': `Bearer ${apiToken}`
+                }
+            });
+            if (response.ok) {
+                const data = await response.json();
+                const logs = data.logs;
+                if (logs.length > 0) {
+                    const latestLog = logs[0];
+                    const logResponse = await fetch(`/api/logs/${latestLog}`, {
+                        headers: {
+                            'Authorization': `Bearer ${apiToken}`
+                        }
+                    });
+                    if (logResponse.ok) {
+                        const logData = await logResponse.json();
+                        renderLogContent(logData.log);
+                    } else {
+                        console.error('Failed to fetch the latest log:', logResponse.statusText);
+                        renderLogContent("Error fetching the latest log.");
+                        showStatus('Error fetching the latest log!', false);
+                    }
+                } else {
+                    console.error('No log files found.');
+                    renderLogContent("No log files found.");
+                    showStatus('No log files found!', false);
+                }
+            } else {
+                console.error('Failed to fetch log files:', response.statusText);
+                renderLogContent("Error fetching log files.");
+                showStatus('Error fetching log files!', false);
+            }
+        } catch (error) {
+            console.error('Error fetching log files:', error);
+            renderLogContent("Error fetching log files.");
+            showStatus('Error fetching log files!', false);
         }
     }
 
