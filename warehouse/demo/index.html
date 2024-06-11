@@ -860,7 +860,7 @@
     async function fetchSelectedLog() {
         const logDropdown = document.getElementById('log-dropdown');
         const selectedLog = logDropdown.value;
-        const apiToken = localStorage.getItem('apiToken');
+        const apiToken = sessionStorage.getItem('apiToken');
 
         if (!selectedLog) {
             renderLogContent('No log file selected.');
