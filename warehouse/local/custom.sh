@@ -1,6 +1,6 @@
 part_bash """
-echo \"Hello, World!\"
+echo \"Hello from Bash!\"
 """
 part_python """
-print(\"Hello, World!\")
+print(\"Hello from Python!\")
 """
