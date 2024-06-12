@@ -4,6 +4,7 @@ import httpx
 import logging
 import ngrok
 import os
+import psutil
 import re
 import requests
 import secrets
@@ -14,6 +15,8 @@ import stat
 import string
 import subprocess
 import sys
+import threading
+import time
 import toml
 import uvicorn
 
@@ -108,6 +111,8 @@ def fpk_build(directory: Union[str, None]):
         print(f"❌ An error occurred while executing the build script.")
     except Exception as e:
         print(f"❌ An unexpected error occurred: {e}")
+    finally:
+        server_status["busy"] = False
 
 
 def fpk_cache_unbox(directory_name: str):
@@ -883,7 +888,36 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+build_lock = threading.Lock()
 flatpack_directory = None
+server_status = {"busy": False}
+
+
+def is_server_busy():
+    return server_status["busy"]
+
+
+def update_server_status():
+    global server_status
+    while True:
+        server_status["busy"] = is_server_busy()
+        time.sleep(1)
+
+
+status_thread = threading.Thread(target=update_server_status, daemon=True)
+status_thread.start()
+
+
+def run_build(directory, callback=None):
+    global server_status
+    with build_lock:
+        try:
+            server_status["busy"] = True
+            fpk_build(directory)
+        finally:
+            server_status["busy"] = False
+            if callback:
+                callback()
 
 
 def escape_special_chars(content: str) -> str:
@@ -1029,11 +1063,13 @@ async def save_file(
 async def build_flatpack(request: Request, token: str = Depends(authenticate_token)):
     if not flatpack_directory:
         raise HTTPException(status_code=500, detail="Flatpack directory is not set")
-    try:
-        fpk_build(flatpack_directory)
-        return JSONResponse(content={"message": "Build process completed successfully."}, status_code=200)
-    except Exception as e:
-        return JSONResponse(content={"message": f"Build process failed: {e}"}, status_code=500)
+    if server_status["busy"]:
+        return JSONResponse(content={"message": "Build process is already running."}, status_code=409)
+
+    build_thread = threading.Thread(target=run_build, args=(flatpack_directory,))
+    build_thread.start()
+
+    return JSONResponse(content={"message": "Build process started"}, status_code=200)
 
 
 @app.post("/api/verify")
@@ -1092,7 +1128,7 @@ async def get_log_file(request: Request, log_filename: str, token: str = Depends
 @app.get("/api/heartbeat")
 async def heartbeat():
     current_time = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
-    return JSONResponse(content={"server_time": current_time})
+    return JSONResponse(content={"server_time": current_time, "server_busy": server_status["busy"]})
 
 
 def setup_static_directory(application, directory: str):
@@ -1157,7 +1193,6 @@ def fpk_cli_handle_run(args, session):
             public_url = listener.url()
             print(f"Ingress established at {public_url}")
 
-        # Set up the Uvicorn server instance for signal handling
         config = uvicorn.Config(app, host="127.0.0.1", port=port)
         global uvicorn_server
         uvicorn_server = uvicorn.Server(config)
