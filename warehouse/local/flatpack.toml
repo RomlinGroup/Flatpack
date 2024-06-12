@@ -31,10 +31,10 @@ numpy = "1.25.2"
 tiktoken = "0.6.0"
 tqdm = "4.66.2"
 
-# [[git]]
-# from_source = "{{git_source_url}}"
-# to_destination = "{{git_destination_dir}}"
-# branch = "{{branch_name}}"
+[[git]]
+from_source = "{{git_source_url}}"
+to_destination = "{{git_destination_dir}}"
+branch = "{{branch_name}}"
 
 [[file]]
 from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/local/index.html"
