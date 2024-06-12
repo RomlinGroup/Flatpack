@@ -557,7 +557,7 @@
             comment: /(#.*?$)/gm,
             function: /\b(def\s+[a-zA-Z_][a-zA-Z0-9_]*)\s*(?=\()/gm,
             string: /("""[\s\S]*?"""|'''[\s\S]*?'''|"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*')/gm,
-            output: /\b(print)\b/gm,
+            output: /\b(import|print)\b/gm,
             variable: /(?<!\.)\b([a-zA-Z_][a-zA-Z0-9_]*)\b(?=\s*=)/gm
         }, bash: {
             comment: /(#.*?$)/gm,
@@ -680,10 +680,8 @@
 
             const data = await getEvalJSON(apiToken);
             const evalPart = data.eval;
-
-            console.log('part-' + evalPart);
-
             const isSuccess = data.curr === evalPart || evalPart === null;
+
             showStatus(JSON.stringify(data), isSuccess);
 
             const allParts = document.querySelectorAll('.color-label.eval-label');
@@ -732,7 +730,6 @@
                 if (xhr.status >= 200 && xhr.status < 300) {
                     try {
                         const json = JSON.parse(xhr.responseText);
-                        console.log('Success:', json);
                     } catch (e) {
                         console.error('Parsing error:', e);
                     }
@@ -977,7 +974,6 @@
     }
 
     function logActiveInputArea(editor) {
-        console.log(`Active input area: ${editor.parentNode.className}`);
         document.querySelectorAll('.part-python, .part-bash').forEach(part => {
             part.classList.remove('active-highlight');
         });
@@ -1118,7 +1114,6 @@
                 }
             });
             const responseText = await response.text();
-            console.log('Server response:', response.status, response.statusText, responseText);
 
             if (status !== false) showStatus(response.ok ? 'Saved successfully!' : 'Save failed!', response.ok);
 
