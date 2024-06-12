@@ -161,7 +161,7 @@ export VENV_PIP="$VENV_PYTHON -m pip"
             repo_path = f"{model_name}/{build_prefix}/{to_destination}"
             git_clone = f"""
 echo "Cloning repository from: {from_source}"
-git clone -b {branch} {from_source} {repo_path}
+git clone --depth=1 -b {branch} {from_source} {repo_path}
 if [ $? -eq 0 ]; then
     echo "Git clone was successful."
 else
