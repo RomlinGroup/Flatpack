@@ -1099,7 +1099,11 @@ def setup_static_directory(application, directory: str):
     global flatpack_directory
     flatpack_directory = os.path.abspath(directory)
     if os.path.exists(flatpack_directory) and os.path.isdir(flatpack_directory):
-        application.mount("/", StaticFiles(directory=f"{flatpack_directory}/build", html=True), name="static")
+        application.mount(
+            "/",
+            StaticFiles(directory=f"{flatpack_directory}/build", html=True),
+            name="static"
+        )
         print(f"Static files will be served from: {flatpack_directory}/build")
     else:
         print(f"The directory '{flatpack_directory}' does not exist or is not a directory.")
