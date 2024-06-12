@@ -730,11 +730,12 @@
                 if (xhr.status >= 200 && xhr.status < 300) {
                     try {
                         const json = JSON.parse(xhr.responseText);
+                        console.log(`API call to ${endpoint} succeeded:`, json);
                     } catch (e) {
-                        console.error('Parsing error:', e);
+                        console.error('Error parsing response JSON:', e);
                     }
                 } else {
-                    console.error('HTTP Error:', xhr.status, xhr.statusText);
+                    console.error(`HTTP Error: ${xhr.status} ${xhr.statusText}`);
                     console.error('Response:', xhr.responseText);
                 }
             }
@@ -1167,9 +1168,12 @@
     async function validateApiKey(apiToken) {
         try {
             const response = await fetch('/api/validate_token', {
-                method: 'POST', headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded', 'Authorization': `Bearer ${apiToken}`
-                }, body: new URLSearchParams({'api_token': apiToken})
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'Authorization': `Bearer ${apiToken}`
+                },
+                body: new URLSearchParams({'api_token': apiToken})
             });
 
             if (!response.ok) {
@@ -1177,7 +1181,7 @@
             }
             return true;
         } catch (error) {
-            console.error('Error validating API key:', error);
+            console.error('Error validating API key:', error.message);
             return false;
         }
     }
@@ -1200,12 +1204,17 @@
             initializeApp(apiToken);
         }
 
-        apiKeySubmit.addEventListener('click', () => {
+        apiKeySubmit.addEventListener('click', async () => {
             const apiKey = apiKeyInput.value.trim();
             if (apiKey) {
-                sessionStorage.setItem('apiToken', apiKey);
-                apiKeyModal.style.display = 'none';
-                initializeApp(apiKey);
+                const isValid = await validateApiKey(apiKey);
+                if (isValid) {
+                    sessionStorage.setItem('apiToken', apiKey);
+                    apiKeyModal.style.display = 'none';
+                    initializeApp(apiKey);
+                } else {
+                    alert('Invalid API token. Please enter a valid token.');
+                }
             } else {
                 alert('Please enter a valid API token.');
             }
