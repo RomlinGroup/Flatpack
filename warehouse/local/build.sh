@@ -6,7 +6,7 @@ echo -e "[DEBUG] $(TZ=GMT date +"%Y-%m-%d %H:%M:%S")"
 echo -e "🚀 build.sh is running in: $SCRIPT_DIR"
 
 # === BEGIN USER CUSTOMIZATION ===
-export DEFAULT_REPO_NAME=local
+export DEFAULT_REPO_NAME=llama.cpp
 export FLATPACK_NAME=local
 # === END USER CUSTOMIZATION ===
 

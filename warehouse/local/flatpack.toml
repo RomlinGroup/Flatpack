@@ -32,9 +32,9 @@ tiktoken = "0.6.0"
 tqdm = "4.66.2"
 
 [[git]]
-from_source = "{{git_source_url}}"
-to_destination = "{{git_destination_dir}}"
-branch = "{{branch_name}}"
+from_source = "https://github.com/ggerganov/llama.cpp"
+to_destination = "llama.cpp"
+branch = "master"
 
 [[file]]
 from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/local/index.html"
