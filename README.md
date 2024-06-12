@@ -72,6 +72,16 @@ flatpack version && \
 bash"
 ```
 
+### Install on Raspberry Pi OS Lite
+
+```bash
+sudo apt-get install -y build-essential git pipx python3.11 python3.11-dev
+```
+
+```bash
+pipx install flatpack
+```
+
 ### Getting started with Flatpack
 
 ```bash

@@ -87,6 +87,9 @@ Check out the [JLA - Compatibility Checker](https://joinup.ec.europa.eu/collecti
 - **[pypdf](https://pypi.org/project/pypdf/)**\
   BSD License ([LICENSE](https://github.com/py-pdf/pypdf/blob/main/LICENSE))
 
+- **[python-multipart](https://pypi.org/project/python-multipart/)**\
+  Apache Software License ([LICENSE](https://github.com/Kludex/python-multipart/blob/master/LICENSE.txt))
+
 - **[requests](https://pypi.org/project/requests/)**\
   Apache Software License (Apache 2.0) ([LICENSE](https://github.com/psf/requests/blob/main/LICENSE))
 
