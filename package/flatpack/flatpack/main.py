@@ -165,6 +165,8 @@ def fpk_create(flatpack_name, repo_url="https://github.com/RomlinGroup/template"
     os.makedirs(flatpack_dir, exist_ok=True)
 
     for item in os.listdir(template_dir):
+        if item in ['.gitignore', 'LICENSE']:
+            continue
         s = os.path.join(template_dir, item)
         d = os.path.join(flatpack_dir, item)
         if os.path.isdir(s):
