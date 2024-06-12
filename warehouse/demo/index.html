@@ -164,7 +164,11 @@
         }
 
         .part-bash .eval-label {
-            background-color: #ff8d80;
+            background-color: #ff8d80 !important;
+        }
+
+        .part-python .eval-label {
+            background-color: #ff8d80 !important;
         }
 
         .part-python .color-label {
@@ -1193,7 +1197,7 @@
         const apiKeyInput = document.getElementById('api-key-input');
         const apiKeyModal = document.getElementById('api-key-modal');
         const apiKeySubmit = document.getElementById('api-key-authorize');
-        const apiToken = sessionStorage.getItem('apiToken');  // Use sessionStorage
+        const apiToken = sessionStorage.getItem('apiToken');
 
         if (!apiToken) {
             apiKeyModal.style.display = 'flex';
