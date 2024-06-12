@@ -6,8 +6,8 @@ echo -e "[DEBUG] $(TZ=GMT date +"%Y-%m-%d %H:%M:%S")"
 echo -e "🚀 build.sh is running in: $SCRIPT_DIR"
 
 # === BEGIN USER CUSTOMIZATION ===
-export DEFAULT_REPO_NAME={flatpack_name}
-export FLATPACK_NAME={flatpack_name}
+export DEFAULT_REPO_NAME=local
+export FLATPACK_NAME=local
 # === END USER CUSTOMIZATION ===
 
 source "$SCRIPT_DIR/device.sh" || {
