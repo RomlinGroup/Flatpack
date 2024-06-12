@@ -1,6 +1,6 @@
 part_bash """
-# Enter your bash code here...
+echo \"Hello, World!\"
 """
 part_python """
-# Enter your python code here...
+print(\"Hello, World!\")
 """
