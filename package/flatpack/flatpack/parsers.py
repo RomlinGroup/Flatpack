@@ -85,7 +85,7 @@ fi
 
     venv_setup = f"""
 handle_error() {{
-    echo "😟 Oops! Something went wrong."
+    echo "Oops! Something went wrong."
     exit 1
 }}
 
@@ -93,7 +93,7 @@ if [[ $IS_COLAB -ne 0 ]]; then
     apt install python3.10-venv
 fi
 
-echo "🐍 Checking for Python"
+echo "Checking for Python"
 if [[ -x "$(command -v python3.11)" ]]; then
     PYTHON_CMD=python3.11
 elif [[ -x "$(command -v python3.10)" ]]; then
@@ -106,23 +106,23 @@ fi
 
 echo "Python command to be used: $PYTHON_CMD"
 
-echo "🦄 Creating the virtual environment at {env_name}/{build_prefix}"
+echo "Creating the virtual environment at {env_name}/{build_prefix}"
 
 if ! $PYTHON_CMD -m venv --clear --copies "{env_name}/{build_prefix}"; then
-    echo "❌ Failed to create the virtual environment using $PYTHON_CMD"
+    echo "Failed to create the virtual environment using $PYTHON_CMD"
     handle_error
 else
-    echo "✅ Successfully created the virtual environment"
+    echo "Successfully created the virtual environment"
 fi
 
 # Ensuring the VENV_PYTHON path does not begin with a dot and is correctly formed
 export VENV_PYTHON="{env_name}/{build_prefix}/bin/python"
 if [[ -f "$VENV_PYTHON" ]]; then
-    echo "✅ VENV_PYTHON is set correctly to $VENV_PYTHON"
-    echo "🐍 Checking Python version in the virtual environment..."
+    echo "VENV_PYTHON is set correctly to $VENV_PYTHON"
+    echo "Checking Python version in the virtual environment..."
     $VENV_PYTHON --version
 else
-    echo "❌ VENV_PYTHON is set to $VENV_PYTHON, but this file does not exist"
+    echo "VENV_PYTHON is set to $VENV_PYTHON, but this file does not exist"
     handle_error
 fi
 

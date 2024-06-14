@@ -59,13 +59,16 @@ class AgentManager:
         return pid
 
     def list_agents(self):
-        if not self.processes:
-            print("No active agents.")
-        else:
-            print("Active agents:")
-            for pid, details in self.processes.items():
-                print(
-                    f"PID: {pid}, Script: {details['script_path']}, Start Time: {details['start_time']}, Port: {details['port']}")
+        agents = []
+        for pid, details in self.processes.items():
+            agent_info = {
+                'pid': pid,
+                'script': details['script_path'],
+                'start_time': details['start_time'],
+                'port': details['port']
+            }
+            agents.append(agent_info)
+        return agents
 
     def terminate_agent(self, pid):
         pid = str(pid)
