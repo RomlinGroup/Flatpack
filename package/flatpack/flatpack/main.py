@@ -477,7 +477,6 @@ def fpk_fetch_github_dirs(session: httpx.Client) -> List[str]:
                 if isinstance(item, dict) and item.get('type') == 'dir' and
                    item.get('name', '').lower()
             ]
-            print(f"[INFO] Fetched directory names from GitHub: {directories}")
             logger.info(f"Fetched directory names from GitHub: {directories}")
             return sorted(directories)
         else:
@@ -611,7 +610,6 @@ def fpk_list_directories(session: httpx.Client) -> str:
     try:
         dirs = fpk_fetch_github_dirs(session)
         directories_str = "\n".join(dirs)
-        print(f"[INFO] Fetched directories: {directories_str}")
         logger.info(f"Fetched directories: {directories_str}")
         return directories_str
     except Exception as e:
