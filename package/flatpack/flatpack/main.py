@@ -225,7 +225,13 @@ def fpk_cache_unbox(directory_name: str):
         with open(cache_file_path, 'w') as f:
             f.write(directory_name)
         print(f"[INFO] Cached the directory name '{directory_name}' to {cache_file_path}.")
-        logger.info("Cached the directory name '%s' to %s", directory_name, cache_file_path)
+
+        logger.info(
+            "Cached the directory name '%s' to %s",
+            directory_name,
+            cache_file_path
+        )
+
     except IOError as e:
         print(f"[ERROR] Failed to cache the directory name '{directory_name}': {e}")
         logger.error("Failed to cache the directory name '%s': %s", directory_name, e)
