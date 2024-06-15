@@ -84,7 +84,7 @@ uvicorn_server = None
 def handle_termination_signal(signal_number, frame):
     """Handle termination signals for graceful shutdown."""
     logger.info(f"Received termination signal ({signal_number}), shutting down...")
-    uvicorn_server.should_exit = True
+    sys.exit(0)
 
 
 signal.signal(signal.SIGINT, handle_termination_signal)
