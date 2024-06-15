@@ -165,7 +165,7 @@ else
     echo "Git clone failed."
     exit 1
 fi
-if [ -f {repo_path}/requirements.txt ]; then
+if [ -f {repo_path}/requirements.txt]; then
     echo "Found requirements.txt, installing dependencies..."
     ${{VENV_PIP}} install -r {repo_path}/requirements.txt
 else
@@ -176,7 +176,7 @@ fi
     return script
 
 
-def download_files_script(items, item_type, model_name, build_prefix):
+def download_files_script(items, model_name, build_prefix):
     """Generate the script to download datasets or files."""
     script = []
     for item in items:
@@ -203,14 +203,13 @@ def execute_run_commands_script(run_vec, model_name, build_prefix):
     return script
 
 
-def parse_toml_to_venv_script(file_path: str, python_version="3.11.8", env_name="myenv") -> str:
+def parse_toml_to_venv_script(file_path: str, env_name="myenv") -> str:
     """
     Convert a TOML configuration to a bash script that sets up a python environment using venv and performs actions based on the TOML.
     Now ensures all directories, Git repositories, and other related files are created within a `/build` directory.
 
     Parameters:
     - file_path: The path to the TOML file.
-    - python_version: The desired Python version (unused, but kept for function signature compatibility).
     - env_name: Name of the virtual environment using venv.
 
     Returns:
@@ -248,9 +247,20 @@ fi
                     python_packages.items()]
     script.extend(install_python_packages_script(package_list))
 
-    script.extend(clone_git_repositories_script(config.get("git", []), model_name, build_prefix))
-    script.extend(download_files_script(config.get("dataset", []), "dataset", model_name, build_prefix))
-    script.extend(download_files_script(config.get("file", []), "file", model_name, build_prefix))
-    script.extend(execute_run_commands_script(config.get("run", []), model_name, build_prefix))
+    script.extend(clone_git_repositories_script(
+        config.get("git", []), model_name, build_prefix
+    ))
+
+    script.extend(download_files_script(
+        config.get("dataset", []), model_name, build_prefix
+    ))
+
+    script.extend(download_files_script(
+        config.get("file", []), model_name, build_prefix
+    ))
+
+    script.extend(execute_run_commands_script(
+        config.get("run", []), model_name, build_prefix
+    ))
 
     return "\n".join(script)
