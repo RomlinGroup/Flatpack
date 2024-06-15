@@ -843,7 +843,11 @@ def fpk_verify(directory: Union[str, None]):
 
     try:
         env_vars = {'VERIFY_MODE': 'true'}
-        result = subprocess.run(['/bin/bash', '-u', safe_script_path], check=True, env={**env_vars, **os.environ})
+        result = subprocess.run(
+            ['/bin/bash', '-u', safe_script_path],
+            check=True,
+            env={**env_vars, **os.environ}
+        )
         print("[INFO] Verification script executed successfully.")
         logger.info("Verification script executed successfully.")
     except subprocess.CalledProcessError as e:
