@@ -12,8 +12,23 @@ from cryptography.hazmat.backends import default_backend
 logging.basicConfig(filename='debug.log', filemode='w', level=logging.INFO)
 
 
+def validate_file_path(path, is_input=True):
+    if is_input:
+        if not os.path.exists(path):
+            raise FileNotFoundError(f"The path '{path}' does not exist.")
+        if not (os.path.isfile(path) or os.path.isdir(path)):
+            raise ValueError(f"The path '{path}' is neither a file nor a directory.")
+    else:
+        output_dir = os.path.dirname(path)
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+
+
 def compress_data(input_path, output_path):
     try:
+        validate_file_path(input_path)
+        validate_file_path(output_path, is_input=False)
+
         if os.path.isfile(input_path):
             with open(input_path, 'rb') as f:
                 data = f.read()
@@ -34,11 +49,16 @@ def compress_data(input_path, output_path):
         else:
             print("The specified input path is neither a file nor a directory.")
     except Exception as e:
+        logging.error(f"An error occurred while compressing: {e}")
         print(f"An error occurred while compressing: {e}")
 
 
 def sign_data(output_path, signed_path, private_key_path, hash_size=256, passphrase=None):
     try:
+        validate_file_path(output_path)
+        validate_file_path(signed_path, is_input=False)
+        validate_file_path(private_key_path)
+
         if hash_size not in [256, 384, 512]:
             raise ValueError("Invalid hash size. Supported sizes are 256, 384, and 512.")
 
@@ -76,11 +96,15 @@ def sign_data(output_path, signed_path, private_key_path, hash_size=256, passphr
         with open(signed_path, 'wb') as f:
             f.write(combined_data)
     except Exception as e:
+        logging.error(f"An error occurred while signing: {e}")
         print(f"An error occurred while signing: {e}")
 
 
 def decompress_data(input_path, output_path):
     try:
+        validate_file_path(input_path)
+        validate_file_path(output_path, is_input=False)
+
         with open(input_path, 'rb') as f:
             compressed_data = f.read()
 
@@ -98,4 +122,5 @@ def decompress_data(input_path, output_path):
                 f.write(decompressed_data)
 
     except Exception as e:
+        logging.error(f"An error occurred while decompressing: {e}")
         print(f"An error occurred while decompressing: {e}")
