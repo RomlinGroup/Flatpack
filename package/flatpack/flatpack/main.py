@@ -50,10 +50,10 @@ MAX_ATTEMPTS = 5
 VALIDATION_ATTEMPTS = 0
 
 
-def setup_logging(log_file_path: Path):
+def setup_logging(log_path: Path):
     """Set up logging configuration."""
-    logger = logging.getLogger(__name__)
-    logger.setLevel(logging.WARNING)
+    new_logger = logging.getLogger(__name__)
+    new_logger.setLevel(logging.WARNING)
 
     # Console handler
     console_handler = logging.StreamHandler()
@@ -62,21 +62,21 @@ def setup_logging(log_file_path: Path):
     console_handler.setFormatter(console_formatter)
 
     # File handler
-    file_handler = logging.FileHandler(log_file_path)
+    file_handler = logging.FileHandler(log_path)
     file_handler.setLevel(logging.INFO)
     file_formatter = logging.Formatter('%(asctime)s - %(message)s')
     file_handler.setFormatter(file_formatter)
 
     # Add handlers to the logger
-    logger.addHandler(console_handler)
-    logger.addHandler(file_handler)
+    new_logger.addHandler(console_handler)
+    new_logger.addHandler(file_handler)
 
-    return logger
+    return new_logger
 
 
 # Initialize logging
-log_file_path = HOME_DIR / "fpk_local_only.log"
-logger = setup_logging(log_file_path)
+global_log_file_path = HOME_DIR / "fpk_local_only.log"
+logger = setup_logging(global_log_file_path)
 
 uvicorn_server = None
 
@@ -127,8 +127,8 @@ def fpk_build(directory: Union[str, None]):
     building_script_path = Path(last_unboxed_flatpack) / 'build' / 'build.sh'
 
     log_file_time = datetime.utcnow().strftime('%Y_%m_%d_%H_%M_%S')
-    log_file_path = Path(last_unboxed_flatpack) / 'build' / 'logs' / f"build_{log_file_time}.log"
-    log_file_path.parent.mkdir(parents=True, exist_ok=True)
+    build_log_file_path = Path(last_unboxed_flatpack) / 'build' / 'logs' / f"build_{log_file_time}.log"
+    build_log_file_path.parent.mkdir(parents=True, exist_ok=True)
 
     if not building_script_path.exists() or not building_script_path.is_file():
         print(f"[ERROR] Building script not found in {last_unboxed_flatpack}.")
@@ -138,7 +138,7 @@ def fpk_build(directory: Union[str, None]):
     safe_script_path = shlex.quote(str(building_script_path.resolve()))
 
     try:
-        with open(log_file_path, 'w') as log_file:
+        with open(build_log_file_path, 'w') as log_file:
             process = subprocess.Popen(
                 ['bash', '-u', safe_script_path],
                 stdout=subprocess.PIPE,
@@ -1891,14 +1891,14 @@ async def heartbeat():
     return JSONResponse(content={"server_time": current_time}, status_code=200)
 
 
-def setup_static_directory(app: FastAPI, directory: str):
+def setup_static_directory(fastapi_app: FastAPI, directory: str):
     """Setup the static directory for serving static files."""
     global flatpack_directory
     flatpack_directory = os.path.abspath(directory)
 
     if os.path.exists(flatpack_directory) and os.path.isdir(flatpack_directory):
         static_dir = os.path.join(flatpack_directory, 'build')
-        app.mount("/", StaticFiles(directory=static_dir, html=True), name="static")
+        fastapi_app.mount("/", StaticFiles(directory=static_dir, html=True), name="static")
         print(f"[INFO] Static files will be served from: {static_dir}")
         logger.info(f"Static files will be served from: {static_dir}")
     else:
