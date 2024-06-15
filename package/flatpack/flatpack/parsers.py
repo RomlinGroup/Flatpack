@@ -1,4 +1,14 @@
+import os
 import toml
+
+
+def is_valid_path(base_path, user_path):
+    # Resolve the full paths
+    base_path = os.path.abspath(base_path)
+    user_path = os.path.abspath(os.path.join(base_path, user_path))
+
+    # Check if the user_path is within base_path
+    return os.path.commonpath([base_path, user_path]) == base_path
 
 
 def parse_toml_to_venv_script(file_path: str, python_version="3.11.8", env_name="myenv") -> str:
@@ -32,6 +42,10 @@ fi
         return checks
 
     # Load TOML configuration
+    base_dir = os.path.dirname(file_path)
+    if not is_valid_path(base_dir, file_path):
+        raise ValueError("Invalid file path")
+
     with open(file_path, 'r') as f:
         config = toml.load(f)
 
