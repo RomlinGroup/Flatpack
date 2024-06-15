@@ -1544,7 +1544,9 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
             logger.info("Finished cloning llama.cpp repository into '%s'", llama_cpp_dir)
 
         except subprocess.CalledProcessError as e:
-            print(f"[ERROR] Failed to clone the llama.cpp repository. Please try again. Error: {e}")
+            print(
+                f"[ERROR] Failed to clone the llama.cpp repository. Please try again. Error: {e}"
+            )
             logger.error("Failed to clone the llama.cpp repository. Error: %s", e)
             return
 
@@ -1601,7 +1603,9 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
             logger.error(f"Failed to run 'make' or install dependencies in the llama.cpp directory. Error: {e}")
             return
         except Exception as e:
-            print(f"[ERROR] An error occurred during the setup of llama.cpp. Error: {e}")
+            print(
+                f"[ERROR] An error occurred during the setup of llama.cpp. Error: {e}"
+            )
             logger.error(f"An error occurred during the setup of llama.cpp. Error: {e}")
             return
 
@@ -1627,7 +1631,9 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
             ]
             subprocess.run(convert_command, check=True)
 
-            print(f"[INFO] Conversion complete. The model has been compressed and saved as '{output_file}'")
+            print(
+                f"[INFO] Conversion complete. The model has been compressed and saved as '{output_file}'"
+            )
             logger.info("Conversion complete. The model has been compressed and saved as '%s'", output_file)
         except subprocess.CalledProcessError as e:
             print(f"[ERROR] Conversion failed. Error: {e}")
@@ -1638,7 +1644,9 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
             logger.error("An error occurred during the model conversion. Error: %s", e)
             return
     else:
-        print(f"[INFO] The model has already been converted and saved as '{output_file}'.")
+        print(
+            f"[INFO] The model has already been converted and saved as '{output_file}'."
+        )
         logger.info("The model has already been converted and saved as '%s'.", output_file)
     if os.path.exists(output_file):
         try:
@@ -1653,7 +1661,9 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
             ]
             subprocess.run(quantize_command, check=True)
 
-            print(f"[INFO] Quantization complete. The quantized model has been saved as '{quantized_output_file}'.")
+            print(
+                f"[INFO] Quantization complete. The quantized model has been saved as '{quantized_output_file}'."
+            )
             logger.info("Quantization complete. The quantized model has been saved as '%s'.", quantized_output_file)
 
             print(f"[INFO] Deleting the original .bin file '{output_file}'...")
@@ -2094,7 +2104,9 @@ def fpk_cli_handle_run(args, session):
                 print("[INFO] Please save the API token before continuing.")
                 logger.info("Please save the API token before continuing.")
     except KeyboardInterrupt:
-        print("[ERROR] Process interrupted by user. Please save the API token and try again.")
+        print(
+            "[ERROR] Process interrupted by user. Please save the API token and try again."
+        )
         logger.error("Process interrupted by user. Please save the API token and try again.")
         sys.exit(1)
 
@@ -2236,7 +2248,9 @@ def fpk_cli_handle_unbox(args, session):
             return
         toml_path = local_directory_path / 'flatpack.toml'
         if not toml_path.exists():
-            print(f"[ERROR] flatpack.toml not found in the specified directory: '{directory_name}'.")
+            print(
+                f"[ERROR] flatpack.toml not found in the specified directory: '{directory_name}'."
+            )
             logger.error(
                 "flatpack.toml not found in the specified directory: '%s'.",
                 directory_name
