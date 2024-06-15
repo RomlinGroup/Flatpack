@@ -294,7 +294,6 @@ def fpk_create(flatpack_name, repo_url="https://github.com/RomlinGroup/template"
     Raises:
         ValueError: If the flatpack name format is invalid.
     """
-
     if not re.match(r'^[a-z0-9-]+$', flatpack_name):
         error_message = "Invalid name format. Only lowercase letters, numbers, and hyphens are allowed."
         print(f"[ERROR] {error_message}")
