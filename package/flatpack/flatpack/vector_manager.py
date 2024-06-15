@@ -165,7 +165,7 @@ class VectorManager:
     def _process_text_and_add(self, text, source_reference):
         """Process the text into chunks and add to the index."""
         if not isinstance(text, str):
-            logging.error(f"_process_text_and_add expected a string but got {type(text)}. Value: {text}")
+            logger.error("_process_text_and_add expected a string but got %s. Value: %s", type(text), text)
             return
         sentences = sent_tokenize(text)
         chunks = [" ".join(sentences[i:i + SENTENCE_CHUNK_SIZE]).strip() for i in
@@ -200,7 +200,7 @@ class VectorManager:
     @staticmethod
     def get_wikipedia_text(page_title):
         """Fetch text from a Wikipedia page."""
-        logging.info(f"Fetching Wikipedia page for: {page_title}")
+        logger.info("Fetching Wikipedia page for: %s", page_title)
         base_url = "https://en.wikipedia.org/w/api.php"
         params = {
             "action": "query",
@@ -232,6 +232,6 @@ class VectorManager:
                 self._process_text_and_add(text, f"wikipedia:{page_title}")
                 logging.info("Wikipedia text added successfully.")
             else:
-                logging.error(f"No text found for Wikipedia page: {page_title}")
+                logger.error("No text found for Wikipedia page: %s", page_title)
         except requests.RequestException as e:
-            logging.error(f"Failed to fetch {page_title}: {e}")
+            logger.error("Failed to fetch %s: %s", page_title, e)

@@ -27,7 +27,7 @@ def delete_existing_fpk_files(folder_path):
     for file in os.listdir(folder_path):
         if file.endswith(".fpk"):
             os.remove(os.path.join(folder_path, file))
-            logging.info(f"Deleted existing .fpk file: {file}.")
+            logger.info("Deleted existing .fpk file: %s.", file)
 
 
 def main():
@@ -73,14 +73,14 @@ def main():
         signed_path = os.path.join(folder, f"{folder_name}.fpk")
 
         compress_and_sign.compress_data(folder, output_path)
-        logging.info(f"Compressed file saved at {output_path}.")
+        logger.info("Compressed file saved at %s.", output_path)
 
         compress_and_sign.sign_data(output_path, signed_path, args.private_key, hash_size=args.hash_size,
                                     passphrase=args.passphrase)
-        logging.info(f"Signed file saved at {signed_path}.")
+        logger.info("Signed file saved at %s.", signed_path)
 
         os.remove(output_path)
-        logging.info(f"Uncompressed file {output_path} deleted.")
+        logger.info("Uncompressed file %s deleted.", output_path)
 
 
 if __name__ == "__main__":
