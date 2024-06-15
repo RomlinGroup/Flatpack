@@ -15,6 +15,7 @@ import sys
 from datetime import datetime
 from importlib.metadata import version
 from io import BytesIO
+from logging.handlers import RotatingFileHandler
 from pathlib import Path
 from typing import List, Optional, Union
 from zipfile import ZipFile
@@ -61,10 +62,14 @@ def setup_logging(log_path: Path):
     console_formatter = logging.Formatter('%(asctime)s - %(message)s')
     console_handler.setFormatter(console_formatter)
 
-    # File handler
-    file_handler = logging.FileHandler(log_path)
+    # Rotating File handler
+    file_handler = RotatingFileHandler(
+        log_path,
+        maxBytes=5 * 1024 * 1024,  # 5MB per file
+        backupCount=5  # keep last 5 files
+    )
     file_handler.setLevel(logging.INFO)
-    file_formatter = logging.Formatter('%(asctime)s - %(message)s')
+    file_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
     file_handler.setFormatter(file_formatter)
 
     # Add handlers to the logger
@@ -77,6 +82,7 @@ def setup_logging(log_path: Path):
 # Initialize logging
 global_log_file_path = HOME_DIR / "fpk_local_only.log"
 logger = setup_logging(global_log_file_path)
+os.chmod(global_log_file_path, 0o600)
 
 uvicorn_server = None
 
