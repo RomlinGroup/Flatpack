@@ -481,11 +481,10 @@ def fpk_fetch_github_dirs(session: httpx.Client) -> List[str]:
             ]
             logger.info(f"Fetched directory names from GitHub: {directories}")
             return sorted(directories)
-        else:
-            message = f"Unexpected response format from GitHub: {json_data}"
-            print(f"[ERROR] {message}")
-            logger.error(message)
-            return []
+        message = f"Unexpected response format from GitHub: {json_data}"
+        print(f"[ERROR] {message}")
+        logger.error(message)
+        return []
     except httpx.HTTPError as e:
         message = f"Unable to connect to GitHub: {e}"
         print(f"[ERROR] {message}")
@@ -725,14 +724,13 @@ def fpk_unbox(directory_name: str, session, local: bool = False):
         print(f"[ERROR] {message}")
         logger.error(message)
         return
-    else:
-        build_dir = flatpack_dir / "build"
+    build_dir = flatpack_dir / "build"
 
-        if build_dir.exists():
-            message = "Build directory already exists."
-            print(f"[ERROR] {message}")
-            logger.error(message)
-            return
+    if build_dir.exists():
+        message = "Build directory already exists."
+        print(f"[ERROR] {message}")
+        logger.error(message)
+        return
 
     flatpack_dir.mkdir(parents=True, exist_ok=True)
     build_dir.mkdir(parents=True, exist_ok=True)
@@ -1740,11 +1738,10 @@ async def validate_token(request: Request, api_token: str = Form(...)):
     global VALIDATION_ATTEMPTS
     if validate_api_token(api_token):
         return JSONResponse(content={"message": "API token is valid."}, status_code=200)
-    else:
-        VALIDATION_ATTEMPTS += 1
-        if VALIDATION_ATTEMPTS >= MAX_ATTEMPTS:
-            shutdown_server()
-        return JSONResponse(content={"message": "Invalid API token."}, status_code=403)
+    VALIDATION_ATTEMPTS += 1
+    if VALIDATION_ATTEMPTS >= MAX_ATTEMPTS:
+        shutdown_server()
+    return JSONResponse(content={"message": "Invalid API token."}, status_code=403)
 
 
 @app.get("/load_file")
