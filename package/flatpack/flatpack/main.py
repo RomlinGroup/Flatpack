@@ -147,7 +147,7 @@ def fpk_build(directory: Union[str, None]):
     try:
         with open(build_log_file_path, 'w') as log_file:
             process = subprocess.Popen(
-                ['bash', '-u', safe_script_path],
+                ['/bin/bash', '-u', safe_script_path],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 text=True
@@ -768,7 +768,7 @@ def fpk_unbox(directory_name: str, session, local: bool = False):
     logger.info(message)
     safe_script_path = shlex.quote(str(bash_script_path.resolve()))
     try:
-        result = subprocess.run(['bash', safe_script_path], check=True)
+        result = subprocess.run(['/bin/bash', safe_script_path], check=True)
         print(f"[INFO] All done!")
         logger.info("All done!")
         fpk_cache_unbox(str(flatpack_dir))
@@ -843,7 +843,7 @@ def fpk_verify(directory: Union[str, None]):
 
     try:
         env_vars = {'VERIFY_MODE': 'true'}
-        result = subprocess.run(['bash', '-u', safe_script_path], check=True, env={**env_vars, **os.environ})
+        result = subprocess.run(['/bin/bash', '-u', safe_script_path], check=True, env={**env_vars, **os.environ})
         print("[INFO] Verification script executed successfully.")
         logger.info("Verification script executed successfully.")
     except subprocess.CalledProcessError as e:
