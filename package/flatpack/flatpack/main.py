@@ -50,6 +50,17 @@ MAX_ATTEMPTS = 5
 VALIDATION_ATTEMPTS = 0
 
 
+def sanitize_log_message(message):
+    # Example sanitization function to remove sensitive info
+    return re.sub(r'\b(password|secret|token)\b', '[REDACTED]', message, flags=re.IGNORECASE)
+
+
+class SensitiveFilter(logging.Filter):
+    def filter(self, record):
+        record.msg = sanitize_log_message(record.getMessage())
+        return True
+
+
 def setup_logging(log_path: Path):
     """Set up logging configuration."""
     new_logger = logging.getLogger(__name__)
@@ -71,9 +82,14 @@ def setup_logging(log_path: Path):
     file_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
     file_handler.setFormatter(file_formatter)
 
-    # Add handlers to the logger
+    # Add handlers and filters to the logger
     new_logger.addHandler(console_handler)
     new_logger.addHandler(file_handler)
+
+    sensitive_filter = SensitiveFilter()
+    new_logger.addFilter(sensitive_filter)
+    console_handler.addFilter(sensitive_filter)
+    file_handler.addFilter(sensitive_filter)
 
     return new_logger
 
@@ -1669,11 +1685,12 @@ app = FastAPI()
 
 class EndpointFilter(logging.Filter):
     def filter(self, record):
-        sanitized_message = re.sub(r'[^a-zA-Z0-9\s]', '', record.getMessage())
+        sanitized_message = sanitize_log_message(record.getMessage())
         record.msg = sanitized_message
-        return 'GET /api/heartbeat' not in record.getMessage()
+        return 'GET /api/heartbeat' not in sanitized_message
 
 
+# Apply the filter to the uvicorn access logger
 uvicorn_logger = logging.getLogger("uvicorn.access")
 uvicorn_logger.addFilter(EndpointFilter())
 
