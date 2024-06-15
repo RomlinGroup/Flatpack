@@ -150,17 +150,17 @@ def fpk_build(directory: Union[str, None]):
     """
     cache_file_path = HOME_DIR / ".fpk_unbox.cache"
     print(f"[INFO] Looking for cached flatpack in {cache_file_path}.")
-    logger.info(f"Looking for cached flatpack in {cache_file_path}.")
+    logger.info("Looking for cached flatpack in %s", cache_file_path)
 
     last_unboxed_flatpack = None
 
     if directory and fpk_valid_directory_name(directory):
         print(f"[INFO] Using provided directory: {directory}")
-        logger.info(f"Using provided directory: {directory}")
+        logger.info("Using provided directory: %s", directory)
         last_unboxed_flatpack = directory
     elif cache_file_path.exists():
         print(f"[INFO] Found cached flatpack in {cache_file_path}.")
-        logger.info(f"Found cached flatpack in {cache_file_path}.")
+        logger.info("Found cached flatpack in %s", cache_file_path)
         last_unboxed_flatpack = cache_file_path.read_text().strip()
     else:
         print("[ERROR] No cached flatpack found, and no valid directory provided.")
@@ -182,7 +182,7 @@ def fpk_build(directory: Union[str, None]):
 
     if not building_script_path.exists() or not building_script_path.is_file():
         print(f"[ERROR] Building script not found in {last_unboxed_flatpack}.")
-        logger.error(f"Building script not found in {last_unboxed_flatpack}.")
+        logger.error("Building script not found in %s", last_unboxed_flatpack)
         return
 
     safe_script_path = shlex.quote(str(building_script_path.resolve()))
@@ -204,10 +204,10 @@ def fpk_build(directory: Union[str, None]):
             process.wait()
     except subprocess.CalledProcessError as e:
         print(f"[ERROR] An error occurred while executing the build script: {e}")
-        logger.error(f"An error occurred while executing the build script: {e}")
+        logger.error("An error occurred while executing the build script: %s", e)
     except Exception as e:
         print(f"[ERROR] An unexpected error occurred: {e}")
-        logger.error(f"An unexpected error occurred: {e}")
+        logger.error("An unexpected error occurred: %s", e)
 
 
 def fpk_cache_unbox(directory_name: str):
@@ -225,10 +225,10 @@ def fpk_cache_unbox(directory_name: str):
         with open(cache_file_path, 'w') as f:
             f.write(directory_name)
         print(f"[INFO] Cached the directory name '{directory_name}' to {cache_file_path}.")
-        logger.info(f"Cached the directory name '{directory_name}' to {cache_file_path}.")
+        logger.info("Cached the directory name '%s' to %s", directory_name, cache_file_path)
     except IOError as e:
         print(f"[ERROR] Failed to cache the directory name '{directory_name}': {e}")
-        logger.error(f"Failed to cache the directory name '{directory_name}': {e}")
+        logger.error("Failed to cache the directory name '%s': %s", directory_name, e)
 
 
 def fpk_check_ngrok_auth():
@@ -245,12 +245,12 @@ def fpk_check_ngrok_auth():
             "export NGROK_AUTHTOKEN='your_ngrok_auth_token'"
         )
         print(f"[ERROR] {message}")
-        logger.error(f"Error: {message}")
+        logger.error("%s", message)
         sys.exit(1)
     else:
         message = "NGROK_AUTHTOKEN is set."
         print(f"[INFO] {message}")
-        logger.info(message)
+        logger.info("%s", message)
 
 
 def fpk_colorize(text, color):
@@ -276,9 +276,8 @@ def fpk_colorize(text, color):
     }
 
     if color not in colors:
-        message = f"Invalid color '{color}' provided. Returning the original text."
-        print(f"[ERROR] {message}")
-        logger.error(message)
+        print(f"[ERROR] Invalid color '{color}' provided. Returning the original text.")
+        logger.error("Invalid color '%s' provided. Returning the original text.", color)
         return text
 
     return colors[color] + text + colors["default"]
@@ -297,7 +296,7 @@ def fpk_create(flatpack_name, repo_url="https://github.com/RomlinGroup/template"
     if not re.match(r'^[a-z0-9-]+$', flatpack_name):
         error_message = "Invalid name format. Only lowercase letters, numbers, and hyphens are allowed."
         print(f"[ERROR] {error_message}")
-        logger.error(error_message)
+        logger.error("%s", error_message)
         raise ValueError(error_message)
 
     flatpack_name = flatpack_name.lower().replace(' ', '-')
@@ -308,7 +307,7 @@ def fpk_create(flatpack_name, repo_url="https://github.com/RomlinGroup/template"
     except Exception as e:
         error_message = f"Failed to download and extract template: {e}"
         print(f"[ERROR] {error_message}")
-        logger.error(error_message)
+        logger.error("Failed to download and extract template: %s", e)
         return
 
     flatpack_dir = os.path.join(current_dir, flatpack_name)
@@ -316,11 +315,11 @@ def fpk_create(flatpack_name, repo_url="https://github.com/RomlinGroup/template"
     try:
         os.makedirs(flatpack_dir, exist_ok=True)
         print(f"[INFO] Created flatpack directory: {flatpack_dir}")
-        logger.info(f"Created flatpack directory: {flatpack_dir}")
+        logger.info("Created flatpack directory: %s", flatpack_dir)
     except OSError as e:
         error_message = f"Failed to create flatpack directory: {e}"
         print(f"[ERROR] {error_message}")
-        logger.error(error_message)
+        logger.error("Failed to create flatpack directory: %s", e)
         return
 
     try:
@@ -334,11 +333,11 @@ def fpk_create(flatpack_name, repo_url="https://github.com/RomlinGroup/template"
             else:
                 shutil.copy2(s, d)
         print(f"[INFO] Copied template files to flatpack directory: {flatpack_dir}")
-        logger.info(f"Copied template files to flatpack directory: {flatpack_dir}")
+        logger.info("Copied template files to flatpack directory: %s", flatpack_dir)
     except OSError as e:
         error_message = f"Failed to copy template files: {e}"
         print(f"[ERROR] {error_message}")
-        logger.error(error_message)
+        logger.error("Failed to copy template files: %s", e)
         return
 
     files_to_edit = [
@@ -358,25 +357,25 @@ def fpk_create(flatpack_name, repo_url="https://github.com/RomlinGroup/template"
             with open(file_path, 'w') as file:
                 file.write(newdata)
         print(f"[INFO] Edited template files for flatpack: {flatpack_name}")
-        logger.info(f"Edited template files for flatpack: {flatpack_name}")
+        logger.info("Edited template files for flatpack: %s", flatpack_name)
     except OSError as e:
         error_message = f"Failed to edit template files: {e}"
         print(f"[ERROR] {error_message}")
-        logger.error(error_message)
+        logger.error("Failed to edit template files: %s", e)
         return
 
     try:
         shutil.rmtree(template_dir)
         print(f"[INFO] Removed temporary template directory: {template_dir}")
-        logger.info(f"Removed temporary template directory: {template_dir}")
+        logger.info("Removed temporary template directory: %s", template_dir)
     except OSError as e:
         error_message = f"Failed to remove temporary template directory: {e}"
         print(f"[ERROR] {error_message}")
-        logger.error(error_message)
+        logger.error("Failed to remove temporary template directory: %s", e)
         return
 
     print(f"[INFO] Successfully created {flatpack_name}.")
-    logger.info(f"Successfully created {flatpack_name}.")
+    logger.info("Successfully created %s", flatpack_name)
 
 
 def fpk_display_disclaimer(directory_name: str, local: bool):
