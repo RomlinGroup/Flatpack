@@ -429,7 +429,11 @@ https://fpk.ai/w/{directory_name}
 
     disclaimer_message = disclaimer_template.format(please_note=please_note_colored)
     print(disclaimer_message)
-    logger.info("Displayed disclaimer for flatpack '%s' with local set to %s.", directory_name, local)
+    logger.info(
+        "Displayed disclaimer for flatpack '%s' with local set to %s.",
+        directory_name,
+        local
+    )
 
 
 def fpk_download_and_extract_template(repo_url, dest_dir):
@@ -453,7 +457,11 @@ def fpk_download_and_extract_template(repo_url, dest_dir):
             zip_ref.extractall(dest_dir)
 
         print(f"[INFO] Downloaded and extracted template from {repo_url} to {dest_dir}")
-        logger.info("Downloaded and extracted template from %s to %s", repo_url, dest_dir)
+        logger.info(
+            "Downloaded and extracted template from %s to %s",
+            repo_url,
+            dest_dir
+        )
 
         return template_dir
     except requests.RequestException as e:
@@ -622,7 +630,10 @@ def fpk_get_api_key() -> Optional[str]:
         return api_key
     except Exception as e:
         error_message = f"An error occurred while retrieving the API key: {e}"
-        print("[ERROR] An error occurred while retrieving the API key: %s", error_message)
+        print(
+            "[ERROR] An error occurred while retrieving the API key: %s",
+            error_message
+        )
         logger.error(error_message)
         return None
 
@@ -638,8 +649,14 @@ def fpk_get_last_flatpack() -> Optional[str]:
         if cache_file_path.exists():
             with cache_file_path.open('r') as cache_file:
                 last_flatpack = cache_file.read().strip()
-                print("[INFO] Last unboxed flatpack directory retrieved: %s", last_flatpack)
-                logger.info("Last unboxed flatpack directory retrieved: %s", last_flatpack)
+                print(
+                    "[INFO] Last unboxed flatpack directory retrieved: %s",
+                    last_flatpack
+                )
+                logger.info(
+                    "Last unboxed flatpack directory retrieved: %s",
+                    last_flatpack
+                )
                 return last_flatpack
         else:
             print("[WARNING] Cache file does not exist: %s", cache_file_path)
