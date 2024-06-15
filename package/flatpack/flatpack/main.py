@@ -2325,7 +2325,7 @@ def fpk_cli_handle_vector_commands(args, session, vm):
             print("[INFO] Search results:")
             logger.info("Search results:")
             for result in results:
-                print(f"{result['id']}: {result['text']}\n")
+                print("%s: %s\n" % (result['id'], result['text']))
                 logger.info("%s: %s" % (result['id'], result['text']))
         else:
             print("[INFO] No results found.")
@@ -2336,7 +2336,7 @@ def fpk_cli_handle_vector_commands(args, session, vm):
         fpk_cli_handle_add_url(args.url, vm)
     elif args.vector_command == 'add-wikipedia':
         vm.add_wikipedia_page(args.page_title)
-        print(f"[INFO] Added text from Wikipedia page: '{args.page_title}' to the vector database.")
+        print("[INFO] Added text from Wikipedia page: '%s' to the vector database." % args.page_title)
         logger.info("Added text from Wikipedia page: '%s' to the vector database.", args.page_title)
     else:
         print("[ERROR] Unknown vector command.")
