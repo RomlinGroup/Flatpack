@@ -25,7 +25,12 @@ class LSTM(nn.Module):
         return torch.load(model_path)
 
     def load_vocab_size(self, save_dir):
-        with open(os.path.join(save_dir, 'char_to_index.json'), 'r') as f:
+        allowed_files = {'char_to_index.json'}
+        char_to_index_path = os.path.join(save_dir, 'char_to_index.json')
+        if not os.path.basename(char_to_index_path) in allowed_files:
+            raise ValueError('Invalid filename')
+
+        with open(char_to_index_path, 'r') as f:
             char_to_index = json.load(f)
         self.vocab_size = len(char_to_index)
         self.embedding = nn.Embedding(self.vocab_size, self.embed_size)
@@ -78,10 +83,19 @@ class LSTM(nn.Module):
 
     def generate_text(self, save_dir, start_sequence="To be, or not to be", generate_length=1024, temperature=1.0,
                       device=None):
-        with open(os.path.join(save_dir, 'char_to_index.json'), 'r') as f:
+        allowed_files = {'char_to_index.json', 'index_to_char.json'}
+
+        char_to_index_path = os.path.join(save_dir, 'char_to_index.json')
+        index_to_char_path = os.path.join(save_dir, 'index_to_char.json')
+
+        if not (os.path.basename(char_to_index_path) in allowed_files and os.path.basename(
+                index_to_char_path) in allowed_files):
+            raise ValueError('Invalid filename')
+
+        with open(char_to_index_path, 'r') as f:
             char_to_index = json.load(f)
 
-        with open(os.path.join(save_dir, 'index_to_char.json'), 'r') as f:
+        with open(index_to_char_path, 'r') as f:
             index_to_char = json.load(f)
 
         input_sequence = [char_to_index[char] for char in start_sequence]
