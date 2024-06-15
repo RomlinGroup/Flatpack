@@ -2249,7 +2249,7 @@ def fpk_cli_handle_unbox(args, session):
         toml_path = local_directory_path / 'flatpack.toml'
         if not toml_path.exists():
             print(
-                f"[ERROR] flatpack.toml not found in the specified directory: '{directory_name}'."
+                f"[ERROR] flatpack.toml not found in '{directory_name}'."
             )
             logger.error(
                 "flatpack.toml not found in the specified directory: '%s'.",
