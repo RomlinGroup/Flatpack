@@ -2336,7 +2336,9 @@ def fpk_cli_handle_vector_commands(args, session, vm):
         fpk_cli_handle_add_url(args.url, vm)
     elif args.vector_command == 'add-wikipedia':
         vm.add_wikipedia_page(args.page_title)
-        print(f"[INFO] Added text from Wikipedia page: '{args.page_title}' to the vector database.")
+        print(
+            f"[INFO] Added text from Wikipedia page: '{args.page_title}' to the vector database."
+        )
         logger.info(
             "Added text from Wikipedia page: '%s' to the vector database.",
             args.page_title
