@@ -131,7 +131,7 @@ uvicorn_server = None
 
 def handle_termination_signal(signal_number, frame):
     """Handle termination signals for graceful shutdown."""
-    logger.info(f"Received termination signal ({signal_number}), shutting down...")
+    logger.info("Received termination signal (%s), shutting down...", signal_number)
     sys.exit(0)
 
 
@@ -429,7 +429,7 @@ https://fpk.ai/w/{directory_name}
 
     disclaimer_message = disclaimer_template.format(please_note=please_note_colored)
     print(disclaimer_message)
-    logger.info("Displayed disclaimer for flatpack '{}' with local set to {}.".format(directory_name, local))
+    logger.info("Displayed disclaimer for flatpack '%s' with local set to %s.", directory_name, local)
 
 
 def fpk_download_and_extract_template(repo_url, dest_dir):
@@ -451,18 +451,24 @@ def fpk_download_and_extract_template(repo_url, dest_dir):
         response.raise_for_status()
         with ZipFile(BytesIO(response.content)) as zip_ref:
             zip_ref.extractall(dest_dir)
+
         print(f"[INFO] Downloaded and extracted template from {repo_url} to {dest_dir}")
-        logger.info(f"Downloaded and extracted template from {repo_url} to {dest_dir}")
+        logger.info("Downloaded and extracted template from %s to %s", repo_url, dest_dir)
+
         return template_dir
     except requests.RequestException as e:
         error_message = f"Failed to download template from {repo_url}: {e}"
+
         print(f"[ERROR] {error_message}")
-        logger.error(error_message)
+        logger.error("%s", error_message)
+
         raise RuntimeError(error_message)
     except (OSError, IOError) as e:
         error_message = f"Failed to extract template to {dest_dir}: {e}"
+
         print(f"[ERROR] {error_message}")
-        logger.error(error_message)
+        logger.error("%s", error_message)
+
         raise RuntimeError(error_message)
 
 
@@ -478,31 +484,41 @@ def fpk_fetch_flatpack_toml_from_dir(directory_name: str, session: httpx.Client)
     """
     if not fpk_valid_directory_name(directory_name):
         message = f"Invalid directory name: '{directory_name}'."
+
         print(f"[ERROR] {message}")
-        logger.error(message)
+        logger.error("%s", message)
+
         return None
 
     toml_url = f"{BASE_URL}/{directory_name}/flatpack.toml"
     try:
         response = session.get(toml_url)
         response.raise_for_status()
+
         print(f"[INFO] Successfully fetched TOML from {toml_url}")
-        logger.info(f"Successfully fetched TOML from {toml_url}")
+        logger.info("Successfully fetched TOML from %s", toml_url)
+
         return response.text
     except httpx.HTTPStatusError as e:
         message = f"HTTP error occurred: {e.response.status_code} - {e.response.text}"
+
         print(f"[ERROR] {message}")
-        logger.error(message)
+        logger.error("%s", message)
+
         return None
     except httpx.RequestError as e:
         message = f"Network error occurred: {e}"
+
         print(f"[ERROR] {message}")
-        logger.error(message)
+        logger.error("%s", message)
+
         return None
     except Exception as e:
         message = f"An unexpected error occurred: {e}"
+
         print(f"[ERROR] {message}")
-        logger.error(message)
+        logger.error("%s", message)
+
         return None
 
 
@@ -526,21 +542,27 @@ def fpk_fetch_github_dirs(session: httpx.Client) -> List[str]:
                 if isinstance(item, dict) and item.get('type') == 'dir' and
                    item.get('name', '').lower()
             ]
-            logger.info(f"Fetched directory names from GitHub: {directories}")
+            logger.info("Fetched directory names from GitHub: %s", directories)
             return sorted(directories)
         message = f"Unexpected response format from GitHub: {json_data}"
+
         print(f"[ERROR] {message}")
-        logger.error(message)
+        logger.error("%s", message)
+
         return []
     except httpx.HTTPError as e:
         message = f"Unable to connect to GitHub: {e}"
+
         print(f"[ERROR] {message}")
-        logger.error(message)
+        logger.error("%s", message)
+
         sys.exit(1)
     except (ValueError, KeyError) as e:
         message = f"Error processing the response from GitHub: {e}"
+
         print(f"[ERROR] {message}")
-        logger.error(message)
+        logger.error("%s", message)
+
         return []
 
 
@@ -555,7 +577,8 @@ def fpk_find_models(directory_path: str = None) -> List[str]:
     """
     if directory_path is None:
         directory_path = os.getcwd()
-    logger.info(f"Searching for model files in directory: {directory_path}")
+
+    logger.info("Searching for model files in directory: %s", directory_path)
 
     model_file_formats = ['.caffemodel', '.ckpt', '.gguf', '.h5', '.mar', '.mlmodel', '.model', '.onnx',
                           '.params', '.pb', '.pkl', '.pickle', '.pt', '.pth', '.sav', '.tflite', '.weights']
@@ -567,13 +590,16 @@ def fpk_find_models(directory_path: str = None) -> List[str]:
                 if any(file.endswith(fmt) for fmt in model_file_formats):
                     model_file_path = os.path.join(root, file)
                     model_files.append(model_file_path)
-                    logger.info(f"Found model file: {model_file_path}")
+                    logger.info("Found model file: %s", model_file_path)
+
         print(f"[INFO] Found {len(model_files)} model file(s).")
-        logger.info(f"Total number of model files found: {len(model_files)}")
+        logger.info("Total number of model files found: %d", len(model_files))
+
     except Exception as e:
         error_message = f"An error occurred while searching for model files: {e}"
+
         print(f"[ERROR] {error_message}")
-        logger.error(error_message)
+        logger.error("%s", error_message)
 
     return model_files
 
@@ -588,15 +614,15 @@ def fpk_get_api_key() -> Optional[str]:
         config = load_config()
         api_key = config.get('api_key')
         if api_key:
-            print(f"[INFO] API key retrieved successfully.")
+            print("[INFO] API key retrieved successfully.")
             logger.info("API key retrieved successfully.")
         else:
-            print(f"[WARNING] API key not found in the configuration.")
+            print("[WARNING] API key not found in the configuration.")
             logger.warning("API key not found in the configuration.")
         return api_key
     except Exception as e:
         error_message = f"An error occurred while retrieving the API key: {e}"
-        print(f"[ERROR] {error_message}")
+        print("[ERROR] An error occurred while retrieving the API key: %s", error_message)
         logger.error(error_message)
         return None
 
@@ -612,16 +638,16 @@ def fpk_get_last_flatpack() -> Optional[str]:
         if cache_file_path.exists():
             with cache_file_path.open('r') as cache_file:
                 last_flatpack = cache_file.read().strip()
-                print(f"[INFO] Last unboxed flatpack directory retrieved: {last_flatpack}")
-                logger.info(f"Last unboxed flatpack directory retrieved: {last_flatpack}")
+                print("[INFO] Last unboxed flatpack directory retrieved: %s", last_flatpack)
+                logger.info("Last unboxed flatpack directory retrieved: %s", last_flatpack)
                 return last_flatpack
         else:
-            print(f"[WARNING] Cache file does not exist: {cache_file_path}")
-            logger.warning(f"Cache file does not exist: {cache_file_path}")
+            print("[WARNING] Cache file does not exist: %s", cache_file_path)
+            logger.warning("Cache file does not exist: %s", cache_file_path)
     except (OSError, IOError) as e:
         error_message = f"An error occurred while accessing the cache file: {e}"
-        print(f"[ERROR] {error_message}")
-        logger.error(error_message)
+        print("[ERROR] %s", error_message)
+        logger.error("%s", error_message)
     return None
 
 
@@ -635,13 +661,13 @@ def fpk_is_raspberry_pi() -> bool:
         with open('/proc/cpuinfo', 'r') as f:
             for line in f:
                 if line.startswith('Hardware') and 'BCM' in line:
-                    print(f"[INFO] Running on a Raspberry Pi.")
+                    print("[INFO] Running on a Raspberry Pi.")
                     logger.info("Running on a Raspberry Pi.")
                     return True
     except IOError as e:
-        print(f"[WARNING] Could not access /proc/cpuinfo: {e}")
-        logger.warning(f"Could not access /proc/cpuinfo: {e}")
-    print(f"[INFO] Not running on a Raspberry Pi.")
+        print("[WARNING] Could not access /proc/cpuinfo:", e)
+        logger.warning("Could not access /proc/cpuinfo: %s", e)
+    print("[INFO] Not running on a Raspberry Pi.")
     logger.info("Not running on a Raspberry Pi.")
     return False
 
@@ -658,11 +684,11 @@ def fpk_list_directories(session: httpx.Client) -> str:
     try:
         dirs = fpk_fetch_github_dirs(session)
         directories_str = "\n".join(dirs)
-        logger.info(f"Fetched directories: {directories_str}")
+        logger.info("Fetched directories: %s", directories_str)
         return directories_str
     except Exception as e:
         error_message = f"An error occurred while listing directories: {e}"
-        print(f"[ERROR] {error_message}")
+        print("[ERROR] %s", error_message)
         logger.error(error_message)
         return ""
 
@@ -679,11 +705,11 @@ def fpk_safe_cleanup():
             if file_path.exists():
                 file_path.unlink()
                 message = f"Deleted {filename}."
-                print(f"[INFO] {message}")
+                print("[INFO] %s", message)
                 logger.info(message)
     except Exception as e:
         error_message = f"Exception during safe_cleanup: {e}"
-        print(f"[ERROR] {error_message}")
+        print("[ERROR] %s", error_message)
         logger.error(error_message)
 
 
@@ -695,19 +721,19 @@ def load_config():
     """
     if not os.path.exists(CONFIG_FILE_PATH):
         print(f"[WARNING] Configuration file does not exist: {CONFIG_FILE_PATH}")
-        logger.warning(f"Configuration file does not exist: {CONFIG_FILE_PATH}")
+        logger.warning("Configuration file does not exist: %s", CONFIG_FILE_PATH)
         return {}
 
     try:
         with open(CONFIG_FILE_PATH, 'r') as config_file:
             config = toml.load(config_file)
             print(f"[INFO] Configuration loaded successfully from {CONFIG_FILE_PATH}")
-            logger.info(f"Configuration loaded successfully from {CONFIG_FILE_PATH}")
+            logger.info("Configuration loaded successfully from %s", CONFIG_FILE_PATH)
             return config
     except Exception as e:
         error_message = f"Error loading config: {e}"
         print(f"[ERROR] {error_message}")
-        logger.error(error_message)
+        logger.error("Error loading config: %s", e)
         return {}
 
 
@@ -724,11 +750,11 @@ def save_config(config):
             toml.dump(sorted_config, config_file)
         os.chmod(CONFIG_FILE_PATH, 0o600)
         print(f"[INFO] Configuration saved successfully to {CONFIG_FILE_PATH}")
-        logger.info(f"Configuration saved successfully to {CONFIG_FILE_PATH}")
+        logger.info("Configuration saved successfully to %s", CONFIG_FILE_PATH)
     except Exception as e:
         error_message = f"Error saving config: {e}"
         print(f"[ERROR] {error_message}")
-        logger.error(error_message)
+        logger.error("Error saving config: %s", error_message)
 
 
 def fpk_set_secure_file_permissions(file_path):
@@ -740,11 +766,11 @@ def fpk_set_secure_file_permissions(file_path):
     try:
         os.chmod(file_path, stat.S_IRUSR | stat.S_IWUSR)
         print(f"[INFO] Set secure file permissions for {file_path}")
-        logger.info(f"Set secure file permissions for {file_path}")
+        logger.info("Set secure file permissions for %s", file_path)
     except OSError as e:
         error_message = f"Failed to set secure file permissions for {file_path}: {e}"
         print(f"[ERROR] {error_message}")
-        logger.error(error_message)
+        logger.error("Failed to set secure file permissions for %s: %s", file_path, e)
 
 
 def fpk_unbox(directory_name: str, session, local: bool = False):
@@ -761,7 +787,7 @@ def fpk_unbox(directory_name: str, session, local: bool = False):
     if not fpk_valid_directory_name(directory_name):
         message = f"Invalid directory name: '{directory_name}'."
         print(f"[ERROR] {message}")
-        logger.error(message)
+        logger.error("Invalid directory name: '%s'", directory_name)
         return
 
     flatpack_dir = Path.cwd() / directory_name
@@ -769,14 +795,14 @@ def fpk_unbox(directory_name: str, session, local: bool = False):
     if flatpack_dir.exists() and not local:
         message = "Flatpack directory already exists."
         print(f"[ERROR] {message}")
-        logger.error(message)
+        logger.error("%s", message)
         return
     build_dir = flatpack_dir / "build"
 
     if build_dir.exists():
         message = "Build directory already exists."
         print(f"[ERROR] {message}")
-        logger.error(message)
+        logger.error("%s", message)
         return
 
     flatpack_dir.mkdir(parents=True, exist_ok=True)
@@ -788,7 +814,7 @@ def fpk_unbox(directory_name: str, session, local: bool = False):
         if not toml_path.exists():
             message = f"flatpack.toml not found in the specified directory: '{directory_name}'."
             print(f"[ERROR] {message}")
-            logger.error(message)
+            logger.error("%s", message)
             return
         toml_content = toml_path.read_text()
     else:
@@ -796,7 +822,7 @@ def fpk_unbox(directory_name: str, session, local: bool = False):
         if not toml_content:
             message = f"Failed to fetch TOML content for '{directory_name}'."
             print(f"[ERROR] {message}")
-            logger.error(message)
+            logger.error("%s", message)
             return
 
     temp_toml_path.write_text(toml_content)
@@ -807,11 +833,13 @@ def fpk_unbox(directory_name: str, session, local: bool = False):
 
     message = f"Unboxing {directory_name}..."
     print(f"[INFO] {message}")
-    logger.info(message)
+    logger.info("%s", message)
+
     safe_script_path = shlex.quote(str(bash_script_path.resolve()))
+
     try:
         result = subprocess.run(['/bin/bash', safe_script_path], check=True)
-        print(f"[INFO] All done!")
+        print("[INFO] All done!")
         logger.info("All done!")
         fpk_cache_unbox(str(flatpack_dir))
     except subprocess.CalledProcessError as e:
