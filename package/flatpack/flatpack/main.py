@@ -1544,8 +1544,7 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
             logger.info("Finished cloning llama.cpp repository into '%s'", llama_cpp_dir)
 
         except subprocess.CalledProcessError as e:
-            print(
-                "[ERROR] Failed to clone the llama.cpp repository. Please check your internet connection and try again. Error: %s" % e)
+            print(f"[ERROR] Failed to clone the llama.cpp repository. Please try again. Error: {e}")
             logger.error("Failed to clone the llama.cpp repository. Error: %s", e)
             return
 
@@ -1571,13 +1570,13 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
             logger.info("Finished running 'make' in the llama.cpp directory")
 
             if not os.path.exists(venv_dir):
-                print("[INFO] Creating virtual environment in '%s'..." % venv_dir)
+                print(f"[INFO] Creating virtual environment in '{venv_dir}'...")
                 logger.info("Creating virtual environment in '%s'...", venv_dir)
                 create_venv(venv_dir)
                 print("[INFO] Virtual environment created.")
                 logger.info("Virtual environment created.")
             else:
-                print("[INFO] Virtual environment already exists in '%s'" % venv_dir)
+                print(f"[INFO] Virtual environment already exists in '{venv_dir}'")
                 logger.info("Virtual environment already exists in '%s'", venv_dir)
 
             print("[INFO] Installing llama.cpp dependencies in virtual environment...")
@@ -1628,18 +1627,18 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
             ]
             subprocess.run(convert_command, check=True)
 
-            print("[INFO] Conversion complete. The model has been compressed and saved as '%s'" % output_file)
+            print(f"[INFO] Conversion complete. The model has been compressed and saved as '{output_file}'")
             logger.info("Conversion complete. The model has been compressed and saved as '%s'", output_file)
         except subprocess.CalledProcessError as e:
-            print("[ERROR] Conversion failed. Error: %s" % e)
+            print(f"[ERROR] Conversion failed. Error: {e}")
             logger.error("Conversion failed. Error: %s", e)
             return
         except Exception as e:
-            print("[ERROR] An error occurred during the model conversion. Error: %s" % e)
+            print(f"[ERROR] An error occurred during the model conversion. Error: {e}")
             logger.error("An error occurred during the model conversion. Error: %s", e)
             return
     else:
-        print("[INFO] The model has already been converted and saved as '%s'." % output_file)
+        print(f"[INFO] The model has already been converted and saved as '{output_file}'.")
         logger.info("The model has already been converted and saved as '%s'.", output_file)
     if os.path.exists(output_file):
         try:
@@ -1654,27 +1653,27 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
             ]
             subprocess.run(quantize_command, check=True)
 
-            print("[INFO] Quantization complete. The quantized model has been saved as '%s'." % quantized_output_file)
+            print(f"[INFO] Quantization complete. The quantized model has been saved as '{quantized_output_file}'.")
             logger.info("Quantization complete. The quantized model has been saved as '%s'.", quantized_output_file)
 
-            print("[INFO] Deleting the original .bin file '%s'..." % output_file)
+            print(f"[INFO] Deleting the original .bin file '{output_file}'...")
             logger.info("Deleting the original .bin file '%s'...", output_file)
 
             os.remove(output_file)
 
-            print("[INFO] Deleted the original .bin file '%s'." % output_file)
+            print(f"[INFO] Deleted the original .bin file '{output_file}'.")
             logger.info("Deleted the original .bin file '%s'.", output_file)
 
         except subprocess.CalledProcessError as e:
-            print("[ERROR] Quantization failed. Error: %s" % e)
+            print(f"[ERROR] Quantization failed. Error: {e}")
             logger.error("Quantization failed. Error: %s", e)
             return
         except Exception as e:
-            print("[ERROR] An error occurred during the quantization process. Error: %s" % e)
+            print(f"[ERROR] An error occurred during the quantization process. Error: {e}")
             logger.error("An error occurred during the quantization process. Error: %s", e)
             return
     else:
-        print("[ERROR] The original model file '%s' does not exist." % output_file)
+        print(f"[ERROR] The original model file '{output_file}' does not exist.")
         logger.error("The original model file '%s' does not exist.", output_file)
 
 
@@ -1698,7 +1697,7 @@ def fpk_cli_handle_get_api_key(args, session):
     logger.info("Retrieving API key...")
     api_key = fpk_get_api_key()
     if api_key:
-        print("API Key: %s" % api_key)
+        print(f"API Key: {api_key}")
         logger.info("API Key: %s", api_key)
     else:
         print("[ERROR] No API key found.")
@@ -1714,7 +1713,7 @@ def fpk_cli_handle_help(args, session):
             subparser.print_help()
             logger.info("Displayed help for command '%s'.", args.command)
         else:
-            print("[ERROR] Command '%s' not found." % args.command)
+            print(f"[ERROR] Command '{args.command}' not found.")
             logger.error("Command '%s' not found.", args.command)
     else:
         parser.print_help()
@@ -1831,7 +1830,7 @@ def set_token(token: str):
         print("[INFO] Token set successfully!")
         logger.info("Token set successfully.")
     except Exception as e:
-        print("[ERROR] Failed to set token: %s" % e)
+        print(f"[ERROR] Failed to set token: {e}")
         logger.error("Failed to set token: %s", e)
 
 
@@ -2031,11 +2030,11 @@ def setup_static_directory(fastapi_app: FastAPI, directory: str):
             StaticFiles(directory=static_dir, html=True),
             name="static"
         )
-        print("[INFO] Static files will be served from: %s" % static_dir)
+        print(f"[INFO] Static files will be served from: {static_dir}")
         logger.info("Static files will be served from: %s", static_dir)
     else:
         error_message = "The directory '%s' does not exist or is not a directory." % flatpack_directory
-        print("[ERROR] %s" % error_message)
+        print(f"[ERROR] {error_message}")
         logger.error(error_message)
         raise ValueError(error_message)
 
@@ -2068,10 +2067,10 @@ def fpk_cli_handle_run(args, session):
     directory = args.input
 
     if os.path.exists(directory) and os.path.isdir(directory):
-        print("[INFO] Using provided flatpack: %s" % directory)
+        print(f"[INFO] Using provided flatpack: {directory}")
         logger.info("Using provided flatpack: %s", directory)
     else:
-        print("[ERROR] The flatpack '%s' does not exist." % directory)
+        print(f"[ERROR] The flatpack '{directory}' does not exist.")
         logger.error("The flatpack '%s' does not exist.", directory)
         return
 
@@ -2080,7 +2079,7 @@ def fpk_cli_handle_run(args, session):
 
     token = generate_secure_token()
 
-    print("[INFO] Generated API token: %s" % token)
+    print(f"[INFO] Generated API token: {token}")
     logger.info("Generated API token: %s", token)
 
     print("[INFO] Please save this API token securely. You will not be able to retrieve it again.")
@@ -2095,7 +2094,7 @@ def fpk_cli_handle_run(args, session):
                 print("[INFO] Please save the API token before continuing.")
                 logger.info("Please save the API token before continuing.")
     except KeyboardInterrupt:
-        print("\n[ERROR] Process interrupted by user. Please save the API token and try again.")
+        print("[ERROR] Process interrupted by user. Please save the API token and try again.")
         logger.error("Process interrupted by user. Please save the API token and try again.")
         sys.exit(1)
 
@@ -2108,7 +2107,7 @@ def fpk_cli_handle_run(args, session):
         if args.share:
             listener = ngrok.forward(port, authtoken_from_env=True)
             public_url = listener.url()
-            print("[INFO] Ingress established at %s" % public_url)
+            print(f"[INFO] Ingress established at {public_url}")
             logger.info("Ingress established at %s", public_url)
 
         config = uvicorn.Config(app, host="127.0.0.1", port=port)
@@ -2119,12 +2118,12 @@ def fpk_cli_handle_run(args, session):
         print("[INFO] FastAPI server has been stopped.")
         logger.info("FastAPI server has been stopped.")
     except Exception as e:
-        print("[ERROR] An unexpected error occurred during server run: %s" % e)
+        print(f"[ERROR] An unexpected error occurred during server run: {e}")
         logger.error("An unexpected error occurred during server run: %s", e)
     finally:
         if args.share:
             ngrok.disconnect(public_url)
-            print("[INFO] Disconnected ngrok ingress at %s" % public_url)
+            print(f"[INFO] Disconnected ngrok ingress at {public_url}")
             logger.info("Disconnected ngrok ingress at %s", public_url)
 
 
@@ -2135,7 +2134,7 @@ def fpk_cli_handle_set_api_key(args, session):
         args: The command-line arguments.
         session: The HTTP session.
     """
-    print("[INFO] Setting API key: %s" % args.api_key)
+    print(f"[INFO] Setting API key: {args.api_key}")
     logger.info("Setting API key: %s", args.api_key)
 
     api_key = args.api_key
@@ -2155,7 +2154,7 @@ def fpk_cli_handle_set_api_key(args, session):
             print("[ERROR] Verification failed: API key does not match.")
             logger.error("Verification failed: API key does not match.")
     except Exception as e:
-        print("[ERROR] Error during API key verification: %s" % e)
+        print(f"[ERROR] Error during API key verification: {e}")
         logger.error("Error during API key verification: %s", e)
 
 
@@ -2170,10 +2169,10 @@ def fpk_cli_handle_spawn_agent(args, session):
 
     try:
         pid = agent_manager.spawn_agent(args.script_path)
-        print("[INFO] Agent spawned with PID: %s" % pid)
+        print(f"[INFO] Agent spawned with PID: {pid}")
         logger.info("Agent spawned with PID: %s", pid)
     except Exception as e:
-        print("[ERROR] Failed to spawn agent: %s" % e)
+        print(f"[ERROR] Failed to spawn agent: {e}")
         logger.error("Failed to spawn agent: %s", e)
 
 
@@ -2188,10 +2187,10 @@ def fpk_cli_handle_terminate_agent(args, session):
 
     try:
         agent_manager.terminate_agent(args.pid)
-        print("[INFO] Agent with PID %s terminated successfully." % args.pid)
+        print(f"[INFO] Agent with PID {args.pid} terminated successfully.")
         logger.info("Agent with PID %s terminated successfully.", args.pid)
     except Exception as e:
-        print("[ERROR] Failed to terminate agent with PID %s: %s" % (args.pid, e))
+        print(f"[ERROR] Failed to terminate agent with PID {args.pid}: {e}")
         logger.error("Failed to terminate agent with PID %s: %s", args.pid, e)
 
 
@@ -2211,7 +2210,7 @@ def fpk_cli_handle_unbox(args, session):
     existing_dirs = fpk_fetch_github_dirs(session)
 
     if directory_name not in existing_dirs and not args.local:
-        print("[ERROR] The flatpack '%s' does not exist." % directory_name)
+        print(f"[ERROR] The flatpack '{directory_name}' does not exist.")
         logger.error("The flatpack '%s' does not exist.", directory_name)
         return
 
@@ -2232,27 +2231,27 @@ def fpk_cli_handle_unbox(args, session):
     if args.local:
         local_directory_path = Path(directory_name)
         if not local_directory_path.exists() or not local_directory_path.is_dir():
-            print("[ERROR] Local directory does not exist: '%s'." % directory_name)
+            print(f"[ERROR] Local directory does not exist: '{directory_name}'.")
             logger.error("Local directory does not exist: '%s'.", directory_name)
             return
         toml_path = local_directory_path / 'flatpack.toml'
         if not toml_path.exists():
-            print("[ERROR] flatpack.toml not found in the specified directory: '%s'." % directory_name)
+            print(f"[ERROR] flatpack.toml not found in the specified directory: '{directory_name}'.")
             logger.error(
                 "flatpack.toml not found in the specified directory: '%s'.",
                 directory_name
             )
             return
 
-    print("[INFO] Directory name resolved to: '%s'" % directory_name)
+    print(f"[INFO] Directory name resolved to: '{directory_name}'")
     logger.info("Directory name resolved to: '%s'", directory_name)
 
     try:
         fpk_unbox(directory_name, session, local=args.local)
-        print("[INFO] Unboxed flatpack '%s' successfully." % directory_name)
+        print(f"[INFO] Unboxed flatpack '{directory_name}' successfully.")
         logger.info("Unboxed flatpack '%s' successfully.", directory_name)
     except Exception as e:
-        print(f"[ERROR] Failed to unbox flatpack '{directory_name}': %s" % e)
+        print(f"[ERROR] Failed to unbox flatpack '{directory_name}': {e}")
         logger.error(f"Failed to unbox flatpack '{directory_name}': %s", e)
 
 
@@ -2331,7 +2330,7 @@ def fpk_cli_handle_vector_commands(args, session, vm):
             print("[INFO] Search results:")
             logger.info("Search results:")
             for result in results:
-                print("%s: %s\n" % (result['id'], result['text']))
+                print(f"{result['id']}: {result['text']}\n")
                 logger.info("%s: %s", result['id'], result['text'])
         else:
             print("[INFO] No results found.")
