@@ -57,8 +57,8 @@ def main():
 
     args = parser.parse_args()
 
-    setup_logging()
-    logging.info("Starting the compression and signing process...")
+    logger = setup_logging()
+    logger.info("Starting the compression and signing process...")
 
     validate_file_path(args.private_key, purpose="private key")
 
