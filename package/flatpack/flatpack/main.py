@@ -1429,13 +1429,22 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
     venv_python = os.path.join(venv_dir, "bin", "python")
 
     if not os.path.exists(llama_cpp_dir):
+
+        # Find the full path of the git executable
+        git_executable = shutil.which("git")
+        if not git_executable:
+            raise FileNotFoundError("The 'git' executable was not found in your PATH.")
+
         try:
             print("[INFO] Cloning llama.cpp repository...")
             logger.info("Cloning llama.cpp repository...")
+
+            # Use the full path of the git executable
             subprocess.run(
-                ["git", "clone", "https://github.com/ggerganov/llama.cpp", llama_cpp_dir],
+                [git_executable, "clone", "--depth", "1", "https://github.com/ggerganov/llama.cpp", llama_cpp_dir],
                 check=True
             )
+
             print(f"[INFO] Finished cloning llama.cpp repository into '{llama_cpp_dir}'")
             logger.info(f"Finished cloning llama.cpp repository into '{llama_cpp_dir}'")
         except subprocess.CalledProcessError as e:
@@ -1530,7 +1539,7 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
             logger.info("Quantizing the model...")
 
             quantize_command = [
-                os.path.join(llama_cpp_dir, 'quantize'),
+                os.path.join(llama_cpp_dir, 'llama-quantize'),
                 output_file,
                 quantized_output_file,
                 "Q4_K_M"
