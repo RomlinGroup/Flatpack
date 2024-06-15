@@ -1,44 +1,40 @@
-try:
-    import argparse
-    import atexit
-    import logging
-    import os
-    import re
-    import secrets
-    import shlex
-    import shutil
-    import signal
-    import stat
-    import string
-    import subprocess
-    import sys
+import argparse
+import atexit
+import logging
+import os
+import re
+import secrets
+import shlex
+import shutil
+import signal
+import stat
+import string
+import subprocess
+import sys
 
-    from datetime import datetime
-    from importlib.metadata import version
-    from io import BytesIO
-    from pathlib import Path
-    from typing import List, Optional, Union
-    from zipfile import ZipFile
+from datetime import datetime
+from importlib.metadata import version
+from io import BytesIO
+from pathlib import Path
+from typing import List, Optional, Union
+from zipfile import ZipFile
 
-    import httpx
-    import requests
-    import toml
-    import uvicorn
+import httpx
+import requests
+import toml
+import uvicorn
 
-    from fastapi import Depends, FastAPI, Form, HTTPException, Request
-    from fastapi.middleware.cors import CORSMiddleware
-    from fastapi.responses import FileResponse, JSONResponse
-    from fastapi.staticfiles import StaticFiles
-    from huggingface_hub import snapshot_download
-    from pydantic import BaseModel
+from fastapi import Depends, FastAPI, Form, HTTPException, Request
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
+from huggingface_hub import snapshot_download
+from pydantic import BaseModel
 
-    from .agent_manager import AgentManager
-    from .parsers import parse_toml_to_venv_script
-    from .session_manager import SessionManager
-    from .vector_manager import VectorManager
-
-except KeyboardInterrupt:
-    sys.exit(1)
+from .agent_manager import AgentManager
+from .parsers import parse_toml_to_venv_script
+from .session_manager import SessionManager
+from .vector_manager import VectorManager
 
 # Configuration constants
 HOME_DIR = Path.home() / ".fpk"
