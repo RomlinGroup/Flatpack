@@ -1349,9 +1349,11 @@ def create_venv(venv_dir: str):
     Returns:
         None
     """
+    python_executable = sys.executable
+
     try:
         subprocess.run(
-            ["python3", "-m", "venv", venv_dir],
+            [python_executable, "-m", "venv", venv_dir],
             check=True
         )
         print(f"[INFO] Virtual environment created successfully in '{venv_dir}'.")
