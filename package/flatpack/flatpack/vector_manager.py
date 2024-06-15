@@ -94,7 +94,8 @@ class VectorManager:
         np.save(self.embeddings_file, self.embeddings)
         self.index.save_index(self.index_file)
 
-    def _generate_positive_hash(self, text):
+    @staticmethod
+    def _generate_positive_hash(text):
         """Generate a positive hash for a given text."""
         hash_object = hashlib.sha256(text.encode())
         return int(hash_object.hexdigest()[:16], 16)
@@ -196,7 +197,8 @@ class VectorManager:
         except requests.RequestException as e:
             logging.error(f"Failed to fetch {url}: {e}")
 
-    def get_wikipedia_text(self, page_title):
+    @staticmethod
+    def get_wikipedia_text(page_title):
         """Fetch text from a Wikipedia page."""
         logging.info(f"Fetching Wikipedia page for: {page_title}")
         base_url = "https://en.wikipedia.org/w/api.php"
