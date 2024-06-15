@@ -4,7 +4,7 @@
 
 # Flatpack
 
-[![pip install flatpack](https://img.shields.io/badge/pip%20install-flatpack-5865f2)](https://pypi.org/project/flatpack/) [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/romlingroup/flatpack-ai/blob/main/notebooks/flatpack_playground.ipynb)
+[![pip install flatpack](https://img.shields.io/badge/pip%20install-flatpack-5865f2)](https://pypi.org/project/flatpack/) [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/romlingroup/flatpack-ai/blob/main/notebooks/flatpack_playground.ipynb) [![DeepSource](https://app.deepsource.com/gh/RomlinGroup/Flatpack.svg/?label=active+issues&show_trend=true&token=ludXWV8MdvRbiETqDIORwomF)](https://app.deepsource.com/gh/RomlinGroup/Flatpack/)
 
 > :warning: **DISCLAIMER:** This repository contains our research. Verify the information and do your own research (DYOR). We assume no responsibility for accuracy or completeness.
 
