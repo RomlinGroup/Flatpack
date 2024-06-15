@@ -4,6 +4,7 @@ import psutil
 import signal
 import socket
 import subprocess
+import sys
 
 from datetime import datetime
 from pathlib import Path
@@ -45,7 +46,15 @@ class AgentManager:
         env = os.environ.copy()
         env['AGENT_PORT'] = str(free_port)
 
-        process = subprocess.Popen(["python", script_path], env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        python_executable = sys.executable
+
+        process = subprocess.Popen(
+            [python_executable, script_path],
+            env=env,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE
+        )
+
         pid = process.pid
 
         self.processes[str(pid)] = {
