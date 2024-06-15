@@ -1669,10 +1669,11 @@ app = FastAPI()
 
 class EndpointFilter(logging.Filter):
     def filter(self, record):
+        sanitized_message = re.sub(r'[^a-zA-Z0-9\s]', '', record.getMessage())
+        record.msg = sanitized_message
         return 'GET /api/heartbeat' not in record.getMessage()
 
 
-# Apply the filter to the uvicorn access logger
 uvicorn_logger = logging.getLogger("uvicorn.access")
 uvicorn_logger.addFilter(EndpointFilter())
 
