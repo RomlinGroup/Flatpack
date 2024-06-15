@@ -61,13 +61,27 @@ def sanitize_log_message(message):
         str: The sanitized log message.
     """
     SENSITIVE_PATTERNS = {
-        'password': re.compile(r'(?i)\bpassword\b\s*[:=]\s*["\']?([^"\']+)', re.IGNORECASE),
-        'token': re.compile(r'(?i)\b(token|secret|api[-_]key)\b\s*[:=]\s*["\']?([^"\']+)', re.IGNORECASE),
-        'credit_card': re.compile(r'\b(?:\d[ -]*?){13,16}\b'),
-        'ssn': re.compile(r'\b\d{3}-\d{2}-\d{4}\b'),
-        'email': re.compile(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'),
+        'password': re.compile(
+            r'(?i)\bpassword\b\s*[:=]\s*["\']?([^"\']+)',
+            re.IGNORECASE
+        ),
+        'token': re.compile(
+            r'(?i)\b(token|secret|api[-_]key)\b\s*[:=]\s*["\']?([^"\']+)',
+            re.IGNORECASE
+        ),
+        'credit_card': re.compile(
+            r'\b(?:\d[ -]*?){13,16}\b'
+        ),
+        'ssn': re.compile(
+            r'\b\d{3}-\d{2}-\d{4}\b'
+        ),
+        'email': re.compile(
+            r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
+        ),
         'phone': re.compile(
-            r'\b(\+?(\d{1,3})?[-.\s]?(\(\d{1,4}\)|\d{1,4})[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9})\b')
+            r'\b(\+?(\d{1,3})?[-.\s]?(\(\d{1,4}\)|\d{1,4})'
+            r'[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9})\b'
+        )
     }
     for key, pattern in SENSITIVE_PATTERNS.items():
         message = re.sub(pattern, f'[REDACTED {key.upper()}]', message)
