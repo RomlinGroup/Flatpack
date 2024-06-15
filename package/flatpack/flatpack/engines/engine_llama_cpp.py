@@ -22,7 +22,6 @@ class LlamaCPPEngine:
 
                 if not git_executable:
                     print("[ERROR] The 'git' executable was not found in your PATH.")
-                    logger.error("The 'git' executable was not found in your PATH.")
                     return
 
                 print("📥 Cloning llama.cpp repository...")
@@ -56,10 +55,9 @@ class LlamaCPPEngine:
 
                     if not make_executable:
                         print("[ERROR] 'make' executable not found in PATH.")
-                        logger.error("'make' executable not found in PATH.")
                         return
 
-                    make_result = subprocess.run(
+                    subprocess.run(
                         [make_executable],
                         cwd=self.llama_cpp_dir,
                         check=True
