@@ -71,7 +71,7 @@ fi
 
     # Install required Unix packages using apt, but only if not in Google Colab and on a Debian-based system
     unix_packages = config.get("packages", {}).get("unix", {})
-    package_list_unix = [package for package in unix_packages.keys()]
+    package_list_unix = list(unix_packages.keys())
     if package_list_unix:
         apt_install = f"""
 OS=$(uname)
