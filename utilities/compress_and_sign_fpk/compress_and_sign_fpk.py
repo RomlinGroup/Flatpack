@@ -1,6 +1,5 @@
 import logging
 import os
-import re
 import tarfile
 import tempfile
 import zstandard as zstd
@@ -20,7 +19,9 @@ def validate_file_path(path, is_input=True, allowed_dir=None):
     if allowed_dir:
         allowed_dir_absolute = os.path.abspath(allowed_dir)
         if not absolute_path.startswith(allowed_dir_absolute):
-            raise ValueError(f"Path '{path}' is outside the allowed directory '{allowed_dir}'.")
+            raise ValueError(
+                f"Path '{path}' is outside the allowed directory '{allowed_dir}'."
+            )
 
     if is_input:
         if not os.path.exists(absolute_path):
@@ -62,7 +63,14 @@ def compress_data(input_path, output_path, allowed_dir=None):
         print(f"An error occurred while compressing: {e}")
 
 
-def sign_data(output_path, signed_path, private_key_path, hash_size=256, passphrase=None, allowed_dir=None):
+def sign_data(
+        output_path,
+        signed_path,
+        private_key_path,
+        hash_size=256,
+        passphrase=None,
+        allowed_dir=None
+):
     try:
         validate_file_path(output_path, allowed_dir=allowed_dir)
         validate_file_path(signed_path, is_input=False, allowed_dir=allowed_dir)
@@ -78,7 +86,11 @@ def sign_data(output_path, signed_path, private_key_path, hash_size=256, passphr
                 backend=default_backend()
             )
 
-        hash_algorithm = {256: hashes.SHA256(), 384: hashes.SHA384(), 512: hashes.SHA512()}[hash_size]
+        hash_algorithm = {
+            256: hashes.SHA256(),
+            384: hashes.SHA384(),
+            512: hashes.SHA512()
+        }[hash_size]
 
         with open(output_path, 'rb') as f:
             data = f.read()
