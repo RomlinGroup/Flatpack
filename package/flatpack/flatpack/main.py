@@ -36,7 +36,6 @@ from .parsers import parse_toml_to_venv_script
 from .session_manager import SessionManager
 from .vector_manager import VectorManager
 
-# Configuration constants
 HOME_DIR = Path.home() / ".fpk"
 HOME_DIR.mkdir(exist_ok=True)
 
@@ -99,23 +98,20 @@ def setup_logging(log_path: Path):
     new_logger = logging.getLogger(__name__)
     new_logger.setLevel(logging.WARNING)
 
-    # Console handler
     console_handler = logging.StreamHandler()
     console_handler.setLevel(logging.INFO)
     console_formatter = logging.Formatter('%(asctime)s - %(message)s')
     console_handler.setFormatter(console_formatter)
 
-    # Rotating File handler
     file_handler = RotatingFileHandler(
         log_path,
-        maxBytes=5 * 1024 * 1024,  # 5MB per file
-        backupCount=5  # keep last 5 files
+        maxBytes=5 * 1024 * 1024,
+        backupCount=5
     )
     file_handler.setLevel(logging.INFO)
     file_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
     file_handler.setFormatter(file_formatter)
 
-    # Add handlers and filters to the logger
     sensitive_filter = SensitiveFilter()
     new_logger.addHandler(console_handler)
     new_logger.addHandler(file_handler)
@@ -126,7 +122,6 @@ def setup_logging(log_path: Path):
     return new_logger
 
 
-# Initialize logging
 global_log_file_path = HOME_DIR / "fpk_local_only.log"
 logger = setup_logging(global_log_file_path)
 os.chmod(global_log_file_path, 0o600)
@@ -299,7 +294,7 @@ def fpk_create(flatpack_name, repo_url="https://github.com/RomlinGroup/template"
     Raises:
         ValueError: If the flatpack name format is invalid.
     """
-    # Validate flatpack name
+
     if not re.match(r'^[a-z0-9-]+$', flatpack_name):
         error_message = "Invalid name format. Only lowercase letters, numbers, and hyphens are allowed."
         print(f"[ERROR] {error_message}")
@@ -309,7 +304,6 @@ def fpk_create(flatpack_name, repo_url="https://github.com/RomlinGroup/template"
     flatpack_name = flatpack_name.lower().replace(' ', '-')
     current_dir = os.getcwd()
 
-    # Download and extract template
     try:
         template_dir = fpk_download_and_extract_template(repo_url, current_dir)
     except Exception as e:
@@ -320,7 +314,6 @@ def fpk_create(flatpack_name, repo_url="https://github.com/RomlinGroup/template"
 
     flatpack_dir = os.path.join(current_dir, flatpack_name)
 
-    # Create flatpack directory
     try:
         os.makedirs(flatpack_dir, exist_ok=True)
         print(f"[INFO] Created flatpack directory: {flatpack_dir}")
@@ -331,7 +324,6 @@ def fpk_create(flatpack_name, repo_url="https://github.com/RomlinGroup/template"
         logger.error(error_message)
         return
 
-    # Copy files from template to flatpack directory
     try:
         for item in os.listdir(template_dir):
             if item in ['.gitignore', 'LICENSE']:
@@ -350,7 +342,6 @@ def fpk_create(flatpack_name, repo_url="https://github.com/RomlinGroup/template"
         logger.error(error_message)
         return
 
-    # Edit specific files
     files_to_edit = [
         (os.path.join(flatpack_dir, "README.md"), r"# template", f"# {flatpack_name}"),
         (os.path.join(flatpack_dir, "flatpack.toml"), r"{{model_name}}", flatpack_name),
@@ -375,7 +366,6 @@ def fpk_create(flatpack_name, repo_url="https://github.com/RomlinGroup/template"
         logger.error(error_message)
         return
 
-    # Remove the temporary template directory
     try:
         shutil.rmtree(template_dir)
         print(f"[INFO] Removed temporary template directory: {template_dir}")
@@ -454,7 +444,7 @@ def fpk_download_and_extract_template(repo_url, dest_dir):
     template_dir = os.path.join(dest_dir, "template-main")
     try:
         response = requests.get(f"{repo_url}/archive/refs/heads/main.zip")
-        response.raise_for_status()  # Raise an HTTPError for bad responses
+        response.raise_for_status()
         with ZipFile(BytesIO(response.content)) as zip_ref:
             zip_ref.extractall(dest_dir)
         print(f"[INFO] Downloaded and extracted template from {repo_url} to {dest_dir}")
@@ -1667,7 +1657,6 @@ def fpk_cli_handle_help(args, session):
     """Handle the 'help' command to display the help message."""
     parser = setup_arg_parser()
     if args.command:
-        # Print help for the specific command if provided
         subparser = parser._subparsers._actions[1].choices.get(args.command)
         if subparser:
             subparser.print_help()
@@ -1676,7 +1665,6 @@ def fpk_cli_handle_help(args, session):
             print(f"[ERROR] Command '{args.command}' not found.")
             logger.error(f"Command '{args.command}' not found.")
     else:
-        # Print general help if no specific command is provided
         parser.print_help()
         logger.info("Displayed general help.")
 
@@ -1722,7 +1710,6 @@ class EndpointFilter(logging.Filter):
         return 'GET /api/heartbeat' not in sanitized_message
 
 
-# Apply the filter to the uvicorn access logger
 uvicorn_logger = logging.getLogger("uvicorn.access")
 uvicorn_logger.addFilter(EndpointFilter())
 
@@ -1848,7 +1835,6 @@ async def load_file(
 
     file_path = os.path.join(flatpack_directory, 'build', filename)
 
-    # Ensure the requested file is within the flatpack directory to prevent directory traversal attacks
     if not os.path.commonpath([flatpack_directory, os.path.realpath(file_path)]).startswith(
             os.path.realpath(flatpack_directory)):
         raise HTTPException(status_code=403, detail="Access to the requested file is forbidden")
@@ -1878,7 +1864,6 @@ async def save_file(
 
     file_path = os.path.join(flatpack_directory, 'build', filename)
 
-    # Ensure the requested file is within the flatpack directory to prevent directory traversal attacks
     if not os.path.commonpath([flatpack_directory, os.path.realpath(file_path)]).startswith(
             os.path.realpath(flatpack_directory)):
         raise HTTPException(status_code=403, detail="Access to the requested file is forbidden")
@@ -2072,7 +2057,6 @@ def fpk_cli_handle_run(args, session):
             print(f"[INFO] Ingress established at {public_url}")
             logger.info(f"Ingress established at {public_url}")
 
-        # Set up the Uvicorn server instance for signal handling
         config = uvicorn.Config(app, host="127.0.0.1", port=port)
         global uvicorn_server
         uvicorn_server = uvicorn.Server(config)
