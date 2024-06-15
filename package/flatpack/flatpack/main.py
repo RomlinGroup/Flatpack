@@ -2032,7 +2032,7 @@ def setup_static_directory(fastapi_app: FastAPI, directory: str):
             name="static"
         )
         print("[INFO] Static files will be served from: %s" % static_dir)
-        logger.info("Static files will be served from: %s" % static_dir)
+        logger.info("Static files will be served from: %s", static_dir)
     else:
         error_message = "The directory '%s' does not exist or is not a directory." % flatpack_directory
         print("[ERROR] %s" % error_message)
@@ -2069,10 +2069,10 @@ def fpk_cli_handle_run(args, session):
 
     if os.path.exists(directory) and os.path.isdir(directory):
         print("[INFO] Using provided flatpack: %s" % directory)
-        logger.info("Using provided flatpack: %s" % directory)
+        logger.info("Using provided flatpack: %s", directory)
     else:
         print("[ERROR] The flatpack '%s' does not exist." % directory)
-        logger.error("The flatpack '%s' does not exist." % directory)
+        logger.error("The flatpack '%s' does not exist.", directory)
         return
 
     if args.share:
@@ -2081,7 +2081,7 @@ def fpk_cli_handle_run(args, session):
     token = generate_secure_token()
 
     print("[INFO] Generated API token: %s" % token)
-    logger.info("Generated API token: %s" % token)
+    logger.info("Generated API token: %s", token)
 
     print("[INFO] Please save this API token securely. You will not be able to retrieve it again.")
     logger.info("Please save this API token securely. You will not be able to retrieve it again.")
@@ -2109,7 +2109,7 @@ def fpk_cli_handle_run(args, session):
             listener = ngrok.forward(port, authtoken_from_env=True)
             public_url = listener.url()
             print("[INFO] Ingress established at %s" % public_url)
-            logger.info("Ingress established at %s" % public_url)
+            logger.info("Ingress established at %s", public_url)
 
         config = uvicorn.Config(app, host="127.0.0.1", port=port)
         global uvicorn_server
@@ -2120,12 +2120,12 @@ def fpk_cli_handle_run(args, session):
         logger.info("FastAPI server has been stopped.")
     except Exception as e:
         print("[ERROR] An unexpected error occurred during server run: %s" % e)
-        logger.error("An unexpected error occurred during server run: %s" % e)
+        logger.error("An unexpected error occurred during server run: %s", e)
     finally:
         if args.share:
             ngrok.disconnect(public_url)
             print("[INFO] Disconnected ngrok ingress at %s" % public_url)
-            logger.info("Disconnected ngrok ingress at %s" % public_url)
+            logger.info("Disconnected ngrok ingress at %s", public_url)
 
 
 def fpk_cli_handle_set_api_key(args, session):
@@ -2136,7 +2136,7 @@ def fpk_cli_handle_set_api_key(args, session):
         session: The HTTP session.
     """
     print("[INFO] Setting API key: %s" % args.api_key)
-    logger.info("Setting API key: %s" % args.api_key)
+    logger.info("Setting API key: %s", args.api_key)
 
     api_key = args.api_key
     config = load_config()
@@ -2156,7 +2156,7 @@ def fpk_cli_handle_set_api_key(args, session):
             logger.error("Verification failed: API key does not match.")
     except Exception as e:
         print("[ERROR] Error during API key verification: %s" % e)
-        logger.error("Error during API key verification: %s" % e)
+        logger.error("Error during API key verification: %s", e)
 
 
 def fpk_cli_handle_spawn_agent(args, session):
@@ -2171,10 +2171,10 @@ def fpk_cli_handle_spawn_agent(args, session):
     try:
         pid = agent_manager.spawn_agent(args.script_path)
         print("[INFO] Agent spawned with PID: %s" % pid)
-        logger.info("Agent spawned with PID: %s" % pid)
+        logger.info("Agent spawned with PID: %s", pid)
     except Exception as e:
         print("[ERROR] Failed to spawn agent: %s" % e)
-        logger.error("Failed to spawn agent: %s" % e)
+        logger.error("Failed to spawn agent: %s", e)
 
 
 def fpk_cli_handle_terminate_agent(args, session):
@@ -2189,10 +2189,10 @@ def fpk_cli_handle_terminate_agent(args, session):
     try:
         agent_manager.terminate_agent(args.pid)
         print("[INFO] Agent with PID %s terminated successfully." % args.pid)
-        logger.info("Agent with PID %s terminated successfully." % args.pid)
+        logger.info("Agent with PID %s terminated successfully.", args.pid)
     except Exception as e:
         print("[ERROR] Failed to terminate agent with PID %s: %s" % (args.pid, e))
-        logger.error("Failed to terminate agent with PID %s: %s" % (args.pid, e))
+        logger.error("Failed to terminate agent with PID %s: %s", args.pid, e)
 
 
 def fpk_cli_handle_unbox(args, session):
@@ -2212,7 +2212,7 @@ def fpk_cli_handle_unbox(args, session):
 
     if directory_name not in existing_dirs and not args.local:
         print("[ERROR] The flatpack '%s' does not exist." % directory_name)
-        logger.error("The flatpack '%s' does not exist." % directory_name)
+        logger.error("The flatpack '%s' does not exist.", directory_name)
         return
 
     fpk_display_disclaimer(directory_name, local=args.local)
@@ -2233,24 +2233,24 @@ def fpk_cli_handle_unbox(args, session):
         local_directory_path = Path(directory_name)
         if not local_directory_path.exists() or not local_directory_path.is_dir():
             print("[ERROR] Local directory does not exist: '%s'." % directory_name)
-            logger.error("Local directory does not exist: '%s'." % directory_name)
+            logger.error("Local directory does not exist: '%s'.", directory_name)
             return
         toml_path = local_directory_path / 'flatpack.toml'
         if not toml_path.exists():
             print("[ERROR] flatpack.toml not found in the specified directory: '%s'." % directory_name)
-            logger.error("flatpack.toml not found in the specified directory: '%s'." % directory_name)
+            logger.error("flatpack.toml not found in the specified directory: '%s'.", directory_name)
             return
 
     print("[INFO] Directory name resolved to: '%s'" % directory_name)
-    logger.info("Directory name resolved to: '%s'" % directory_name)
+    logger.info("Directory name resolved to: '%s'", directory_name)
 
     try:
         fpk_unbox(directory_name, session, local=args.local)
         print("[INFO] Unboxed flatpack '%s' successfully." % directory_name)
-        logger.info("Unboxed flatpack '%s' successfully." % directory_name)
+        logger.info("Unboxed flatpack '%s' successfully.", directory_name)
     except Exception as e:
         print(f"[ERROR] Failed to unbox flatpack '{directory_name}': %s" % e)
-        logger.error(f"Failed to unbox flatpack '{directory_name}': %s" % e)
+        logger.error(f"Failed to unbox flatpack '{directory_name}': %s", e)
 
 
 def fpk_cli_handle_verify(args, session):
@@ -2267,15 +2267,15 @@ def fpk_cli_handle_verify(args, session):
         return
 
     print(f"[INFO] Verifying flatpack in directory: {directory_name}")
-    logger.info("Verifying flatpack in directory: %s" % directory_name)
+    logger.info("Verifying flatpack in directory: %s", directory_name)
 
     try:
         fpk_verify(directory_name)
         print(f"[INFO] Verification successful for directory: {directory_name}")
-        logger.info("Verification successful for directory: %s" % directory_name)
+        logger.info("Verification successful for directory: %s", directory_name)
     except Exception as e:
         print(f"[ERROR] Verification failed for directory '{directory_name}': {e}")
-        logger.error("Verification failed for directory '%s': %s" % (directory_name, e))
+        logger.error("Verification failed for directory '%s': %s", directory_name, e)
 
 
 def fpk_cli_handle_version(args, session):
@@ -2286,7 +2286,7 @@ def fpk_cli_handle_version(args, session):
         session: The HTTP session.
     """
     print(f"[INFO] Flatpack version: {VERSION}")
-    logger.info("Flatpack version: %s" % VERSION)
+    logger.info("Flatpack version: %s", VERSION)
 
 
 def fpk_initialize_vector_manager(args):
@@ -2300,7 +2300,7 @@ def fpk_initialize_vector_manager(args):
     """
     data_dir = getattr(args, 'data_dir', '.')
     print(f"[INFO] Initializing Vector Manager with model 'all-MiniLM-L6-v2' and data directory: {data_dir}")
-    logger.info("Initializing Vector Manager with model 'all-MiniLM-L6-v2' and data directory: %s" % data_dir)
+    logger.info("Initializing Vector Manager with model 'all-MiniLM-L6-v2' and data directory: %s", data_dir)
     return VectorManager(model_id='all-MiniLM-L6-v2', directory=data_dir)
 
 
@@ -2318,7 +2318,7 @@ def fpk_cli_handle_vector_commands(args, session, vm):
     if args.vector_command == 'add-texts':
         vm.add_texts(args.texts, "manual")
         print(f"[INFO] Added {len(args.texts)} texts to the database.")
-        logger.info("Added %d texts to the database." % len(args.texts))
+        logger.info("Added %d texts to the database.", len(args.texts))
     elif args.vector_command == 'search-text':
         results = vm.search_vectors(args.query)
         if results:
@@ -2326,7 +2326,7 @@ def fpk_cli_handle_vector_commands(args, session, vm):
             logger.info("Search results:")
             for result in results:
                 print("%s: %s\n" % (result['id'], result['text']))
-                logger.info("%s: %s" % (result['id'], result['text']))
+                logger.info("%s: %s", result['id'], result['text'])
         else:
             print("[INFO] No results found.")
             logger.info("No results found.")
