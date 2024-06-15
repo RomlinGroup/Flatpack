@@ -98,7 +98,10 @@ def verify_bulk_signed_data(validate_directory_path, public_pem_path):
     valid_signatures = 0
     invalid_signatures = 0
 
-    abs_directory_path = validate_file_path(validate_directory_path, allowed_dir=validate_directory_path)
+    abs_directory_path = validate_file_path(
+        validate_directory_path,
+        allowed_dir=validate_directory_path
+    )
 
     for subdir in os.listdir(abs_directory_path):
         subdir_path = os.path.join(abs_directory_path, subdir)
