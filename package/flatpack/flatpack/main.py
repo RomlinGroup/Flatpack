@@ -30,7 +30,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from huggingface_hub import snapshot_download
-from pydantic import BaseModel
 
 from .agent_manager import AgentManager
 from .parsers import parse_toml_to_venv_script

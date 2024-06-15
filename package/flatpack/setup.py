@@ -17,7 +17,6 @@ setup(
         "ngrok==1.2.0",
         "nltk==3.8.1",
         "psutil==5.9.5",
-        "pydantic==2.7.1",
         "pypdf==4.2.0",
         "python-multipart==0.0.9",
         "requests==2.31.0",
