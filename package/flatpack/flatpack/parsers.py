@@ -21,37 +21,26 @@ def is_valid_path(base_path, user_path):
     return os.path.commonpath([base_path, user_path]) == base_path
 
 
-def parse_toml_to_venv_script(file_path: str, python_version="3.11.8", env_name="myenv") -> str:
-    """
-    Convert a TOML configuration to a bash script that sets up a python environment using venv and performs actions based on the TOML.
-    Now ensures all directories, Git repositories, and other related files are created within a `/build` directory.
+def is_url(s):
+    """Check if a string is a URL."""
+    return s.startswith('http://') or s.startswith('https://')
 
-    Parameters:
-    - file_path: The path to the TOML file.
-    - python_version: The desired Python version (unused, but kept for function signature compatibility).
-    - env_name: Name of the virtual environment using venv.
 
-    Returns:
-    - Bash script as a string.
-    """
-
-    def is_url(s):
-        """Check if a string is a URL."""
-        return s.startswith('http://') or s.startswith('https://')
-
-    def check_command_availability(commands: list) -> list:
-        """Generate bash snippets to check if each command in the provided list is available."""
-        checks = [
-            f"""
+def check_command_availability(commands):
+    """Generate bash snippets to check if each command in the provided list is available."""
+    checks = [
+        f"""
 if [[ $IS_COLAB -eq 0 ]] && ! command -v {cmd} >/dev/null; then
   echo "{cmd} not found. Please install {cmd}."
   exit 1
 fi
-            """.strip() for cmd in commands
-        ]
-        return checks
+        """.strip() for cmd in commands
+    ]
+    return checks
 
-    # Load TOML configuration
+
+def load_toml_config(file_path):
+    """Load and validate the TOML configuration file."""
     base_dir = os.path.dirname(file_path)
     if not is_valid_path(base_dir, file_path):
         raise ValueError("Invalid file path")
@@ -63,12 +52,12 @@ fi
     if not model_name:
         raise ValueError("Missing model_name in flatpack.toml")
 
-    build_prefix = "build"
+    return config, model_name
 
-    script = ["#!/bin/bash"]
 
-    # Check if running in Google Colab and whether it's a GPU or CPU environment
-    colab_check = """
+def generate_colab_check_script():
+    """Generate the script to check for Google Colab environment."""
+    return """
 if [[ -d "/content" ]]; then
   # Detected Google Colab environment
   if command -v nvidia-smi &> /dev/null; then
@@ -85,29 +74,11 @@ else
   IS_COLAB=0
 fi
     """.strip()
-    script.append(colab_check)
 
-    # Ensure the build/model_name directory exists
-    script.append(f"mkdir -p {model_name}/{build_prefix}")
 
-    # Ensure required commands are available
-    script.extend(check_command_availability(["curl", "wget", "git"]))
-
-    # Install required Unix packages using apt, but only if not in Google Colab and on a Debian-based system
-    unix_packages = config.get("packages", {}).get("unix", {})
-    package_list_unix = list(unix_packages.keys())
-    if package_list_unix:
-        apt_install = f"""
-OS=$(uname)
-if [[ $IS_COLAB -eq 0 && "$OS" = "Linux" && -f /etc/debian_version ]]; then
-    echo "Installing required Unix packages..."
-    sudo apt update
-    sudo apt install -y {' '.join(package_list_unix)}
-fi
-        """.strip()
-        script.append(apt_install)
-
-    venv_setup = f"""
+def generate_venv_setup_script(env_name, build_prefix):
+    """Generate the script to set up the virtual environment."""
+    return f"""
 handle_error() {{
     echo "Oops! Something went wrong."
     exit 1
@@ -158,28 +129,30 @@ fi
 
 # Set VENV_PIP variable to the path of pip within the virtual environment
 export VENV_PIP="$VENV_PYTHON -m pip"
-    """
-    script.append(venv_setup)
+    """.strip()
 
-    # Create other directories within the build directory as per the TOML configuration
-    directories_map = config.get("directories")
+
+def create_directories_script(model_name, build_prefix, directories_map):
+    """Generate the script to create directories."""
+    script = []
     if directories_map:
         for directory_path in directories_map.values():
             formatted_path = directory_path.lstrip('/').replace("home/content/", "")
             script.append(f"mkdir -p {model_name}/{build_prefix}/{formatted_path}")
+    return script
 
-    # Set model name as an environment variable
-    script.append(f"export model_name={model_name}")
 
-    # Install python packages
-    packages = config.get("packages", {}).get("python", {})
-    package_list = [f"{package}=={version}" if version != "*" and version else package for package, version in
-                    packages.items()]
+def install_python_packages_script(package_list):
+    """Generate the script to install Python packages."""
     if package_list:
-        script.append(f"$VENV_PIP install {' '.join(package_list)}")
+        return [f"$VENV_PIP install {' '.join(package_list)}"]
+    return []
 
-    # Clone required git repositories
-    for git in config.get("git", []):
+
+def clone_git_repositories_script(git_repos, model_name, build_prefix):
+    """Generate the script to clone Git repositories."""
+    script = []
+    for git in git_repos:
         from_source, to_destination, branch = git.get("from_source"), git.get("to_destination"), git.get("branch")
         if from_source and to_destination and branch:
             repo_path = f"{model_name}/{build_prefix}/{to_destination}"
@@ -200,27 +173,84 @@ else
 fi
             """.strip()
             script.append(git_clone)
+    return script
 
-    # Download datasets or files
-    for item_type in ["dataset", "file"]:
-        for item in config.get(item_type, []):
-            from_source, to_destination = item.get("from_source"), item.get("to_destination")
 
-            if from_source and to_destination:
+def download_files_script(items, item_type, model_name, build_prefix):
+    """Generate the script to download datasets or files."""
+    script = []
+    for item in items:
+        from_source, to_destination = item.get("from_source"), item.get("to_destination")
 
-                if is_url(from_source):
-                    download_command = f"curl -s -L {from_source} -o ./{model_name}/{build_prefix}/{to_destination}"
-                    script.append(download_command)
-                else:
-                    download_command = f"cp -r ./{model_name}/{from_source} ./{model_name}/{build_prefix}/{to_destination}"
-                    script.append(download_command)
+        if from_source and to_destination:
+            if is_url(from_source):
+                download_command = f"curl -s -L {from_source} -o ./{model_name}/{build_prefix}/{to_destination}"
+                script.append(download_command)
+            else:
+                download_command = f"cp -r ./{model_name}/{from_source} ./{model_name}/{build_prefix}/{to_destination}"
+                script.append(download_command)
+    return script
 
-    # Execute specified run commands
-    run_vec = config.get("run", [])
+
+def execute_run_commands_script(run_vec, model_name, build_prefix):
+    """Generate the script to execute specified run commands."""
+    script = []
     for run in run_vec:
         command, file = run.get("command"), run.get("file")
         if command and file:
             prepended_file = f"./{model_name}/{build_prefix}/" + file
             script.append(f"{command} {prepended_file}")
+    return script
+
+
+def parse_toml_to_venv_script(file_path: str, python_version="3.11.8", env_name="myenv") -> str:
+    """
+    Convert a TOML configuration to a bash script that sets up a python environment using venv and performs actions based on the TOML.
+    Now ensures all directories, Git repositories, and other related files are created within a `/build` directory.
+
+    Parameters:
+    - file_path: The path to the TOML file.
+    - python_version: The desired Python version (unused, but kept for function signature compatibility).
+    - env_name: Name of the virtual environment using venv.
+
+    Returns:
+    - Bash script as a string.
+    """
+    config, model_name = load_toml_config(file_path)
+    build_prefix = "build"
+
+    script = ["#!/bin/bash"]
+    script.append(generate_colab_check_script())
+    script.append(f"mkdir -p {model_name}/{build_prefix}")
+    script.extend(check_command_availability(["curl", "wget", "git"]))
+
+    unix_packages = config.get("packages", {}).get("unix", {})
+    package_list_unix = list(unix_packages.keys())
+    if package_list_unix:
+        apt_install = f"""
+OS=$(uname)
+if [[ $IS_COLAB -eq 0 && "$OS" = "Linux" && -f /etc/debian_version ]]; then
+    echo "Installing required Unix packages..."
+    sudo apt update
+    sudo apt install -y {' '.join(package_list_unix)}
+fi
+        """.strip()
+        script.append(apt_install)
+
+    script.append(generate_venv_setup_script(env_name, build_prefix))
+    script.extend(create_directories_script(model_name, build_prefix, config.get("directories", {})))
+
+    # Set model name as an environment variable
+    script.append(f"export model_name={model_name}")
+
+    python_packages = config.get("packages", {}).get("python", {})
+    package_list = [f"{package}=={version}" if version != "*" and version else package for package, version in
+                    python_packages.items()]
+    script.extend(install_python_packages_script(package_list))
+
+    script.extend(clone_git_repositories_script(config.get("git", []), model_name, build_prefix))
+    script.extend(download_files_script(config.get("dataset", []), "dataset", model_name, build_prefix))
+    script.extend(download_files_script(config.get("file", []), "file", model_name, build_prefix))
+    script.extend(execute_run_commands_script(config.get("run", []), model_name, build_prefix))
 
     return "\n".join(script)
