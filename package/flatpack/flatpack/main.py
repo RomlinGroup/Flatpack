@@ -2238,7 +2238,10 @@ def fpk_cli_handle_unbox(args, session):
         toml_path = local_directory_path / 'flatpack.toml'
         if not toml_path.exists():
             print("[ERROR] flatpack.toml not found in the specified directory: '%s'." % directory_name)
-            logger.error("flatpack.toml not found in the specified directory: '%s'.", directory_name)
+            logger.error(
+                "flatpack.toml not found in the specified directory: '%s'.",
+                directory_name
+            )
             return
 
     print("[INFO] Directory name resolved to: '%s'" % directory_name)
@@ -2300,7 +2303,10 @@ def fpk_initialize_vector_manager(args):
     """
     data_dir = getattr(args, 'data_dir', '.')
     print(f"[INFO] Initializing Vector Manager with model 'all-MiniLM-L6-v2' and data directory: {data_dir}")
-    logger.info("Initializing Vector Manager with model 'all-MiniLM-L6-v2' and data directory: %s", data_dir)
+    logger.info(
+        "Initializing Vector Manager with model 'all-MiniLM-L6-v2' and data directory: %s",
+        data_dir
+    )
     return VectorManager(model_id='all-MiniLM-L6-v2', directory=data_dir)
 
 
