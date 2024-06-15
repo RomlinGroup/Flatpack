@@ -1430,23 +1430,32 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
 
     if not os.path.exists(llama_cpp_dir):
 
-        # Find the full path of the git executable
         git_executable = shutil.which("git")
+
         if not git_executable:
-            raise FileNotFoundError("The 'git' executable was not found in your PATH.")
+            print("[ERROR] The 'git' executable was not found in your PATH.")
+            logger.error("The 'git' executable was not found in your PATH.")
+            return
 
         try:
             print("[INFO] Cloning llama.cpp repository...")
             logger.info("Cloning llama.cpp repository...")
 
-            # Use the full path of the git executable
             subprocess.run(
-                [git_executable, "clone", "--depth", "1", "https://github.com/ggerganov/llama.cpp", llama_cpp_dir],
+                [
+                    git_executable,
+                    "clone",
+                    "--depth",
+                    "1",
+                    "https://github.com/ggerganov/llama.cpp",
+                    llama_cpp_dir
+                ],
                 check=True
             )
 
             print(f"[INFO] Finished cloning llama.cpp repository into '{llama_cpp_dir}'")
             logger.info(f"Finished cloning llama.cpp repository into '{llama_cpp_dir}'")
+
         except subprocess.CalledProcessError as e:
             print(
                 f"[ERROR] Failed to clone the llama.cpp repository. Please check your internet connection and try again. Error: {e}")
@@ -1457,7 +1466,20 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
         try:
             print("[INFO] Running 'make' in the llama.cpp directory...")
             logger.info("Running 'make' in the llama.cpp directory...")
-            subprocess.run(["make"], cwd=llama_cpp_dir, check=True)
+
+            make_executable = shutil.which("make")
+
+            if not make_executable:
+                print("[ERROR] 'make' executable not found in PATH.")
+                logger.error("'make' executable not found in PATH.")
+                return
+
+            subprocess.run(
+                [make_executable],
+                cwd=directory,
+                check=True
+            )
+
             print("[INFO] Finished running 'make' in the llama.cpp directory")
             logger.info("Finished running 'make' in the llama.cpp directory")
 
