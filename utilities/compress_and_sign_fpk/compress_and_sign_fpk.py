@@ -13,7 +13,21 @@ logging.basicConfig(filename='debug.log', filemode='w', level=logging.INFO)
 
 
 def validate_file_path(path, is_input=True, allowed_dir=None):
-    # Resolve absolute path to avoid false positives on legitimate paths
+    """
+    Validate the file path to prevent directory traversal attacks.
+
+    Parameters:
+        path (str): The path to validate.
+        is_input (bool): Flag indicating if the path is for input. Defaults to True.
+        allowed_dir (str): The allowed directory for the path. Defaults to None.
+
+    Returns:
+        str: The absolute path if valid.
+
+    Raises:
+        ValueError: If the path is outside the allowed directory or invalid.
+        FileNotFoundError: If the path does not exist.
+    """
     absolute_path = os.path.abspath(path)
 
     if allowed_dir:
