@@ -3,6 +3,16 @@ import toml
 
 
 def is_valid_path(base_path, user_path):
+    """
+    Validates whether a given user_path is within the base_path.
+
+    Parameters:
+    - base_path: The base directory path.
+    - user_path: The user-specified path to validate.
+
+    Returns:
+    - True if user_path is within base_path, False otherwise.
+    """
     # Resolve the full paths
     base_path = os.path.abspath(base_path)
     user_path = os.path.abspath(os.path.join(base_path, user_path))
