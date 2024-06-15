@@ -6,6 +6,7 @@ import os
 
 def setup_logging():
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+    return logging.getLogger(__name__)
 
 
 def validate_file_path(file_path, purpose="input"):
@@ -23,7 +24,7 @@ def find_folders_to_compress(base_dir):
     return folders
 
 
-def delete_existing_fpk_files(folder_path):
+def delete_existing_fpk_files(folder_path, logger):
     for file in os.listdir(folder_path):
         if file.endswith(".fpk"):
             os.remove(os.path.join(folder_path, file))
@@ -66,7 +67,7 @@ def main():
     folders = find_folders_to_compress(base_dir)
 
     for folder in folders:
-        delete_existing_fpk_files(folder)
+        delete_existing_fpk_files(folder, logger)
 
         folder_name = os.path.basename(folder)
         output_path = os.path.join(folder, f"{folder_name}-temp.fpk")
