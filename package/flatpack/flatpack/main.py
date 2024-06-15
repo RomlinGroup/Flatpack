@@ -509,7 +509,7 @@ def fpk_find_models(directory_path: str = None) -> List[str]:
         directory_path = os.getcwd()
     logger.info(f"Searching for model files in directory: {directory_path}")
 
-    model_file_formats = ['.caffemodel', '.ckpt', '.gguf', '.h5', '.json', '.mar', '.mlmodel', '.model', '.onnx',
+    model_file_formats = ['.caffemodel', '.ckpt', '.gguf', '.h5', '.mar', '.mlmodel', '.model', '.onnx',
                           '.params', '.pb', '.pkl', '.pickle', '.pt', '.pth', '.sav', '.tflite', '.weights']
     model_files = []
 
