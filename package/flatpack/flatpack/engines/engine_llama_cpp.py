@@ -18,12 +18,29 @@ class LlamaCPPEngine:
     def setup_llama_cpp(self):
         if not os.path.exists(self.llama_cpp_dir):
             try:
+                git_executable = shutil.which("git")
+
+                if not git_executable:
+                    print("[ERROR] The 'git' executable was not found in your PATH.")
+                    logger.error("The 'git' executable was not found in your PATH.")
+                    return
+
                 print("📥 Cloning llama.cpp repository...")
+
                 clone_result = subprocess.run(
-                    ["git", "clone", "https://github.com/ggerganov/llama.cpp", self.llama_cpp_dir],
+                    [
+                        git_executable,
+                        "clone",
+                        "--depth",
+                        "1",
+                        "https://github.com/ggerganov/llama.cpp",
+                        self.llama_cpp_dir
+                    ],
                     check=True
                 )
+
                 print(f"📥 Finished cloning llama.cpp repository into '{self.llama_cpp_dir}'")
+
             except subprocess.CalledProcessError as e:
                 print(f"❌ Failed to clone the llama.cpp repository. Error: {e}")
                 return
@@ -34,8 +51,22 @@ class LlamaCPPEngine:
             if os.path.exists(makefile_path):
                 try:
                     print("🔨 Running 'make' in the llama.cpp directory...")
-                    make_result = subprocess.run(["make"], cwd=self.llama_cpp_dir, check=True)
+
+                    make_executable = shutil.which("make")
+
+                    if not make_executable:
+                        print("[ERROR] 'make' executable not found in PATH.")
+                        logger.error("'make' executable not found in PATH.")
+                        return
+
+                    make_result = subprocess.run(
+                        [make_executable],
+                        cwd=self.llama_cpp_dir,
+                        check=True
+                    )
+
                     print("🔨 Finished running 'make' in the llama.cpp directory")
+
                 except subprocess.CalledProcessError as e:
                     print(f"❌ Failed to run 'make' in the llama.cpp directory. Error: {e}")
                     return
