@@ -7,6 +7,42 @@ from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.backends import default_backend
 
 
+def validate_file_path(path, is_input=True, allowed_dir=None):
+    """
+    Validate the file path to prevent directory traversal attacks and ensure it is within allowed directories.
+
+    Parameters:
+        path (str): The path to validate.
+        is_input (bool): Flag indicating if the path is for input. Defaults to True.
+        allowed_dir (str): The allowed directory for the path. Defaults to None.
+
+    Returns:
+        str: The absolute path if valid.
+
+    Raises:
+        ValueError: If the path is outside the allowed directory or invalid.
+        FileNotFoundError: If the path does not exist.
+    """
+    absolute_path = os.path.abspath(path)
+
+    if allowed_dir:
+        allowed_dir_absolute = os.path.abspath(allowed_dir)
+        if not absolute_path.startswith(allowed_dir_absolute):
+            raise ValueError(f"Path '{path}' is outside the allowed directory '{allowed_dir}'.")
+
+    if is_input:
+        if not os.path.exists(absolute_path):
+            raise FileNotFoundError(f"The path '{absolute_path}' does not exist.")
+        if not (os.path.isfile(absolute_path) or os.path.isdir(absolute_path)):
+            raise ValueError(f"The path '{absolute_path}' is neither a file nor a directory.")
+    else:
+        output_dir = os.path.dirname(absolute_path)
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+
+    return absolute_path
+
+
 def verify_signed_data(signed_file_path, public_pem_path):
     """
     Verify the digital signature of a signed file.
@@ -19,10 +55,13 @@ def verify_signed_data(signed_file_path, public_pem_path):
         bool: True if the signature is valid, False otherwise.
     """
     try:
-        with open(public_pem_path, 'rb') as f:
+        abs_signed_file_path = validate_file_path(signed_file_path)
+        abs_public_pem_path = validate_file_path(public_pem_path)
+
+        with open(abs_public_pem_path, 'rb') as f:
             public_pem = f.read()
 
-        with open(signed_file_path, 'rb') as f:
+        with open(abs_signed_file_path, 'rb') as f:
             signed_data = f.read()
 
         separator = b"---SIGNATURE_SEPARATOR---"
@@ -55,8 +94,10 @@ def verify_bulk_signed_data(directory_path, public_pem_path):
     valid_signatures = 0
     invalid_signatures = 0
 
-    for subdir in os.listdir(directory_path):
-        subdir_path = os.path.join(directory_path, subdir)
+    abs_directory_path = validate_file_path(directory_path, allowed_dir=directory_path)
+
+    for subdir in os.listdir(abs_directory_path):
+        subdir_path = os.path.join(abs_directory_path, subdir)
         if os.path.isdir(subdir_path):
             fpk_files = [f for f in os.listdir(subdir_path) if f.endswith('.fpk')]
             if fpk_files:
