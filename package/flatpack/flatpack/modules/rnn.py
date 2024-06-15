@@ -88,8 +88,8 @@ class RNN(nn.Module):
         char_to_index_path = os.path.join(save_dir, 'char_to_index.json')
         index_to_char_path = os.path.join(save_dir, 'index_to_char.json')
 
-        if not (os.path.basename(char_to_index_path) in allowed_files and os.path.basename(
-                index_to_char_path) in allowed_files):
+        if not (os.path.basename(char_to_index_path) in allowed_files and
+                os.path.basename(index_to_char_path) in allowed_files):
             raise ValueError('Invalid filename')
 
         with open(char_to_index_path, 'r') as f:
