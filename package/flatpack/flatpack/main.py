@@ -1548,17 +1548,17 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
 
 def fpk_cli_handle_find(args, session):
     """Handle the 'find' command to search for model files."""
-    logger.info("Searching for model files...")
+    logger.info("Searching for files...")
     model_files = fpk_find_models()
     if model_files:
-        print("[INFO] Found the following model files:")
-        logger.info("Found the following model files:")
+        print("[INFO] Found the following files:")
+        logger.info("Found the following files:")
         for model_file in model_files:
             print(f" - {model_file}")
             logger.info(f" - {model_file}")
     else:
-        print("[INFO] No model files found.")
-        logger.info("No model files found.")
+        print("[INFO] No files found.")
+        logger.info("No files found.")
 
 
 def fpk_cli_handle_get_api_key(args, session):
