@@ -126,8 +126,10 @@ def fpk_build(directory: Union[str, None]):
 
     building_script_path = Path(last_unboxed_flatpack) / 'build' / 'build.sh'
 
+    log_dir = Path(last_unboxed_flatpack) / 'build' / 'logs'
     log_file_time = datetime.utcnow().strftime('%Y_%m_%d_%H_%M_%S')
-    build_log_file_path = Path(last_unboxed_flatpack) / 'build' / 'logs' / f"build_{log_file_time}.log"
+    log_filename = f"build_{log_file_time}.log"
+    build_log_file_path = log_dir / log_filename
     build_log_file_path.parent.mkdir(parents=True, exist_ok=True)
 
     if not building_script_path.exists() or not building_script_path.is_file():
@@ -1898,7 +1900,11 @@ def setup_static_directory(fastapi_app: FastAPI, directory: str):
 
     if os.path.exists(flatpack_directory) and os.path.isdir(flatpack_directory):
         static_dir = os.path.join(flatpack_directory, 'build')
-        fastapi_app.mount("/", StaticFiles(directory=static_dir, html=True), name="static")
+        fastapi_app.mount(
+            "/",
+            StaticFiles(directory=static_dir, html=True),
+            name="static"
+        )
         print(f"[INFO] Static files will be served from: {static_dir}")
         logger.info(f"Static files will be served from: {static_dir}")
     else:
