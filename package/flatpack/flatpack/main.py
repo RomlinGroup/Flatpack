@@ -59,7 +59,8 @@ def sanitize_log_message(message, *args):
     Returns:
         str: The sanitized log message.
     """
-    message = message % args  # Format the message with args first
+    if args:
+        message = message % args
     SENSITIVE_PATTERNS = {
         'password': re.compile(
             r'(?i)\bpassword\b\s*[:=]\s*["\']?([^"\']+)',
@@ -91,6 +92,7 @@ def sanitize_log_message(message, *args):
 class SensitiveFilter(logging.Filter):
     def filter(self, record):
         record.msg = sanitize_log_message(record.msg, *record.args)
+        record.args = ()
         return True
 
 
@@ -123,6 +125,7 @@ def setup_logging(log_path: Path):
     return new_logger
 
 
+# Initialize the logger
 global_log_file_path = HOME_DIR / "fpk_local_only.log"
 logger = setup_logging(global_log_file_path)
 os.chmod(global_log_file_path, 0o600)
