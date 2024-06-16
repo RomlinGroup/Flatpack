@@ -113,7 +113,7 @@ flatpack agents spawn fast_api_local.py
 ```
 
 ```bash
-curl -X POST "http://127.0.0.1:<port/generate-response/" \
+curl -X POST "http://127.0.0.1:<port>/generate-response/" \
      -H "Content-Type: application/json" \
      -d '{
            "prompt": "<your_prompt>",
