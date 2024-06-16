@@ -43,9 +43,9 @@ class Query(BaseModel):
 executor = ThreadPoolExecutor(max_workers=4)
 
 
-async def generate_response_async(engine, prompt, max_tokens):
+async def generate_response_async(engine_instance, prompt, max_tokens):
     loop = asyncio.get_event_loop()
-    return await loop.run_in_executor(executor, engine.generate_response, prompt, max_tokens)
+    return await loop.run_in_executor(executor, engine_instance.generate_response, prompt, max_tokens)
 
 
 @app.post("/generate-response/")
@@ -78,8 +78,8 @@ async def generate_response(query: Query):
 
     except HTTPException as he:
         raise he
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    except Exception as exception:
+        raise HTTPException(status_code=500, detail=str(exception))
 
 
 @app.get("/")
