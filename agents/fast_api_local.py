@@ -44,7 +44,12 @@ executor = ThreadPoolExecutor(max_workers=4)
 
 async def generate_response_async(engine_instance, prompt, max_tokens):
     loop = asyncio.get_event_loop()
-    return await loop.run_in_executor(executor, engine_instance.generate_response, prompt, max_tokens)
+    return await loop.run_in_executor(
+        executor,
+        engine_instance.generate_response,
+        prompt,
+        max_tokens
+    )
 
 
 @app.post("/generate-response/")
