@@ -1,5 +1,5 @@
 from flatpack.datasets import TextDataset
-from torch.utils.data import DataLoader, Dataset
+from torch.utils.data import DataLoader
 
 import json
 import os

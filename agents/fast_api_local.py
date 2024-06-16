@@ -1,7 +1,6 @@
 import asyncio
 import os
 import re
-import sys
 import uvicorn
 
 from concurrent.futures import ThreadPoolExecutor, TimeoutError as FuturesTimeoutError
