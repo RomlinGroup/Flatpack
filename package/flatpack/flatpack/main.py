@@ -49,7 +49,7 @@ MAX_ATTEMPTS = 5
 VALIDATION_ATTEMPTS = 0
 
 
-def sanitize_log_message(message):
+def sanitize_log_message(message, *args):
     """
     Sanitizes a log message by redacting sensitive information.
 
@@ -59,6 +59,7 @@ def sanitize_log_message(message):
     Returns:
         str: The sanitized log message.
     """
+    message = message % args  # Format the message with args first
     SENSITIVE_PATTERNS = {
         'password': re.compile(
             r'(?i)\bpassword\b\s*[:=]\s*["\']?([^"\']+)',
@@ -89,7 +90,7 @@ def sanitize_log_message(message):
 
 class SensitiveFilter(logging.Filter):
     def filter(self, record):
-        record.msg = sanitize_log_message(record.getMessage())
+        record.msg = sanitize_log_message(record.msg, *record.args)
         return True
 
 
