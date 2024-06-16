@@ -97,6 +97,6 @@ if __name__ == "__main__":
         port = int(os.environ.get("AGENT_PORT", 8000))
         uvicorn.run(app, host="127.0.0.1", port=port)
     except KeyboardInterrupt:
-        print("❌ FastAPI server has been stopped.")
+        print("FastAPI server has been stopped.")
     except Exception as e:
-        print(f"❌ An unexpected error occurred during server run: {e}")
+        print(f"An unexpected error occurred during server run: {e}")

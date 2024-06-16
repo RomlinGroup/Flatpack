@@ -49,53 +49,6 @@ MAX_ATTEMPTS = 5
 VALIDATION_ATTEMPTS = 0
 
 
-def sanitize_log_message(message, *args):
-    """
-    Sanitizes a log message by redacting sensitive information.
-
-    Args:
-        message (str): The log message to sanitize.
-
-    Returns:
-        str: The sanitized log message.
-    """
-    if args:
-        message = message % args
-    SENSITIVE_PATTERNS = {
-        'password': re.compile(
-            r'(?i)\bpassword\b\s*[:=]\s*["\']?([^"\']+)',
-            re.IGNORECASE
-        ),
-        'token': re.compile(
-            r'(?i)\b(token|secret|api[-_]key)\b\s*[:=]\s*["\']?([^"\']+)',
-            re.IGNORECASE
-        ),
-        'credit_card': re.compile(
-            r'\b(?:\d[ -]*?){13,16}\b'
-        ),
-        'ssn': re.compile(
-            r'\b\d{3}-\d{2}-\d{4}\b'
-        ),
-        'email': re.compile(
-            r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
-        ),
-        'phone': re.compile(
-            r'\b(\+?(\d{1,3})?[-.\s]?(\(\d{1,4}\)|\d{1,4})'
-            r'[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9})\b'
-        )
-    }
-    for key, pattern in SENSITIVE_PATTERNS.items():
-        message = re.sub(pattern, f'[REDACTED {key.upper()}]', message)
-    return message
-
-
-class SensitiveFilter(logging.Filter):
-    def filter(self, record):
-        record.msg = sanitize_log_message(record.msg, *record.args)
-        record.args = ()
-        return True
-
-
 def setup_logging(log_path: Path):
     """Set up logging configuration."""
     new_logger = logging.getLogger(__name__)
@@ -115,12 +68,8 @@ def setup_logging(log_path: Path):
     file_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
     file_handler.setFormatter(file_formatter)
 
-    sensitive_filter = SensitiveFilter()
     new_logger.addHandler(console_handler)
     new_logger.addHandler(file_handler)
-    new_logger.addFilter(sensitive_filter)
-    console_handler.addFilter(sensitive_filter)
-    file_handler.addFilter(sensitive_filter)
 
     return new_logger
 
@@ -1784,9 +1733,7 @@ app = FastAPI()
 
 class EndpointFilter(logging.Filter):
     def filter(self, record):
-        sanitized_message = sanitize_log_message(record.getMessage())
-        record.msg = sanitized_message
-        return 'GET /api/heartbeat' not in sanitized_message
+        return 'GET /api/heartbeat' not in record.getMessage()
 
 
 uvicorn_logger = logging.getLogger("uvicorn.access")
