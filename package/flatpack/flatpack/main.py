@@ -2100,9 +2100,8 @@ def fpk_cli_handle_run(args, session):
             confirmation = input("Have you saved the API token? Type 'YES' to continue: ").strip().upper()
             if confirmation == 'YES':
                 break
-            else:
-                print("[INFO] Please save the API token before continuing.")
-                logger.info("Please save the API token before continuing.")
+            print("[INFO] Please save the API token before continuing.")
+            logger.info("Please save the API token before continuing.")
     except KeyboardInterrupt:
         print(
             "[ERROR] Process interrupted by user. Please save the API token and try again."
