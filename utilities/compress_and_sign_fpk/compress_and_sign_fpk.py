@@ -77,7 +77,7 @@ def compress_data(input_path, output_path, allowed_dir=None):
         else:
             print("The specified input path is neither a file nor a directory.")
     except Exception as e:
-        logging.error(f"An error occurred while compressing: {e}")
+        logging.error("An error occurred while compressing: %s", e)
         print(f"An error occurred while compressing: {e}")
 
 
@@ -138,7 +138,7 @@ def sign_data(
         with open(abs_signed_path, 'wb') as f:
             f.write(combined_data)
     except Exception as e:
-        logging.error(f"An error occurred while signing: {e}")
+        logging.error("An error occurred while signing: %s", e)
         print(f"An error occurred while signing: {e}")
 
 
@@ -171,5 +171,5 @@ def decompress_data(input_path, output_path, allowed_dir=None):
                 f.write(decompressed_data)
 
     except Exception as e:
-        logging.error(f"An error occurred while decompressing: {e}")
+        logging.error("An error occurred while decompressing: %s", e)
         print(f"An error occurred while decompressing: {e}")

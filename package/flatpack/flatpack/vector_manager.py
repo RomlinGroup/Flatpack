@@ -175,7 +175,7 @@ class VectorManager:
     def add_pdf(self, pdf_path: str):
         """Extract text from a PDF and add to the index."""
         if not os.path.isfile(pdf_path) or not pdf_path.lower().endswith('.pdf'):
-            logging.error(f"Invalid PDF path provided: {pdf_path}")
+            logging.error("Invalid PDF path provided: %s", pdf_path)
             return
         with open(pdf_path, 'rb') as file:
             pdf = PdfReader(file)
@@ -184,7 +184,7 @@ class VectorManager:
 
     def add_url(self, url: str):
         """Fetch text from a URL and add to the index."""
-        logging.info(f"Fetching URL: {url}")
+        logging.info("Fetching URL: %s", url)
         try:
             response = requests.get(url, timeout=10)
             response.raise_for_status()
@@ -195,7 +195,7 @@ class VectorManager:
             self._process_text_and_add(text, url)
             logging.info("Text added successfully.")
         except requests.RequestException as e:
-            logging.error(f"Failed to fetch {url}: {e}")
+            logging.error("Failed to fetch %s: %s", url, e)
 
     @staticmethod
     def get_wikipedia_text(page_title):
@@ -220,7 +220,7 @@ class VectorManager:
             page = next(iter(data["query"]["pages"].values()))
             return page.get("extract", "")
         except requests.RequestException as e:
-            logging.error(f"Failed to fetch {page_title}: {e}")
+            logging.error("Failed to fetch %s: %s", page_title, e)
             return ""
 
     def add_wikipedia_page(self, page_title):

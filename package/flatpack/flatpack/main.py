@@ -1604,13 +1604,13 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
                 f.write("Ready")
         except subprocess.CalledProcessError as e:
             print(f"[ERROR] Failed to run 'make' or install dependencies in the llama.cpp directory. Error: {e}")
-            logger.error(f"Failed to run 'make' or install dependencies in the llama.cpp directory. Error: {e}")
+            logger.error("Failed to run 'make' or install dependencies in the llama.cpp directory. Error: %s", e)
             return
         except Exception as e:
             print(
                 f"[ERROR] An error occurred during the setup of llama.cpp. Error: {e}"
             )
-            logger.error(f"An error occurred during the setup of llama.cpp. Error: {e}")
+            logger.error("An error occurred during the setup of llama.cpp. Error: %s", e)
             return
 
     output_file = os.path.join(local_dir, f"{repo_name}-fp16.bin")
