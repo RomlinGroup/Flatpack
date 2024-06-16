@@ -547,10 +547,14 @@ def fpk_fetch_github_dirs(session: httpx.Client) -> List[str]:
         if isinstance(json_data, list):
             directories = [
                 item['name'] for item in json_data
-                if isinstance(item, dict) and item.get('type') == 'dir' and item.get('name', '').lower()
+                if (
+                        isinstance(item, dict) and item.get('type') == 'dir' and
+                        item.get('name', '').lower()
+                )
             ]
             logger.info("Fetched directory names from GitHub: %s", directories)
             return sorted(directories)
+
         message = f"Unexpected response format from GitHub: {json_data}"
 
         print(f"[ERROR] {message}")
