@@ -1418,7 +1418,7 @@ def fpk_cli_handle_create(args, session):
     flatpack_name = args.input
 
     if not fpk_valid_directory_name(flatpack_name):
-        print("[ERROR] Invalid flatpack name: '%s'." % flatpack_name)
+        print(f"[ERROR] Invalid flatpack name: '{flatpack_name}'.")
         logger.error("Invalid flatpack name: '%s'.", flatpack_name)
         return
 
@@ -1426,7 +1426,7 @@ def fpk_cli_handle_create(args, session):
         fpk_create(flatpack_name)
         logger.info("Flatpack '%s' created successfully.", flatpack_name)
     except Exception as e:
-        print("[ERROR] Failed to create flatpack: %s" % e)
+        print(f"[ERROR] Failed to create flatpack: {e}")
         logger.error("Failed to create flatpack: %s", e)
 
 
@@ -1447,13 +1447,13 @@ def create_venv(venv_dir: str):
             [python_executable, "-m", "venv", venv_dir],
             check=True
         )
-        print("[INFO] Virtual environment created successfully in '%s'." % venv_dir)
+        print(f"[INFO] Virtual environment created successfully in '{venv_dir}'.")
         logger.info("Virtual environment created successfully in '%s'.", venv_dir)
     except subprocess.CalledProcessError as e:
-        print("[ERROR] Failed to create virtual environment: %s" % e)
+        print(f"[ERROR] Failed to create virtual environment: {e}")
         logger.error("Failed to create virtual environment: %s", e)
     except Exception as e:
-        print("[ERROR] An unexpected error occurred while creating virtual environment: %s" % e)
+        print(f"[ERROR] An unexpected error occurred while creating virtual environment: {e}")
         logger.error("An unexpected error occurred while creating virtual environment: %s", e)
 
 
@@ -1480,12 +1480,12 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
     local_dir = repo_name
 
     if os.path.exists(local_dir):
-        print("[INFO] The model '%s' is already downloaded in the directory '%s'." % (model_id, local_dir))
+        print(f"[INFO] The model '{model_id}' is already downloaded in the directory '{local_dir}'.")
         logger.info("The model '%s' is already downloaded in the directory '%s'.", model_id, local_dir)
     else:
         try:
             if token:
-                print("[INFO] Downloading model '%s' with provided token..." % model_id)
+                print(f"[INFO] Downloading model '{model_id}' with provided token...")
                 logger.info("Downloading model '%s' with provided token...", model_id)
                 snapshot_download(
                     repo_id=model_id,
@@ -1494,18 +1494,19 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
                     token=token
                 )
             else:
-                print("[INFO] Downloading model '%s'..." % model_id)
+                print(f"[INFO] Downloading model '{model_id}'...")
                 logger.info("Downloading model '%s'...", model_id)
                 snapshot_download(
                     repo_id=model_id,
                     local_dir=local_dir,
                     revision="main"
                 )
-            print("[INFO] Finished downloading %s into the directory '%s'" % (model_id, local_dir))
+            print(f"[INFO] Finished downloading {model_id} into the directory '{local_dir}'")
             logger.info("Finished downloading %s into the directory '%s'", model_id, local_dir)
         except Exception as e:
             print(
-                "[ERROR] Failed to download the model. Please check your internet connection and try again. Error: %s" % e)
+                f"[ERROR] Failed to download the model. Error: {e}"
+            )
             logger.error("Failed to download the model. Error: %s", e)
             return
 
@@ -1540,12 +1541,12 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
                 check=True
             )
 
-            print("[INFO] Finished cloning llama.cpp repository into '%s'" % llama_cpp_dir)
+            print(f"[INFO] Finished cloning llama.cpp repository into '{llama_cpp_dir}'")
             logger.info("Finished cloning llama.cpp repository into '%s'", llama_cpp_dir)
 
         except subprocess.CalledProcessError as e:
             print(
-                f"[ERROR] Failed to clone the llama.cpp repository. Please try again. Error: {e}"
+                f"[ERROR] Failed to clone the llama.cpp repository. Error: {e}"
             )
             logger.error("Failed to clone the llama.cpp repository. Error: %s", e)
             return
@@ -1695,7 +1696,7 @@ def fpk_cli_handle_find(args, session):
         print("[INFO] Found the following files:")
         logger.info("Found the following files:")
         for model_file in model_files:
-            print(" - %s" % model_file)
+            print(f" - {model_file}")
             logger.info(" - %s", model_file)
     else:
         print("[INFO] No files found.")
@@ -2043,9 +2044,8 @@ def setup_static_directory(fastapi_app: FastAPI, directory: str):
         print(f"[INFO] Static files will be served from: {static_dir}")
         logger.info("Static files will be served from: %s", static_dir)
     else:
-        error_message = "The directory '%s' does not exist or is not a directory." % flatpack_directory
-        print(f"[ERROR] {error_message}")
-        logger.error(error_message)
+        print(f"[ERROR] The directory '{flatpack_directory}' does not exist or is not a directory.")
+        logger.error("The directory '%s' does not exist or is not a directory.", flatpack_directory)
         raise ValueError(error_message)
 
 
