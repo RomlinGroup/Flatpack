@@ -2232,13 +2232,12 @@ def fpk_cli_handle_unbox(args, session):
         user_response = input().strip().upper()
         if user_response == "YES":
             break
-        elif user_response == "NO":
+        if user_response == "NO":
             print("[INFO] Installation aborted by user.")
             logger.info("Installation aborted by user.")
             return
-        else:
-            print("[ERROR] Invalid input. Please type 'YES' to accept or 'NO' to decline.")
-            logger.error("Invalid input from user. Expected 'YES' or 'NO'.")
+        print("[ERROR] Invalid input. Please type 'YES' to accept or 'NO' to decline.")
+        logger.error("Invalid input from user. Expected 'YES' or 'NO'.")
 
     if args.local:
         local_directory_path = Path(directory_name)
