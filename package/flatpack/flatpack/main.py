@@ -971,7 +971,7 @@ def setup_arg_parser():
     )
 
     parser_list.set_defaults(
-        func=lambda args, session: fpk_cli_handle_list(args, session)
+        func=fpk_cli_handle_list
     )
 
     parser_find = subparsers.add_parser(
@@ -980,7 +980,7 @@ def setup_arg_parser():
     )
 
     parser_find.set_defaults(
-        func=lambda args, session: fpk_cli_handle_find(args, session)
+        func=fpk_cli_handle_find
     )
 
     parser_help = subparsers.add_parser(
@@ -989,7 +989,7 @@ def setup_arg_parser():
     )
 
     parser_help.set_defaults(
-        func=lambda args, session: fpk_cli_handle_help(args, session)
+        func=fpk_cli_handle_help
     )
 
     parser_version = subparsers.add_parser(
@@ -998,7 +998,7 @@ def setup_arg_parser():
     )
 
     parser_version.set_defaults(
-        func=lambda args, session: fpk_cli_handle_version(args, session)
+        func=fpk_cli_handle_version
     )
 
     # API Key management
@@ -1024,7 +1024,7 @@ def setup_arg_parser():
     )
 
     parser_set_api.set_defaults(
-        func=lambda args, session: fpk_cli_handle_set_api_key(args, session)
+        func=fpk_cli_handle_set_api_key
     )
 
     # Get API key
@@ -1034,7 +1034,7 @@ def setup_arg_parser():
     )
 
     parser_get_api.set_defaults(
-        func=lambda args, session: fpk_cli_handle_get_api_key(args, session)
+        func=fpk_cli_handle_get_api_key
     )
 
     # Create flatpack
@@ -1051,7 +1051,7 @@ def setup_arg_parser():
     )
 
     parser_create.set_defaults(
-        func=lambda args, session: fpk_cli_handle_create(args, session)
+        func=fpk_cli_handle_create
     )
 
     # Unbox commands
@@ -1074,7 +1074,7 @@ def setup_arg_parser():
     )
 
     parser_unbox.set_defaults(
-        func=lambda args, session: fpk_cli_handle_unbox(args, session)
+        func=fpk_cli_handle_unbox
     )
 
     # Build commands
@@ -1091,7 +1091,7 @@ def setup_arg_parser():
     )
 
     parser_build.set_defaults(
-        func=lambda args, session: fpk_cli_handle_build(args, session)
+        func=fpk_cli_handle_build
     )
 
     # Verify commands
@@ -1108,7 +1108,7 @@ def setup_arg_parser():
     )
 
     parser_verify.set_defaults(
-        func=lambda args, session: fpk_cli_handle_verify(args, session)
+        func=fpk_cli_handle_verify
     )
 
     # Run server
@@ -1131,7 +1131,7 @@ def setup_arg_parser():
     )
 
     parser_run.set_defaults(
-        func=lambda args, session: fpk_cli_handle_run(args, session)
+        func=fpk_cli_handle_run
     )
 
     # Vector database management
@@ -1163,7 +1163,7 @@ def setup_arg_parser():
     )
 
     parser_add_text.set_defaults(
-        func=lambda args, session, vm: fpk_cli_handle_vector_commands(args, session, vm)
+        func=fpk_cli_handle_vector_commands
     )
 
     parser_search_text = vector_subparsers.add_parser(
@@ -1184,7 +1184,7 @@ def setup_arg_parser():
     )
 
     parser_search_text.set_defaults(
-        func=lambda args, session, vm: fpk_cli_handle_vector_commands(args, session, vm)
+        func=fpk_cli_handle_vector_commands
     )
 
     parser_add_pdf = vector_subparsers.add_parser(
@@ -1205,7 +1205,7 @@ def setup_arg_parser():
     )
 
     parser_add_pdf.set_defaults(
-        func=lambda args, session, vm: fpk_cli_handle_vector_commands(args, session, vm)
+        func=fpk_cli_handle_vector_commands
     )
 
     parser_add_url = vector_subparsers.add_parser(
@@ -1226,7 +1226,7 @@ def setup_arg_parser():
     )
 
     parser_add_url.set_defaults(
-        func=lambda args, session, vm: fpk_cli_handle_vector_commands(args, session, vm)
+        func=fpk_cli_handle_vector_commands
     )
 
     parser_add_wikipedia_page = vector_subparsers.add_parser(
@@ -1247,7 +1247,7 @@ def setup_arg_parser():
     )
 
     parser_add_wikipedia_page.set_defaults(
-        func=lambda args, session, vm: fpk_cli_handle_vector_commands(args, session, vm)
+        func=fpk_cli_handle_vector_commands
     )
 
     # Add commands for agents
@@ -1274,7 +1274,7 @@ def setup_arg_parser():
     )
 
     parser_spawn.set_defaults(
-        func=lambda args, session: fpk_cli_handle_spawn_agent(args, session)
+        func=fpk_cli_handle_spawn_agent
     )
 
     # Add command to list active agents
@@ -1284,7 +1284,7 @@ def setup_arg_parser():
     )
 
     parser_list_agents.set_defaults(
-        func=lambda args, session: fpk_cli_handle_list_agents(args, session)
+        func=fpk_cli_handle_list_agents
     )
 
     # Add command to terminate an agent
@@ -1300,7 +1300,7 @@ def setup_arg_parser():
     )
 
     parser_terminate.set_defaults(
-        func=lambda args, session: fpk_cli_handle_terminate_agent(args, session)
+        func=fpk_cli_handle_terminate_agent
     )
 
     # Model compression
@@ -1323,7 +1323,7 @@ def setup_arg_parser():
     )
 
     parser_compress.set_defaults(
-        func=lambda args, session: fpk_cli_handle_compress(args, session)
+        func=fpk_cli_handle_compress
     )
 
     return parser
