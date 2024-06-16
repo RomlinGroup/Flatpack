@@ -858,7 +858,7 @@ def fpk_unbox(directory_name: str, session, local: bool = False):
     safe_script_path = shlex.quote(str(bash_script_path.resolve()))
 
     try:
-        result = subprocess.run(['/bin/bash', safe_script_path], check=True)
+        subprocess.run(['/bin/bash', safe_script_path], check=True)
         print("[INFO] All done!")
         logger.info("All done!")
         fpk_cache_unbox(str(flatpack_dir))
@@ -933,7 +933,7 @@ def fpk_verify(directory: Union[str, None]):
 
     try:
         env_vars = {'VERIFY_MODE': 'true'}
-        result = subprocess.run(
+        subprocess.run(
             ['/bin/bash', '-u', safe_script_path],
             check=True,
             env={**env_vars, **os.environ}

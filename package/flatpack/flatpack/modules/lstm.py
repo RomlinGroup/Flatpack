@@ -60,7 +60,7 @@ class LSTM(nn.Module):
         total_accuracy = 0.0
         total_batches = 0
         for epoch in range(epochs):
-            for batch, (inputs, targets) in enumerate(dataloader):
+            for inputs, targets in dataloader:
                 inputs, targets = inputs.to(device), targets.to(device)
 
                 outputs = model(inputs)

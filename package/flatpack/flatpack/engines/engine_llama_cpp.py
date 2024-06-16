@@ -25,7 +25,7 @@ class LlamaCPPEngine:
 
                 print("📥 Cloning llama.cpp repository...")
 
-                clone_result = subprocess.run(
+                subprocess.run(
                     [
                         git_executable,
                         "clone",
@@ -95,7 +95,7 @@ class LlamaCPPEngine:
 
         try:
             with open(output_file_path, 'w') as out_file:
-                result = subprocess.run(command, stdout=out_file, stderr=subprocess.PIPE, check=True)
+                subprocess.run(command, stdout=out_file, stderr=subprocess.PIPE, check=True)
         except subprocess.CalledProcessError as e:
             print("Error running model:", e.stderr.decode())
             return "I'm sorry, I don't have a response for that."
