@@ -117,7 +117,7 @@ curl -X POST "http://127.0.0.1:<port>/generate-response/" \
      -H "Content-Type: application/json" \
      -d '{
            "prompt": "<your_prompt>",
-           "max_tokens": 50
+           "max_tokens": <max_tokens>
          }'
 ```
 
