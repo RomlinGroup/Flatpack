@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-echo "📦 Initializing the FPK package"
+echo "Initializing the FPK package"
 
 CONTEXT_PYTHON_SCRIPT="/tmp/context_python_script.py"
 EVAL_BUILD="$SCRIPT_DIR/eval_build.json"
