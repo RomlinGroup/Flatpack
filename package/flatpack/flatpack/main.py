@@ -133,7 +133,7 @@ os.chmod(global_log_file_path, 0o600)
 uvicorn_server = None
 
 
-def handle_termination_signal(signal_number):
+def handle_termination_signal(signal_number, frame):
     """Handle termination signals for graceful shutdown."""
     logger.info("Received termination signal (%s), shutting down...", signal_number)
     sys.exit(0)
