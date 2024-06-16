@@ -1846,7 +1846,6 @@ def unescape_content_parts(content: str) -> str:
 
 
 def set_token(token: str):
-    """Set the token in the configuration file."""
     try:
         config = load_config()
         config['token'] = token
@@ -1854,8 +1853,8 @@ def set_token(token: str):
         print("[INFO] Token set successfully!")
         logger.info("Token set successfully.")
     except Exception as e:
-        print(f"[ERROR] Failed to set token: {e}")
-        logger.error("Failed to set token: %s", e)
+        print(f"[ERROR] Failed to set token: {str(e)}")
+        logger.error("Failed to set token: %s", str(e))
 
 
 def get_token() -> Optional[str]:
@@ -2402,8 +2401,8 @@ def main():
         print("\nProcess interrupted by user. Exiting gracefully...")
         sys.exit(1)
     except Exception as e:
-        print(f"[ERROR] An unexpected error occurred: {e}")
-        logger.error("An unexpected error occurred: %s", e)
+        print(f"[ERROR] An unexpected error occurred: {str(e)}")
+        logger.error("An unexpected error occurred: %s", str(e))
         sys.exit(1)
 
 
