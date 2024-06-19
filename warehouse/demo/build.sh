@@ -24,6 +24,7 @@ fi
 
 # === BEGIN USER CUSTOMIZATION ===
 init_script="$SCRIPT_DIR/init.sh"
+
 [ -f "$init_script" ] || {
   echo "init.sh not found, exiting."
   exit 1
@@ -33,8 +34,8 @@ source "$init_script" || {
   exit 1
 }
 
-source "$SCRIPT_DIR/custom.sh" || {
-  echo "Error: Failed to source custom.sh" >&2
+source "$SCRIPT_DIR/temp.sh" || {
+  echo "Error: Failed to source temp.sh" >&2
   exit 1
 }
 # === END USER CUSTOMIZATION ===

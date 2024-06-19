@@ -56,14 +56,9 @@
         }
 
         .actions {
-            padding-right: 20px;
-        }
-
-        .actions {
             width: 100%;
             display: flex;
             margin-top: 20px;
-            padding-right: 0px;
             justify-content: flex-end;
             align-items: top;
             border-bottom: 1px solid #5865f2;
@@ -129,10 +124,6 @@
             border-left: 1px solid #5865f2;
             border-right: 1px solid #5865f2;
             padding: 0 10px;
-        }
-
-        .highlight-comment {
-            color: #777;
         }
 
         .highlight-function {
@@ -388,10 +379,10 @@
             padding: 20px;
         }
 
-        #save-button {
-            background: #5865f2;
-            margin-left: auto;
-            margin-right: 0px;
+        #outer-wrapper {
+            max-width: 800px;
+            width: 100%;
+            margin: 0 auto;
         }
 
         #save-button, #add-python-button, #add-bash-button {
@@ -402,6 +393,12 @@
             padding: 10px 20px;
             margin-right: 20px;
             font-size: 14px;
+        }
+
+        #save-button {
+            background: #5865f2;
+            margin-left: auto;
+            margin-right: 0px;
         }
 
         #add-python-button, #add-bash-button {
@@ -419,6 +416,7 @@
             margin-top: 20px;
             max-width: 800px;
             text-align: center;
+            line-height: 1.5em;
         }
 
         #status-bar.error {
@@ -451,15 +449,13 @@
             justify-content: space-between;
         }
 
-        @media (max-width: 800px) {
-            #hooks, #log, #wrapper {
-                border-left: 0px;
-                border-right: 0px;
+        @media (max-width: 840px) {
+            #outer-wrapper {
+                width: calc(100% - 40px);
             }
 
-            a {
-                color: #5865f2;
-                text-decoration: none;
+            #status-bar {
+                width: calc(100% - 40px);
             }
         }
     </style>
@@ -474,66 +470,70 @@
 
 <div id="status-bar"></div>
 
-<div class="tabs-container">
-    <div class="tabs">
-        <div class="tab active" data-tab="editor">Editor</div>
-        <div class="tab" data-tab="hooks">Hooks</div>
-        <div class="tab" data-tab="log">Log</div>
-    </div>
-    <div class="actions">
-        <div class="action" id="save-action">
-            S
-        </div>
-        <div class="action" id="verify-action">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M20 6L9 17L4 12" stroke="#5865f2" stroke-width="2" stroke-linecap="round"
-                      stroke-linejoin="round"/>
-            </svg>
-        </div>
-        <div class="action" id="build-action">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M5 3L19 12L5 21V3Z" stroke="#5865f2" stroke-width="2" stroke-linecap="round"
-                      stroke-linejoin="round"/>
-            </svg>
-        </div>
-    </div>
-</div>
+<div id="outer-wrapper">
 
-<div class="tab-content active" id="editor-content">
-    <div id="wrapper">
-        <select id="filter" onchange="filterContent()" autocomplete="off">
-            <option value="all">Show all</option>
-            <option value="bash">Bash</option>
-            <option value="python">Python</option>
-        </select>
-
-        <h2>custom.sh</h2>
-        <div id="file-content"></div>
-        <div id="button-container">
-            <button id="add-bash-button" onclick="addBashBlock()">Bash</button>
-            <button id="add-python-button" onclick="addPythonBlock()">Python</button>
-            <button id="save-button">Save</button>
+    <div class="tabs-container">
+        <div class="tabs">
+            <div class="tab active" data-tab="editor">Editor</div>
+            <div class="tab" data-tab="hooks">Hooks</div>
+            <div class="tab" data-tab="log">Log</div>
+        </div>
+        <div class="actions">
+            <div class="action" id="save-action">
+                S
+            </div>
+            <div class="action" id="verify-action">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M20 6L9 17L4 12" stroke="#5865f2" stroke-width="2" stroke-linecap="round"
+                          stroke-linejoin="round"/>
+                </svg>
+            </div>
+            <div class="action" id="build-action">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M5 3L19 12L5 21V3Z" stroke="#5865f2" stroke-width="2" stroke-linecap="round"
+                          stroke-linejoin="round"/>
+                </svg>
+            </div>
         </div>
     </div>
-</div>
 
-<div class="tab-content" id="hooks-content">
-    <div id="hooks">
-        <h2>Hooks</h2>
-        [PLACEHOLDER]
+    <div class="tab-content active" id="editor-content">
+        <div id="wrapper">
+            <select id="filter" onchange="filterContent()" autocomplete="off">
+                <option value="all">Show all</option>
+                <option value="bash">Bash</option>
+                <option value="python">Python</option>
+            </select>
+
+            <h2>custom.sh</h2>
+            <div id="file-content"></div>
+            <div id="button-container">
+                <button id="add-bash-button" onclick="addBashBlock()">Bash</button>
+                <button id="add-python-button" onclick="addPythonBlock()">Python</button>
+                <button id="save-button">Save</button>
+            </div>
+        </div>
     </div>
-</div>
 
-<div class="tab-content" id="log-content">
-    <div id="log">
-        <h2>Log</h2>
-        <select id="log-dropdown" onchange="fetchSelectedLog()">
-            <option value="">Select a log file</option>
-        </select>
-        <div id="log-output">
+    <div class="tab-content" id="hooks-content">
+        <div id="hooks">
+            <h2>Hooks</h2>
             [PLACEHOLDER]
         </div>
     </div>
+
+    <div class="tab-content" id="log-content">
+        <div id="log">
+            <h2>Log</h2>
+            <select id="log-dropdown" onchange="fetchSelectedLog()">
+                <option value="">Select a log file</option>
+            </select>
+            <div id="log-output">
+                [PLACEHOLDER]
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <div id="footer">
@@ -554,13 +554,11 @@
 
     const languagePatterns = {
         python: {
-            comment: /(#.*?$)/gm,
             function: /\b(def\s+[a-zA-Z_][a-zA-Z0-9_]*)\s*(?=\()/gm,
             string: /("""[\s\S]*?"""|'''[\s\S]*?'''|"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*')/gm,
             output: /\b(import|print)\b/gm,
             variable: /(?<!\.)\b([a-zA-Z_][a-zA-Z0-9_]*)\b(?=\s*=)/gm
         }, bash: {
-            comment: /(#.*?$)/gm,
             function: /\bfunction\s+([a-zA-Z_][a-zA-Z0-9_]*)\b|\b([a-zA-Z_][a-zA-Z0-9_]*)\s*\(\s*\)\s*\{/gm,
             string: /"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'/gm,
             output: /\b(echo|exit|export|pwd)\b/gm,
@@ -619,56 +617,66 @@
     function applySyntaxHighlighting(editor, language) {
         const patterns = languagePatterns[language];
         if (patterns) {
-            let html = editor.innerText.replace(/\$/g, '__DOLLAR__');
+            const originalHtml = editor.innerHTML;
+
+            let textContent = editor.innerText.replace(/\$/g, '__DOLLAR__');
 
             const stringMatches = [];
-            html = html.replace(patterns.string, (match) => {
+            textContent = textContent.replace(patterns.string, (match) => {
                 stringMatches.push(match);
                 return `__STRING_PLACEHOLDER_${stringMatches.length - 1}__`;
             });
 
             const sortedPatterns = Object.entries(patterns).sort(([a], [b]) => a.localeCompare(b));
             for (const [type, pattern] of sortedPatterns) {
-                if (type === 'comment') {
-                    html = html.replace(pattern, (match) => {
-                        return `[HIGHLIGHT-COMMENT]${match}[/HIGHLIGHT-COMMENT]`;
-                    });
-                } else if (type === 'function') {
-                    html = html.replace(pattern, (match, p1) => {
+                if (type === 'function') {
+                    textContent = textContent.replace(pattern, (match, p1) => {
                         return `[HIGHLIGHT-FUNCTION]${p1}[/HIGHLIGHT-FUNCTION]`;
                     });
                 } else if (type === 'output') {
-                    html = html.replace(pattern, (match, p1) => {
-                        return `[HIGHLIGHT-OUTPUT]${p1}[/HIGHLIGHT-OUTPUT]`;
+                    textContent = textContent.replace(pattern, (match) => {
+                        return `[HIGHLIGHT-OUTPUT]${match}[/HIGHLIGHT-OUTPUT]`;
                     });
                 } else if (type === 'variable') {
-                    html = html.replace(pattern, (match, p1) => {
+                    textContent = textContent.replace(pattern, (match, p1) => {
                         return `[HIGHLIGHT-VARIABLE]${p1}[/HIGHLIGHT-VARIABLE]`;
                     });
                 }
             }
 
-            html = html.replace(/__STRING_PLACEHOLDER_(\d+)__/g, (match, index) => {
+            textContent = textContent.replace(/__STRING_PLACEHOLDER_(\d+)__/g, (match, index) => {
                 return stringMatches[parseInt(index, 10)];
             });
 
-            html = html.replace(patterns.string, (match) => {
+            textContent = textContent.replace(patterns.string, (match) => {
                 return `[HIGHLIGHT-STRING]${match}[/HIGHLIGHT-STRING]`;
             });
 
-            html = html.replace(/\[HIGHLIGHT-COMMENT\]/g, '<span class="highlight-comment">')
-                .replace(/\[\/HIGHLIGHT-COMMENT\]/g, '</span>')
-                .replace(/\[HIGHLIGHT-STRING\]/g, '<span class="highlight-string">')
-                .replace(/\[\/HIGHLIGHT-STRING\]/g, '</span>')
-                .replace(/\[HIGHLIGHT-FUNCTION\]/g, '<span class="highlight-function">')
+            textContent = textContent.replace(/\[HIGHLIGHT-FUNCTION\]/g, '<span class="highlight-function">')
                 .replace(/\[\/HIGHLIGHT-FUNCTION\]/g, '</span>')
                 .replace(/\[HIGHLIGHT-OUTPUT\]/g, '<span class="highlight-output">')
                 .replace(/\[\/HIGHLIGHT-OUTPUT\]/g, '</span>')
+                .replace(/\[HIGHLIGHT-STRING\]/g, '<span class="highlight-string">')
+                .replace(/\[\/HIGHLIGHT-STRING\]/g, '</span>')
                 .replace(/\[HIGHLIGHT-VARIABLE\]/g, '<span class="highlight-variable">')
                 .replace(/\[\/HIGHLIGHT-VARIABLE\]/g, '</span>');
 
-            html = html.replace(/__DOLLAR__/g, '$');
-            editor.innerHTML = html;
+            textContent = textContent.replace(/__DOLLAR__/g, '$');
+
+            editor.innerHTML = textContent;
+
+            const lines = originalHtml.split('\n');
+            const highlightedLines = editor.innerHTML.split('\n');
+
+            for (let i = 0; i < lines.length; i++) {
+                if (lines[i].includes('<div>')) {
+                    highlightedLines[i] = lines[i].replace(/<div>(.*?)<\/div>/g, (_, innerContent) => {
+                        return `<div>${highlightedLines[i]}</div>`;
+                    });
+                }
+            }
+
+            editor.innerHTML = highlightedLines.join('\n');
         }
     }
 

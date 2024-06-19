@@ -125,6 +125,12 @@ def fpk_build(directory: Union[str, None]):
         logger.error("No valid flatpack directory found.")
         return
 
+    custom_sh_path = Path(last_unboxed_flatpack) / 'build' / 'custom.sh'
+    if not custom_sh_path.exists() or not custom_sh_path.is_file():
+        print(f"[ERROR] custom.sh not found in {last_unboxed_flatpack}. Build process canceled.")
+        logger.error("custom.sh not found in %s. Build process canceled.", last_unboxed_flatpack)
+        return
+
     building_script_path = Path(last_unboxed_flatpack) / 'build' / 'build.sh'
 
     log_dir = Path(last_unboxed_flatpack) / 'build' / 'logs'
