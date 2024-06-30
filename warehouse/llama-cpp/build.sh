@@ -28,6 +28,7 @@ init_script="$SCRIPT_DIR/init.sh"
   echo "init.sh not found, exiting."
   exit 1
 }
+
 source "$init_script" || {
   echo "Failed to load init.sh."
   exit 1
