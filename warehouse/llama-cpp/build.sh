@@ -24,6 +24,7 @@ fi
 
 # === BEGIN USER CUSTOMIZATION ===
 init_script="$SCRIPT_DIR/init.sh"
+
 [ -f "$init_script" ] || {
   echo "init.sh not found, exiting."
   exit 1
