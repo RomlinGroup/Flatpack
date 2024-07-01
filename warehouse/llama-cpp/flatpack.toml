@@ -27,9 +27,9 @@ python3-pip = "*"
 wget = "*"
 
 [packages.python]
-numpy = "1.25.2"
-tiktoken = "0.6.0"
-tqdm = "4.66.2"
+numpy = "2.0.0"
+tiktoken = "0.7.0"
+tqdm = "4.66.4"
 
 # [[git]]
 # from_source = "{{git_source_url}}"
@@ -37,23 +37,23 @@ tqdm = "4.66.2"
 # branch = "{{branch_name}}"
 
 [[file]]
-from_source = "index.html"
+from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/llama-cpp/index.html"
 to_destination = "index.html"
 
 [[file]]
-from_source = "build.sh"
+from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/llama-cpp/build.sh"
 to_destination = "build.sh"
 
 [[file]]
-from_source = "custom.sh"
+from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/llama-cpp/custom.sh"
 to_destination = "custom.sh"
 
 [[file]]
-from_source = "device.sh"
+from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/llama-cpp/device.sh"
 to_destination = "device.sh"
 
 [[file]]
-from_source = "init.sh"
+from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/llama-cpp/init.sh"
 to_destination = "init.sh"
 
 [[run]]
