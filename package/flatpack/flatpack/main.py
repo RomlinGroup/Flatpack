@@ -107,7 +107,12 @@ def fpk_build(directory: Union[str, None]):
 
     last_unboxed_flatpack = None
 
-    if directory and fpk_valid_directory_name(directory):
+    print(f"[INFO] Directory is {directory}.")
+    logger.info("Directory is %s", directory)
+
+    # if directory and fpk_valid_directory_name(directory):
+
+    if directory:
         print(f"[INFO] Using provided directory: {directory}")
         logger.info("Using provided directory: %s", directory)
         last_unboxed_flatpack = directory
@@ -126,6 +131,7 @@ def fpk_build(directory: Union[str, None]):
         return
 
     custom_sh_path = Path(last_unboxed_flatpack) / 'build' / 'custom.sh'
+
     if not custom_sh_path.exists() or not custom_sh_path.is_file():
         print(f"[ERROR] custom.sh not found in {last_unboxed_flatpack}. Build process canceled.")
         logger.error("custom.sh not found in %s. Build process canceled.", last_unboxed_flatpack)
@@ -1919,11 +1925,17 @@ async def build_flatpack(
         raise HTTPException(status_code=500, detail="Flatpack directory is not set")
 
     try:
+        print(f"[INFO] Building flatpack located at {flatpack_directory}")
+        logger.info("Building flatpack located at %s", flatpack_directory)
+
         fpk_build(flatpack_directory)
-        return JSONResponse(content={"message": "Build process completed successfully."}, status_code=200)
+        return JSONResponse(
+            content={"flatpack": flatpack_directory, "message": "Build process completed successfully."},
+            status_code=200)
     except Exception as e:
         logger.error("Build process failed: %s", e)
-        return JSONResponse(content={"message": f"Build process failed: {e}"}, status_code=500)
+        return JSONResponse(content={"flatpack": flatpack_directory, "message": f"Build process failed: {e}"},
+                            status_code=500)
 
 
 @app.post("/api/verify")
@@ -1946,12 +1958,17 @@ async def verify_flatpack(
 @app.get("/api/logs")
 async def get_all_logs(request: Request, token: str = Depends(authenticate_token)):
     """Get a list of all available logs ordered by date."""
-    cache_file_path = HOME_DIR / ".fpk_unbox.cache"
-    if cache_file_path.exists():
-        last_unboxed_flatpack = cache_file_path.read_text().strip()
-        logs_directory = Path(last_unboxed_flatpack) / 'build' / 'logs'
+    global flatpack_directory
+
+    if flatpack_directory:
+        logs_directory = Path(flatpack_directory) / 'build' / 'logs'
     else:
-        raise HTTPException(status_code=500, detail="No cached flatpack directory found")
+        cache_file_path = HOME_DIR / ".fpk_unbox.cache"
+        if cache_file_path.exists():
+            last_unboxed_flatpack = cache_file_path.read_text().strip()
+            logs_directory = Path(last_unboxed_flatpack) / 'build' / 'logs'
+        else:
+            raise HTTPException(status_code=500, detail="No cached flatpack directory found")
 
     try:
         if not logs_directory.exists():
@@ -1971,12 +1988,17 @@ async def get_all_logs(request: Request, token: str = Depends(authenticate_token
 @app.get("/api/logs/{log_filename}")
 async def get_log_file(request: Request, log_filename: str, token: str = Depends(authenticate_token)):
     """Get the content of a specific log file."""
-    cache_file_path = HOME_DIR / ".fpk_unbox.cache"
-    if cache_file_path.exists():
-        last_unboxed_flatpack = cache_file_path.read_text().strip()
-        logs_directory = Path(last_unboxed_flatpack) / 'build' / 'logs'
+    global flatpack_directory
+
+    if flatpack_directory:
+        logs_directory = Path(flatpack_directory) / 'build' / 'logs'
     else:
-        raise HTTPException(status_code=500, detail="No cached flatpack directory found")
+        cache_file_path = HOME_DIR / ".fpk_unbox.cache"
+        if cache_file_path.exists():
+            last_unboxed_flatpack = cache_file_path.read_text().strip()
+            logs_directory = Path(last_unboxed_flatpack) / 'build' / 'logs'
+        else:
+            raise HTTPException(status_code=500, detail="No cached flatpack directory found")
 
     log_path = logs_directory / log_filename
     if log_path.exists() and log_path.is_file():
