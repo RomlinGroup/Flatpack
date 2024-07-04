@@ -815,9 +815,11 @@
                     'Authorization': `Bearer ${apiToken}`
                 }
             });
+
             if (response.ok) {
                 const data = await response.json();
                 const logs = data.logs;
+
                 if (logs.length > 0) {
                     const latestLog = logs[0];
                     const logResponse = await fetch(`/api/logs/${latestLog}`, {
@@ -825,11 +827,12 @@
                             'Authorization': `Bearer ${apiToken}`
                         }
                     });
+
                     if (logResponse.ok) {
                         const logData = await logResponse.json();
                         renderLogContent(logData.log);
                     } else {
-                        console.error('Failed to fetch the latest log:', logResponse.statusText);
+                        //console.error('Failed to fetch the latest log:', logResponse.statusText);
                         renderLogContent("Error fetching the latest log.");
                         showStatus('Error fetching the latest log!', false);
                     }
@@ -839,12 +842,12 @@
                     showStatus('No log files found!', false);
                 }
             } else {
-                console.error('Failed to fetch log files:', response.statusText);
+                //console.error('Failed to fetch log files:', response.statusText);
                 renderLogContent("Error fetching log files.");
                 showStatus('Error fetching log files!', false);
             }
         } catch (error) {
-            console.error('Error fetching log files:', error);
+            //console.error('Error fetching log files:', error);
             renderLogContent("Error fetching log files.");
             showStatus('Error fetching log files!', false);
         }
@@ -861,7 +864,7 @@
                 const data = await response.json();
                 populateLogDropdown(data.logs);
             } else {
-                console.error('Failed to fetch log files:', response.statusText);
+                //console.error('Failed to fetch log files:', response.statusText);
                 showStatus('Error fetching log files!', false);
             }
         } catch (error) {
@@ -1010,14 +1013,18 @@
         const logDropdown = document.getElementById('log-dropdown');
         logDropdown.innerHTML = '';
 
-        logs.forEach(log => {
-            const option = document.createElement('option');
-            option.value = log;
-            option.textContent = log;
-            logDropdown.appendChild(option);
-        });
+        if (logs.length === 0) {
+            const defaultOption = document.createElement('option');
+            defaultOption.textContent = 'Select a log file';
+            logDropdown.appendChild(defaultOption);
+        } else {
+            logs.forEach(log => {
+                const option = document.createElement('option');
+                option.value = log;
+                option.textContent = log;
+                logDropdown.appendChild(option);
+            });
 
-        if (logs.length > 0) {
             logDropdown.value = logs[0];
             fetchSelectedLog();
         }
@@ -1179,6 +1186,11 @@
 
     async function validateApiKey(apiToken) {
         try {
+            if (!apiToken) {
+                console.warn('API token not provided.');
+                return false;
+            }
+
             const response = await fetch('/api/validate_token', {
                 method: 'POST',
                 headers: {
@@ -1189,8 +1201,10 @@
             });
 
             if (!response.ok) {
-                throw new Error('Invalid API token');
+                console.error('Error validating API key:', response.statusText);
+                return false;
             }
+
             return true;
         } catch (error) {
             console.error('Error validating API key:', error.message);

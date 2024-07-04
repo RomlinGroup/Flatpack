@@ -1972,14 +1972,21 @@ async def get_all_logs(request: Request, token: str = Depends(authenticate_token
 
     try:
         if not logs_directory.exists():
-            raise HTTPException(status_code=404, detail="Logs directory not found")
+            logs_directory.mkdir(parents=True, exist_ok=True)
+            if not logs_directory.exists():
+                raise HTTPException(status_code=500, detail="Failed to create logs directory")
 
         log_files = sorted(
             [f for f in os.listdir(logs_directory) if f.startswith("build_") and f.endswith(".log")],
             key=lambda x: datetime.strptime(x, "build_%Y_%m_%d_%H_%M_%S.log"),
             reverse=True
         )
+
         return JSONResponse(content={"logs": log_files}, status_code=200)
+
+    except HTTPException:
+        raise
+
     except Exception as e:
         logger.error("Failed to list log files: %s", e)
         raise HTTPException(status_code=500, detail=f"Failed to list log files: {e}")
