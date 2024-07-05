@@ -93,6 +93,102 @@ signal.signal(signal.SIGINT, handle_termination_signal)
 signal.signal(signal.SIGTERM, handle_termination_signal)
 
 
+def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path):
+    print(f"[INFO] custom_sh_path: {custom_sh_path}.")
+    print(f"[INFO] temp_sh_path: {temp_sh_path}.")
+
+    try:
+        with custom_sh_path.open('r') as infile:
+            script = infile.read()
+
+        print(f"Read script:\n{script}")
+
+        parts = []
+        lines = script.splitlines()
+        i = 0
+        while i < len(lines):
+            line = lines[i].strip()
+            if line.startswith('part_bash """') or line.startswith('part_python """'):
+                start_line = i
+                i += 1
+                while i < len(lines) and not lines[i].strip().endswith('"""'):
+                    i += 1
+                end_line = i
+                if i < len(lines):
+                    end_line += 1
+                parts.append('\n'.join(lines[start_line:end_line]).strip())
+            i += 1
+
+        print(f"Extracted parts:\n{parts}")
+
+        temp_sh_path.parent.mkdir(parents=True, exist_ok=True)
+
+        context_python_script = Path("/tmp/context_python_script.py")
+        exec_python_script = Path("/tmp/exec_python_script.py")
+
+        context_python_script.write_text('')
+        exec_python_script.write_text('')
+
+        with temp_sh_path.open('w') as outfile:
+            outfile.write("#!/bin/bash\n")
+            outfile.write("set -euo pipefail\n")
+            outfile.write(f"CONTEXT_PYTHON_SCRIPT=\"{context_python_script}\"\n")
+            outfile.write(f"EXEC_PYTHON_SCRIPT=\"{exec_python_script}\"\n")
+            outfile.write("VENV_PYTHON=\"python3\"\n")
+            outfile.write("CURR=0\n")
+            outfile.write("LAST=0\n")
+            outfile.write("trap 'rm -f \"$CONTEXT_PYTHON_SCRIPT\" \"$EXEC_PYTHON_SCRIPT\"' EXIT\n")
+            outfile.write("rm -f \"$CONTEXT_PYTHON_SCRIPT\" \"$EXEC_PYTHON_SCRIPT\"\n")
+            outfile.write("touch \"$CONTEXT_PYTHON_SCRIPT\" \"$EXEC_PYTHON_SCRIPT\"\n")
+
+            for part in parts:
+                part_lines = part.splitlines()
+                if len(part_lines) < 2:
+                    print(f"Skipping part with insufficient lines: {part}")
+                    continue
+
+                header = part_lines[0].strip()
+                code_lines = part_lines[1:-1]
+
+                language = 'bash' if 'part_bash' in header else 'python' if 'part_python' in header else None
+                code = '\n'.join(code_lines).strip().replace('\\"', '"')
+
+                print(f"Header: {header}")
+                print(f"Language: {language}")
+                print(f"Code:\n{code}")
+
+                if language == 'bash':
+                    outfile.write(f"{code}\n")
+                elif language == 'python':
+                    context_code = "\n".join(
+                        line for line in code_lines if not line.strip().startswith(('print(', 'subprocess.run')))
+                    execution_code = "\n".join(
+                        line for line in code_lines if line.strip().startswith(('print(', 'subprocess.run')))
+
+                    if context_code:
+                        outfile.write(f"echo \"{context_code}\" >> \"$CONTEXT_PYTHON_SCRIPT\"\n")
+
+                    outfile.write("echo \"try:\" > \"$EXEC_PYTHON_SCRIPT\"\n")
+                    outfile.write("sed 's/^/    /' \"$CONTEXT_PYTHON_SCRIPT\" >> \"$EXEC_PYTHON_SCRIPT\"\n")
+                    if execution_code:
+                        outfile.write(f"echo \"{execution_code}\" | sed 's/^/    /' >> \"$EXEC_PYTHON_SCRIPT\"\n")
+                    outfile.write("echo \"except Exception as e:\" >> \"$EXEC_PYTHON_SCRIPT\"\n")
+                    outfile.write("echo \"    print(e)\" >> \"$EXEC_PYTHON_SCRIPT\"\n")
+                    outfile.write("echo \"    import sys; sys.exit(1)\" >> \"$EXEC_PYTHON_SCRIPT\"\n")
+                    outfile.write("$VENV_PYTHON \"$EXEC_PYTHON_SCRIPT\"\n")
+                    outfile.write("((CURR++))\n")
+                else:
+                    print(f"Skipping part with unsupported language: {language}")
+                    continue
+
+        print(f"Temp script generated successfully at: {temp_sh_path}")
+        logger.info("Temp script generated successfully at: %s", temp_sh_path)
+
+    except Exception as e:
+        print(f"[ERROR] An error occurred while creating temp script: {e}")
+        logger.error("An error occurred while creating temp script: %s", e)
+
+
 def fpk_build(directory: Union[str, None]):
     """Build a flatpack.
 
@@ -135,13 +231,7 @@ def fpk_build(directory: Union[str, None]):
         logger.error("custom.sh not found in %s. Build process canceled.", last_unboxed_flatpack)
         return
     else:
-        try:
-            shutil.copyfile(custom_sh_path, temp_sh_path)
-            print(f"Copied custom.sh to temp.sh successfully.")
-            logger.info("Copied custom.sh to temp.sh successfully.")
-        except Exception as e:
-            print(f"[ERROR] Failed to copy custom.sh to temp.sh: {e}")
-            logger.error("Failed to copy custom.sh to temp.sh: %s", e)
+        create_temp_sh(custom_sh_path, temp_sh_path)
 
     building_script_path = Path(last_unboxed_flatpack) / 'build' / 'build.sh'
 
