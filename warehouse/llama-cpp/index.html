@@ -674,8 +674,6 @@
 
     async function buildProject(apiToken) {
         try {
-            console.log('buildProject');
-
             await saveFile(false, apiToken);
             await callAPI('build', apiToken);
             await fetchLogFiles(apiToken);
@@ -782,16 +780,16 @@
                 heartbeatDot.classList.remove('disconnected');
                 heartbeatDot.classList.add('connected');
             } else {
-                console.error('Failed to fetch server time. Status:', response.status, 'StatusText:', response.statusText);
+                //console.error('Failed to fetch server time. Status:', response.status, 'StatusText:', response.statusText);
                 setDisconnectedState();
             }
         } catch (error) {
-            console.error('Failed to fetch server time. Error:', error);
+            //console.error('Failed to fetch server time. Error:', error);
             setDisconnectedState();
         }
 
         function setDisconnectedState() {
-            console.error('Failed to fetch server time.');
+            //console.error('Failed to fetch server time.');
             heartbeatTime.textContent = 'Disconnected';
             heartbeatDot.classList.remove('connected');
             heartbeatDot.classList.add('disconnected');
@@ -1222,12 +1220,63 @@
         const apiKeyInput = document.getElementById('api-key-input');
         const apiKeyModal = document.getElementById('api-key-modal');
         const apiKeySubmit = document.getElementById('api-key-authorize');
-        const apiToken = sessionStorage.getItem('apiToken');
 
-        if (!apiToken) {
-            apiKeyModal.style.display = 'flex';
+        const initializeApp = async (apiToken) => {
+            const isValid = await validateApiKey(apiToken);
+            if (!isValid) {
+                sessionStorage.removeItem('apiToken');
+                apiKeyModal.style.display = 'flex';
+                return;
+            }
+
+            setupEventListeners(apiToken);
+            checkHeartbeat(apiToken);
+            setInterval(() => checkHeartbeat(apiToken), 1000);
+            await loadDefaultFile(apiToken);
+            await fetchLatestLogs(apiToken);
+            await fetchLogFiles(apiToken);
+        };
+
+        const validateApiKey = async (apiToken) => {
+            try {
+                if (!apiToken) {
+                    console.warn('API token not provided.');
+                    return false;
+                }
+
+                const response = await fetch('/api/validate_token', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'Authorization': `Bearer ${apiToken}`
+                    },
+                    body: new URLSearchParams({'api_token': apiToken})
+                });
+
+                if (!response.ok) {
+                    console.error('Error validating API key:', response.statusText);
+                    return false;
+                }
+
+                return true;
+            } catch (error) {
+                console.error('Error validating API key:', error.message);
+                return false;
+            }
+        };
+
+        const storedApiToken = sessionStorage.getItem('apiToken');
+        if (storedApiToken) {
+            validateApiKey(storedApiToken).then(isValid => {
+                if (isValid) {
+                    apiKeyModal.style.display = 'none';
+                    initializeApp(storedApiToken);
+                } else {
+                    apiKeyModal.style.display = 'flex';
+                }
+            });
         } else {
-            initializeApp(apiToken);
+            apiKeyModal.style.display = 'flex';
         }
 
         apiKeySubmit.addEventListener('click', async () => {
