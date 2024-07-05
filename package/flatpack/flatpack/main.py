@@ -943,7 +943,7 @@ def fpk_unbox(directory_name: str, session, local: bool = False):
             return
 
     temp_toml_path.write_text(toml_content)
-    bash_script_content = parse_toml_to_venv_script(str(temp_toml_path))
+    bash_script_content = parse_toml_to_venv_script(str(temp_toml_path), env_name=flatpack_dir)
     bash_script_path = build_dir / 'flatpack.sh'
     bash_script_path.write_text(bash_script_content)
     temp_toml_path.unlink()

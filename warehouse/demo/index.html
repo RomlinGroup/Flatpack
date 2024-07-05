@@ -1183,12 +1183,12 @@
     }
 
     async function validateApiKey(apiToken) {
-        try {
-            if (!apiToken) {
-                console.warn('API token not provided.');
-                return false;
-            }
+        if (!apiToken) {
+            console.warn('API token not provided.');
+            return false;
+        }
 
+        try {
             const response = await fetch('/api/validate_token', {
                 method: 'POST',
                 headers: {
@@ -1199,7 +1199,8 @@
             });
 
             if (!response.ok) {
-                console.error('Error validating API key:', response.statusText);
+                const errorText = await response.text();
+                console.error('Error validating API key:', response.statusText, errorText);
                 return false;
             }
 

@@ -13,11 +13,9 @@ def is_valid_path(base_path, user_path):
     Returns:
     - True if user_path is within base_path, False otherwise.
     """
-    # Resolve the full paths
     base_path = os.path.abspath(base_path)
     user_path = os.path.abspath(os.path.join(base_path, user_path))
 
-    # Check if the user_path is within base_path
     return os.path.commonpath([base_path, user_path]) == base_path
 
 
@@ -238,8 +236,6 @@ fi
 
     script.append(generate_venv_setup_script(env_name, build_prefix))
     script.extend(create_directories_script(model_name, build_prefix, config.get("directories", {})))
-
-    # Set model name as an environment variable
     script.append(f"export model_name={model_name}")
 
     python_packages = config.get("packages", {}).get("python", {})
