@@ -101,7 +101,7 @@ def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path):
         with custom_sh_path.open('r') as infile:
             script = infile.read()
 
-        # print(f"Read script:\n{script}")
+        last_count = script.count('part_bash """') + script.count('part_python """')
 
         parts = []
         lines = script.splitlines()
@@ -132,10 +132,12 @@ def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path):
         with temp_sh_path.open('w') as outfile:
             outfile.write("#!/bin/bash\n")
             outfile.write("set -euo pipefail\n")
+
             outfile.write(f"CONTEXT_PYTHON_SCRIPT=\"{context_python_script}\"\n")
+            outfile.write("EVAL_BUILD=\"$SCRIPT_DIR/eval_build.json\"\n")
             outfile.write(f"EXEC_PYTHON_SCRIPT=\"{exec_python_script}\"\n")
             outfile.write("CURR=0\n")
-            # outfile.write("LAST=0\n")
+
             outfile.write("trap 'rm -f \"$CONTEXT_PYTHON_SCRIPT\" \"$EXEC_PYTHON_SCRIPT\"' EXIT\n")
             outfile.write("rm -f \"$CONTEXT_PYTHON_SCRIPT\" \"$EXEC_PYTHON_SCRIPT\"\n")
             outfile.write("touch \"$CONTEXT_PYTHON_SCRIPT\" \"$EXEC_PYTHON_SCRIPT\"\n")
@@ -157,8 +159,12 @@ def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path):
                 # print(f"Code:\n{code}")
 
                 if language == 'bash':
+
                     outfile.write(f"{code}\n")
+                    outfile.write("((CURR++))\n")
+
                 elif language == 'python':
+
                     context_code = "\n".join(
                         line for line in code_lines if not line.strip().startswith(('print(', 'subprocess.run')))
                     execution_code = "\n".join(
@@ -169,13 +175,36 @@ def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path):
 
                     outfile.write("echo \"try:\" > \"$EXEC_PYTHON_SCRIPT\"\n")
                     outfile.write("sed 's/^/    /' \"$CONTEXT_PYTHON_SCRIPT\" >> \"$EXEC_PYTHON_SCRIPT\"\n")
+
                     if execution_code:
                         outfile.write(f"echo \"{execution_code}\" | sed 's/^/    /' >> \"$EXEC_PYTHON_SCRIPT\"\n")
+
                     outfile.write("echo \"except Exception as e:\" >> \"$EXEC_PYTHON_SCRIPT\"\n")
                     outfile.write("echo \"    print(e)\" >> \"$EXEC_PYTHON_SCRIPT\"\n")
                     outfile.write("echo \"    import sys; sys.exit(1)\" >> \"$EXEC_PYTHON_SCRIPT\"\n")
                     outfile.write("$VENV_PYTHON \"$EXEC_PYTHON_SCRIPT\"\n")
+
                     outfile.write("((CURR++))\n")
+
+                    outfile.write(
+                        f"if [ \"$CURR\" -eq \"{last_count}\" ]; then\n"
+                        "    EVAL=\"null\"\n"
+                        "else\n"
+                        "    EVAL=$((CURR + 1))\n"
+                        "fi\n"
+                    )
+
+                    outfile.write("datetime=$(date -u +\"%Y-%m-%d %H:%M:%S\")\n")
+
+                    outfile.write(
+                        "echo \"{"
+                        "\\\"curr\\\": $CURR, "
+                        f"\\\"last\\\": {last_count}, "
+                        "\\\"eval\\\": $EVAL, "
+                        "\\\"datetime\\\": \\\"$datetime\\\""
+                        "}\" > \"$EVAL_BUILD\"\n"
+                    )
+
                 else:
                     print(f"Skipping part with unsupported language: {language}")
                     continue
