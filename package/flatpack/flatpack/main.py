@@ -925,6 +925,7 @@ def fpk_unbox(directory_name: str, session, local: bool = False):
     build_dir.mkdir(parents=True, exist_ok=True)
 
     temp_toml_path = build_dir / 'temp_flatpack.toml'
+
     if local:
         toml_path = flatpack_dir / 'flatpack.toml'
         if not toml_path.exists():
