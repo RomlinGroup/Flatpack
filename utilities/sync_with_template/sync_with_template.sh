@@ -11,12 +11,12 @@ DEVICE_SOURCE_FILE="${TEMP_DIR}/device.sh"
 INDEX_SOURCE_FILE="${TEMP_DIR}/index.html"
 
 if [[ ! -f ${DEVICE_SOURCE_FILE} ]]; then
-  echo "❌ Error: Source file ${DEVICE_SOURCE_FILE} does not exist."
+  echo "Error: Source file ${DEVICE_SOURCE_FILE} does not exist."
   exit 1
 fi
 
 if [[ ! -f ${INDEX_SOURCE_FILE} ]]; then
-  echo "❌ Error: Source file ${INDEX_SOURCE_FILE} does not exist."
+  echo "Error: Source file ${INDEX_SOURCE_FILE} does not exist."
   exit 1
 fi
 
@@ -31,4 +31,4 @@ done
 
 rm -rf "${TEMP_DIR}"
 
-echo "👏 Sync with template completed."
+echo "Sync with template completed."
