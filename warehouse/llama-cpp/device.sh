@@ -12,7 +12,7 @@ OS=$(uname)
 WORK_DIR="$CURRENT_DIR/$FLATPACK_NAME/build/$DEFAULT_REPO_NAME"
 
 if [[ -d "/content" ]]; then
-  if command -v nvidia-smi &> /dev/null; then
+  if command -v nvidia-smi &>/dev/null; then
     echo "Detected Colab GPU environment"
     DEVICE="cuda"
   else
@@ -32,9 +32,6 @@ fi
 
 export VENV_PYTHON="${SCRIPT_DIR}/bin/python"
 export VENV_PIP="$(dirname "$VENV_PYTHON")/pip"
-
-echo "Determined WORK_DIR: $WORK_DIR"
-echo "Determined DEVICE: $DEVICE"
 
 if [[ ! -d "$WORK_DIR" ]]; then
   echo "Directory $WORK_DIR does not exist. Creating it..."

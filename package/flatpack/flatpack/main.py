@@ -94,14 +94,14 @@ signal.signal(signal.SIGTERM, handle_termination_signal)
 
 
 def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path):
-    print(f"[INFO] custom_sh_path: {custom_sh_path}.")
-    print(f"[INFO] temp_sh_path: {temp_sh_path}.")
+    # print(f"[INFO] custom_sh_path: {custom_sh_path}.")
+    # print(f"[INFO] temp_sh_path: {temp_sh_path}.")
 
     try:
         with custom_sh_path.open('r') as infile:
             script = infile.read()
 
-        print(f"Read script:\n{script}")
+        # print(f"Read script:\n{script}")
 
         parts = []
         lines = script.splitlines()
@@ -119,7 +119,7 @@ def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path):
                 parts.append('\n'.join(lines[start_line:end_line]).strip())
             i += 1
 
-        print(f"Extracted parts:\n{parts}")
+        # print(f"Extracted parts:\n{parts}")
 
         temp_sh_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -134,9 +134,8 @@ def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path):
             outfile.write("set -euo pipefail\n")
             outfile.write(f"CONTEXT_PYTHON_SCRIPT=\"{context_python_script}\"\n")
             outfile.write(f"EXEC_PYTHON_SCRIPT=\"{exec_python_script}\"\n")
-            outfile.write("VENV_PYTHON=\"python3\"\n")
             outfile.write("CURR=0\n")
-            outfile.write("LAST=0\n")
+            # outfile.write("LAST=0\n")
             outfile.write("trap 'rm -f \"$CONTEXT_PYTHON_SCRIPT\" \"$EXEC_PYTHON_SCRIPT\"' EXIT\n")
             outfile.write("rm -f \"$CONTEXT_PYTHON_SCRIPT\" \"$EXEC_PYTHON_SCRIPT\"\n")
             outfile.write("touch \"$CONTEXT_PYTHON_SCRIPT\" \"$EXEC_PYTHON_SCRIPT\"\n")
@@ -153,9 +152,9 @@ def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path):
                 language = 'bash' if 'part_bash' in header else 'python' if 'part_python' in header else None
                 code = '\n'.join(code_lines).strip().replace('\\"', '"')
 
-                print(f"Header: {header}")
-                print(f"Language: {language}")
-                print(f"Code:\n{code}")
+                # print(f"Header: {header}")
+                # print(f"Language: {language}")
+                # print(f"Code:\n{code}")
 
                 if language == 'bash':
                     outfile.write(f"{code}\n")
@@ -181,8 +180,8 @@ def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path):
                     print(f"Skipping part with unsupported language: {language}")
                     continue
 
-        print(f"Temp script generated successfully at: {temp_sh_path}")
-        logger.info("Temp script generated successfully at: %s", temp_sh_path)
+        print(f"[INFO] Temp script generated successfully at {temp_sh_path}")
+        logger.info("Temp script generated successfully at %s", temp_sh_path)
 
     except Exception as e:
         print(f"[ERROR] An error occurred while creating temp script: {e}")
