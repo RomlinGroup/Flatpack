@@ -142,6 +142,17 @@ def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path):
             outfile.write("rm -f \"$CONTEXT_PYTHON_SCRIPT\" \"$EXEC_PYTHON_SCRIPT\"\n")
             outfile.write("touch \"$CONTEXT_PYTHON_SCRIPT\" \"$EXEC_PYTHON_SCRIPT\"\n")
 
+            outfile.write("datetime=$(date -u +\"%Y-%m-%d %H:%M:%S\")\n")
+
+            outfile.write(
+                "echo \"{"
+                "\\\"curr\\\": $CURR, "
+                f"\\\"last\\\": {last_count}, "
+                "\\\"eval\\\": 1, "
+                "\\\"datetime\\\": \\\"$datetime\\\""
+                "}\" > \"$EVAL_BUILD\"\n"
+            )
+
             for part in parts:
                 part_lines = part.splitlines()
                 if len(part_lines) < 2:
@@ -186,28 +197,26 @@ def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path):
 
                     outfile.write("((CURR++))\n")
 
-                    outfile.write(
-                        f"if [ \"$CURR\" -eq \"{last_count}\" ]; then\n"
-                        "    EVAL=\"null\"\n"
-                        "else\n"
-                        "    EVAL=$((CURR + 1))\n"
-                        "fi\n"
-                    )
-
-                    outfile.write("datetime=$(date -u +\"%Y-%m-%d %H:%M:%S\")\n")
-
-                    outfile.write(
-                        "echo \"{"
-                        "\\\"curr\\\": $CURR, "
-                        f"\\\"last\\\": {last_count}, "
-                        "\\\"eval\\\": $EVAL, "
-                        "\\\"datetime\\\": \\\"$datetime\\\""
-                        "}\" > \"$EVAL_BUILD\"\n"
-                    )
-
                 else:
                     print(f"Skipping part with unsupported language: {language}")
                     continue
+
+                outfile.write(
+                    f"if [ \"$CURR\" -eq \"{last_count}\" ]; then\n"
+                    "    EVAL=\"null\"\n"
+                    "else\n"
+                    "    EVAL=$((CURR + 1))\n"
+                    "fi\n"
+                )
+
+                outfile.write(
+                    "echo \"{"
+                    "\\\"curr\\\": $CURR, "
+                    f"\\\"last\\\": {last_count}, "
+                    "\\\"eval\\\": $EVAL, "
+                    "\\\"datetime\\\": \\\"$datetime\\\""
+                    "}\" > \"$EVAL_BUILD\"\n"
+                )
 
         print(f"[INFO] Temp script generated successfully at {temp_sh_path}")
         logger.info("Temp script generated successfully at %s", temp_sh_path)
