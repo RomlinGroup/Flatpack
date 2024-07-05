@@ -238,6 +238,7 @@ def fpk_build(directory: Union[str, None]):
     log_dir = Path(last_unboxed_flatpack) / 'build' / 'logs'
     log_file_time = datetime.utcnow().strftime('%Y_%m_%d_%H_%M_%S')
     log_filename = f"build_{log_file_time}.log"
+
     build_log_file_path = log_dir / log_filename
     build_log_file_path.parent.mkdir(parents=True, exist_ok=True)
 
