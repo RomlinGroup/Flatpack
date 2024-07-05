@@ -23,8 +23,20 @@ if [[ ! $REQUIRED_DEVICES =~ (^|[[:space:]])$DEVICE($|[[:space:]]) ]]; then
 fi
 
 # === BEGIN USER CUSTOMIZATION ===
-source "$SCRIPT_DIR/temp.sh" || {
-  echo "😱 Error: Failed to source temp.sh" >&2
+init_script="$SCRIPT_DIR/init.sh"
+
+[ -f "$init_script" ] || {
+  echo "init.sh not found, exiting."
+  exit 1
+}
+
+source "$init_script" || {
+  echo "Failed to load init.sh."
+  exit 1
+}
+
+source "$SCRIPT_DIR/custom.sh" || {
+  echo "Error: Failed to source custom.sh" >&2
   exit 1
 }
 # === END USER CUSTOMIZATION ===
