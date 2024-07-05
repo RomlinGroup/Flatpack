@@ -169,7 +169,6 @@ flatpack compress <hf_model_name> --token <hf_token>
   - build.sh
   - custom.sh
   - device.sh
-  - init.sh
   - index.html
 
 ### Code signing
