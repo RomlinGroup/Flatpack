@@ -727,15 +727,12 @@ def fpk_get_api_key() -> Optional[str]:
             print("[INFO] API key retrieved successfully.")
             logger.info("API key retrieved successfully.")
         else:
-            print("[WARNING] API key not found in the configuration.")
-            logger.warning("API key not found in the configuration.")
+            print("[INFO] API key not found in the configuration.")
+            logger.info("API key not found in the configuration.")
         return api_key
     except Exception as e:
         error_message = f"An error occurred while retrieving the API key: {e}"
-        print(
-            "[ERROR] An error occurred while retrieving the API key: %s",
-            error_message
-        )
+        print(f"[ERROR] {error_message}")
         logger.error(error_message)
         return None
 
@@ -1969,7 +1966,13 @@ def authenticate_token(request: Request):
     """Authenticate the token."""
     global VALIDATION_ATTEMPTS
     token = request.headers.get('Authorization')
-    if token is None or token != f"Bearer {get_token()}":
+    stored_token = get_token()
+
+    if not stored_token:
+        return
+
+    print(f"[DEBUG] Received token: {token}, Stored token: {stored_token}")
+    if token is None or token != f"Bearer {stored_token}":
         VALIDATION_ATTEMPTS += 1
         if VALIDATION_ATTEMPTS >= MAX_ATTEMPTS:
             shutdown_server()
@@ -1986,6 +1989,9 @@ def shutdown_server():
 async def validate_token(request: Request, api_token: str = Form(...)):
     """Validate the provided API token."""
     global VALIDATION_ATTEMPTS
+    stored_token = get_token()
+    if not stored_token:
+        return JSONResponse(content={"message": "API token is not set."}, status_code=200)
     if validate_api_token(api_token):
         return JSONResponse(content={"message": "API token is valid."}, status_code=200)
     VALIDATION_ATTEMPTS += 1
