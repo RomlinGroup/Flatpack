@@ -1,4 +1,5 @@
 import argparse
+import ast
 import atexit
 import logging
 import os
@@ -102,17 +103,13 @@ def fpk_build(directory: Union[str, None]):
         None
     """
     cache_file_path = HOME_DIR / ".fpk_unbox.cache"
+
     print(f"[INFO] Looking for cached flatpack in {cache_file_path}.")
     logger.info("Looking for cached flatpack in %s", cache_file_path)
 
     last_unboxed_flatpack = None
 
-    print(f"[INFO] Directory is {directory}.")
-    logger.info("Directory is %s", directory)
-
-    # if directory and fpk_valid_directory_name(directory):
-
-    if directory:
+    if directory and fpk_valid_directory_name(directory):
         print(f"[INFO] Using provided directory: {directory}")
         logger.info("Using provided directory: %s", directory)
         last_unboxed_flatpack = directory
@@ -131,11 +128,20 @@ def fpk_build(directory: Union[str, None]):
         return
 
     custom_sh_path = Path(last_unboxed_flatpack) / 'build' / 'custom.sh'
+    temp_sh_path = Path(last_unboxed_flatpack) / 'build' / 'temp.sh'
 
     if not custom_sh_path.exists() or not custom_sh_path.is_file():
         print(f"[ERROR] custom.sh not found in {last_unboxed_flatpack}. Build process canceled.")
         logger.error("custom.sh not found in %s. Build process canceled.", last_unboxed_flatpack)
         return
+    else:
+        try:
+            shutil.copyfile(custom_sh_path, temp_sh_path)
+            print(f"Copied custom.sh to temp.sh successfully.")
+            logger.info("Copied custom.sh to temp.sh successfully.")
+        except Exception as e:
+            print(f"[ERROR] Failed to copy custom.sh to temp.sh: {e}")
+            logger.error("Failed to copy custom.sh to temp.sh: %s", e)
 
     building_script_path = Path(last_unboxed_flatpack) / 'build' / 'build.sh'
 
@@ -838,7 +844,7 @@ def fpk_unbox(directory_name: str, session, local: bool = False):
 
 
 def fpk_valid_directory_name(name: str) -> bool:
-    """Validate that the directory name contains only alphanumeric characters, dashes, and underscores.
+    """Validate that the directory name contains only alphanumeric characters, dashes, underscores, and slashes.
 
     Args:
         name (str): The directory name to validate.
@@ -846,7 +852,7 @@ def fpk_valid_directory_name(name: str) -> bool:
     Returns:
         bool: True if the name is valid, False otherwise.
     """
-    pattern = r'^[\w-]+$'
+    pattern = r'^[\w\-/]+$'
     is_valid = re.match(pattern, name) is not None
     return is_valid
 
@@ -1929,6 +1935,7 @@ async def build_flatpack(
         logger.info("Building flatpack located at %s", flatpack_directory)
 
         fpk_build(flatpack_directory)
+
         return JSONResponse(
             content={"flatpack": flatpack_directory, "message": "Build process completed successfully."},
             status_code=200)
