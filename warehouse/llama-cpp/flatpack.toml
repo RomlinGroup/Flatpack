@@ -53,13 +53,13 @@ from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/wa
 to_destination = "device.sh"
 
 [[run]]
-command = "chmod +x"
-file = "build.sh"
+command = "chmod"
+args = ["+x", "build.sh"]
 
 [[run]]
-command = "chmod +x"
-file = "custom.sh"
+command = "chmod"
+args = ["+x", "custom.sh"]
 
 [[run]]
-command = "chmod +x"
-file = "device.sh"
+command = "chmod"
+args = ["+x", "device.sh"]

@@ -194,10 +194,11 @@ def execute_run_commands_script(run_vec, model_name, build_prefix):
     """Generate the script to execute specified run commands."""
     script = []
     for run in run_vec:
-        command, file = run.get("command"), run.get("file")
-        if command and file:
-            prepended_file = f"./{model_name}/{build_prefix}/" + file
-            script.append(f"{command} {prepended_file}")
+        command = run.get("command")
+        args = run.get("args", [])
+        if command and args:
+            args_str = " ".join(args)
+            script.append(f"{command} {args_str}")
     return script
 
 
