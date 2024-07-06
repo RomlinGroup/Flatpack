@@ -63,7 +63,3 @@ file = "custom.sh"
 [[run]]
 command = "chmod +x"
 file = "device.sh"
-
-[[cmd]]
-command = "bash"
-file = "build.sh"
