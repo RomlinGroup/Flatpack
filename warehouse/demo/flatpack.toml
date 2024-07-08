@@ -36,6 +36,9 @@ tqdm = "4.66.4"
 # from_source = "{{git_source_url}}"
 # to_destination = "{{git_destination_dir}}"
 # branch = "{{branch_name}}"
+# setup_commands = [
+#   "{{setup_command}}"
+# ]
 
 [[file]]
 from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/demo/index.html"

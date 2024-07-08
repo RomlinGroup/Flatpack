@@ -148,10 +148,14 @@ def install_python_packages_script(package_list):
 
 
 def clone_git_repositories_script(git_repos, model_name, build_prefix):
-    """Generate the script to clone Git repositories."""
+    """Generate the script to clone Git repositories and run setup commands."""
     script = []
     for git in git_repos:
-        from_source, to_destination, branch = git.get("from_source"), git.get("to_destination"), git.get("branch")
+        from_source = git.get("from_source")
+        to_destination = git.get("to_destination")
+        branch = git.get("branch")
+        setup_commands = git.get("setup_commands", [])
+
         if from_source and to_destination and branch:
             repo_path = f"{model_name}/{build_prefix}/{to_destination}"
             git_clone = f"""
@@ -163,15 +167,16 @@ else
     echo "Git clone failed."
     exit 1
 fi
-if [ -f {repo_path}/requirements.txt]; then
-    echo "Found requirements.txt, installing dependencies..."
-    ${{VENV_PIP}} install -r {repo_path}/requirements.txt
-else
-    echo "No requirements.txt found."
-fi
-            """.strip()
+""".strip()
             script.append(git_clone)
-    return script
+
+            if setup_commands:
+                script.append(f"cd {repo_path}")
+                for cmd in setup_commands:
+                    script.append(cmd)
+                script.append("cd -")
+
+    return "\n".join(script)
 
 
 def download_files_script(items, model_name, build_prefix):
