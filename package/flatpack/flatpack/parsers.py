@@ -167,7 +167,7 @@ else
     echo "Git clone failed."
     exit 1
 fi 
-""".strip()
+    """.strip()
             script.append(git_clone)
 
             if setup_commands:
