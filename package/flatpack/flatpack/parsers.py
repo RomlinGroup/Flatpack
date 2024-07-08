@@ -166,14 +166,17 @@ if [ $? -eq 0 ]; then
 else
     echo "Git clone failed."
     exit 1
-fi
+fi 
 """.strip()
             script.append(git_clone)
 
             if setup_commands:
+                script.append(f'echo "Running setup commands for repository: {to_destination}"')
                 script.append(f"cd {repo_path}")
                 for cmd in setup_commands:
+                    script.append(f'echo "Executing: {cmd}"')
                     script.append(cmd)
+                script.append('echo "Setup commands completed."')
                 script.append("cd -")
 
     return "\n".join(script)
