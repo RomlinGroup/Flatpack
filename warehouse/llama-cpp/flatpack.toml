@@ -36,8 +36,7 @@ from_source = "https://github.com/ggerganov/llama.cpp"
 to_destination = "llama.cpp"
 branch = "master"
 setup_commands = [
-    "make",
-    "cd models && flatpack compress microsoft/Phi-3-mini-4k-instruct"
+    "make"
 ]
 
 [[file]]
