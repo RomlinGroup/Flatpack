@@ -99,9 +99,10 @@ fi
 
 echo "Python command to be used: $PYTHON_CMD"
 
-echo "Creating the virtual environment at {env_name}/{build_prefix}"
+VENV_PATH="{env_name}/{build_prefix}"
+echo "Creating the virtual environment at $VENV_PATH"
 
-if ! $PYTHON_CMD -m venv --clear --copies "{env_name}/{build_prefix}"; then
+if ! $PYTHON_CMD -m venv --copies "$VENV_PATH"; then
     echo "Failed to create the virtual environment using $PYTHON_CMD"
     handle_error
 else
@@ -109,7 +110,7 @@ else
 fi
 
 # Ensuring the VENV_PYTHON path does not begin with a dot and is correctly formed
-export VENV_PYTHON="{env_name}/{build_prefix}/bin/python"
+export VENV_PYTHON="$VENV_PATH/bin/python"
 if [[ -f "$VENV_PYTHON" ]]; then
     echo "VENV_PYTHON is set correctly to $VENV_PYTHON"
     echo "Checking Python version in the virtual environment..."
@@ -148,7 +149,7 @@ def install_python_packages_script(package_list):
 
 
 def clone_git_repositories_script(git_repos, model_name, build_prefix):
-    """Generate the script to clone Git repositories and run setup commands."""
+    """Generate the script to clone Git repositories."""
     script = []
     for git in git_repos:
         from_source = git.get("from_source")
@@ -166,20 +167,34 @@ if [ $? -eq 0 ]; then
 else
     echo "Git clone failed."
     exit 1
-fi 
-    """.strip()
+fi
+
+if [ -f {repo_path}/requirements.txt ]; then
+    echo "Found requirements.txt, installing dependencies..."
+    ${{VENV_PIP}} install -r {repo_path}/requirements.txt
+else
+    echo "No requirements.txt found."
+fi
+            """.strip()
+
             script.append(git_clone)
 
-            if setup_commands:
-                script.append(f'echo "Running setup commands for repository: {to_destination}"')
-                script.append(f"cd {repo_path}")
-                for cmd in setup_commands:
-                    script.append(f'echo "Executing: {cmd}"')
-                    script.append(cmd)
-                script.append('echo "Setup commands completed."')
-                script.append("cd -")
+            for command in setup_commands:
+                setup_command_script = f"""
+echo "Running setup command: {command}"
+pushd {repo_path}
+{command}
+if [ $? -eq 0 ]; then
+    echo "Setup command '{command}' executed successfully."
+else
+    echo "Setup command '{command}' failed."
+    exit 1
+fi
+popd
+                """.strip()
+                script.append(setup_command_script)
 
-    return "\n".join(script)
+    return script
 
 
 def download_files_script(items, model_name, build_prefix):
@@ -189,6 +204,9 @@ def download_files_script(items, model_name, build_prefix):
         from_source, to_destination = item.get("from_source"), item.get("to_destination")
 
         if from_source and to_destination:
+            destination_dir = os.path.dirname(f"./{model_name}/{build_prefix}/{to_destination}")
+            script.append(f"mkdir -p {destination_dir}")
+
             if is_url(from_source):
                 download_command = f"curl -s -L {from_source} -o ./{model_name}/{build_prefix}/{to_destination}"
                 script.append(download_command)
