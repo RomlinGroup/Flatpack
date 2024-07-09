@@ -12,7 +12,9 @@ import stat
 import string
 import subprocess
 import sys
+import tempfile
 
+from bs4 import BeautifulSoup
 from datetime import datetime
 from importlib.metadata import version
 from io import BytesIO
@@ -93,13 +95,18 @@ signal.signal(signal.SIGINT, handle_termination_signal)
 signal.signal(signal.SIGTERM, handle_termination_signal)
 
 
-def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path):
-    # print(f"[INFO] custom_sh_path: {custom_sh_path}.")
-    # print(f"[INFO] temp_sh_path: {temp_sh_path}.")
+def strip_html(content: str) -> str:
+    soup = BeautifulSoup(content, "html.parser")
+    return soup.get_text()
 
+
+def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path):
     try:
         with custom_sh_path.open('r') as infile:
             script = infile.read()
+
+        soup = BeautifulSoup(script, 'html.parser')
+        script = soup.get_text()
 
         last_count = script.count('part_bash """') + script.count('part_python """')
 
@@ -119,23 +126,23 @@ def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path):
                 parts.append('\n'.join(lines[start_line:end_line]).strip())
             i += 1
 
-        # print(f"Extracted parts:\n{parts}")
-
         temp_sh_path.parent.mkdir(parents=True, exist_ok=True)
 
-        context_python_script = Path("/tmp/context_python_script.py")
-        exec_python_script = Path("/tmp/exec_python_script.py")
+        with tempfile.NamedTemporaryFile(mode='w', delete=False) as context_python_script:
+            context_python_script_path = Path(context_python_script.name)
+            context_python_script.write('')
 
-        context_python_script.write_text('')
-        exec_python_script.write_text('')
+        with tempfile.NamedTemporaryFile(mode='w', delete=False) as exec_python_script:
+            exec_python_script_path = Path(exec_python_script.name)
+            exec_python_script.write('')
 
         with temp_sh_path.open('w') as outfile:
             outfile.write("#!/bin/bash\n")
             outfile.write("set -euo pipefail\n")
 
-            outfile.write(f"CONTEXT_PYTHON_SCRIPT=\"{context_python_script}\"\n")
+            outfile.write(f"CONTEXT_PYTHON_SCRIPT=\"{context_python_script_path}\"\n")
             outfile.write("EVAL_BUILD=\"$SCRIPT_DIR/eval_build.json\"\n")
-            outfile.write(f"EXEC_PYTHON_SCRIPT=\"{exec_python_script}\"\n")
+            outfile.write(f"EXEC_PYTHON_SCRIPT=\"{exec_python_script_path}\"\n")
             outfile.write("CURR=0\n")
 
             outfile.write("trap 'rm -f \"$CONTEXT_PYTHON_SCRIPT\" \"$EXEC_PYTHON_SCRIPT\"' EXIT\n")
@@ -165,17 +172,11 @@ def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path):
                 language = 'bash' if 'part_bash' in header else 'python' if 'part_python' in header else None
                 code = '\n'.join(code_lines).strip().replace('\\"', '"')
 
-                # print(f"Header: {header}")
-                # print(f"Language: {language}")
-                # print(f"Code:\n{code}")
-
                 if language == 'bash':
-
                     outfile.write(f"{code}\n")
                     outfile.write("((CURR++))\n")
 
                 elif language == 'python':
-
                     context_code = "\n".join(
                         line for line in code_lines if not line.strip().startswith(('print(', 'subprocess.run')))
                     execution_code = "\n".join(
@@ -217,6 +218,9 @@ def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path):
                     "\\\"datetime\\\": \\\"$datetime\\\""
                     "}\" > \"$EVAL_BUILD\"\n"
                 )
+
+        context_python_script_path.unlink()
+        exec_python_script_path.unlink()
 
         print(f"[INFO] Temp script generated successfully at {temp_sh_path}")
         logger.info("Temp script generated successfully at %s", temp_sh_path)
