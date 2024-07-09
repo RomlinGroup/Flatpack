@@ -1,6 +1,3 @@
 part_bash """
-echo \"Hello from Bash!\"
-"""
-part_python """
-print(\"Hello from Python!\")
+./llama-cli \<br>-m models/gemma-1.1-2b-it-Q4_K_M.gguf \<br>-p \"What is the meaning of life?\" \<br>-n 128<br>
 """
