@@ -108,14 +108,13 @@ def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path):
         soup = BeautifulSoup(script, 'html.parser')
         script = soup.get_text()
 
-        last_count = script.count('part_bash """') + script.count('part_python """')
-
         parts = []
         lines = script.splitlines()
         i = 0
         while i < len(lines):
             line = lines[i].strip()
-            if line.startswith('part_bash """') or line.startswith('part_python """'):
+            if line.startswith('part_bash """') or line.startswith('part_python """') or line.startswith(
+                    'disabled part_bash """') or line.startswith('disabled part_python """'):
                 start_line = i
                 i += 1
                 while i < len(lines) and not lines[i].strip().endswith('"""'):
@@ -125,6 +124,8 @@ def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path):
                     end_line += 1
                 parts.append('\n'.join(lines[start_line:end_line]).strip())
             i += 1
+
+        last_count = sum(1 for part in parts if not part.startswith('disabled'))
 
         temp_sh_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -168,6 +169,10 @@ def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path):
 
                 header = part_lines[0].strip()
                 code_lines = part_lines[1:-1]
+
+                if header.startswith('disabled'):
+                    print(f"Skipping disabled part: {header}")
+                    continue
 
                 language = 'bash' if 'part_bash' in header else 'python' if 'part_python' in header else None
                 code = '\n'.join(code_lines).strip().replace('\\"', '"')
