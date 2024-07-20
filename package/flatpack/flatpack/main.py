@@ -1903,14 +1903,22 @@ app.add_middleware(
 flatpack_directory = None
 
 
-def escape_special_chars(content: str) -> str:
-    """Escape special characters in a given string."""
-    return content.replace('"', '\\"')
+def authenticate_token(request: Request):
+    """Authenticate the token."""
+    global VALIDATION_ATTEMPTS
+    token = request.headers.get('Authorization')
+    stored_token = get_token()
 
+    if not stored_token:
+        return
 
-def unescape_special_chars(content: str) -> str:
-    """Unescape special characters in a given string."""
-    return content.replace('\\"', '"')
+    print(f"[DEBUG] Received token: {token}, Stored token: {stored_token}")
+
+    if token is None or token != f"Bearer {stored_token}":
+        VALIDATION_ATTEMPTS += 1
+        if VALIDATION_ATTEMPTS >= MAX_ATTEMPTS:
+            shutdown_server()
+        raise HTTPException(status_code=403, detail="Invalid or missing token")
 
 
 def escape_content_parts(content: str) -> str:
@@ -1931,6 +1939,35 @@ def escape_content_parts(content: str) -> str:
     return escaped_content
 
 
+def escape_special_chars(content: str) -> str:
+    """Escape special characters in a given string."""
+    return content.replace('"', '\\"')
+
+
+def get_token() -> Optional[str]:
+    """Retrieve the token from the configuration file."""
+    config = load_config()
+    return config.get('token')
+
+
+def set_token(token: str):
+    try:
+        config = load_config()
+        config['token'] = token
+        save_config(config)
+        print("[INFO] Token set successfully!")
+        logger.info("Token set successfully.")
+    except Exception as e:
+        print(f"[ERROR] Failed to set token: {str(e)}")
+        logger.error("Failed to set token: %s", str(e))
+
+
+def shutdown_server():
+    """Shutdown the FastAPI server."""
+    logging.getLogger("uvicorn.error").info("Shutting down the server after maximum validation attempts.")
+    os._exit(0)
+
+
 def unescape_content_parts(content: str) -> str:
     """Unescape special characters within content parts."""
     parts = content.split('part_')
@@ -1949,65 +1986,14 @@ def unescape_content_parts(content: str) -> str:
     return unescaped_content
 
 
-def set_token(token: str):
-    try:
-        config = load_config()
-        config['token'] = token
-        save_config(config)
-        print("[INFO] Token set successfully!")
-        logger.info("Token set successfully.")
-    except Exception as e:
-        print(f"[ERROR] Failed to set token: {str(e)}")
-        logger.error("Failed to set token: %s", str(e))
-
-
-def get_token() -> Optional[str]:
-    """Retrieve the token from the configuration file."""
-    config = load_config()
-    return config.get('token')
+def unescape_special_chars(content: str) -> str:
+    """Unescape special characters in a given string."""
+    return content.replace('\\"', '"')
 
 
 def validate_api_token(api_token: str) -> bool:
     """Validate the API token."""
     return api_token == get_token()
-
-
-def authenticate_token(request: Request):
-    """Authenticate the token."""
-    global VALIDATION_ATTEMPTS
-    token = request.headers.get('Authorization')
-    stored_token = get_token()
-
-    if not stored_token:
-        return
-
-    print(f"[DEBUG] Received token: {token}, Stored token: {stored_token}")
-    if token is None or token != f"Bearer {stored_token}":
-        VALIDATION_ATTEMPTS += 1
-        if VALIDATION_ATTEMPTS >= MAX_ATTEMPTS:
-            shutdown_server()
-        raise HTTPException(status_code=403, detail="Invalid or missing token")
-
-
-def shutdown_server():
-    """Shutdown the FastAPI server."""
-    logging.getLogger("uvicorn.error").info("Shutting down the server after maximum validation attempts.")
-    os._exit(0)
-
-
-@app.post("/api/validate_token")
-async def validate_token(request: Request, api_token: str = Form(...)):
-    """Validate the provided API token."""
-    global VALIDATION_ATTEMPTS
-    stored_token = get_token()
-    if not stored_token:
-        return JSONResponse(content={"message": "API token is not set."}, status_code=200)
-    if validate_api_token(api_token):
-        return JSONResponse(content={"message": "API token is valid."}, status_code=200)
-    VALIDATION_ATTEMPTS += 1
-    if VALIDATION_ATTEMPTS >= MAX_ATTEMPTS:
-        shutdown_server()
-    return JSONResponse(content={"message": "Invalid API token."}, status_code=403)
 
 
 @app.get("/load_file")
@@ -2089,21 +2075,11 @@ async def build_flatpack(
                             status_code=500)
 
 
-@app.post("/api/verify")
-async def verify_flatpack(
-        request: Request,
-        token: str = Depends(authenticate_token)
-):
-    """Trigger the verification process for the flatpack."""
-    if not flatpack_directory:
-        raise HTTPException(status_code=500, detail="Flatpack directory is not set")
-
-    try:
-        fpk_verify(flatpack_directory)
-        return JSONResponse(content={"message": "Verification process completed successfully."}, status_code=200)
-    except Exception as e:
-        logger.error("Verification process failed: %s", e)
-        return JSONResponse(content={"message": f"Verification process failed: {e}"}, status_code=500)
+@app.get("/api/heartbeat")
+async def heartbeat():
+    """Endpoint to check the server heartbeat."""
+    current_time = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
+    return JSONResponse(content={"server_time": current_time}, status_code=200)
 
 
 @app.get("/api/logs")
@@ -2171,11 +2147,49 @@ async def get_log_file(request: Request, log_filename: str, token: str = Depends
         raise HTTPException(status_code=404, detail="Log file not found")
 
 
-@app.get("/api/heartbeat")
-async def heartbeat():
-    """Endpoint to check the server heartbeat."""
-    current_time = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
-    return JSONResponse(content={"server_time": current_time}, status_code=200)
+@app.post("/api/validate_token")
+async def validate_token(request: Request, api_token: str = Form(...)):
+    """Validate the provided API token."""
+    global VALIDATION_ATTEMPTS
+    stored_token = get_token()
+    if not stored_token:
+        return JSONResponse(content={"message": "API token is not set."}, status_code=200)
+    if validate_api_token(api_token):
+        return JSONResponse(content={"message": "API token is valid."}, status_code=200)
+    VALIDATION_ATTEMPTS += 1
+    if VALIDATION_ATTEMPTS >= MAX_ATTEMPTS:
+        shutdown_server()
+    return JSONResponse(content={"message": "Invalid API token."}, status_code=401)
+
+
+@app.post("/api/verify")
+async def verify_flatpack(
+        request: Request,
+        token: str = Depends(authenticate_token)
+):
+    """Trigger the verification process for the flatpack."""
+    if not flatpack_directory:
+        raise HTTPException(status_code=500, detail="Flatpack directory is not set")
+
+    try:
+        fpk_verify(flatpack_directory)
+        return JSONResponse(content={"message": "Verification process completed successfully."}, status_code=200)
+    except Exception as e:
+        logger.error("Verification process failed: %s", e)
+        return JSONResponse(content={"message": f"Verification process failed: {e}"}, status_code=500)
+
+
+def generate_secure_token(length=32):
+    """Generate a secure token of the specified length.
+
+    Args:
+        length (int): The length of the token to generate. Default is 32.
+
+    Returns:
+        str: A securely generated token.
+    """
+    alphabet = string.ascii_letters + string.digits + string.punctuation
+    return ''.join(secrets.choice(alphabet) for _ in range(length))
 
 
 def setup_static_directory(fastapi_app: FastAPI, directory: str):
@@ -2196,19 +2210,6 @@ def setup_static_directory(fastapi_app: FastAPI, directory: str):
         print(f"[ERROR] The directory '{flatpack_directory}' does not exist or is not a directory.")
         logger.error("The directory '%s' does not exist or is not a directory.", flatpack_directory)
         raise ValueError(error_message)
-
-
-def generate_secure_token(length=32):
-    """Generate a secure token of the specified length.
-
-    Args:
-        length (int): The length of the token to generate. Default is 32.
-
-    Returns:
-        str: A securely generated token.
-    """
-    alphabet = string.ascii_letters + string.digits + string.punctuation
-    return ''.join(secrets.choice(alphabet) for _ in range(length))
 
 
 def fpk_cli_handle_run(args, session):
@@ -2288,12 +2289,7 @@ def fpk_cli_handle_run(args, session):
 
 
 def fpk_cli_handle_set_api_key(args, session):
-    """Handle the 'set' command to set the API key.
-
-    Args:
-        args: The command-line arguments.
-        session: The HTTP session.
-    """
+    """Handle the 'set' command to set the API key."""
     print(f"[INFO] Setting API key: {args.api_key}")
     logger.info("Setting API key: %s", args.api_key)
 

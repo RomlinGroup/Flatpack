@@ -4,16 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FPK Editor</title>
-    <style type="text/css">
+    <style>
         /* Reset and global styles */
         * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
             -moz-osx-font-smoothing: grayscale;
             -ms-text-size-adjust: 100%;
             -webkit-font-smoothing: antialiased;
             -webkit-text-size-adjust: 100%;
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
             text-rendering: optimizeLegibility;
         }
 
@@ -60,11 +60,11 @@
         }
 
         .action:last-of-type {
-            margin-right: 0px;
+            margin-right: 0;
         }
 
         .actions {
-            align-items: top;
+            align-items: flex-start;
             border-bottom: 1px solid #5865f2;
             display: flex;
             justify-content: flex-end;
@@ -88,13 +88,9 @@
             background: #31efb8;
         }
 
-        .delete-button svg {
-            width: 15px;
-            height: 15px;
-            fill: #5865f2;
-        }
-
-        .delete-button, .move-up, .move-down {
+        .delete-button,
+        .move-up,
+        .move-down {
             align-items: center;
             border: 1px solid;
             color: #fff;
@@ -108,6 +104,12 @@
             width: 28px;
         }
 
+        .delete-button svg {
+            width: 15px;
+            height: 15px;
+            fill: #5865f2;
+        }
+
         .disconnected {
             background: #ff8d80;
         }
@@ -119,7 +121,11 @@
             font-style: italic;
         }
 
-        .handle, .move-up, .move-down, .toggle-button, .delete-button {
+        .handle,
+        .move-up,
+        .move-down,
+        .toggle-button,
+        .delete-button {
             align-items: center;
             background: #fff;
             border: 0;
@@ -158,23 +164,18 @@
             color: #5865f2;
         }
 
-        .move-up, .move-down {
-            background: #fff;
-            border: 0px;
-            border-right: 1px solid #5865f2;
-            color: #5865f2;
-            font-size: 12px;
-        }
-
-        .part-bash .color-label, .part-python .color-label {
+        .part-bash .color-label,
+        .part-python .color-label {
             background-color: #5865f2;
         }
 
-        .part-bash .eval-label, .part-python .eval-label {
-            background-color: #ff8d80 !important;
+        .part-bash .eval-label,
+        .part-python .eval-label {
+            background-color: #ff8d80;
         }
 
-        .part-python .controls, .part-bash .controls {
+        .part-python .controls,
+        .part-bash .controls {
             border-bottom: 1px solid #5865f2;
             display: flex;
             position: absolute;
@@ -182,7 +183,8 @@
             top: 0;
         }
 
-        .part-python .editor, .part-bash .editor {
+        .part-python .editor,
+        .part-bash .editor {
             background: none;
             border: none;
             color: #fff;
@@ -198,7 +200,8 @@
             word-wrap: break-word;
         }
 
-        .part-python, .part-bash {
+        .part-python,
+        .part-bash {
             background: #000;
             border: 1px solid #5865f2;
             color: #fff;
@@ -211,7 +214,8 @@
             word-break: break-all;
         }
 
-        .part-python.disabled, .part-bash.disabled {
+        .part-python.disabled,
+        .part-bash.disabled {
             opacity: 0.5;
             filter: grayscale(100%);
         }
@@ -219,8 +223,8 @@
         .spinner {
             animation: spin 1s linear infinite;
             border: 10px solid #ffffff;
-            border-top: 10px solid #5865f2;
             border-radius: 50%;
+            border-top: 10px solid #5865f2;
             height: 60px;
             width: 60px;
         }
@@ -269,22 +273,46 @@
         }
 
         .toggle-button {
-            cursor: pointer;
-            width: 28px;
-            height: 28px;
-            display: flex;
             align-items: center;
+            background: #fff;
+            border: 0;
+            border-right: 1px solid #5865f2;
+            color: #5865f2;
+            cursor: pointer;
+            display: flex;
+            font-size: 12px;
+            height: 28px;
             justify-content: center;
-            border-right: 0px;
+            width: 28px;
         }
 
         .toggle-button svg {
-            width: 15px;
-            height: 15px;
             fill: #5865f2;
+            height: 15px;
+            width: 15px;
         }
 
         /* ID selectors */
+        #add-bash-button,
+        #add-python-button,
+        #save-button {
+            background: #5865f2;
+            border: none;
+            color: #fff;
+            cursor: pointer;
+            font-size: 14px;
+            padding: 10px 20px;
+        }
+
+        #add-bash-button,
+        #add-python-button {
+            background: #000;
+        }
+
+        #add-python-button {
+            margin-left: 20px;
+        }
+
         #api-key-authorize {
             background: #5865f2;
             border: none;
@@ -350,7 +378,7 @@
         #filter {
             background: #fff;
             border: 1px solid #5865f2;
-            border-radius: 0px;
+            border-radius: 0;
             color: #5865f2;
             font-size: 12px;
             padding: 5px 10px;
@@ -377,7 +405,9 @@
             width: 10px;
         }
 
-        #hooks, #log, #wrapper {
+        #hooks,
+        #log,
+        #wrapper {
             background: #fff;
             border: 1px solid #5865f2;
             border-top: 0;
@@ -426,23 +456,9 @@
             padding: 20px;
         }
 
-        #save-button, #add-python-button, #add-bash-button {
-            background: #5865f2;
-            border: none;
-            color: #fff;
-            cursor: pointer;
-            font-size: 14px;
-            margin-right: 20px;
-            padding: 10px 20px;
-        }
-
         #save-button {
             margin-left: auto;
-            margin-right: 0px;
-        }
-
-        #add-python-button, #add-bash-button {
-            background: #000;
+            margin-right: 0;
         }
 
         #server-time {
@@ -489,13 +505,15 @@
 
         /* Media queries */
         @media (max-width: 800px) {
-            #hooks, #log, #wrapper {
-                border-left: 0px;
-                border-right: 0px;
-            }
-
             .action:last-of-type {
                 margin-right: 20px;
+            }
+
+            #hooks,
+            #log,
+            #wrapper {
+                border-left: 0;
+                border-right: 0;
             }
         }
 
@@ -504,6 +522,7 @@
             0% {
                 transform: rotate(0deg);
             }
+
             100% {
                 transform: rotate(360deg);
             }
@@ -516,9 +535,9 @@
     <div id="heartbeat-indicator">
         <span id="heartbeat-dot"></span> <span id="heartbeat-time"></span>
     </div>
-</div>
+</div> <!-- END #toolbar -->
 
-<div id="status-bar"></div>
+<div id="status-bar"></div> <!-- END #status-bar -->
 
 <div class="tabs-container">
     <div class="tabs">
@@ -542,7 +561,7 @@
             </svg>
         </div>
     </div>
-</div>
+</div> <!-- END #tabs-container -->
 
 <div class="tab-content active" id="editor-content">
     <div id="wrapper">
@@ -560,14 +579,14 @@
             <button id="save-button">Save</button>
         </div>
     </div>
-</div>
+</div> <!-- END #editor-content -->
 
 <div class="tab-content" id="hooks-content">
     <div id="hooks">
         <h2>Hooks</h2>
         [PLACEHOLDER]
     </div>
-</div>
+</div> <!-- END #hooks-content -->
 
 <div class="tab-content" id="log-content">
     <div id="log">
@@ -579,11 +598,11 @@
             [PLACEHOLDER]
         </div>
     </div>
-</div>
+</div> <!-- END #log-content -->
 
 <div id="footer">
     Powered by <a href="https://fpk.ai">Flatpack</a>
-</div>
+</div> <!-- END #footer -->
 
 <div id="api-key-modal" style="display: none;">
     <div id="api-key-modal-content">
@@ -592,28 +611,22 @@
         <input type="text" id="api-key-input" placeholder="Enter your API token" autocomplete="off">
         <button id="api-key-authorize">Authorize</button>
     </div>
-</div>
+</div> <!-- END #api-key-modal -->
 
 <div id="loading-overlay" style="display: none;">
     <div class="spinner"></div>
-    <p>Building...</p>
-</div>
-
+    <p>Please wait...</p>
+</div> <!-- END #loading-overlay -->
 <script>
     'use strict';
 
-    let currentPart = 1;
-    let originalContent = '';
+    const currentSessionID = getSessionID();
+    const storedSessionID = sessionStorage.getItem('sessionID');
 
-    const eyeIcon = `
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16">
-  <path d="M0 6h2v4H0zM2 4h3v2H2zM2 10h3v2H2zM5 3h2v2H5zM5 11h2v2H5zM7 2h2v2H7zM7 12h2v2H7zM9 3h2v2H9zM9 11h2v2H9zM11 4h3v2h-3zM11 10h3v2h-3zM14 6h2v4h-2zM6 6h4v4H6z" fill="currentColor"/>
-</svg>`;
-
-    const trashIcon = `
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16">
-  <path d="M2 1h12v2H2zM1 3h2v1H1zM13 3h2v1h-2zM3 4h2v11H3zM7 4h2v11H7zM11 4h2v11h-2zM2 15h12v1H2z" fill="currentColor"/>
-</svg>`;
+    if (!storedSessionID || storedSessionID !== currentSessionID) {
+        sessionStorage.removeItem('apiToken');
+        sessionStorage.setItem('sessionID', currentSessionID);
+    }
 
     const languagePatterns = {
         python: {
@@ -630,6 +643,20 @@
             variable: /(?<!\.)\b([a-zA-Z_][a-zA-Z0-9_]*)\b(?=\s*=)|\b\$([a-zA-Z_][a-zA-Z0-9_]*)\b/gm
         }
     };
+
+    const eyeIcon = `
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16">
+  <path d="M0 6h2v4H0zM2 4h3v2H2zM2 10h3v2H2zM5 3h2v2H5zM5 11h2v2H5zM7 2h2v2H7zM7 12h2v2H7zM9 3h2v2H9zM9 11h2v2H9zM11 4h3v2h-3zM11 10h3v2h-3zM14 6h2v4h-2zM6 6h4v4H6z" fill="currentColor"/>
+</svg>`;
+
+    const trashIcon = `
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16">
+  <path d="M2 1h12v2H2zM1 3h2v1H1zM13 3h2v1h-2zM3 4h2v11H3zM7 4h2v11H7zM11 4h2v11h-2zM2 15h12v1H2z" fill="currentColor"/>
+</svg>`;
+
+    let currentPart = 1;
+    let isBuilding = false;
+    let originalContent = '';
 
     function addBashBlock() {
         addBlock('bash');
@@ -739,28 +766,6 @@
         }
     }
 
-    function showLoadingOverlay() {
-        document.getElementById('loading-overlay').style.display = 'flex';
-    }
-
-    function hideLoadingOverlay() {
-        document.getElementById('loading-overlay').style.display = 'none';
-    }
-
-    function disableInteractions() {
-        document.querySelectorAll('button, .action, .editor').forEach(el => {
-            el.setAttribute('disabled', 'true');
-            el.style.pointerEvents = 'none';
-        });
-    }
-
-    function enableInteractions() {
-        document.querySelectorAll('button, .action, .editor').forEach(el => {
-            el.removeAttribute('disabled');
-            el.style.pointerEvents = 'auto';
-        });
-    }
-
     async function buildProject(apiToken) {
         showLoadingOverlay();
         disableInteractions();
@@ -772,10 +777,8 @@
 
             const data = await getEvalJSON(apiToken);
 
-            console.log(data);
-
             const evalPart = data.eval;
-            const isSuccess = data.curr === evalPart || evalPart === null;
+            const isSuccess = data.curr === data.last || evalPart === null;
 
             showStatus(JSON.stringify(data), isSuccess);
 
@@ -785,7 +788,9 @@
                 label.classList.remove('eval-label');
             });
 
-            if (evalPart !== null) {
+            if (data.last === 0) {
+                showStatus("Build completed successfully (no active parts)", true);
+            } else if (evalPart !== null) {
                 const partDiv = document.getElementById('part-' + evalPart);
                 if (partDiv) {
                     const colorLabelDiv = partDiv.querySelector('.color-label');
@@ -813,45 +818,71 @@
         }
     }
 
-    function callAPI(endpoint, apiToken) {
-        const xhr = new XMLHttpRequest();
-        const baseUrl = window.location.origin;
-        const url = `${baseUrl}/api/${endpoint}`;
+    function callAPI(endpoint, apiToken, method = "POST", data = null) {
+        return new Promise((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            const baseUrl = window.location.origin;
+            const url = `${baseUrl}/api/${endpoint}`;
 
-        xhr.open("POST", url, true);
-        xhr.setRequestHeader("Content-Type", "application/json");
-        xhr.setRequestHeader("Authorization", `Bearer ${apiToken}`);
+            xhr.open(method, url, true);
+            xhr.setRequestHeader("Authorization", `Bearer ${apiToken}`);
 
-        const data = JSON.stringify({key: 'value'});
-
-        xhr.onreadystatechange = function () {
-            if (xhr.readyState === 4) {
-                if (xhr.status >= 200 && xhr.status < 300) {
-                    try {
-                        const json = JSON.parse(xhr.responseText);
-                        console.log(`API call to ${endpoint} succeeded:`, json);
-                    } catch (e) {
-                        console.error('Error parsing response JSON:', e);
-                    }
-                } else {
-                    console.error(`HTTP Error: ${xhr.status} ${xhr.statusText}`);
-                    console.error('Response:', xhr.responseText);
-                }
+            if (method === "POST" && data) {
+                xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
             }
-        };
 
-        xhr.onerror = function () {
-            console.error('Network error');
-        };
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4) {
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        try {
+                            const json = JSON.parse(xhr.responseText);
+                            console.log(`API call to ${endpoint} succeeded:`, json);
+                            resolve(json);
+                        } catch (e) {
+                            console.error('Error parsing response JSON:', e);
+                            reject(e);
+                        }
+                    } else {
+                        console.error(`HTTP Error: ${xhr.status} ${xhr.statusText}`);
+                        console.error('Response:', xhr.responseText);
+                        reject(new Error(`HTTP Error: ${xhr.status} ${xhr.statusText}`));
+                    }
+                }
+            };
 
-        try {
-            xhr.send(data);
-        } catch (e) {
-            console.error('Request failed:', e);
-        }
+            xhr.onerror = function () {
+                console.error('Network error');
+                reject(new Error('Network error'));
+            };
+
+            try {
+                if (method === "POST" && data) {
+                    const params = new URLSearchParams();
+                    for (const key in data) {
+                        if (data.hasOwnProperty(key)) {
+                            params.append(key, data[key]);
+                        }
+                    }
+                    xhr.send(params.toString());
+                } else {
+                    xhr.send();
+                }
+            } catch (e) {
+                console.error('Request failed:', e);
+                reject(e);
+            }
+        });
     }
 
-    let isBuilding = false;
+    async function checkApiTokenValidity(apiToken) {
+        try {
+            const response = await callAPI('validate_token', apiToken, 'GET');
+            return response.valid;
+        } catch (error) {
+            console.error('Error checking API token:', error);
+            return false;
+        }
+    }
 
     async function checkHeartbeat(apiToken) {
         const heartbeatDot = document.getElementById('heartbeat-dot');
@@ -916,16 +947,18 @@
         return createControlElement('toggle-button', eyeIcon, () => toggleBlock(block));
     }
 
-    function toggleBlock(block) {
-        block.classList.toggle('disabled');
-        const toggleButton = block.querySelector('.toggle-button');
-        const editor = block.querySelector('.editor');
+    function disableInteractions() {
+        document.querySelectorAll('button, .action, .editor').forEach(el => {
+            el.setAttribute('disabled', 'true');
+            el.style.pointerEvents = 'none';
+        });
+    }
 
-        if (block.classList.contains('disabled')) {
-            editor.contentEditable = 'false';
-        } else {
-            editor.contentEditable = 'true';
-        }
+    function enableInteractions() {
+        document.querySelectorAll('button, .action, .editor').forEach(el => {
+            el.removeAttribute('disabled');
+            el.style.pointerEvents = 'auto';
+        });
     }
 
     async function fetchLatestLogs(apiToken) {
@@ -952,7 +985,6 @@
                         const logData = await logResponse.json();
                         renderLogContent(logData.log);
                     } else {
-                        //console.error('Failed to fetch the latest log:', logResponse.statusText);
                         renderLogContent("Error fetching the latest log.");
                         showStatus('Error fetching the latest log!', false);
                     }
@@ -962,12 +994,10 @@
                     showStatus('No log files found!', false);
                 }
             } else {
-                //console.error('Failed to fetch log files:', response.statusText);
                 renderLogContent("Error fetching log files.");
                 showStatus('Error fetching log files!', false);
             }
         } catch (error) {
-            //console.error('Error fetching log files:', error);
             renderLogContent("Error fetching log files.");
             showStatus('Error fetching log files!', false);
         }
@@ -984,7 +1014,6 @@
                 const data = await response.json();
                 populateLogDropdown(data.logs);
             } else {
-                //console.error('Failed to fetch log files:', response.statusText);
                 showStatus('Error fetching log files!', false);
             }
         } catch (error) {
@@ -994,9 +1023,9 @@
     }
 
     async function fetchSelectedLog() {
+        const apiToken = sessionStorage.getItem('apiToken');
         const logDropdown = document.getElementById('log-dropdown');
         const selectedLog = logDropdown.value;
-        const apiToken = sessionStorage.getItem('apiToken');
 
         if (!selectedLog) {
             renderLogContent('No log file selected.');
@@ -1061,21 +1090,25 @@
         }
     }
 
+    function getSessionID() {
+        return new Date().getTime().toString();
+    }
+
+    function hideLoadingOverlay() {
+        document.getElementById('loading-overlay').style.display = 'none';
+    }
+
     async function initializeApp(apiToken) {
-        const isValid = await validateApiKey(apiToken);
-        if (!isValid) {
-            sessionStorage.removeItem('apiToken');
-            document.getElementById('api-key-modal').style.display = 'flex';
-            return;
+        try {
+            setupEventListeners(apiToken);
+            checkHeartbeat(apiToken);
+            setInterval(() => checkHeartbeat(apiToken), 1000);
+            await loadDefaultFile(apiToken);
+            await fetchLatestLogs(apiToken);
+            await fetchLogFiles(apiToken);
+        } catch (error) {
+            console.error('Error initializing app:', error);
         }
-
-        setupEventListeners(apiToken);
-
-        checkHeartbeat(apiToken);
-        setInterval(() => checkHeartbeat(apiToken), 1000);
-        await loadDefaultFile(apiToken);
-        await fetchLatestLogs(apiToken);
-        await fetchLogFiles(apiToken);
     }
 
     async function loadDefaultFile(apiToken) {
@@ -1294,6 +1327,10 @@
         }
     }
 
+    function showLoadingOverlay() {
+        document.getElementById('loading-overlay').style.display = 'flex';
+    }
+
     function showStatus(message, isSuccess = true) {
         const statusBar = document.getElementById('status-bar');
         if (!statusBar) {
@@ -1316,32 +1353,15 @@
         }, 5000);
     }
 
-    async function validateApiKey(apiToken) {
-        if (!apiToken) {
-            console.warn('API token not provided.');
-            return false;
-        }
+    function toggleBlock(block) {
+        block.classList.toggle('disabled');
+        const toggleButton = block.querySelector('.toggle-button');
+        const editor = block.querySelector('.editor');
 
-        try {
-            const response = await fetch('/api/validate_token', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'Authorization': `Bearer ${apiToken}`
-                },
-                body: new URLSearchParams({'api_token': apiToken})
-            });
-
-            if (!response.ok) {
-                const errorText = await response.text();
-                console.error('Error validating API key:', response.statusText, errorText);
-                return false;
-            }
-
-            return true;
-        } catch (error) {
-            console.error('Error validating API key:', error.message);
-            return false;
+        if (block.classList.contains('disabled')) {
+            editor.contentEditable = 'false';
+        } else {
+            editor.contentEditable = 'true';
         }
     }
 
@@ -1351,84 +1371,79 @@
 
     window.addEventListener('resize', resizeAllTextareas);
 
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', async () => {
         const apiKeyInput = document.getElementById('api-key-input');
         const apiKeyModal = document.getElementById('api-key-modal');
         const apiKeySubmit = document.getElementById('api-key-authorize');
 
-        const initializeApp = async (apiToken) => {
-            const isValid = await validateApiKey(apiToken);
-            if (!isValid) {
-                sessionStorage.removeItem('apiToken');
-                apiKeyModal.style.display = 'flex';
-                return;
-            }
+        function showApiKeyModal() {
+            apiKeyModal.style.display = 'flex';
+        }
 
-            setupEventListeners(apiToken);
-            checkHeartbeat(apiToken);
-            setInterval(() => checkHeartbeat(apiToken), 1000);
-            await loadDefaultFile(apiToken);
-            await fetchLatestLogs(apiToken);
-            await fetchLogFiles(apiToken);
-        };
-
-        const validateApiKey = async (apiToken) => {
+        async function validateAndInitialize(apiToken) {
             try {
-                if (!apiToken) {
-                    console.warn('API token not provided.');
-                    return false;
-                }
+                const formData = new FormData();
+                formData.append('api_token', apiToken);
 
-                const response = await fetch('/api/validate_token', {
+                const response = await fetch('http://127.0.0.1:8000/api/validate_token', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                        'Authorization': `Bearer ${apiToken}`
-                    },
-                    body: new URLSearchParams({'api_token': apiToken})
+                    body: formData
                 });
 
-                if (!response.ok) {
-                    console.error('Error validating API key:', response.statusText);
+                if (response.status === 401) {
+                    console.error('Unauthorized: Invalid API token.');
+                    alert('Please enter a valid API token.');
+                    sessionStorage.removeItem('apiToken');
                     return false;
                 }
 
-                return true;
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.message === 'API token is valid.') {
+                        sessionStorage.setItem('apiToken', apiToken);
+                        await initializeApp(apiToken);
+                        apiKeyModal.style.display = 'none';
+                        return true;
+                    }
+                }
+
+                sessionStorage.removeItem('apiToken');
+                alert('Please enter a valid API token.');
+                return false;
+
             } catch (error) {
-                console.error('Error validating API key:', error.message);
+                if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
+                    alert('Network error. Please try again.');
+                } else {
+                    console.error('Error checking API token:', error);
+                }
+                sessionStorage.removeItem('apiToken');
                 return false;
             }
-        };
-
-        const storedApiToken = sessionStorage.getItem('apiToken');
-        if (storedApiToken) {
-            validateApiKey(storedApiToken).then(isValid => {
-                if (isValid) {
-                    apiKeyModal.style.display = 'none';
-                    initializeApp(storedApiToken);
-                } else {
-                    apiKeyModal.style.display = 'flex';
-                }
-            });
-        } else {
-            apiKeyModal.style.display = 'flex';
         }
 
         apiKeySubmit.addEventListener('click', async () => {
             const apiKey = apiKeyInput.value.trim();
             if (apiKey) {
-                const isValid = await validateApiKey(apiKey);
-                if (isValid) {
-                    sessionStorage.setItem('apiToken', apiKey);
-                    apiKeyModal.style.display = 'none';
-                    initializeApp(apiKey);
-                } else {
-                    alert('Invalid API token. Please enter a valid token.');
+                const isValid = await validateAndInitialize(apiKey);
+                if (!isValid) {
+                    showApiKeyModal();
                 }
             } else {
                 alert('Please enter a valid API token.');
             }
         });
+
+        const storedApiToken = sessionStorage.getItem('apiToken');
+
+        if (storedApiToken) {
+            const isValid = await validateAndInitialize(storedApiToken);
+            if (!isValid) {
+                showApiKeyModal();
+            }
+        } else {
+            showApiKeyModal();
+        }
 
         document.querySelectorAll('.editor').forEach(editor => {
             addEventListenersToEditor(editor);
@@ -1450,7 +1465,7 @@
 
             tab.classList.add('active');
             document.getElementById(`${tab.dataset.tab}-content`).classList.add('active');
-            document.cookie = `activeTab=${tab.dataset.tab}; path=/; SameSite=Lax;`;
+            sessionStorage.setItem('activeTab', tab.dataset.tab); // Update session storage
             resizeAllTextareas();
         };
 
@@ -1458,18 +1473,12 @@
         hooksTab.addEventListener('click', () => setActiveTab(hooksTab));
         logTab.addEventListener('click', () => setActiveTab(logTab));
 
-        const getCookie = (name) => {
-            const value = `; ${document.cookie}`;
-            const parts = value.split(`; ${name}=`);
-            if (parts.length === 2) return parts.pop().split(';').shift();
-        };
-
-        const activeTab = getCookie('activeTab');
+        const activeTab = sessionStorage.getItem('activeTab'); // Get from session storage
         let initialTab = editorTab;
 
         if (activeTab) {
-            const tabFromCookie = document.querySelector(`.tab[data-tab="${activeTab}"]`);
-            if (tabFromCookie) initialTab = tabFromCookie;
+            const tabFromSession = document.querySelector(`.tab[data-tab="${activeTab}"]`);
+            if (tabFromSession) initialTab = tabFromSession;
         }
 
         setActiveTab(initialTab);
