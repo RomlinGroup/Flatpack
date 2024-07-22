@@ -1912,8 +1912,6 @@ def authenticate_token(request: Request):
     if not stored_token:
         return
 
-    print(f"[DEBUG] Received token: {token}, Stored token: {stored_token}")
-
     if token is None or token != f"Bearer {stored_token}":
         VALIDATION_ATTEMPTS += 1
         if VALIDATION_ATTEMPTS >= MAX_ATTEMPTS:
@@ -2213,37 +2211,35 @@ def setup_static_directory(fastapi_app: FastAPI, directory: str):
 
 
 def fpk_cli_handle_run(args, session):
-    """Handle the 'run' command to start the FastAPI server.
-
-    Args:
-        args: The command-line arguments.
-        session: The HTTP session.
-    """
+    """Handle the 'run' command to start the FastAPI server."""
     if not args.input:
         print("[ERROR] Please specify a flatpack for the run command.")
         logger.error("Please specify a flatpack for the run command.")
         return
 
-    directory = args.input
+    directory = Path(args.input).resolve()
+    allowed_directory = Path.cwd()  # Or another allowed base directory
 
-    if os.path.exists(directory) and os.path.isdir(directory):
-        print(f"[INFO] Using provided flatpack: {directory}")
-        logger.info("Using provided flatpack: %s", directory)
-    else:
-        print(f"[ERROR] The flatpack '{directory}' does not exist.")
-        logger.error("The flatpack '%s' does not exist.", directory)
+    if not directory.is_dir() or not directory.exists():
+        print(f"[ERROR] The flatpack '{directory}' does not exist or is not a directory.")
+        logger.error("The flatpack '%s' does not exist or is not a directory.", directory)
+        return
+
+    if not directory.is_relative_to(allowed_directory):
+        print(f"[ERROR] The specified directory is not within allowed paths.")
+        logger.error("The specified directory is not within allowed paths.")
         return
 
     if args.share:
-        fpk_check_ngrok_auth()
+        if not os.environ.get('NGROK_AUTHTOKEN'):
+            print("[ERROR] NGROK_AUTHTOKEN environment variable is not set.")
+            logger.error("NGROK_AUTHTOKEN environment variable is not set.")
+            return
 
     token = generate_secure_token()
-
     print(f"[INFO] Generated API token: {token}")
-    logger.info("Generated API token: %s", token)
-
     print("[INFO] Please save this API token securely. You will not be able to retrieve it again.")
-    logger.info("Please save this API token securely. You will not be able to retrieve it again.")
+    logger.info("API token generated and displayed to user.")
 
     try:
         while True:
@@ -2251,41 +2247,40 @@ def fpk_cli_handle_run(args, session):
             if confirmation == 'YES':
                 break
             print("[INFO] Please save the API token before continuing.")
-            logger.info("Please save the API token before continuing.")
     except KeyboardInterrupt:
-        print(
-            "[ERROR] Process interrupted by user. Please save the API token and try again."
-        )
-        logger.error("Process interrupted by user. Please save the API token and try again.")
-        sys.exit(1)
+        print("\n[INFO] Process interrupted. Exiting.")
+        return
 
     set_token(token)
-    setup_static_directory(app, directory)
+    setup_static_directory(app, str(directory))
 
     try:
         port = 8000
+        host = "127.0.0.1"
 
         if args.share:
-            listener = ngrok.forward(port, authtoken_from_env=True)
+            listener = ngrok.forward(f"{host}:{port}", authtoken_from_env=True)
             public_url = listener.url()
             print(f"[INFO] Ingress established at {public_url}")
             logger.info("Ingress established at %s", public_url)
 
-        config = uvicorn.Config(app, host="127.0.0.1", port=port)
-        global uvicorn_server
-        uvicorn_server = uvicorn.Server(config)
-        uvicorn_server.run()
-    except KeyboardInterrupt:
-        print("[INFO] FastAPI server has been stopped.")
-        logger.info("FastAPI server has been stopped.")
+        config = uvicorn.Config(app, host=host, port=port)
+        server = uvicorn.Server(config)
+        server.run()
+
     except Exception as e:
-        print(f"[ERROR] An unexpected error occurred during server run: {e}")
-        logger.error("An unexpected error occurred during server run: %s", e)
+        print("[ERROR] An unexpected error occurred during server run.")
+        logger.exception("An unexpected error occurred during server run: %s", str(e))
+
     finally:
         if args.share:
-            ngrok.disconnect(public_url)
-            print(f"[INFO] Disconnected ngrok ingress at {public_url}")
-            logger.info("Disconnected ngrok ingress at %s", public_url)
+            try:
+                ngrok.disconnect(public_url)
+                print("[INFO] Disconnected ngrok ingress.")
+                logger.info("Disconnected ngrok ingress.")
+            except Exception as e:
+                print("[ERROR] Failed to disconnect ngrok ingress.")
+                logger.error("Failed to disconnect ngrok ingress: %s", str(e))
 
 
 def fpk_cli_handle_set_api_key(args, session):
