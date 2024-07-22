@@ -608,7 +608,7 @@
     <div id="api-key-modal-content">
         <h2>Enter API token</h2>
         <p>The API token can be found in your terminal.</p>
-        <input type="text" id="api-key-input" placeholder="Enter your API token" autocomplete="off">
+        <input type="password" id="api-key-input" placeholder="Enter your API token" autocomplete="off">
         <button id="api-key-authorize">Authorize</button>
     </div>
 </div> <!-- END #api-key-modal -->
@@ -1465,7 +1465,7 @@
 
             tab.classList.add('active');
             document.getElementById(`${tab.dataset.tab}-content`).classList.add('active');
-            sessionStorage.setItem('activeTab', tab.dataset.tab); // Update session storage
+            sessionStorage.setItem('activeTab', tab.dataset.tab);
             resizeAllTextareas();
         };
 
@@ -1473,7 +1473,7 @@
         hooksTab.addEventListener('click', () => setActiveTab(hooksTab));
         logTab.addEventListener('click', () => setActiveTab(logTab));
 
-        const activeTab = sessionStorage.getItem('activeTab'); // Get from session storage
+        const activeTab = sessionStorage.getItem('activeTab');
         let initialTab = editorTab;
 
         if (activeTab) {
