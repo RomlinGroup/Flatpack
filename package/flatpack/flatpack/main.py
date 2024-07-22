@@ -24,6 +24,7 @@ from typing import List, Optional, Union
 from zipfile import ZipFile
 
 import httpx
+import ngrok
 import requests
 import toml
 import uvicorn
