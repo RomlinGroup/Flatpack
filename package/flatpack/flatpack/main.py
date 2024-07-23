@@ -853,8 +853,6 @@ def load_config():
     try:
         with open(CONFIG_FILE_PATH, 'r') as config_file:
             config = toml.load(config_file)
-            print(f"[INFO] Configuration loaded successfully from {CONFIG_FILE_PATH}")
-            logger.info("Configuration loaded successfully from %s", CONFIG_FILE_PATH)
             return config
     except Exception as e:
         error_message = f"Error loading config: {e}"
