@@ -140,7 +140,6 @@ def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path):
 
         with temp_sh_path.open('w') as outfile:
             outfile.write("#!/bin/bash\n")
-            outfile.write("set -euo pipefail\n")
 
             outfile.write(f"CONTEXT_PYTHON_SCRIPT=\"{context_python_script_path}\"\n")
             outfile.write("EVAL_BUILD=\"$SCRIPT_DIR/eval_build.json\"\n")
