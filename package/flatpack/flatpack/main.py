@@ -31,7 +31,7 @@ import uvicorn
 
 from fastapi import Depends, FastAPI, Form, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from huggingface_hub import snapshot_download
 
@@ -1991,6 +1991,15 @@ def unescape_special_chars(content: str) -> str:
 def validate_api_token(api_token: str) -> bool:
     """Validate the API token."""
     return api_token == get_token()
+
+
+@app.get("/favicon.ico", include_in_schema=False)
+async def favicon():
+    favicon_path = Path(flatpack_directory) / "build" / "favicon.ico"
+    if favicon_path.exists():
+        return FileResponse(favicon_path)
+    else:
+        return Response(status_code=204)
 
 
 @app.get("/load_file")
