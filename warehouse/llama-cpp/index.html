@@ -1267,12 +1267,13 @@
         const parts = Array.from(document.querySelectorAll('.part-python, .part-bash'))
             .map(part => {
                 const editor = part.querySelector('.editor');
-                let code = editor.innerText.trim();
+                let code = editor.innerText;
+
+                code = code.replace(/\n+$/, '');
 
                 if (code === "") return null;
 
                 const type = part.classList.contains('part-python') ? 'part_python' : 'part_bash';
-                code = code.replace(/\n{3,}/g, '\n\n');
 
                 if (type === 'part_bash') {
                     code = code.replace(/\$/g, '\\$');
