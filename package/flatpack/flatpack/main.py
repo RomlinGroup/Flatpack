@@ -13,8 +13,9 @@ import string
 import subprocess
 import sys
 import tempfile
+import warnings
 
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, MarkupResemblesLocatorWarning
 from datetime import datetime
 from importlib.metadata import version
 from io import BytesIO
@@ -51,6 +52,8 @@ VERSION = version("flatpack")
 
 MAX_ATTEMPTS = 5
 VALIDATION_ATTEMPTS = 0
+
+warnings.filterwarnings("ignore", category=MarkupResemblesLocatorWarning)
 
 
 def setup_logging(log_path: Path):
@@ -97,7 +100,7 @@ signal.signal(signal.SIGTERM, handle_termination_signal)
 
 
 def strip_html(content: str) -> str:
-    soup = BeautifulSoup(content, "html.parser")
+    soup = BeautifulSoup(content, 'html.parser')
     return soup.get_text()
 
 
@@ -106,8 +109,7 @@ def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path):
         with custom_sh_path.open('r') as infile:
             script = infile.read()
 
-        soup = BeautifulSoup(script, 'html.parser')
-        script = soup.get_text()
+        script = strip_html(script)
 
         parts = []
         lines = script.splitlines()
