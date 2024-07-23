@@ -1269,6 +1269,7 @@
                 const editor = part.querySelector('.editor');
                 let code = editor.innerText;
 
+                code = code.replace(/\n{3,}/g, '\n\n');
                 code = code.replace(/\n+$/, '');
 
                 if (code === "") return null;
