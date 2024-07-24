@@ -1,6 +1,7 @@
 import argparse
 import ast
 import atexit
+import json
 import logging
 import os
 import re
@@ -16,7 +17,7 @@ import tempfile
 import warnings
 
 from bs4 import BeautifulSoup, MarkupResemblesLocatorWarning
-from datetime import datetime
+from datetime import datetime, timedelta
 from importlib.metadata import version
 from io import BytesIO
 from logging.handlers import RotatingFileHandler
@@ -47,8 +48,9 @@ HOME_DIR.mkdir(exist_ok=True)
 
 BASE_URL = "https://raw.githubusercontent.com/romlingroup/flatpack/main/warehouse"
 CONFIG_FILE_PATH = HOME_DIR / ".fpk_config.toml"
+GITHUB_CACHE = HOME_DIR / ".fpk_github.cache"
+GITHUB_CACHE_EXPIRY = timedelta(hours=1)
 GITHUB_REPO_URL = "https://api.github.com/repos/romlingroup/flatpack"
-KEY_FILE_PATH = HOME_DIR / ".fpk_encryption_key"
 VERSION = version("flatpack")
 
 MAX_ATTEMPTS = 5
@@ -642,7 +644,9 @@ def fpk_fetch_flatpack_toml_from_dir(directory_name: str, session: httpx.Client)
 
 
 def fpk_fetch_github_dirs(session: httpx.Client) -> List[str]:
-    """Fetch a list of directory names from the GitHub repository.
+    """
+    Fetch a list of directory names from the GitHub repository.
+    Uses local caching to reduce GitHub API calls.
 
     Args:
         session (httpx.Client): HTTP client session for making requests.
@@ -650,6 +654,17 @@ def fpk_fetch_github_dirs(session: httpx.Client) -> List[str]:
     Returns:
         List[str]: List of directory names.
     """
+    if os.path.exists(GITHUB_CACHE):
+        with open(GITHUB_CACHE, 'r') as f:
+            cache_data = json.load(f)
+
+        cache_time = datetime.fromisoformat(cache_data['timestamp'])
+
+        if datetime.now() - cache_time < GITHUB_CACHE_EXPIRY:
+            print(f"[INFO] Using cached directory names ({cache_time})")
+            logger.info("Using cached directory names (%s)", cache_time)
+            return cache_data['directories']
+
     try:
         response = session.get(f"{GITHUB_REPO_URL}/contents/warehouse")
         response.raise_for_status()
@@ -663,28 +678,35 @@ def fpk_fetch_github_dirs(session: httpx.Client) -> List[str]:
                         item.get('name', '').lower()
                 )
             ]
-            logger.info("Fetched directory names from GitHub: %s", directories)
-            return sorted(directories)
+
+            directories = sorted(directories)
+
+            os.makedirs(HOME_DIR, exist_ok=True)
+
+            with open(GITHUB_CACHE, 'w') as f:
+                json.dump({
+                    'timestamp': datetime.now().isoformat(),
+                    'directories': directories
+                }, f)
+
+            print(f"[INFO] Fetched and cached directory names from GitHub: {directories}")
+            logger.info("Fetched and cached directory names from GitHub: %s", directories)
+            return directories
 
         message = f"Unexpected response format from GitHub: {json_data}"
-
         print(f"[ERROR] {message}")
         logger.error("%s", message)
-
         return []
+
     except httpx.HTTPError as e:
         message = f"Unable to connect to GitHub: {e}"
-
         print(f"[ERROR] {message}")
         logger.error("%s", message)
-
         sys.exit(1)
     except (ValueError, KeyError) as e:
         message = f"Error processing the response from GitHub: {e}"
-
         print(f"[ERROR] {message}")
         logger.error("%s", message)
-
         return []
 
 
