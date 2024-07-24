@@ -661,8 +661,8 @@ def fpk_fetch_github_dirs(session: httpx.Client) -> List[str]:
         cache_time = datetime.fromisoformat(cache_data['timestamp'])
 
         if datetime.now() - cache_time < GITHUB_CACHE_EXPIRY:
-            print(f"[INFO] Using cached directory names ({cache_time})")
-            logger.info("Using cached directory names (%s)", cache_time)
+            print(f"[INFO] Using cached GitHub dirs ({cache_time})")
+            logger.info("Using cached GitHub dirs (%s)", cache_time)
             return cache_data['directories']
 
     try:
@@ -689,8 +689,8 @@ def fpk_fetch_github_dirs(session: httpx.Client) -> List[str]:
                     'directories': directories
                 }, f)
 
-            print(f"[INFO] Fetched and cached directory names from GitHub: {directories}")
-            logger.info("Fetched and cached directory names from GitHub: %s", directories)
+            print(f"[INFO] Cached GitHub dirs: {directories}")
+            logger.info("Cached GitHub dirs: %s", directories)
             return directories
 
         message = f"Unexpected response format from GitHub: {json_data}"
