@@ -21,6 +21,7 @@ from importlib.metadata import version
 from io import BytesIO
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
+from prettytable import PrettyTable
 from typing import List, Optional, Union
 from zipfile import ZipFile
 
@@ -1854,7 +1855,15 @@ def fpk_cli_handle_list(args, session):
     """Handle the 'list' command to fetch and print the list of directories."""
     directories = fpk_list_directories(session)
     if directories:
-        print(directories)
+        table = PrettyTable()
+        table.field_names = ["Index", "Directory Name"]
+        table.align["Index"] = "r"
+        table.align["Directory Name"] = "l"
+
+        for index, directory in enumerate(directories.split('\n'), start=1):
+            table.add_row([index, directory])
+
+        print(table)
         logger.info("Directories found: %s", directories)
     else:
         print("[ERROR] No directories found.")

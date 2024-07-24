@@ -78,6 +78,9 @@ Check out the [JLA - Compatibility Checker](https://joinup.ec.europa.eu/collecti
 - **[nltk](https://pypi.org/project/nltk/)**\
   Apache Software License (Apache License, Version 2.0) ([LICENSE](https://github.com/nltk/nltk/blob/develop/LICENSE.txt))
 
+- **[prettytable](https://pypi.org/project/prettytable/)**\
+  BSD License (BSD (3 clause)) ([LICENSE](https://github.com/jazzband/prettytable/blob/main/LICENSE))
+
 - **[psutil](https://pypi.org/project/psutil/)**\
   BSD License (BSD-3-Clause) ([LICENSE](https://github.com/giampaolo/psutil/blob/master/LICENSE))
 
@@ -102,4 +105,4 @@ Check out the [JLA - Compatibility Checker](https://joinup.ec.europa.eu/collecti
 - **[uvicorn](https://pypi.org/project/uvicorn/)**\
   BSD License ([LICENSE](https://github.com/encode/uvicorn/blob/master/LICENSE.md))
 
-Last updated: 2024-06-24
+Last updated: 2024-07-24
