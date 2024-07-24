@@ -1,6 +1,5 @@
 part_bash """
-echo \"Hello from Bash!\"
-"""
-part_python """
-print(\"Hello from Python!\")
+if [ -f ../tiger.png ]; then
+    cp -f ../tiger.png tiger.png
+fi
 """
