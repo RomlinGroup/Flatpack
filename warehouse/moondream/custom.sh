@@ -4,9 +4,6 @@ if [ -f ../tiger.png ]; then
 fi
 """
 part_bash """
-../bin/pip install transformers==4.41.2
-"""
-part_bash """
 ../bin/python sample.py \
 --cpu \
 --image \"tiger.png\" \
