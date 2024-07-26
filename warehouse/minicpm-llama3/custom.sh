@@ -6,14 +6,14 @@ wget https://huggingface.co/openbmb/MiniCPM-Llama3-V-2_5-gguf/resolve/main/ggml-
 """
 part_bash """
 ./minicpmv-cli \
--m ggml-model-Q4_K_M.gguf \
---mmproj mmproj-model-f16.gguf \
--c 4096 \
---temp 0.7 \
---top-p 0.8 \
---top-k 100 \
---repeat-penalty 1.05 \
 --image tiger.png \
+--mmproj mmproj-model-f16.gguf \
+--repeat-penalty 1.05 \
+--temp 0.7 \
+--top-k 100 \
+--top-p 0.8 \
+-c 4096 \
+-m ggml-model-Q4_K_M.gguf \
 -p \"Should I pet this dog?\" \
 > output.txt \
 2>/dev/null

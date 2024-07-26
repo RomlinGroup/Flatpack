@@ -11,8 +11,8 @@ fi
 part_bash """
 ./llama-cli \
 -m models/gemma-1.1-2b-it.Q4_K_M.gguf \
--p \"What is the meaning of life?\" \
 -n 64 \
+-p \"What is the meaning of life?\" \
 > output.txt \
 2>/dev/null
 """
