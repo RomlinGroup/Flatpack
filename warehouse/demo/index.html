@@ -144,26 +144,6 @@
             width: auto;
         }
 
-        .highlight-comment {
-            color: #777;
-        }
-
-        .highlight-function {
-            color: #ff8d80;
-        }
-
-        .highlight-output {
-            color: #f5e342;
-        }
-
-        .highlight-string {
-            color: #31efb8;
-        }
-
-        .highlight-variable {
-            color: #5865f2;
-        }
-
         .part-bash .color-label,
         .part-python .color-label {
             background-color: #5865f2;
@@ -628,22 +608,6 @@
         sessionStorage.setItem('sessionID', currentSessionID);
     }
 
-    const languagePatterns = {
-        python: {
-            comment: /(#.*?$)/gm,
-            function: /\b(def\s+[a-zA-Z_][a-zA-Z0-9_]*)\s*(?=\()/gm,
-            string: /("""[\s\S]*?"""|'''[\s\S]*?'''|"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*')/gm,
-            output: /\b(import|print)\b/gm,
-            variable: /(?<!\.)\b([a-zA-Z_][a-zA-Z0-9_]*)\b(?=\s*=)/gm
-        }, bash: {
-            comment: /(#.*?$)/gm,
-            function: /\bfunction\s+([a-zA-Z_][a-zA-Z0-9_]*)\b|\b([a-zA-Z_][a-zA-Z0-9_]*)\s*\(\s*\)\s*\{/gm,
-            string: /"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'/gm,
-            output: /\b(echo|exit|export|pwd)\b/gm,
-            variable: /(?<!\.)\b([a-zA-Z_][a-zA-Z0-9_]*)\b(?=\s*=)|\b\$([a-zA-Z_][a-zA-Z0-9_]*)\b/gm
-        }
-    };
-
     const eyeIcon = `
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16">
   <path d="M0 6h2v4H0zM2 4h3v2H2zM2 10h3v2H2zM5 3h2v2H5zM5 11h2v2H5zM7 2h2v2H7zM7 12h2v2H7zM9 3h2v2H9zM9 11h2v2H9zM11 4h3v2h-3zM11 10h3v2h-3zM14 6h2v4h-2zM6 6h4v4H6z" fill="currentColor"/>
@@ -692,8 +656,6 @@
         block.appendChild(controls);
 
         document.getElementById('file-content').appendChild(block);
-
-        applySyntaxHighlighting(editor, type);
     }
 
     function addEventListenersToEditor(editor) {
@@ -704,66 +666,11 @@
                 resizeEditor(event.target);
             }
         });
+        editor.addEventListener('paste', stripFormatting);
     }
 
     function addPythonBlock() {
         addBlock('python');
-    }
-
-    function applySyntaxHighlighting(editor, language) {
-        const patterns = languagePatterns[language];
-        if (patterns) {
-            let html = editor.innerText.replace(/\$/g, '__DOLLAR__');
-
-            const stringMatches = [];
-            html = html.replace(patterns.string, (match) => {
-                stringMatches.push(match);
-                return `__STRING_PLACEHOLDER_${stringMatches.length - 1}__`;
-            });
-
-            const sortedPatterns = Object.entries(patterns).sort(([a], [b]) => a.localeCompare(b));
-            for (const [type, pattern] of sortedPatterns) {
-                if (type === 'comment') {
-                    html = html.replace(pattern, (match) => {
-                        return `[HIGHLIGHT-COMMENT]${match}[/HIGHLIGHT-COMMENT]`;
-                    });
-                } else if (type === 'function') {
-                    html = html.replace(pattern, (match, p1) => {
-                        return `[HIGHLIGHT-FUNCTION]${p1}[/HIGHLIGHT-FUNCTION]`;
-                    });
-                } else if (type === 'output') {
-                    html = html.replace(pattern, (match, p1) => {
-                        return `[HIGHLIGHT-OUTPUT]${p1}[/HIGHLIGHT-OUTPUT]`;
-                    });
-                } else if (type === 'variable') {
-                    html = html.replace(pattern, (match, p1) => {
-                        return `[HIGHLIGHT-VARIABLE]${p1}[/HIGHLIGHT-VARIABLE]`;
-                    });
-                }
-            }
-
-            html = html.replace(/__STRING_PLACEHOLDER_(\d+)__/g, (match, index) => {
-                return stringMatches[parseInt(index, 10)];
-            });
-
-            html = html.replace(patterns.string, (match) => {
-                return `[HIGHLIGHT-STRING]${match}[/HIGHLIGHT-STRING]`;
-            });
-
-            html = html.replace(/\[HIGHLIGHT-COMMENT\]/g, '<span class="highlight-comment">')
-                .replace(/\[\/HIGHLIGHT-COMMENT\]/g, '</span>')
-                .replace(/\[HIGHLIGHT-STRING\]/g, '<span class="highlight-string">')
-                .replace(/\[\/HIGHLIGHT-STRING\]/g, '</span>')
-                .replace(/\[HIGHLIGHT-FUNCTION\]/g, '<span class="highlight-function">')
-                .replace(/\[\/HIGHLIGHT-FUNCTION\]/g, '</span>')
-                .replace(/\[HIGHLIGHT-OUTPUT\]/g, '<span class="highlight-output">')
-                .replace(/\[\/HIGHLIGHT-OUTPUT\]/g, '</span>')
-                .replace(/\[HIGHLIGHT-VARIABLE\]/g, '<span class="highlight-variable">')
-                .replace(/\[\/HIGHLIGHT-VARIABLE\]/g, '</span>');
-
-            html = html.replace(/__DOLLAR__/g, '$');
-            editor.innerHTML = html;
-        }
     }
 
     async function buildProject(apiToken) {
@@ -1234,8 +1141,6 @@
                 block.appendChild(controls);
                 fileContentElement.appendChild(block);
 
-                applySyntaxHighlighting(editor, type.split('_')[1]);
-
                 if (isDisabled) {
                     const toggleButton = block.querySelector('.toggle-button');
                 }
@@ -1353,6 +1258,12 @@
             statusBar.style.display = 'none';
             statusBar.classList.remove('success', 'error');
         }, 5000);
+    }
+
+    function stripFormatting(e) {
+        e.preventDefault();
+        const text = (e.originalEvent || e).clipboardData.getData('text/plain');
+        document.execCommand('insertText', false, text);
     }
 
     function toggleBlock(block) {
