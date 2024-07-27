@@ -39,6 +39,7 @@ from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from huggingface_hub import snapshot_download
 from prettytable import PrettyTable
+from pydantic import BaseModel
 
 from .agent_manager import AgentManager
 from .parsers import parse_toml_to_venv_script
@@ -64,6 +65,7 @@ warnings.filterwarnings("ignore", category=MarkupResemblesLocatorWarning)
 def initialize_database(db_path: str):
     """Initialize the SQLite database."""
     try:
+        print(f"[DEBUG] Initializing database at path: {db_path}")
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
 
@@ -284,6 +286,10 @@ def fpk_build(directory: Union[str, None]):
     Returns:
         None
     """
+    if directory:
+        db_path = os.path.join(directory, 'build', 'flatpack.db')
+        initialize_database(db_path)
+
     cache_file_path = HOME_DIR / ".fpk_unbox.cache"
 
     print(f"[INFO] Looking for cached flatpack in {cache_file_path}.")
@@ -970,13 +976,15 @@ def fpk_unbox(directory_name: str, session, local: bool = False):
         return
 
     flatpack_dir = Path.cwd() / directory_name
+    build_dir = flatpack_dir / "build"
+    db_path = build_dir / 'flatpack.db'
+    initialize_database(str(db_path))
 
     if flatpack_dir.exists() and not local:
         message = "Flatpack directory already exists."
         print(f"[ERROR] {message}")
         logger.error("%s", message)
         return
-    build_dir = flatpack_dir / "build"
 
     if build_dir.exists():
         message = "Build directory already exists."
@@ -1956,6 +1964,11 @@ atexit.register(fpk_safe_cleanup)
 app = FastAPI()
 
 
+class Hook(BaseModel):
+    hook_name: str
+    hook_script: str
+
+
 class EndpointFilter(logging.Filter):
     def filter(self, record):
         return 'GET /api/heartbeat' not in record.getMessage()
@@ -1975,6 +1988,29 @@ app.add_middleware(
 flatpack_directory = None
 
 
+def add_hook_to_database(hook: Hook):
+    global flatpack_directory
+    if not flatpack_directory:
+        raise HTTPException(status_code=500, detail="Flatpack directory is not set")
+
+    db_path = os.path.join(flatpack_directory, 'build', 'flatpack.db')
+    try:
+        ensure_database_initialized()
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT INTO flatpack_hooks (hook_name, hook_script)
+            VALUES (?, ?)
+        """, (hook.hook_name, hook.hook_script))
+        conn.commit()
+        conn.close()
+        return {"message": "Hook added successfully."}
+    except Error as e:
+        logger.error("An error occurred while adding the hook: %s", e)
+        print(f"[ERROR] An error occurred while adding the hook: {e}")
+        raise HTTPException(status_code=500, detail=f"An error occurred while adding the hook: {e}")
+
+
 def authenticate_token(request: Request):
     """Authenticate the token."""
     global VALIDATION_ATTEMPTS
@@ -1982,13 +2018,28 @@ def authenticate_token(request: Request):
     stored_token = get_token()
 
     if not stored_token:
+        logger.error("Stored token is not set")
+        print("Stored token is not set")
         return
+
+    logger.info(f"Received token: {token}")
+    print(f"Received token: {token}")
+    logger.info(f"Stored token: Bearer {stored_token}")
+    print(f"Stored token: Bearer {stored_token}")
 
     if token is None or token != f"Bearer {stored_token}":
         VALIDATION_ATTEMPTS += 1
+        logger.error(f"Invalid or missing token. Attempt {VALIDATION_ATTEMPTS}")
+        print(f"Invalid or missing token. Attempt {VALIDATION_ATTEMPTS}")
         if VALIDATION_ATTEMPTS >= MAX_ATTEMPTS:
             shutdown_server()
         raise HTTPException(status_code=403, detail="Invalid or missing token")
+
+
+def ensure_database_initialized():
+    if flatpack_directory:
+        db_path = os.path.join(flatpack_directory, 'build', 'flatpack.db')
+        initialize_database(db_path)
 
 
 def escape_content_parts(content: str) -> str:
@@ -2130,6 +2181,20 @@ async def save_file(
         raise HTTPException(status_code=500, detail=f"Failed to save file: {e}")
 
 
+@app.get("/test_db")
+async def test_db():
+    db_path = os.path.join(flatpack_directory, 'build', 'flatpack.db')
+    try:
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        cursor.execute("SELECT 1")
+        conn.close()
+        return {"message": "Database connection successful"}
+    except Error as e:
+        logger.error("Database connection failed: %s", e)
+        return {"message": f"Database connection failed: {e}"}
+
+
 @app.post("/api/build")
 async def build_flatpack(
         request: Request,
@@ -2159,6 +2224,18 @@ async def heartbeat():
     """Endpoint to check the server heartbeat."""
     current_time = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
     return JSONResponse(content={"server_time": current_time}, status_code=200)
+
+
+@app.post("/api/hooks")
+async def add_hook(hook: Hook, token: str = Depends(authenticate_token)):
+    try:
+        response = add_hook_to_database(hook)
+        return JSONResponse(content=response, status_code=201)
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        logger.error("Failed to add hook: %s", e)
+        raise HTTPException(status_code=500, detail="Failed to add hook.")
 
 
 @app.get("/api/logs")
@@ -2267,7 +2344,7 @@ def generate_secure_token(length=32):
     Returns:
         str: A securely generated token.
     """
-    alphabet = string.ascii_letters + string.digits + string.punctuation
+    alphabet = string.ascii_letters + string.digits + '-._~'
     return ''.join(secrets.choice(alphabet) for _ in range(length))
 
 
