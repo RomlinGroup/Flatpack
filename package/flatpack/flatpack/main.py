@@ -1990,10 +1990,12 @@ flatpack_directory = None
 
 def add_hook_to_database(hook: Hook):
     global flatpack_directory
+
     if not flatpack_directory:
         raise HTTPException(status_code=500, detail="Flatpack directory is not set")
 
     db_path = os.path.join(flatpack_directory, 'build', 'flatpack.db')
+
     try:
         ensure_database_initialized()
         conn = sqlite3.connect(db_path)
