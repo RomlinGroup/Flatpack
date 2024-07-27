@@ -68,6 +68,15 @@ def initialize_database(db_path: str):
         cursor = conn.cursor()
 
         cursor.execute("""
+            CREATE TABLE IF NOT EXISTS flatpack_hooks (
+                id INTEGER PRIMARY KEY,
+                hook_name TEXT NOT NULL,
+                hook_script TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+
+        cursor.execute("""
             CREATE TABLE IF NOT EXISTS flatpack_metadata (
                 id INTEGER PRIMARY KEY,
                 key TEXT NOT NULL,
