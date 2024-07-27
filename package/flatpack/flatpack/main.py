@@ -9,6 +9,7 @@ import secrets
 import shlex
 import shutil
 import signal
+import sqlite3
 import stat
 import string
 import subprocess
@@ -16,13 +17,12 @@ import sys
 import tempfile
 import warnings
 
-from bs4 import BeautifulSoup, MarkupResemblesLocatorWarning
 from datetime import datetime, timedelta
 from importlib.metadata import version
 from io import BytesIO
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
-from prettytable import PrettyTable
+from sqlite3 import Error
 from typing import List, Optional, Union
 from zipfile import ZipFile
 
@@ -32,11 +32,13 @@ import requests
 import toml
 import uvicorn
 
+from bs4 import BeautifulSoup, MarkupResemblesLocatorWarning
 from fastapi import Depends, FastAPI, Form, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from huggingface_hub import snapshot_download
+from prettytable import PrettyTable
 
 from .agent_manager import AgentManager
 from .parsers import parse_toml_to_venv_script
@@ -57,6 +59,29 @@ MAX_ATTEMPTS = 5
 VALIDATION_ATTEMPTS = 0
 
 warnings.filterwarnings("ignore", category=MarkupResemblesLocatorWarning)
+
+
+def initialize_database(db_path: str):
+    """Initialize the SQLite database."""
+    try:
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS flatpack_metadata (
+                id INTEGER PRIMARY KEY,
+                key TEXT NOT NULL,
+                value TEXT NOT NULL
+            )
+        """)
+
+        conn.commit()
+        conn.close()
+        print(f"[INFO] Database initialized successfully at {db_path}")
+        logger.info("Database initialized successfully at %s", db_path)
+    except Error as e:
+        print(f"[ERROR] An error occurred while initializing the database: {e}")
+        logger.error("An error occurred while initializing the database: %s", e)
 
 
 def setup_logging(log_path: Path):
@@ -855,13 +880,9 @@ def fpk_safe_cleanup():
 
             if file_path.exists():
                 file_path.unlink()
-                message = f"Deleted {filename}."
-                print("[INFO] %s", message)
-                logger.info(message)
+                print(f"Deleted {filename}.")
     except Exception as e:
-        error_message = f"Exception during safe_cleanup: {e}"
-        print("[ERROR] %s", error_message)
-        logger.error(error_message)
+        print(f"Exception during safe_cleanup: {e}")
 
 
 def load_config():
@@ -976,9 +997,11 @@ def fpk_unbox(directory_name: str, session, local: bool = False):
             return
 
     temp_toml_path.write_text(toml_content)
+
     bash_script_content = parse_toml_to_venv_script(str(temp_toml_path), env_name=flatpack_dir)
     bash_script_path = build_dir / 'flatpack.sh'
     bash_script_path.write_text(bash_script_content)
+
     temp_toml_path.unlink()
 
     message = f"Unboxing {directory_name}..."
@@ -989,9 +1012,15 @@ def fpk_unbox(directory_name: str, session, local: bool = False):
 
     try:
         subprocess.run(['/bin/bash', safe_script_path], check=True)
+
         print("[INFO] All done!")
         logger.info("All done!")
+
+        db_path = build_dir / 'flatpack.db'
+        initialize_database(str(db_path))
+
         fpk_cache_unbox(str(flatpack_dir))
+
     except subprocess.CalledProcessError as e:
         message = f"Failed to execute the bash script: {e}"
         print(f"[ERROR] {message}")
@@ -1000,6 +1029,8 @@ def fpk_unbox(directory_name: str, session, local: bool = False):
         message = f"An unexpected error occurred: {e}"
         print(f"[ERROR] {message}")
         logger.error(message)
+    finally:
+        bash_script_path.unlink()
 
 
 def fpk_valid_directory_name(name: str) -> bool:
