@@ -110,7 +110,7 @@ def setup_logging(log_path: Path):
 
 
 # Initialize the logger
-global_log_file_path = HOME_DIR / "fpk_local_only.log"
+global_log_file_path = HOME_DIR / ".fpk_logger.log"
 logger = setup_logging(global_log_file_path)
 os.chmod(global_log_file_path, 0o600)
 
