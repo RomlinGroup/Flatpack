@@ -84,9 +84,6 @@ Check out the [JLA - Compatibility Checker](https://joinup.ec.europa.eu/collecti
 - **[psutil](https://pypi.org/project/psutil/)**\
   BSD License (BSD-3-Clause) ([LICENSE](https://github.com/giampaolo/psutil/blob/master/LICENSE))
 
-- **[pydantic](https://pypi.org/project/pydantic/)**\
-  MIT License ([LICENSE](https://github.com/pydantic/pydantic/blob/main/LICENSE))
-
 - **[pypdf](https://pypi.org/project/pypdf/)**\
   BSD License ([LICENSE](https://github.com/py-pdf/pypdf/blob/main/LICENSE))
 
@@ -108,4 +105,4 @@ Check out the [JLA - Compatibility Checker](https://joinup.ec.europa.eu/collecti
 - **[uvicorn](https://pypi.org/project/uvicorn/)**\
   BSD License ([LICENSE](https://github.com/encode/uvicorn/blob/master/LICENSE.md))
 
-Last updated: 2024-07-24
+Last updated: 2024-07-27
