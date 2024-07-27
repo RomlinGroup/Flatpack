@@ -13,7 +13,7 @@ part_bash """
 """
 part_bash """
 if [ -f \"output.txt\" ]; then
-    echo \"🪝 Running hooks for output.txt:\"
+    echo \"Running hooks for output.txt:\"
     cat output.txt
 else
     echo \"Error: output.txt does not exist.\"
