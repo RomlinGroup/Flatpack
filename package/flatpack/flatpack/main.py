@@ -65,6 +65,11 @@ warnings.filterwarnings("ignore", category=MarkupResemblesLocatorWarning)
 def initialize_database(db_path: str):
     """Initialize the SQLite database."""
     try:
+        db_dir = os.path.dirname(db_path)
+        if not os.path.exists(db_dir):
+            os.makedirs(db_dir)
+            print(f"[DEBUG] Created directory for database at path: {db_dir}")
+
         print(f"[DEBUG] Initializing database at path: {db_path}")
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
@@ -978,7 +983,6 @@ def fpk_unbox(directory_name: str, session, local: bool = False):
     flatpack_dir = Path.cwd() / directory_name
     build_dir = flatpack_dir / "build"
     db_path = build_dir / 'flatpack.db'
-    initialize_database(str(db_path))
 
     if flatpack_dir.exists() and not local:
         message = "Flatpack directory already exists."
@@ -1033,8 +1037,8 @@ def fpk_unbox(directory_name: str, session, local: bool = False):
         print("[INFO] All done!")
         logger.info("All done!")
 
-        db_path = build_dir / 'flatpack.db'
         initialize_database(str(db_path))
+        print(f"[INFO] Database initialized at {db_path}")
 
         fpk_cache_unbox(str(flatpack_dir))
 
