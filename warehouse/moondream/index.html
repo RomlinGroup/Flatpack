@@ -144,24 +144,32 @@
             width: auto;
         }
 
-        .highlight-comment {
-            color: #777;
+        .hook-label {
+            background: #31efb8;
+            height: 5px;
+            left: 0;
+            position: absolute;
+            top: 0;
+            width: 100%;
         }
 
-        .highlight-function {
-            color: #ff8d80;
+        .hook-name {
+            font-family: monospace;
+            font-size: 14px;
+            line-height: 1.5em;
         }
 
-        .highlight-output {
-            color: #f5e342;
-        }
-
-        .highlight-string {
+        .hook-name span {
             color: #31efb8;
         }
 
-        .highlight-variable {
-            color: #5865f2;
+        .hook-script {
+            color: #fff;
+            font-family: monospace;
+            font-size: 14px;
+            line-height: 1.5em;
+            white-space: pre-wrap;
+            word-wrap: break-word;
         }
 
         .part-bash .color-label,
@@ -418,6 +426,27 @@
             width: 100%;
         }
 
+        #hooks-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        #hooks-list li {
+            background: #000;
+            border: 1px solid #31efb8;
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 20px;
+            padding: 20px;
+            transition: background 0.3s ease;
+            position: relative;
+        }
+
+        #hooks-list li:last-of-type {
+            margin-bottom: 0px;
+        }
+
         #loading-overlay {
             align-items: center;
             background-color: rgba(0, 0, 0, 0.75);
@@ -584,7 +613,7 @@
 <div class="tab-content" id="hooks-content">
     <div id="hooks">
         <h2>Hooks</h2>
-        [PLACEHOLDER]
+        <div id="hooks-list"></div>
     </div>
 </div> <!-- END #hooks-content -->
 
@@ -620,6 +649,8 @@
 <script>
     'use strict';
 
+    const getBaseUrl = () => window.location.origin;
+
     const currentSessionID = getSessionID();
     const storedSessionID = sessionStorage.getItem('sessionID');
 
@@ -627,22 +658,6 @@
         sessionStorage.removeItem('apiToken');
         sessionStorage.setItem('sessionID', currentSessionID);
     }
-
-    const languagePatterns = {
-        python: {
-            comment: /(#.*?$)/gm,
-            function: /\b(def\s+[a-zA-Z_][a-zA-Z0-9_]*)\s*(?=\()/gm,
-            string: /("""[\s\S]*?"""|'''[\s\S]*?'''|"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*')/gm,
-            output: /\b(import|print)\b/gm,
-            variable: /(?<!\.)\b([a-zA-Z_][a-zA-Z0-9_]*)\b(?=\s*=)/gm
-        }, bash: {
-            comment: /(#.*?$)/gm,
-            function: /\bfunction\s+([a-zA-Z_][a-zA-Z0-9_]*)\b|\b([a-zA-Z_][a-zA-Z0-9_]*)\s*\(\s*\)\s*\{/gm,
-            string: /"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'/gm,
-            output: /\b(echo|exit|export|pwd)\b/gm,
-            variable: /(?<!\.)\b([a-zA-Z_][a-zA-Z0-9_]*)\b(?=\s*=)|\b\$([a-zA-Z_][a-zA-Z0-9_]*)\b/gm
-        }
-    };
 
     const eyeIcon = `
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16">
@@ -692,8 +707,6 @@
         block.appendChild(controls);
 
         document.getElementById('file-content').appendChild(block);
-
-        applySyntaxHighlighting(editor, type);
     }
 
     function addEventListenersToEditor(editor) {
@@ -704,66 +717,11 @@
                 resizeEditor(event.target);
             }
         });
+        editor.addEventListener('paste', stripFormatting);
     }
 
     function addPythonBlock() {
         addBlock('python');
-    }
-
-    function applySyntaxHighlighting(editor, language) {
-        const patterns = languagePatterns[language];
-        if (patterns) {
-            let html = editor.innerText.replace(/\$/g, '__DOLLAR__');
-
-            const stringMatches = [];
-            html = html.replace(patterns.string, (match) => {
-                stringMatches.push(match);
-                return `__STRING_PLACEHOLDER_${stringMatches.length - 1}__`;
-            });
-
-            const sortedPatterns = Object.entries(patterns).sort(([a], [b]) => a.localeCompare(b));
-            for (const [type, pattern] of sortedPatterns) {
-                if (type === 'comment') {
-                    html = html.replace(pattern, (match) => {
-                        return `[HIGHLIGHT-COMMENT]${match}[/HIGHLIGHT-COMMENT]`;
-                    });
-                } else if (type === 'function') {
-                    html = html.replace(pattern, (match, p1) => {
-                        return `[HIGHLIGHT-FUNCTION]${p1}[/HIGHLIGHT-FUNCTION]`;
-                    });
-                } else if (type === 'output') {
-                    html = html.replace(pattern, (match, p1) => {
-                        return `[HIGHLIGHT-OUTPUT]${p1}[/HIGHLIGHT-OUTPUT]`;
-                    });
-                } else if (type === 'variable') {
-                    html = html.replace(pattern, (match, p1) => {
-                        return `[HIGHLIGHT-VARIABLE]${p1}[/HIGHLIGHT-VARIABLE]`;
-                    });
-                }
-            }
-
-            html = html.replace(/__STRING_PLACEHOLDER_(\d+)__/g, (match, index) => {
-                return stringMatches[parseInt(index, 10)];
-            });
-
-            html = html.replace(patterns.string, (match) => {
-                return `[HIGHLIGHT-STRING]${match}[/HIGHLIGHT-STRING]`;
-            });
-
-            html = html.replace(/\[HIGHLIGHT-COMMENT\]/g, '<span class="highlight-comment">')
-                .replace(/\[\/HIGHLIGHT-COMMENT\]/g, '</span>')
-                .replace(/\[HIGHLIGHT-STRING\]/g, '<span class="highlight-string">')
-                .replace(/\[\/HIGHLIGHT-STRING\]/g, '</span>')
-                .replace(/\[HIGHLIGHT-FUNCTION\]/g, '<span class="highlight-function">')
-                .replace(/\[\/HIGHLIGHT-FUNCTION\]/g, '</span>')
-                .replace(/\[HIGHLIGHT-OUTPUT\]/g, '<span class="highlight-output">')
-                .replace(/\[\/HIGHLIGHT-OUTPUT\]/g, '</span>')
-                .replace(/\[HIGHLIGHT-VARIABLE\]/g, '<span class="highlight-variable">')
-                .replace(/\[\/HIGHLIGHT-VARIABLE\]/g, '</span>');
-
-            html = html.replace(/__DOLLAR__/g, '$');
-            editor.innerHTML = html;
-        }
     }
 
     async function buildProject(apiToken) {
@@ -818,11 +776,10 @@
         }
     }
 
-    function callAPI(endpoint, apiToken, method = "POST", data = null) {
+    async function callAPI(endpoint, apiToken, method = "POST", data = null) {
         return new Promise((resolve, reject) => {
             const xhr = new XMLHttpRequest();
-            const baseUrl = window.location.origin;
-            const url = `${baseUrl}/api/${endpoint}`;
+            const url = `${getBaseUrl()}/api/${endpoint}`;
 
             xhr.open(method, url, true);
             xhr.setRequestHeader("Authorization", `Bearer ${apiToken}`);
@@ -894,8 +851,7 @@
         }
 
         try {
-            const baseUrl = window.location.origin;
-            const response = await fetch(`${baseUrl}/api/heartbeat`, {
+            const response = await fetch(`${getBaseUrl()}/api/heartbeat`, {
                 headers: {'Authorization': `Bearer ${apiToken}`}
             });
             if (response.ok) {
@@ -961,6 +917,26 @@
         });
     }
 
+    async function fetchHooks(apiToken) {
+        try {
+            const response = await fetch(`${getBaseUrl()}/api/hooks`, {
+                headers: {
+                    'Authorization': `Bearer ${apiToken}`
+                }
+            });
+            if (response.ok) {
+                const data = await response.json();
+                renderHooks(data.hooks);
+            } else {
+                console.error('Error response:', response.status, response.statusText);
+                showStatus('Error fetching hooks!', false);
+            }
+        } catch (error) {
+            console.error('Fetch error:', error);
+            showStatus('Error fetching hooks!', false);
+        }
+    }
+
     async function fetchLatestLogs(apiToken) {
         try {
             const response = await fetch('/api/logs', {
@@ -1005,7 +981,7 @@
 
     async function fetchLogFiles(apiToken) {
         try {
-            const response = await fetch('/api/logs', {
+            const response = await fetch(`${getBaseUrl()}/api/logs`, {
                 headers: {
                     'Authorization': `Bearer ${apiToken}`
                 }
@@ -1033,7 +1009,7 @@
         }
 
         try {
-            const response = await fetch(`/api/logs/${selectedLog}`, {
+            const response = await fetch(`${getBaseUrl()}/api/logs/${selectedLog}`, {
                 headers: {
                     'Authorization': `Bearer ${apiToken}`
                 }
@@ -1070,8 +1046,7 @@
 
     async function getEvalJSON(apiToken) {
         try {
-            const baseUrl = window.location.origin;
-            const response = await fetch(`${baseUrl}/eval_build.json`, {
+            const response = await fetch(`${getBaseUrl()}/eval_build.json`, {
                 headers: {
                     'Authorization': `Bearer ${apiToken}`
                 }
@@ -1104,6 +1079,7 @@
             checkHeartbeat(apiToken);
             setInterval(() => checkHeartbeat(apiToken), 1000);
             await loadDefaultFile(apiToken);
+            await fetchHooks(apiToken);
             await fetchLatestLogs(apiToken);
             await fetchLogFiles(apiToken);
         } catch (error) {
@@ -1113,7 +1089,7 @@
 
     async function loadDefaultFile(apiToken) {
         try {
-            const response = await fetch(`/load_file?filename=custom.sh&_=${Date.now()}`, {
+            const response = await fetch(`${getBaseUrl()}/load_file?filename=custom.sh&_=${Date.now()}`, {
                 headers: {
                     'Authorization': `Bearer ${apiToken}`
                 }
@@ -1234,8 +1210,6 @@
                 block.appendChild(controls);
                 fileContentElement.appendChild(block);
 
-                applySyntaxHighlighting(editor, type.split('_')[1]);
-
                 if (isDisabled) {
                     const toggleButton = block.querySelector('.toggle-button');
                 }
@@ -1243,6 +1217,39 @@
         });
 
         document.getElementById('file-content').classList.add('loaded');
+    }
+
+    function renderHooks(hooks) {
+        const hooksContainer = document.getElementById('hooks-list');
+        hooksContainer.innerHTML = '';
+
+        if (!hooks || hooks.length === 0) {
+            hooksContainer.innerHTML += '<p>No hooks available.</p>';
+            return;
+        }
+
+        const list = document.createElement('ul');
+        hooks.forEach(hook => {
+            const listItem = document.createElement('li');
+
+            const hookLabelElement = document.createElement('div');
+            hookLabelElement.className = 'hook-label';
+
+            const hookNameElement = document.createElement('div');
+            hookNameElement.className = 'hook-name';
+            hookNameElement.innerHTML = `@${hook.hook_name || 'undefined'}`;
+
+            const hookScriptElement = document.createElement('pre');
+            hookScriptElement.className = 'hook-script';
+            hookScriptElement.textContent = hook.hook_script || 'undefined';
+
+            listItem.appendChild(hookLabelElement);
+            listItem.appendChild(hookNameElement);
+            listItem.appendChild(hookScriptElement);
+
+            list.appendChild(listItem);
+        });
+        hooksContainer.appendChild(list);
     }
 
     function renderLogContent(content) {
@@ -1355,6 +1362,12 @@
         }, 5000);
     }
 
+    function stripFormatting(e) {
+        e.preventDefault();
+        const text = (e.originalEvent || e).clipboardData.getData('text/plain');
+        document.execCommand('insertText', false, text);
+    }
+
     function toggleBlock(block) {
         block.classList.toggle('disabled');
         const toggleButton = block.querySelector('.toggle-button');
@@ -1387,7 +1400,7 @@
                 const formData = new FormData();
                 formData.append('api_token', apiToken);
 
-                const response = await fetch('http://127.0.0.1:8000/api/validate_token', {
+                const response = await fetch(`${getBaseUrl()}/api/validate_token`, {
                     method: 'POST',
                     body: formData
                 });
@@ -1404,7 +1417,7 @@
                     if (data.message === 'API token is valid.') {
                         sessionStorage.setItem('apiToken', apiToken);
                         await initializeApp(apiToken);
-                        apiKeyModal.style.display = 'none';
+                        document.getElementById('api-key-modal').style.display = 'none';
                         return true;
                     }
                 }
