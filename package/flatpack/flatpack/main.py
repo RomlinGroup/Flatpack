@@ -230,7 +230,7 @@ def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path):
                         line for line in code_lines if line.strip().startswith(('print(', 'subprocess.run')))
 
                     if context_code:
-                        outfile.write(f"echo \"{context_code}\" >> \"$CONTEXT_PYTHON_SCRIPT\"\n")
+                        outfile.write(f"echo \"\"\"{context_code}\"\"\" >> \"$CONTEXT_PYTHON_SCRIPT\"\n")
 
                     outfile.write("echo \"try:\" > \"$EXEC_PYTHON_SCRIPT\"\n")
                     outfile.write("sed 's/^/    /' \"$CONTEXT_PYTHON_SCRIPT\" >> \"$EXEC_PYTHON_SCRIPT\"\n")
