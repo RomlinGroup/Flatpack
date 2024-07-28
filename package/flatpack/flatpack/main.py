@@ -2024,11 +2024,6 @@ def authenticate_token(request: Request):
         print("Stored token is not set")
         return
 
-    logger.info(f"Received token: {token}")
-    print(f"Received token: {token}")
-    logger.info(f"Stored token: Bearer {stored_token}")
-    print(f"Stored token: Bearer {stored_token}")
-
     if token is None or token != f"Bearer {stored_token}":
         VALIDATION_ATTEMPTS += 1
         logger.error(f"Invalid or missing token. Attempt {VALIDATION_ATTEMPTS}")
