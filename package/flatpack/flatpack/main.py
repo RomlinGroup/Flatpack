@@ -2067,6 +2067,31 @@ def escape_special_chars(content: str) -> str:
     return content.replace('"', '\\"')
 
 
+def get_all_hooks_from_database():
+    global flatpack_directory
+
+    if not flatpack_directory:
+        raise HTTPException(status_code=500, detail="Flatpack directory is not set")
+
+    db_path = os.path.join(flatpack_directory, 'build', 'flatpack.db')
+
+    try:
+        ensure_database_initialized()
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        cursor.execute("SELECT hook_name, hook_script FROM flatpack_hooks")
+        hooks = cursor.fetchall()
+        conn.close()
+
+        hooks_list = [{"hook_name": hook[0], "hook_script": hook[1]} for hook in hooks]
+        return hooks_list
+
+    except Error as e:
+        logger.error("An error occurred while fetching hooks: %s", e)
+        print(f"[ERROR] An error occurred while fetching hooks: {e}")
+        raise HTTPException(status_code=500, detail=f"An error occurred while fetching hooks: {e}")
+
+
 def get_token() -> Optional[str]:
     """Retrieve the token from the configuration file."""
     config = load_config()
@@ -2238,6 +2263,18 @@ async def add_hook(hook: Hook, token: str = Depends(authenticate_token)):
     except Exception as e:
         logger.error("Failed to add hook: %s", e)
         raise HTTPException(status_code=500, detail="Failed to add hook.")
+
+
+@app.get("/api/hooks", response_model=List[Hook])
+async def get_hooks(token: str = Depends(authenticate_token)):
+    try:
+        hooks = get_all_hooks_from_database()
+        return JSONResponse(content={"hooks": hooks}, status_code=200)
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        logger.error("Failed to retrieve hooks: %s", e)
+        raise HTTPException(status_code=500, detail="Failed to retrieve hooks.")
 
 
 @app.get("/api/logs")

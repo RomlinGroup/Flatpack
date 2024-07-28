@@ -58,7 +58,7 @@ This project is released under [Apache-2.0](https://github.com/RomlinGroup/Flatp
 
 **DISCLAIMER:** This information is only a technical reference, not an endorsement or legal advice. Before using any software for commercial purposes, perform compatibility checks and seek legal advice. You are responsible for ensuring compliance with licensing requirements.
 
-Check out the [JLA - Compatibility Checker](https://joinup.ec.europa.eu/collection/eupl/solution/joinup-licensing-assistant/jla-compatibility-checker) (European Commission 2023).
+Check out the [JLA - Compatibility Checker](https://joinup.ec.europa.eu/collection/eupl/solution/joinup-licensing-assistant/jla-compatibility-checker) (European Commission 2024).
 
 - **[beautifulsoup4](https://pypi.org/project/beautifulsoup4/)**\
   MIT License (MIT License) ([LICENSE](https://pypi.org/project/beautifulsoup4/))
