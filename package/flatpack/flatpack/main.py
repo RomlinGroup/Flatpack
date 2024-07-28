@@ -1977,12 +1977,14 @@ class EndpointFilter(logging.Filter):
 uvicorn_logger = logging.getLogger("uvicorn.access")
 uvicorn_logger.addFilter(EndpointFilter())
 
+origins = ["*"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["*"],
+    allow_headers=["*"]
 )
 
 flatpack_directory = None
@@ -2448,7 +2450,7 @@ def fpk_cli_handle_run(args, session):
 
     try:
         port = 8000
-        host = "127.0.0.1"
+        host = "0.0.0.0"
 
         if args.share:
             listener = ngrok.forward(f"{host}:{port}", authtoken_from_env=True)
