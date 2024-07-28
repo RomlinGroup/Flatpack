@@ -5,6 +5,11 @@ disabled part_bash """
 wget https://huggingface.co/openbmb/MiniCPM-Llama3-V-2_5-gguf/resolve/main/ggml-model-Q4_K_M.gguf
 """
 part_bash """
+if [ -f ../tiger.png ]; then
+    cp -f ../tiger.png tiger.png
+fi
+"""
+part_bash """
 ./minicpmv-cli \
 --image tiger.png \
 --mmproj mmproj-model-f16.gguf \
