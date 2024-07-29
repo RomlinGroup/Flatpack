@@ -698,8 +698,8 @@
         controls.appendChild(createControlElement('handle', type));
         controls.appendChild(createControlElement('move-up', '&#x25B2;', () => moveBlockUp(block)));
         controls.appendChild(createControlElement('move-down', '&#x25BC;', () => moveBlockDown(block)));
-        controls.appendChild(createControlElement('toggle-button', eyeIcon, () => toggleBlock(block)));
         controls.appendChild(createControlElement('delete-button', trashIcon, () => block.remove()));
+        controls.appendChild(createControlElement('toggle-button', eyeIcon, () => toggleBlock(block)));
 
         block.appendChild(controls);
 
