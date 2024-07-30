@@ -187,7 +187,7 @@ class VectorManager:
             soup = BeautifulSoup(response.content, 'html.parser')
             text = soup.get_text(separator=' ', strip=True)
             self._process_text_and_add(text, url)
-        except requests.RequestException as e:
+        except requests.RequestException:
             pass
 
     @staticmethod
@@ -211,7 +211,7 @@ class VectorManager:
             data = response.json()
             page = next(iter(data["query"]["pages"].values()))
             return page.get("extract", "")
-        except requests.RequestException as e:
+        except requests.RequestException:
             return ""
 
     def add_wikipedia_page(self, page_title):
@@ -222,5 +222,5 @@ class VectorManager:
                 self._process_text_and_add(text, f"wikipedia:{page_title}")
             else:
                 pass
-        except requests.RequestException as e:
+        except requests.RequestException:
             pass
