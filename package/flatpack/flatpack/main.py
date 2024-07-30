@@ -1689,9 +1689,7 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
             print(f"[INFO] Finished downloading {model_id} into the directory '{local_dir}'")
             logger.info("Finished downloading %s into the directory '%s'", model_id, local_dir)
         except Exception as e:
-            print(
-                f"[ERROR] Failed to download the model. Error: {e}"
-            )
+            print(f"[ERROR] Failed to download the model. Error: {e}")
             logger.error("Failed to download the model. Error: %s", e)
             return
 
@@ -1700,6 +1698,7 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
     requirements_file = os.path.join(llama_cpp_dir, "requirements.txt")
     venv_dir = os.path.join(llama_cpp_dir, "venv")
     venv_python = os.path.join(venv_dir, "bin", "python")
+    convert_script = os.path.join(llama_cpp_dir, 'convert_hf_to_gguf.py')
 
     if not os.path.exists(llama_cpp_dir):
 
@@ -1730,9 +1729,7 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
             logger.info("Finished cloning llama.cpp repository into '%s'", llama_cpp_dir)
 
         except subprocess.CalledProcessError as e:
-            print(
-                f"[ERROR] Failed to clone the llama.cpp repository. Error: {e}"
-            )
+            print(f"[ERROR] Failed to clone the llama.cpp repository. Error: {e}")
             logger.error("Failed to clone the llama.cpp repository. Error: %s", e)
             return
 
@@ -1750,7 +1747,7 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
 
             subprocess.run(
                 [make_executable],
-                cwd=directory,
+                cwd=llama_cpp_dir,
                 check=True
             )
 
@@ -1786,28 +1783,21 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
                 f.write("Ready")
         except subprocess.CalledProcessError as e:
             print(f"[ERROR] Failed to build llama.cpp. Error: {e}")
-
-            logger.error(
-                "Failed to build llama.cpp. Error: %s",
-                e
-            )
-
+            logger.error("Failed to build llama.cpp. Error: %s", e)
             return
         except Exception as e:
-            print(
-                f"[ERROR] An error occurred during the setup of llama.cpp. Error: {e}"
-            )
-
-            logger.error(
-                "An error occurred during the setup of llama.cpp. Error: %s",
-                e
-            )
-
+            print(f"[ERROR] An error occurred during the setup of llama.cpp. Error: {e}")
+            logger.error("An error occurred during the setup of llama.cpp. Error: %s", e)
             return
 
     output_file = os.path.join(local_dir, f"{repo_name}-fp16.bin")
     quantized_output_file = os.path.join(local_dir, f"{repo_name}-Q4_K_M.gguf")
     outtype = "f16"
+
+    if not os.path.exists(convert_script):
+        print(f"[ERROR] The conversion script '{convert_script}' does not exist.")
+        logger.error("The conversion script '%s' does not exist.", convert_script)
+        return
 
     if not os.path.exists(output_file):
         try:
@@ -1815,21 +1805,19 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
             logger.info("Converting the model using llama.cpp...")
 
             venv_activate = os.path.join(venv_dir, "bin", "activate")
-            script_path = os.path.join(llama_cpp_dir, 'convert-hf-to-gguf.py')
 
             convert_command = [
                 "/bin/bash", "-c",
                 (
                     f"source {shlex.quote(venv_activate)} && {shlex.quote(venv_python)} "
-                    f"{shlex.quote(script_path)} {shlex.quote(local_dir)} --outfile "
+                    f"{shlex.quote(convert_script)} {shlex.quote(local_dir)} --outfile "
                     f"{shlex.quote(output_file)} --outtype {shlex.quote(outtype)}"
                 )
             ]
+            print(f"[DEBUG] Running command: {convert_command}")
             subprocess.run(convert_command, check=True)
 
-            print(
-                f"[INFO] Conversion complete. The model has been compressed and saved as '{output_file}'"
-            )
+            print(f"[INFO] Conversion complete. The model has been compressed and saved as '{output_file}'")
             logger.info("Conversion complete. The model has been compressed and saved as '%s'", output_file)
         except subprocess.CalledProcessError as e:
             print(f"[ERROR] Conversion failed. Error: {e}")
@@ -1840,10 +1828,9 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
             logger.error("An error occurred during the model conversion. Error: %s", e)
             return
     else:
-        print(
-            f"[INFO] The model has already been converted and saved as '{output_file}'."
-        )
+        print(f"[INFO] The model has already been converted and saved as '{output_file}'.")
         logger.info("The model has already been converted and saved as '%s'.", output_file)
+
     if os.path.exists(output_file):
         try:
             print("[INFO] Quantizing the model...")
@@ -1857,9 +1844,7 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
             ]
             subprocess.run(quantize_command, check=True)
 
-            print(
-                f"[INFO] Quantization complete. The quantized model has been saved as '{quantized_output_file}'."
-            )
+            print(f"[INFO] Quantization complete. The quantized model has been saved as '{quantized_output_file}'.")
             logger.info("Quantization complete. The quantized model has been saved as '%s'.", quantized_output_file)
 
             print(f"[INFO] Deleting the original .bin file '{output_file}'...")
