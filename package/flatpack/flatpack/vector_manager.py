@@ -2,7 +2,6 @@ import datetime
 import hashlib
 import hnswlib
 import json
-import logging
 import nltk
 import numpy as np
 import os
@@ -18,8 +17,6 @@ from sentence_transformers import SentenceTransformer
 from typing import Dict, List
 
 warnings.filterwarnings('ignore', category=FutureWarning)
-
-logging.basicConfig(level=logging.CRITICAL, format='%(asctime)s - %(levelname)s - %(message)s')
 
 
 def download_nltk_data():
@@ -44,6 +41,9 @@ VECTOR_DIMENSION = 384
 class VectorManager:
     def __init__(self, model_id='all-MiniLM-L6-v2', directory='./data'):
         self.directory = directory
+        if not os.path.exists(self.directory):
+            os.makedirs(self.directory)
+
         self.index_file = os.path.join(self.directory, INDEX_FILE)
         self.metadata_file = os.path.join(self.directory, METADATA_FILE)
         self.embeddings_file = os.path.join(self.directory, EMBEDDINGS_FILE)
@@ -135,7 +135,6 @@ class VectorManager:
 
     def search_vectors(self, query_text: str, top_k=5):
         if not self.is_index_ready():
-            logging.error("Index is not ready. No elements in the index.")
             return []
 
         start_time = time.time()
@@ -165,7 +164,6 @@ class VectorManager:
     def _process_text_and_add(self, text, source_reference):
         """Process the text into chunks and add to the index."""
         if not isinstance(text, str):
-            logger.error("_process_text_and_add expected a string but got %s. Value: %s", type(text), text)
             return
         sentences = sent_tokenize(text)
         chunks = [" ".join(sentences[i:i + SENTENCE_CHUNK_SIZE]).strip() for i in
@@ -175,7 +173,6 @@ class VectorManager:
     def add_pdf(self, pdf_path: str):
         """Extract text from a PDF and add to the index."""
         if not os.path.isfile(pdf_path) or not pdf_path.lower().endswith('.pdf'):
-            logging.error("Invalid PDF path provided: %s", pdf_path)
             return
         with open(pdf_path, 'rb') as file:
             pdf = PdfReader(file)
@@ -184,23 +181,18 @@ class VectorManager:
 
     def add_url(self, url: str):
         """Fetch text from a URL and add to the index."""
-        logging.info("Fetching URL: %s", url)
         try:
             response = requests.get(url, timeout=10)
             response.raise_for_status()
-            logging.debug("URL fetched successfully.")
             soup = BeautifulSoup(response.content, 'html.parser')
             text = soup.get_text(separator=' ', strip=True)
-            logging.debug("Extracted text from HTML.")
             self._process_text_and_add(text, url)
-            logging.info("Text added successfully.")
         except requests.RequestException as e:
-            logging.error("Failed to fetch %s: %s", url, e)
+            pass
 
     @staticmethod
     def get_wikipedia_text(page_title):
         """Fetch text from a Wikipedia page."""
-        logger.info("Fetching Wikipedia page for: %s", page_title)
         base_url = "https://en.wikipedia.org/w/api.php"
         params = {
             "action": "query",
@@ -220,7 +212,6 @@ class VectorManager:
             page = next(iter(data["query"]["pages"].values()))
             return page.get("extract", "")
         except requests.RequestException as e:
-            logging.error("Failed to fetch %s: %s", page_title, e)
             return ""
 
     def add_wikipedia_page(self, page_title):
@@ -228,10 +219,8 @@ class VectorManager:
         try:
             text = self.get_wikipedia_text(page_title)
             if text:
-                logging.debug("Starting to process and add Wikipedia text.")
                 self._process_text_and_add(text, f"wikipedia:{page_title}")
-                logging.info("Wikipedia text added successfully.")
             else:
-                logger.error("No text found for Wikipedia page: %s", page_title)
+                pass
         except requests.RequestException as e:
-            logger.error("Failed to fetch %s: %s", page_title, e)
+            pass
