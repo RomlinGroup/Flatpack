@@ -24,11 +24,11 @@ cd llama.cpp
 make -j
 """
 part_bash """
-curl -L -o models/llama-2-7b-chat.Q2_K.gguf https://huggingface.co/TheBloke/Llama-2-7b-Chat-GGUF/resolve/main/llama-2-7b-chat.Q2_K.gguf
+curl -L -o models/Phi-3-mini-4k-instruct-q4.gguf https://huggingface.co/microsoft/Phi-3-mini-4k-instruct-gguf/resolve/main/Phi-3-mini-4k-instruct-q4.gguf
 """
 part_bash """
 ./llama-cli \
--m models/llama-2-7b-chat.Q2_K.gguf \
+-m models/Phi-3-mini-4k-instruct-q4.gguf \
 -p \"What is edge artificial intelligence?\" \
 -n 400 \
 > output.txt \
