@@ -15,11 +15,11 @@ git clone https://github.com/ggerganov/llama.cpp
 cd llama.cpp
 make -j
 
-curl -L -o models/Phi-3.1-mini-4k-instruct-Q4_K_S.gguf https://huggingface.co/bartowski/Phi-3.1-mini-4k-instruct-GGUF/resolve/main/Phi-3.1-mini-4k-instruct-Q4_K_S.gguf
+curl -L -o models/gemma-2b.Q8_0.gguf https://huggingface.co/ggerganov/gemma-2b-Q8_0-GGUF/resolve/main/gemma-2b.Q8_0.gguf
 """
 disabled part_bash """
 ./llama-cli \
--m models/Phi-3.1-mini-4k-instruct-Q4_K_S.gguf \
+-m models/gemma-2b.Q8_0.gguf \
 -p \"What is edge artificial intelligence?\" \
 -n 400 \
 > output.txt \
