@@ -24,11 +24,11 @@ cd llama.cpp
 make -j
 """
 part_bash """
-curl -L -o models/Phi-3-mini-4k-instruct-q4.gguf https://huggingface.co/microsoft/Phi-3-mini-4k-instruct-gguf/resolve/main/Phi-3-mini-4k-instruct-q4.gguf
+curl -L -o models/Phi-3.1-mini-4k-instruct-Q4_K_S.gguf https://huggingface.co/bartowski/Phi-3.1-mini-4k-instruct-GGUF/resolve/main/Phi-3.1-mini-4k-instruct-Q4_K_S.gguf
 """
 part_bash """
 ./llama-cli \
--m models/Phi-3-mini-4k-instruct-q4.gguf \
+-m models/Phi-3.1-mini-4k-instruct-Q4_K_S.gguf \
 -p \"What is edge artificial intelligence?\" \
 -n 400 \
 > output.txt \
