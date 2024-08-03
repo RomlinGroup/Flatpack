@@ -35,7 +35,7 @@ import uvicorn
 from bs4 import BeautifulSoup, MarkupResemblesLocatorWarning
 from fastapi import Depends, FastAPI, Form, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse, Response
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from huggingface_hub import snapshot_download
 from prettytable import PrettyTable
@@ -2192,6 +2192,20 @@ async def save_file(
         return JSONResponse(content={"message": "File saved successfully!"})
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to save file: {e}")
+
+
+@app.get("/test", response_class=HTMLResponse)
+async def test():
+    return """
+    <html>
+        <head>
+            <title>Hello, World!</title>
+        </head>
+        <body>
+            <h1>Hello, World!</h1>
+        </body>
+    </html>
+    """
 
 
 @app.get("/test_db")
