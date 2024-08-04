@@ -5,16 +5,16 @@ with open("README.md", "r") as f:
 
 setup(
     name="flatpack",
-    version="3.6.11",
+    version="3.6.12",
     license="Apache Software License (Apache-2.0)",
     packages=find_packages(),
     install_requires=[
         "beautifulsoup4==4.12.3",
-        "fastapi==0.111.1",
+        "fastapi==0.112.0",
         "hnswlib==0.8.0",
         "httpx==0.27.0",
-        "huggingface-hub==0.24.2",
-        "ngrok==1.3.0",
+        "huggingface-hub==0.24.5",
+        "ngrok==1.4.0",
         "nltk==3.8.1",
         "prettytable==3.10.2",
         "psutil==6.0.0",
@@ -25,7 +25,7 @@ setup(
         "sentence-transformers==3.0.1",
         "toml==0.10.2",
         "torch==2.4.0",
-        "uvicorn==0.30.3"
+        "uvicorn==0.30.5"
     ],
     author="Romlin Group AB",
     author_email="hello@romlin.com",
