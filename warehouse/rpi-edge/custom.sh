@@ -1,4 +1,4 @@
-part_bash """
+disabled part_bash """
 sudo apt update
 sudo apt install git g++ wget build-essential
 
@@ -14,18 +14,21 @@ git clone https://github.com/ggerganov/llama.cpp
 
 cd llama.cpp
 make -j
-
-curl -L -o models/gemma-2b.Q8_0.gguf https://huggingface.co/ggerganov/gemma-2b-Q8_0-GGUF/resolve/main/gemma-2b.Q8_0.gguf
 """
 disabled part_bash """
+flatpack compress google/gemma-2-2b-it --token <hf_token>
+"""
+part_bash """
+cd llama.cpp
+
 ./llama-cli \
--m models/gemma-2b.Q8_0.gguf \
+-m models/gemma-2-2b-it-Q4_K_S.gguf \
 -p \"What is edge artificial intelligence?\" \
--n 400 \
+-n 128 \
 > output.txt \
 2>/dev/null
 """
-disabled part_bash """
+part_bash """
 if [ -f \"output.txt\" ]; then
     echo \"Running hooks for output.txt:\"
     cat output.txt
