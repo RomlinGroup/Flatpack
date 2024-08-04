@@ -24,7 +24,7 @@ cd llama.cpp
 ./llama-cli \
 -m models/gemma-2-2b-it-Q4_K_S.gguf \
 -p \"What is edge artificial intelligence?\" \
--n 128 \
+-n 256 \
 > output.txt \
 2>/dev/null
 """
