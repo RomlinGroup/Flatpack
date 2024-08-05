@@ -40,19 +40,19 @@ tqdm = "4.66.4"
 # ]
 
 [[file]]
-from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/edge/index.html"
+from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/rpi-edge/index.html"
 to_destination = "index.html"
 
 [[file]]
-from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/edge/build.sh"
+from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/rpi-edge/build.sh"
 to_destination = "build.sh"
 
 [[file]]
-from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/edge/custom.sh"
+from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/rpi-edge/custom.sh"
 to_destination = "custom.sh"
 
 [[file]]
-from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/edge/device.sh"
+from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/rpi-edge/device.sh"
 to_destination = "device.sh"
 
 [[run]]
