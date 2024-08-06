@@ -4,7 +4,7 @@ cd llama.cpp
 make -j
 """
 part_bash """
-flatpack compress google/gemma-2-2b-it --token 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
+flatpack compress google/gemma-2-2b-it --token <hf_token>
 """
 part_bash """
 mv ./gemma-2-2b-it/gemma-2-2b-it-Q4_K_S.gguf \
