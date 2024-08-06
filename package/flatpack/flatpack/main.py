@@ -553,7 +553,7 @@ def fpk_display_disclaimer(directory_name: str, local: bool):
     """
     disclaimer_template = """
 -----------------------------------------------------
-STOP AND READ BEFORE YOU PROCEED ✋
+STOP AND READ BEFORE YOU PROCEED
 https://pypi.org/project/flatpack
 Copyright 2024 Romlin Group AB
 
