@@ -1,10 +1,14 @@
-disabled part_bash """
+part_bash """
 git clone https://github.com/ggerganov/llama.cpp
 cd llama.cpp
 make -j
 """
-disabled part_bash """
-flatpack compress google/gemma-2-2b-it --token <hf_token>
+part_bash """
+flatpack compress google/gemma-2-2b-it --token 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
+"""
+part_bash """
+mv ./gemma-2-2b-it/gemma-2-2b-it-Q4_K_S.gguf \
+./llama.cpp/models/gemma-2-2b-it-Q4_K_S.gguf
 """
 part_bash """
 cd llama.cpp

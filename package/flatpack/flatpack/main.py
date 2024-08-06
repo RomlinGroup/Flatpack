@@ -225,7 +225,6 @@ def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path):
                 code = '\n'.join(code_lines).strip().replace('\\"', '"')
 
                 if language == 'bash':
-                    # Ensure double-dollar signs are handled properly
                     code = code.replace('$', '\$').replace('\\$\\$', '$$')
                     outfile.write(f"{code}\n")
                     outfile.write("((CURR++))\n")
@@ -261,6 +260,7 @@ def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path):
                     "    EVAL=\"null\"\n"
                     "else\n"
                     "    EVAL=$((CURR + 1))\n"
+                    "fi\n"
                 )
 
                 outfile.write(
