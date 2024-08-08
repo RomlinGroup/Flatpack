@@ -79,8 +79,7 @@ sudo apt-get install -y build-essential git pipx python3.11 python3.11-dev
 ```
 
 ```bash
-pipx install flatpack && \
-sudo reboot
+pipx install flatpack && sudo reboot
 ```
 
 ### Getting started with Flatpack
