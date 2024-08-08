@@ -1,5 +1,5 @@
 part_bash """
-git clone https://github.com/ggerganov/llama.cpp
+git clone --depth 1 https://github.com/ggerganov/llama.cpp
 cd llama.cpp
 make -j
 """
