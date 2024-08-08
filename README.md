@@ -72,7 +72,7 @@ flatpack version && \
 bash"
 ```
 
-### Install on Raspberry Pi OS Lite
+### Install on Raspberry Pi OS Lite (64-bit)
 
 ```bash
 sudo apt-get install -y build-essential git pipx python3.11 python3.11-dev
