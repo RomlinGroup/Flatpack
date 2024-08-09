@@ -9,7 +9,7 @@ part_bash """
 --image \"tiger.png\" \
 --prompt \"Should I pet this dog?\" \
 > output.txt \
-2>/dev/null
+2>error.txt
 """
 part_bash """
 if [ -f \"output.txt\" ]; then

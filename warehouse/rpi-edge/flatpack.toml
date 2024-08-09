@@ -28,6 +28,7 @@ wget = "*"
 
 [packages.python]
 numpy = "2.0.1"
+piper-tts = "1.2.0"
 tiktoken = "0.7.0"
 tqdm = "4.66.4"
 

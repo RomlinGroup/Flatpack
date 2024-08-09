@@ -11,7 +11,7 @@ part_bash """
 -n 64 \
 -p \"What is the meaning of life?\" \
 > output.txt \
-2>/dev/null
+2>error.txt
 """
 part_bash """
 if [ -f \"output.txt\" ]; then

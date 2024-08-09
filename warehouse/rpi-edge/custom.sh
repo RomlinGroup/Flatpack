@@ -18,7 +18,7 @@ cd llama.cpp
 -p \"What is edge artificial intelligence?\" \
 -n 256 \
 > output.txt \
-2>/dev/null
+2>error.txt
 """
 part_bash """
 if [ -f \"output.txt\" ]; then
