@@ -75,6 +75,11 @@ bash"
 ### Install on Raspberry Pi OS Lite (64-bit)
 
 ```bash
+sudo apt-get update && sudo apt-get upgrade -y && \
+sudo apt-get dist-upgrade -y && sudo apt-get autoremove -y
+```
+
+```bash
 sudo apt-get install -y build-essential git pipx python3.11 python3.11-dev
 ```
 
