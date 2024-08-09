@@ -75,6 +75,7 @@ bash"
 ### Install on Raspberry Pi OS Lite (64-bit)
 
 ```bash
+# Set swap to 8192MB and reboot (optional)
 sudo apt install -y dphys-swapfile && \
 sudo dphys-swapfile swapoff && \
 sudo sed -i 's/^CONF_SWAPSIZE=.*/CONF_SWAPSIZE=8192/' /etc/dphys-swapfile && \
