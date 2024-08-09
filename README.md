@@ -75,6 +75,16 @@ bash"
 ### Install on Raspberry Pi OS Lite (64-bit)
 
 ```bash
+sudo apt install -y dphys-swapfile && \
+sudo dphys-swapfile swapoff && \
+sudo sed -i 's/^CONF_SWAPSIZE=.*/CONF_SWAPSIZE=8192/' /etc/dphys-swapfile && \
+sudo sed -i 's/^#CONF_MAXSWAP=.*/CONF_MAXSWAP=8192/' /etc/dphys-swapfile && \
+sudo dphys-swapfile setup && \
+sudo dphys-swapfile swapon && \
+sudo reboot
+```
+
+```bash
 sudo apt-get update && sudo apt-get upgrade -y && \
 sudo apt-get dist-upgrade -y && sudo apt-get autoremove -y
 ```
