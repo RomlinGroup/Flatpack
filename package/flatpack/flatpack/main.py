@@ -247,7 +247,9 @@ def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path):
                     outfile.write("((CURR++))\n")
 
                 elif language == 'python':
-                    outfile.write(f"echo \"\"\"{code}\"\"\" >> \"$CONTEXT_PYTHON_SCRIPT\"\n")
+                    escaped_code = code.replace('"', '\\"')
+
+                    outfile.write(f"echo \"\"\"{escaped_code}\"\"\" >> \"$CONTEXT_PYTHON_SCRIPT\"\n")
 
                     outfile.write("echo \"try:\" > \"$EXEC_PYTHON_SCRIPT\"\n")
                     outfile.write("cat \"$CONTEXT_PYTHON_SCRIPT\" | sed 's/^/    /' >> \"$EXEC_PYTHON_SCRIPT\"\n")
