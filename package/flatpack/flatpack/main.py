@@ -194,7 +194,7 @@ def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path):
             outfile.write("CURR=0\n")
 
             outfile.write("trap 'rm -f \"$CONTEXT_PYTHON_SCRIPT\" \"$EXEC_PYTHON_SCRIPT\"' EXIT\n")
-            outfile.write("rm -f \"$CONTEXT_PYTHON_SCRIPT\" c\"$EXEC_PYTHON_SCRIPT\"\n")
+            outfile.write("rm -f \"$CONTEXT_PYTHON_SCRIPT\" \"$EXEC_PYTHON_SCRIPT\"\n")
             outfile.write("touch \"$CONTEXT_PYTHON_SCRIPT\" \"$EXEC_PYTHON_SCRIPT\"\n")
 
             outfile.write("datetime=$(date -u +\"%Y-%m-%d %H:%M:%S\")\n")
@@ -239,30 +239,25 @@ def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path):
                     continue
 
                 language = 'bash' if 'part_bash' in header else 'python' if 'part_python' in header else None
-                code = '\n'.join(code_lines).strip().replace('\\"', '"')
 
                 if language == 'bash':
-                    code = code.replace('$', '\$').replace('\\$\\$', '$$')
+                    code = '\n'.join(code_lines).strip().replace('$', '\$').replace('\\$\\$', '$$')
                     outfile.write(f"{code}\n")
                     outfile.write("((CURR++))\n")
 
                 elif language == 'python':
-                    context_code = "\n".join(
-                        line for line in code_lines if not line.strip().startswith(('print(', 'subprocess.run')))
-                    execution_code = "\n".join(
-                        line for line in code_lines if line.strip().startswith(('print(', 'subprocess.run')))
-
-                    if context_code:
-                        outfile.write(f"echo \"\"\"{context_code}\"\"\" >> \"$CONTEXT_PYTHON_SCRIPT\"\n")
+                    outfile.write("echo \"\"\"\\\n")
+                    for line in code_lines:
+                        line = line.replace('"', '\\"').replace('$', '\\$')
+                        outfile.write(f"{line}\\n\\\n")
+                    outfile.write("\"\"\" > \"$CONTEXT_PYTHON_SCRIPT\"\n")
 
                     outfile.write("echo \"try:\" > \"$EXEC_PYTHON_SCRIPT\"\n")
                     outfile.write("sed 's/^/    /' \"$CONTEXT_PYTHON_SCRIPT\" >> \"$EXEC_PYTHON_SCRIPT\"\n")
 
-                    if execution_code:
-                        outfile.write(f"echo \"{execution_code}\" | sed 's/^/    /' >> \"$EXEC_PYTHON_SCRIPT\"\n")
-
-                    outfile.write("echo \"except Exception as e:\" >> \"$EXEC_PYTHON_SCRIPT\"\n")
-                    outfile.write("echo \"    print(e)\" >> \"$EXEC_PYTHON_SCRIPT\"\n")
+                    outfile.write("echo \"except subprocess.CalledProcessError as e:\" >> \"$EXEC_PYTHON_SCRIPT\"\n")
+                    outfile.write(
+                        "echo \"    print(f'Error occurred processing chunk: {e}')\" >> \"$EXEC_PYTHON_SCRIPT\"\n")
                     outfile.write("echo \"    import sys; sys.exit(1)\" >> \"$EXEC_PYTHON_SCRIPT\"\n")
                     outfile.write("$VENV_PYTHON \"$EXEC_PYTHON_SCRIPT\"\n")
 
