@@ -25,6 +25,7 @@ git = "*"
 jq = "*"
 python3-dev = "*"
 python3-pip = "*"
+sox = "*"
 wget = "*"
 
 [packages.python]
