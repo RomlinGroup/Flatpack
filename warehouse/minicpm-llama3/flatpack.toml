@@ -34,12 +34,11 @@ tiktoken = "0.7.0"
 tqdm = "4.66.5"
 
 [[git]]
-from_source = "https://github.com/OpenBMB/llama.cpp"
+from_source = "https://github.com/ggerganov/llama.cpp"
 to_destination = "llama.cpp"
-branch = "minicpm-v2.5"
+branch = "master"
 setup_commands = [
-    "make",
-    "make minicpmv-cli"
+    "make"
 ]
 
 [[file]]
