@@ -247,10 +247,20 @@ def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path):
                     outfile.write("((CURR++))\n")
 
                 elif language == 'python':
-                    outfile.write(f"echo \"\"\"{code}\"\"\" >> \"$CONTEXT_PYTHON_SCRIPT\"\n")
+                    context_code = "\n".join(
+                        line for line in code_lines if not line.strip().startswith(('print(', 'subprocess.run')))
+                    execution_code = "\n".join(
+                        line for line in code_lines if line.strip().startswith(('print(', 'subprocess.run')))
+
+                    if context_code:
+                        outfile.write(f"echo \"\"\"{context_code}\"\"\" >> \"$CONTEXT_PYTHON_SCRIPT\"\n")
 
                     outfile.write("echo \"try:\" > \"$EXEC_PYTHON_SCRIPT\"\n")
-                    outfile.write("cat \"$CONTEXT_PYTHON_SCRIPT\" | sed 's/^/    /' >> \"$EXEC_PYTHON_SCRIPT\"\n")
+                    outfile.write("sed 's/^/    /' \"$CONTEXT_PYTHON_SCRIPT\" >> \"$EXEC_PYTHON_SCRIPT\"\n")
+
+                    if execution_code:
+                        outfile.write(f"echo \"{execution_code}\" | sed 's/^/    /' >> \"$EXEC_PYTHON_SCRIPT\"\n")
+
                     outfile.write("echo \"except Exception as e:\" >> \"$EXEC_PYTHON_SCRIPT\"\n")
                     outfile.write("echo \"    print(e)\" >> \"$EXEC_PYTHON_SCRIPT\"\n")
                     outfile.write("echo \"    import sys; sys.exit(1)\" >> \"$EXEC_PYTHON_SCRIPT\"\n")
