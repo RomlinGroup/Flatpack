@@ -75,13 +75,10 @@ bash"
 ### Install on Raspberry Pi OS Lite (64-bit)
 
 ```bash
-# Set swap to 8192MB and reboot (optional)
-sudo apt install -y dphys-swapfile && \
-sudo dphys-swapfile swapoff && \
-sudo sed -i 's/^CONF_SWAPSIZE=.*/CONF_SWAPSIZE=8192/' /etc/dphys-swapfile && \
-sudo sed -i 's/^#CONF_MAXSWAP=.*/CONF_MAXSWAP=8192/' /etc/dphys-swapfile && \
-sudo dphys-swapfile setup && \
-sudo dphys-swapfile swapon && \
+# Install ZRAM tools, enable ZRAM, and reboot
+sudo apt update && \
+sudo apt install -y zram-tools && \
+sudo systemctl enable --now zramswap.service && \
 sudo reboot
 ```
 
