@@ -15,18 +15,10 @@ cd llama.cpp
 
 ./llama-cli \
 -m models/gemma-2-2b-it-Q4_K_S.gguf \
--p \"What is edge artificial intelligence? Provide a brief, one-sentence answer.\" \
+-p \"What is edge artificial intelligence? Provide a brief, one-sentence answer.\n---\n\" \
 -n 64 \
 > output.txt \
 2>log.txt
-"""
-part_bash """
-if [ -f \"output.txt\" ]; then
-    echo \"Running hooks for output.txt:\"
-    cat output.txt
-else
-    echo \"Error: output.txt does not exist.\"
-fi
 """
 part_bash """
 if [ ! -d \"piper\" ]; then
