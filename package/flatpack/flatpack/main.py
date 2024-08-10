@@ -178,11 +178,6 @@ def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path):
 
         with tempfile.NamedTemporaryFile(mode='w', delete=False) as context_python_script:
             context_python_script_path = Path(context_python_script.name)
-            context_python_script.write('')
-
-        with tempfile.NamedTemporaryFile(mode='w', delete=False) as exec_python_script:
-            exec_python_script_path = Path(exec_python_script.name)
-            exec_python_script.write('')
 
         with temp_sh_path.open('w') as outfile:
             outfile.write("#!/bin/bash\n")
@@ -190,12 +185,11 @@ def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path):
 
             outfile.write(f"CONTEXT_PYTHON_SCRIPT=\"{context_python_script_path}\"\n")
             outfile.write("EVAL_BUILD=\"$SCRIPT_DIR/eval_build.json\"\n")
-            outfile.write(f"EXEC_PYTHON_SCRIPT=\"{exec_python_script_path}\"\n")
             outfile.write("CURR=0\n")
 
-            outfile.write("trap 'rm -f \"$CONTEXT_PYTHON_SCRIPT\" \"$EXEC_PYTHON_SCRIPT\"' EXIT\n")
-            outfile.write("rm -f \"$CONTEXT_PYTHON_SCRIPT\" \"$EXEC_PYTHON_SCRIPT\"\n")
-            outfile.write("touch \"$CONTEXT_PYTHON_SCRIPT\" \"$EXEC_PYTHON_SCRIPT\"\n")
+            outfile.write("trap 'rm -f \"$CONTEXT_PYTHON_SCRIPT\"' EXIT\n")
+            outfile.write("rm -f \"$CONTEXT_PYTHON_SCRIPT\"\n")
+            outfile.write("touch \"$CONTEXT_PYTHON_SCRIPT\"\n")
 
             outfile.write("datetime=$(date -u +\"%Y-%m-%d %H:%M:%S\")\n")
 
@@ -246,20 +240,8 @@ def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path):
                     outfile.write("((CURR++))\n")
 
                 elif language == 'python':
-                    outfile.write("echo \"\"\"\\n")
-                    for line in code_lines:
-                        line = line.replace('"', '\\"').replace('$', '\\$')
-                        outfile.write(f"{line}\\n\n")
-                    outfile.write("\"\"\" > \"$CONTEXT_PYTHON_SCRIPT\"\n")
-
-                    outfile.write("echo \"try:\" > \"$EXEC_PYTHON_SCRIPT\"\n")
-                    outfile.write("sed 's/^/    /' \"$CONTEXT_PYTHON_SCRIPT\" >> \"$EXEC_PYTHON_SCRIPT\"\n")
-
-                    outfile.write("echo \"except subprocess.CalledProcessError as e:\" >> \"$EXEC_PYTHON_SCRIPT\"\n")
-                    outfile.write(
-                        "echo \"    print(f'Error occurred processing chunk: {e}')\" >> \"$EXEC_PYTHON_SCRIPT\"\n")
-                    outfile.write("echo \"    import sys; sys.exit(1)\" >> \"$EXEC_PYTHON_SCRIPT\"\n")
-                    outfile.write("$VENV_PYTHON \"$EXEC_PYTHON_SCRIPT\"\n")
+                    with context_python_script_path.open('a') as py_script:
+                        py_script.write('\n'.join(code_lines) + '\n')
 
                     outfile.write("((CURR++))\n")
 
@@ -286,8 +268,9 @@ def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path):
                     "}\" > \"$EVAL_BUILD\"\n"
                 )
 
+            outfile.write("$VENV_PYTHON \"$CONTEXT_PYTHON_SCRIPT\"\n")
+
         context_python_script_path.unlink()
-        exec_python_script_path.unlink()
 
         print(f"[INFO] Temp script generated successfully at {temp_sh_path}")
         logger.info("Temp script generated successfully at %s", temp_sh_path)
