@@ -199,20 +199,20 @@ def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path):
 
             outfile.write("datetime=$(date -u +\"%Y-%m-%d %H:%M:%S\")\n")
 
-            outfile.write("CHANGES_FILE=\"$SCRIPT_DIR/file_changes.json\"\n")
-            outfile.write("echo '[]' > \"$CHANGES_FILE\"  # Initialize empty JSON array\n")
+            outfile.write("DATA_FILE=\"$SCRIPT_DIR/eval_data.json\"\n")
+            outfile.write("echo '[]' > \"$DATA_FILE\"\n")
             outfile.write("\n")
-            outfile.write("function log_changes() {\n")
+            outfile.write("function log_data() {\n")
             outfile.write("    local part_number=\"$1\"\n")
-            outfile.write("    local new_files=$(find \"$SCRIPT_DIR\" -type f -newer \"$CHANGES_FILE\")\n")
+            outfile.write("    local new_files=$(find \"$SCRIPT_DIR\" -type f -newer \"$DATA_FILE\")\n")
             outfile.write("    if [ -n \"$new_files\" ]; then\n")
             outfile.write(
                 "        local json_entry=\"{\\\"part\\\": $part_number, \\\"files\\\": [\\\"$(echo \"$new_files\" | sed 's/^//' | tr '\\n' ',' | sed 's/,$//' | sed 's/,/\\\",\\\"/g')\\\"]}\"\n")
             outfile.write("        local temp_file=$(mktemp)\n")
             outfile.write(
-                "        jq \". + [$json_entry]\" \"$CHANGES_FILE\" > \"$temp_file\" && mv \"$temp_file\" \"$CHANGES_FILE\"\n")
+                "        jq \". + [$json_entry]\" \"$DATA_FILE\" > \"$temp_file\" && mv \"$temp_file\" \"$DATA_FILE\"\n")
             outfile.write("    fi\n")
-            outfile.write("    touch \"$CHANGES_FILE\"  # Update the timestamp\n")
+            outfile.write("    touch \"$DATA_FILE\"\n")
             outfile.write("}\n")
             outfile.write("\n")
 
@@ -272,7 +272,7 @@ def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path):
                     print(f"Skipping part with unsupported language: {language}")
                     continue
 
-                outfile.write(f"log_changes \"$CURR\"\n")
+                outfile.write(f"log_data \"$CURR\"\n")
 
                 outfile.write(
                     f"if [ \"$CURR\" -eq \"{last_count}\" ]; then\n"
