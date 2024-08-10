@@ -246,10 +246,10 @@ def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path):
                     outfile.write("((CURR++))\n")
 
                 elif language == 'python':
-                    outfile.write("echo \"\"\"\\\n")
+                    outfile.write("echo \"\"\"\\n")
                     for line in code_lines:
                         line = line.replace('"', '\\"').replace('$', '\\$')
-                        outfile.write(f"{line}\\n\\\n")
+                        outfile.write(f"{line}\\n\n")
                     outfile.write("\"\"\" > \"$CONTEXT_PYTHON_SCRIPT\"\n")
 
                     outfile.write("echo \"try:\" > \"$EXEC_PYTHON_SCRIPT\"\n")
