@@ -28,7 +28,7 @@ def check_command_availability(commands):
     """Generate bash snippets to check if each command in the provided list is available."""
     checks = [
         f"""
-if [[ $IS_COLAB -eq 0 ]] && ! command -v {cmd} >/dev/null; then
+if ! command -v {cmd} >/dev/null; then
   echo "{cmd} not found. Please install {cmd}."
   exit 1
 fi
@@ -53,27 +53,6 @@ def load_toml_config(file_path):
     return config, model_name
 
 
-def generate_colab_check_script():
-    """Generate the script to check for Google Colab environment."""
-    return """
-if [[ -d "/content" ]]; then
-  # Detected Google Colab environment
-  if command -v nvidia-smi &> /dev/null; then
-    echo "Running in Google Colab with GPU"
-    IS_COLAB=1
-    DEVICE="cuda"
-  else
-    echo "Running in Google Colab with CPU only"
-    IS_COLAB=1
-    DEVICE="cpu"
-  fi
-else
-  echo "Not running in Google Colab environment"
-  IS_COLAB=0
-fi
-    """.strip()
-
-
 def generate_venv_setup_script(env_name, build_prefix):
     """Generate the script to set up the virtual environment."""
     return f"""
@@ -81,10 +60,6 @@ handle_error() {{
     echo "Oops! Something went wrong."
     exit 1
 }}
-
-if [[ $IS_COLAB -ne 0 ]]; then
-    apt install python3.10-venv
-fi
 
 echo "Checking for Python"
 if [[ -x "$(command -v python3.11)" ]]; then
@@ -243,7 +218,6 @@ def parse_toml_to_venv_script(file_path: str, env_name="myenv") -> str:
     build_prefix = "build"
 
     script = ["#!/bin/bash"]
-    script.append(generate_colab_check_script())
     script.append(f"mkdir -p {model_name}/{build_prefix}")
     script.extend(check_command_availability(["curl", "wget", "git"]))
 
@@ -252,7 +226,7 @@ def parse_toml_to_venv_script(file_path: str, env_name="myenv") -> str:
     if package_list_unix:
         apt_install = f"""
 OS=$(uname)
-if [[ $IS_COLAB -eq 0 && "$OS" = "Linux" && -f /etc/debian_version ]]; then
+if [[ "$OS" = "Linux" && -f /etc/debian_version ]]; then
     echo "Installing required Unix packages..."
     sudo apt update
     sudo apt install -y {' '.join(package_list_unix)}
