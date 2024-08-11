@@ -11,15 +11,7 @@ CURRENT_DIR="$(pwd)"
 OS=$(uname)
 WORK_DIR="$CURRENT_DIR/$FLATPACK_NAME/build/$DEFAULT_REPO_NAME"
 
-if [[ -d "/content" ]]; then
-  if command -v nvidia-smi &>/dev/null; then
-    echo "Detected Colab GPU environment"
-    DEVICE="cuda"
-  else
-    echo "Detected Colab CPU environment"
-    DEVICE="cpu"
-  fi
-elif [[ "$OS" == "Darwin" ]]; then
+if [[ "$OS" == "Darwin" ]]; then
   echo "Detected macOS environment"
   DEVICE="mps"
 elif [[ "$OS" == "Linux" ]]; then
