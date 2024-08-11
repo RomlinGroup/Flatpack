@@ -79,6 +79,7 @@ def initialize_database(db_path: str):
                 id INTEGER PRIMARY KEY,
                 hook_name TEXT NOT NULL,
                 hook_script TEXT NOT NULL,
+                hook_type TEXT NOT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
@@ -304,6 +305,13 @@ def fpk_build(directory: Union[str, None]):
         None
     """
     if directory:
+        flatpack_dir = Path.cwd() / directory
+
+        if not flatpack_dir.exists():
+            print(f"[ERROR] The directory '{flatpack_dir}' does not exist.")
+            logger.error("The directory '%s' does not exist.", flatpack_dir)
+            return
+
         db_path = os.path.join(directory, 'build', 'flatpack.db')
         initialize_database(db_path)
 
@@ -373,6 +381,44 @@ def fpk_build(directory: Union[str, None]):
                 log_file.write(line)
 
             process.wait()
+
+            db_path = os.path.join(last_unboxed_flatpack, 'build', 'flatpack.db')
+
+            try:
+                conn = sqlite3.connect(db_path)
+                cursor = conn.cursor()
+                cursor.execute("SELECT hook_name, hook_script, hook_type FROM flatpack_hooks")
+                hooks = cursor.fetchall()
+                conn.close()
+
+                for hook_name, hook_script in hooks:
+                    print(f"[INFO] Executing hook: {hook_name}")
+                    logger.info("Executing hook: %s", hook_name)
+
+                    if hook_type == "bash":
+                        hook_process = subprocess.Popen(hook_script, shell=True, stdout=subprocess.PIPE,
+                                                        stderr=subprocess.STDOUT, text=True)
+                        for line in hook_process.stdout:
+                            print(line, end='')
+                            logger.info(line.strip())
+                            log_file.write(line)
+
+                        hook_process.wait()
+                    elif hook_type == "python":
+                        try:
+                            exec(hook_script)
+                        except Exception as e:
+                            print(f"[ERROR] An error occurred while executing Python hook {hook_name}: {e}")
+                            logger.error("An error occurred while executing Python hook %s: %s", hook_name, e)
+                    else:
+                        print(f"[WARNING] Unsupported hook type for {hook_name}. Skipping.")
+                        logger.warning("Unsupported hook type for %s. Skipping.", hook_name)
+
+            except sqlite3.Error as e:
+                print(f"[ERROR] An error occurred while retrieving or executing hooks: {e}")
+                logger.error("An error occurred while retrieving or executing hooks: %s", e)
+                return
+
     except subprocess.CalledProcessError as e:
         print(f"[ERROR] An error occurred while executing the build script: {e}")
         logger.error("An error occurred while executing the build script: %s", e)
