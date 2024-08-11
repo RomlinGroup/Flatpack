@@ -391,7 +391,7 @@ def fpk_build(directory: Union[str, None]):
                 hooks = cursor.fetchall()
                 conn.close()
 
-                for hook_name, hook_script in hooks:
+                for hook_name, hook_script, hook_type in hooks:
                     print(f"[INFO] Executing hook: {hook_name}")
                     logger.info("Executing hook: %s", hook_name)
 
@@ -2014,6 +2014,8 @@ app = FastAPI()
 class Hook(BaseModel):
     hook_name: str
     hook_script: str
+    hook_type: str
+
 
 
 class EndpointFilter(logging.Filter):
@@ -2050,9 +2052,9 @@ def add_hook_to_database(hook: Hook):
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
         cursor.execute("""
-            INSERT INTO flatpack_hooks (hook_name, hook_script)
-            VALUES (?, ?)
-        """, (hook.hook_name, hook.hook_script))
+            INSERT INTO flatpack_hooks (hook_name, hook_script, hook_type)
+            VALUES (?, ?, ?)
+        """, (hook.hook_name, hook.hook_script, 'python'))
         conn.commit()
         conn.close()
         return {"message": "Hook added successfully."}
@@ -2123,11 +2125,11 @@ def get_all_hooks_from_database():
         ensure_database_initialized()
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
-        cursor.execute("SELECT hook_name, hook_script FROM flatpack_hooks")
+        cursor.execute("SELECT hook_name, hook_script, hook_type FROM flatpack_hooks")
         hooks = cursor.fetchall()
         conn.close()
 
-        hooks_list = [{"hook_name": hook[0], "hook_script": hook[1]} for hook in hooks]
+        hooks_list = [{"hook_name": hook[0], "hook_script": hook[1], "hook_type": hook[2]} for hook in hooks]
         return hooks_list
 
     except Error as e:
