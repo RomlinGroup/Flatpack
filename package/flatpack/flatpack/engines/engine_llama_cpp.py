@@ -1,4 +1,3 @@
-import logging
 import os
 import shlex
 import shutil
@@ -7,7 +6,7 @@ import tempfile
 
 
 class LlamaCPPEngine:
-    def __init__(self, model_path, llama_cpp_dir="llama.cpp", n_ctx=4096, n_threads=8, verbose=False):
+    def __init__(self, model_path, llama_cpp_dir="llama.cpp", n_ctx=4096, n_threads=8, verbose=True):
         self.model_path = model_path
         self.llama_cpp_dir = llama_cpp_dir
         self.n_ctx = n_ctx
@@ -16,28 +15,34 @@ class LlamaCPPEngine:
         self.setup_llama_cpp()
         os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
-    def log(self, message, level=logging.INFO):
+    def print_debug(self, message):
         if self.verbose:
             print(message)
-        else:
-            logging.log(level, message)
 
     def setup_llama_cpp(self):
+        self.print_debug(f"Checking if llama.cpp directory '{self.llama_cpp_dir}' exists...")
         if not os.path.exists(self.llama_cpp_dir):
+            self.print_debug(f"Directory '{self.llama_cpp_dir}' not found. Cloning repository...")
             self.clone_llama_cpp_repo()
+        else:
+            self.print_debug(f"Directory '{self.llama_cpp_dir}' already exists. Skipping cloning.")
 
         main_executable = os.path.join(self.llama_cpp_dir, "llama-cli")
+        self.print_debug(f"Checking if main executable '{main_executable}' exists...")
         if not os.path.exists(main_executable):
+            self.print_debug(f"Executable '{main_executable}' not found. Running 'make'...")
             self.run_make()
+        else:
+            self.print_debug(f"Executable '{main_executable}' found. Skipping 'make'.")
 
     def clone_llama_cpp_repo(self):
         git_executable = shutil.which("git")
         if not git_executable:
-            self.log("[ERROR] The 'git' executable was not found in your PATH.", logging.ERROR)
+            print("[ERROR] The 'git' executable was not found in your PATH.")
             return
 
         try:
-            self.log("Cloning llama.cpp repository...")
+            self.print_debug("Running 'git clone' to clone the llama.cpp repository...")
             subprocess.run(
                 [
                     git_executable,
@@ -51,20 +56,22 @@ class LlamaCPPEngine:
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE
             )
-            self.log(f"Finished cloning llama.cpp repository into '{self.llama_cpp_dir}'")
+            self.print_debug(f"Successfully cloned llama.cpp repository into '{self.llama_cpp_dir}'")
         except subprocess.CalledProcessError as e:
-            self.log(f"Failed to clone the llama.cpp repository. Error: {e.stderr.decode()}", logging.ERROR)
+            print(f"[ERROR] Failed to clone the llama.cpp repository. Error: {e.stderr.decode()}")
 
     def run_make(self):
         makefile_path = os.path.join(self.llama_cpp_dir, "Makefile")
+        self.print_debug(f"Checking if Makefile exists at '{makefile_path}'...")
         if os.path.exists(makefile_path):
+            self.print_debug("Makefile found. Checking if 'make' is available...")
             make_executable = shutil.which("make")
             if not make_executable:
-                self.log("[ERROR] 'make' executable not found in PATH.", logging.ERROR)
+                print("[ERROR] 'make' executable not found in PATH.")
                 return
 
             try:
-                self.log("Running 'make' in the llama.cpp directory...")
+                self.print_debug("Running 'make' to build the llama.cpp project...")
                 subprocess.run(
                     [make_executable],
                     cwd=self.llama_cpp_dir,
@@ -72,19 +79,24 @@ class LlamaCPPEngine:
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE
                 )
-                self.log("Finished running 'make' in the llama.cpp directory")
+                self.print_debug("Successfully ran 'make' in the llama.cpp directory")
             except subprocess.CalledProcessError as e:
-                self.log(f"Failed to run 'make' in the llama.cpp directory. Error: {e.stderr.decode()}", logging.ERROR)
+                print(f"[ERROR] Failed to run 'make' in the llama.cpp directory. Error: {e.stderr.decode()}")
         else:
-            self.log("Makefile not found in the llama.cpp directory.", logging.ERROR)
+            print("[ERROR] Makefile not found in the llama.cpp directory.")
 
     def generate_response(self, prompt, max_tokens):
+        self.print_debug(f"Generating response for the prompt: {prompt}")
+        self.print_debug(f"Maximum tokens set to: {max_tokens}")
+
         with tempfile.NamedTemporaryFile(delete=False, mode='w', encoding='utf-8') as prompt_file:
+            self.print_debug(f"Writing prompt to temporary file '{prompt_file.name}'...")
             prompt_file.write(prompt)
             prompt_file_path = prompt_file.name
 
         with tempfile.NamedTemporaryFile(delete=False, mode='w', encoding='utf-8') as output_file:
             output_file_path = output_file.name
+            self.print_debug(f"Output will be written to temporary file '{output_file_path}'")
 
         command = [
             os.path.join(self.llama_cpp_dir, 'llama-cli'),
@@ -97,21 +109,25 @@ class LlamaCPPEngine:
             '--file', prompt_file_path
         ]
 
-        self.log(f"Executing command: {' '.join(shlex.quote(arg) for arg in command)}")
+        self.print_debug(f"Executing command: {' '.join(shlex.quote(arg) for arg in command)}")
 
         try:
             with open(output_file_path, 'w', encoding='utf-8') as out_file:
                 subprocess.run(command, stdout=out_file, stderr=subprocess.PIPE, check=True)
+                self.print_debug("Command executed successfully.")
 
             with open(output_file_path, 'r', encoding='utf-8') as file:
                 content = file.read().strip()
+                self.print_debug(f"Read content from output file: {content}")
 
             response = content.replace(prompt.strip(), '', 1).strip()
+            self.print_debug(f"Generated response: {response}")
             return response
 
         except subprocess.CalledProcessError as e:
-            self.log(f"Error running model: {e.stderr.decode()}", logging.ERROR)
+            print(f"[ERROR] Error running model: {e.stderr.decode()}")
             return "I'm sorry, I don't have a response for that."
         finally:
+            self.print_debug(f"Cleaning up temporary files: {prompt_file_path}, {output_file_path}")
             os.remove(prompt_file_path)
             os.remove(output_file_path)
