@@ -119,6 +119,9 @@ flatpack create <flatpack_name>
 
 ```bash
 wget -nc https://raw.githubusercontent.com/romlingroup/flatpack/main/agents/fast_api_local.py
+```
+
+```bash
 flatpack agents spawn fast_api_local.py
 ```
 
