@@ -118,7 +118,7 @@ flatpack create <flatpack_name>
 ## AgentManager
 
 ```bash
-wget https://raw.githubusercontent.com/romlingroup/flatpack/main/agents/fast_api_local.py
+wget -nc https://raw.githubusercontent.com/romlingroup/flatpack/main/agents/fast_api_local.py
 flatpack agents spawn fast_api_local.py
 ```
 
