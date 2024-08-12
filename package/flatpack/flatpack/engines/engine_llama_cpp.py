@@ -26,7 +26,7 @@ class LlamaCPPEngine:
         if not os.path.exists(self.llama_cpp_dir):
             self.clone_llama_cpp_repo()
 
-        main_executable = os.path.join(self.llama_cpp_dir, "main")
+        main_executable = os.path.join(self.llama_cpp_dir, "llama-cli")
         if not os.path.exists(main_executable):
             self.run_make()
 

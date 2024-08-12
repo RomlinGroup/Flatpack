@@ -207,11 +207,13 @@ def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path):
             outfile.write("    local part_number=\"$1\"\n")
             outfile.write("    local new_files=$(find \"$SCRIPT_DIR\" -type f -newer \"$DATA_FILE\")\n")
             outfile.write("    if [ -n \"$new_files\" ]; then\n")
-            outfile.write(
-                "        local json_entry=\"{\\\"part\\\": $part_number, \\\"files\\\": [\\\"$(echo \"$new_files\" | sed 's/^//' | tr '\\n' ',' | sed 's/,$//' | sed 's/,/\\\",\\\"/g')\\\"]}\"\n")
             outfile.write("        local temp_file=$(mktemp)\n")
+            outfile.write("        for file in $new_files; do\n")
             outfile.write(
-                "        jq \". + [$json_entry]\" \"$DATA_FILE\" > \"$temp_file\" && mv \"$temp_file\" \"$DATA_FILE\"\n")
+                "            local json_entry=\"{\\\"part\\\": $part_number, \\\"files\\\": [\\\"$file\\\"]}\"\n")
+            outfile.write(
+                "            jq \". + [$json_entry]\" \"$DATA_FILE\" > \"$temp_file\" && mv \"$temp_file\" \"$DATA_FILE\"\n")
+            outfile.write("        done\n")
             outfile.write("    fi\n")
             outfile.write("    touch \"$DATA_FILE\"\n")
             outfile.write("}\n")
