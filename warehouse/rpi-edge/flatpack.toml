@@ -31,6 +31,7 @@ wget = "*"
 [packages.python]
 numpy = "2.0.1"
 tiktoken = "0.7.0"
+torch = "2.4.0"
 tqdm = "4.66.5"
 
 # [[git]]
@@ -56,6 +57,10 @@ to_destination = "custom.sh"
 [[file]]
 from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/rpi-edge/device.sh"
 to_destination = "device.sh"
+
+[[file]]
+from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/rpi-edge/rwkv-cpp.py"
+to_destination = "rwkv-cpp.py"
 
 [[run]]
 command = "chmod +x"
