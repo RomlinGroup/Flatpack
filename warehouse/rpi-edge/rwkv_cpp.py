@@ -61,10 +61,8 @@ def chat() -> None:
     print('Starting chat... Type your message and press Enter. Type "exit" to quit.')
 
     while True:
-        state = None
-        logits = None
-
         user_input: str = input("> ").strip()
+
         if user_input.lower() == "exit":
             print("Exiting chat.")
             break
@@ -104,7 +102,7 @@ def chat() -> None:
 
         print(bot_response.strip(), flush=True)
 
-        os.system(f'espeak-ng -v sv "{bot_response.strip()}"')
+        os.system(f'espeak-ng -v en-us -s 150 -p 70 -g 10 "{bot_response.strip()}"')
 
 
 if __name__ == "__main__":
