@@ -99,9 +99,6 @@ def chat() -> None:
                 bot_response += decoded
                 accumulated_tokens = []
 
-            if "\n" in bot_response:
-                break
-
         if bot_response.strip() == "":
             bot_response = "I'm sorry, I didn't catch that. Could you please rephrase?"
 
