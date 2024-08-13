@@ -105,9 +105,9 @@ def chat() -> None:
         if bot_response.strip() == "":
             bot_response = "I'm sorry, I didn't catch that. Could you please rephrase?"
 
-        print(bot_response.strip())
+        print(bot_response, flush=True)
 
-        os.system(f'espeak-ng "{bot_response.strip()}"')
+        os.system(f'espeak-ng -v sv "{bot_response.strip()}"')
 
 
 if __name__ == "__main__":
