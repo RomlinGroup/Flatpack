@@ -75,16 +75,6 @@ bash"
 ### Install on Raspberry Pi OS Lite (64-bit)
 
 ```bash
-sudo apt update && \
-sudo apt-get dist-upgrade -y && \
-sudo apt-get autoremove -y && \
-sudo apt install -y zram-tools && \
-echo -e "ALGO=zstd\nPERCENT=60" | sudo tee /etc/default/zramswap && \
-sudo systemctl enable --now zramswap.service && \
-sudo reboot
-```
-
-```bash
 sudo apt-get install -y build-essential git pipx python3.11 python3.11-dev
 ```
 
