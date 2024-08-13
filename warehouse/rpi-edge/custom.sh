@@ -74,7 +74,7 @@ with open(\"output.txt\", \"w\") as file:
     file.write(cleaned_output)
 """
 part_bash """
-if [ ! -d \\"piper\\" ]; then
+if [ ! -d \"piper\" ]; then
     wget -nc https://github.com/rhasspy/piper/releases/download/v1.2.0/piper_arm64.tar.gz
     tar -xvzf piper_arm64.tar.gz
 else
