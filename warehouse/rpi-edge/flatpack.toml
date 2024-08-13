@@ -59,8 +59,8 @@ from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/wa
 to_destination = "device.sh"
 
 [[file]]
-from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/rpi-edge/rwkv-cpp.py"
-to_destination = "rwkv-cpp.py"
+from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/rpi-edge/rwkv_cpp.py"
+to_destination = "rwkv_cpp.py"
 
 [[run]]
 command = "chmod +x"
