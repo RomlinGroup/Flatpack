@@ -1,12 +1,12 @@
 part_bash """
-cp -f ../rwkv_cpp.py ./rwkv.cpp/python/rwkv_cpp.py
-"""
-part_bash """
 sudo apt-get update && sudo apt-get upgrade
 sudo apt-get install cmake espeak-ng -y
 """
 part_bash """
 git clone --depth 1 --recursive https://github.com/RWKV/rwkv.cpp
+"""
+part_bash """
+cp -f ../rwkv_cpp.py ./rwkv.cpp/python/rwkv_cpp.py
 """
 part_bash """
 cd rwkv.cpp
