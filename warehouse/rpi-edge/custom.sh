@@ -10,6 +10,7 @@ cp -f ../rwkv_cpp.py ./rwkv.cpp/python/rwkv_cpp.py
 """
 part_bash """
 cd rwkv.cpp
+
 cmake .
 cmake --build . --config Release
 
