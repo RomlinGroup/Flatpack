@@ -149,7 +149,7 @@ def strip_html(content: str) -> str:
     return soup.get_text()
 
 
-def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path):
+def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path, use_euxo: bool = False):
     try:
         with custom_sh_path.open('r') as infile:
             script = infile.read()
@@ -187,7 +187,11 @@ def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path):
 
         with temp_sh_path.open('w') as outfile:
             outfile.write("#!/bin/bash\n")
-            outfile.write("set -euo pipefail\n")
+
+            if use_euxo:
+                outfile.write("set -euxo pipefail\n")
+            else:
+                outfile.write("set -euo pipefail\n")
 
             outfile.write(f"CONTEXT_PYTHON_SCRIPT=\"{context_python_script_path}\"\n")
             outfile.write("EVAL_BUILD=\"$SCRIPT_DIR/eval_build.json\"\n")
@@ -297,7 +301,7 @@ def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path):
         logger.error("An error occurred while creating temp script: %s", e)
 
 
-def fpk_build(directory: Union[str, None]):
+def fpk_build(directory: Union[str, None], use_euxo: bool = False):
     """Build a flatpack.
 
     Args:
@@ -350,7 +354,7 @@ def fpk_build(directory: Union[str, None]):
         logger.error("custom.sh not found in %s. Build process canceled.", last_unboxed_flatpack)
         return
     else:
-        create_temp_sh(custom_sh_path, temp_sh_path)
+        create_temp_sh(custom_sh_path, temp_sh_path, use_euxo=use_euxo)
 
     building_script_path = Path(last_unboxed_flatpack) / 'build' / 'build.sh'
 
@@ -1335,6 +1339,12 @@ def setup_arg_parser():
         help='The directory of the flatpack to build.'
     )
 
+    parser_build.add_argument(
+        '--use-euxo',
+        action='store_true',
+        help="Use 'set -euxo pipefail' in the shell script (default is 'set -euo pipefail')."
+    )
+
     parser_build.set_defaults(
         func=fpk_cli_handle_build
     )
@@ -1641,7 +1651,7 @@ def fpk_cli_handle_build(args, session):
         print("[INFO] No directory name provided. Using cached directory if available.")
         logger.info("No directory name provided. Using cached directory if available.")
 
-    fpk_build(directory_name)
+    fpk_build(directory_name, use_euxo=args.use_euxo)
 
 
 def fpk_cli_handle_create(args, session):
@@ -2017,7 +2027,6 @@ class Hook(BaseModel):
     hook_name: str
     hook_script: str
     hook_type: str
-
 
 
 class EndpointFilter(logging.Filter):
