@@ -111,6 +111,7 @@ flatpack unbox <flatpack_name>
 ```
 
 ```bash
+# Use the --use-euxo flag for debugging
 flatpack build <flatpack_name>
 ```
 
