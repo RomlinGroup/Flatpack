@@ -8,8 +8,7 @@ part_bash """
 --cpu \
 --image \"tiger.png\" \
 --prompt \"Should I pet this dog?\" \
-> output.txt \
-2>log.txt
+> output.txt
 """
 part_bash """
 if [ -f \"output.txt\" ]; then
