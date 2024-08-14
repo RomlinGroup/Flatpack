@@ -51,7 +51,7 @@ git clone https://github.com/RomlinGroup/Flatpack && cd Flatpack/package/flatpac
 ```
 
 ```bash
-pipx install --force .
+pip install --force .
 ```
 
 ### Install with Docker
