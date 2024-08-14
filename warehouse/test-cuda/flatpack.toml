@@ -42,19 +42,19 @@ tqdm = "4.66.5"
 # ]
 
 [[file]]
-from_source = "index.html"
+from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/test-cuda/index.html"
 to_destination = "index.html"
 
 [[file]]
-from_source = "build.sh"
+from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/test-cuda/build.sh"
 to_destination = "build.sh"
 
 [[file]]
-from_source = "custom.sh"
+from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/test-cuda/custom.sh"
 to_destination = "custom.sh"
 
 [[file]]
-from_source = "device.sh"
+from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/test-cuda/device.sh"
 to_destination = "device.sh"
 
 [[run]]
