@@ -75,7 +75,24 @@ bash"
 ### Install on Raspberry Pi OS Lite (64-bit)
 
 ```bash
-sudo apt-get install -y build-essential git pipx python3.11 python3.11-dev
+sudo apt-get install -y build-essential git pipx python3-dev python3.11 python3.11-dev
+```
+
+```bash
+pipx install flatpack && sudo reboot
+```
+
+### Install on Windows 11
+
+Install Ubuntu 24.04 LTS using Windows Subsystem for Linux (WSL).
+https://apps.microsoft.com/detail/9nz3klhxdjp5
+
+```bash
+sudo add-apt-repository ppa:deadsnakes/ppa
+```
+
+```bash
+sudo apt-get install -y build-essential git pipx python3-dev python3.11 python3.11-dev
 ```
 
 ```bash
