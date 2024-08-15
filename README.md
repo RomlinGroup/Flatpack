@@ -84,8 +84,7 @@ pipx install flatpack && sudo reboot
 
 ### Install on Windows 11
 
-Install Ubuntu 24.04 LTS using Windows Subsystem for Linux (WSL).
-https://apps.microsoft.com/detail/9nz3klhxdjp5
+Install [Ubuntu 24.04 LTS](https://apps.microsoft.com/detail/9nz3klhxdjp5) using Windows Subsystem for Linux (WSL).
 
 ```bash
 sudo add-apt-repository ppa:deadsnakes/ppa
