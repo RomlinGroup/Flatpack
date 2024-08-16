@@ -63,6 +63,9 @@ Check out the [JLA - Compatibility Checker](https://joinup.ec.europa.eu/collecti
 - **[beautifulsoup4](https://pypi.org/project/beautifulsoup4/)**\
   MIT License (MIT License) ([LICENSE](https://pypi.org/project/beautifulsoup4/))
 
+- **[cryptography](https://pypi.org/project/cryptography/)**\
+  Apache Software License, BSD License (Apache-2.0 OR BSD-3-Clause) ([LICENSE](https://github.com/pyca/cryptography/blob/main/LICENSE))
+
 - **[fastapi](https://pypi.org/project/fastapi/)**\
   MIT License ([LICENSE](https://github.com/tiangolo/fastapi/blob/master/LICENSE))
 
@@ -110,5 +113,8 @@ Check out the [JLA - Compatibility Checker](https://joinup.ec.europa.eu/collecti
 
 - **[uvicorn](https://pypi.org/project/uvicorn/)**\
   BSD License ([LICENSE](https://github.com/encode/uvicorn/blob/master/LICENSE.md))
+
+- **[zstandard](https://pypi.org/project/zstandard/)**\
+  BSD License (BSD) ([LICENSE](https://github.com/indygreg/python-zstandard/blob/main/LICENSE))
 
 Last updated: 2024-07-28

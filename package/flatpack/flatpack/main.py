@@ -14,6 +14,7 @@ import stat
 import string
 import subprocess
 import sys
+import tarfile
 import tempfile
 import warnings
 
@@ -31,8 +32,13 @@ import ngrok
 import requests
 import toml
 import uvicorn
+import zstandard as zstd
 
 from bs4 import BeautifulSoup, MarkupResemblesLocatorWarning
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import padding
 from fastapi import Depends, FastAPI, Form, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Response
@@ -721,7 +727,9 @@ def fpk_fetch_flatpack_toml_from_dir(directory_name: str, session: httpx.Client)
 
         return None
 
+    fpk_url = f"{BASE_URL}/{directory_name}/{directory_name}.fpk"
     toml_url = f"{BASE_URL}/{directory_name}/flatpack.toml"
+
     try:
         response = session.get(toml_url)
         response.raise_for_status()
@@ -1027,16 +1035,85 @@ def fpk_set_secure_file_permissions(file_path):
         logger.error("Failed to set secure file permissions for %s: %s", file_path, e)
 
 
-def fpk_unbox(directory_name: str, session, local: bool = False):
+def validate_file_path(path, is_input=True, allowed_dir=None):
+    """
+    Validate the file path to prevent directory traversal attacks.
+
+    Parameters:
+        path (str): The path to validate.
+        is_input (bool): Flag indicating if the path is for input. Defaults to True.
+        allowed_dir (str): The allowed directory for the path. Defaults to None.
+
+    Returns:
+        str: The absolute path if valid.
+
+    Raises:
+        ValueError: If the path is outside the allowed directory or invalid.
+        FileNotFoundError: If the path does not exist.
+    """
+    absolute_path = os.path.abspath(path)
+
+    if allowed_dir:
+        allowed_dir_absolute = os.path.abspath(allowed_dir)
+        if not absolute_path.startswith(allowed_dir_absolute):
+            raise ValueError(
+                f"Path '{path}' is outside the allowed directory '{allowed_dir}'."
+            )
+
+    if is_input:
+        if not os.path.exists(absolute_path):
+            raise FileNotFoundError(f"The path '{absolute_path}' does not exist.")
+        if not (os.path.isfile(absolute_path) or os.path.isdir(absolute_path)):
+            raise ValueError(
+                f"The path '{absolute_path}' is neither a file nor a directory."
+            )
+    else:
+        output_dir = os.path.dirname(absolute_path)
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+
+    return absolute_path
+
+
+def decompress_data(input_path, output_path, allowed_dir=None):
+    try:
+        abs_input_path = validate_file_path(input_path, allowed_dir=allowed_dir)
+        abs_output_path = validate_file_path(output_path, is_input=False, allowed_dir=allowed_dir)
+
+        with open(abs_input_path, 'rb') as f:
+            compressed_data = f.read()
+
+        decompressed_data = zstd.decompress(compressed_data)
+
+        try:
+            with tempfile.NamedTemporaryFile() as tmp_file:
+                tmp_file.write(decompressed_data)
+                tmp_file.seek(0)
+
+                with tarfile.open(fileobj=tmp_file, mode='r:') as tar:
+
+                    for member in tar.getmembers():
+                        member_path = os.path.join(abs_output_path, member.name)
+                        if not os.path.commonprefix([abs_output_path, os.path.abspath(member_path)]) == abs_output_path:
+                            raise Exception(f"Attempted Path Traversal in Tar File: {member.name}")
+                    tar.extractall(path=abs_output_path)
+        except tarfile.ReadError:
+
+            with open(abs_output_path, 'wb') as f:
+                f.write(decompressed_data)
+
+    except Exception as e:
+        logging.error("An error occurred while decompressing: %s", e)
+        print(f"[ERROR] An error occurred while decompressing: {e}")
+
+
+def fpk_unbox(directory_name: str, session: httpx.Client, local: bool = False):
     """Unbox a flatpack from GitHub or a local directory.
 
     Args:
         directory_name (str): Name of the flatpack directory.
         session (httpx.Client): HTTP client session for making requests.
         local (bool): Indicates if the flatpack is local. Defaults to False.
-
-    Returns:
-        None
     """
     if not fpk_valid_directory_name(directory_name):
         message = f"Invalid directory name: '{directory_name}'."
@@ -1048,39 +1125,73 @@ def fpk_unbox(directory_name: str, session, local: bool = False):
     build_dir = flatpack_dir / "build"
     db_path = build_dir / 'flatpack.db'
 
-    if flatpack_dir.exists() and not local:
-        message = "Flatpack directory already exists."
-        print(f"[ERROR] {message}")
-        logger.error("%s", message)
-        return
-
-    if build_dir.exists():
-        message = "Build directory already exists."
-        print(f"[ERROR] {message}")
-        logger.error("%s", message)
-        return
-
     flatpack_dir.mkdir(parents=True, exist_ok=True)
     build_dir.mkdir(parents=True, exist_ok=True)
-
     temp_toml_path = build_dir / 'temp_flatpack.toml'
 
     if local:
         toml_path = flatpack_dir / 'flatpack.toml'
+
         if not toml_path.exists():
             message = f"flatpack.toml not found in the specified directory: '{directory_name}'."
             print(f"[ERROR] {message}")
             logger.error("%s", message)
             return
-        toml_content = toml_path.read_text()
     else:
-        toml_content = fpk_fetch_flatpack_toml_from_dir(directory_name, session)
-        if not toml_content:
-            message = f"Failed to fetch TOML content for '{directory_name}'."
-            print(f"[ERROR] {message}")
-            logger.error("%s", message)
+        fpk_url = f"{BASE_URL}/{directory_name}/{directory_name}.fpk"
+
+        try:
+            response = session.head(fpk_url)
+            if response.status_code != 200:
+                print(f"[ERROR] .fpk file does not exist at {fpk_url}")
+                logger.error(".fpk file does not exist at %s", fpk_url)
+                return
+            else:
+                print(f"[INFO] .fpk file found at {fpk_url}")
+                logger.info(".fpk file found at %s", fpk_url)
+        except httpx.RequestError as e:
+            print(f"[ERROR] Network error occurred while checking .fpk file: {e}")
+            logger.error("Network error occurred while checking .fpk file: %s", e)
+            return
+        except Exception as e:
+            print(f"[ERROR] An unexpected error occurred: {e}")
+            logger.error("An unexpected error occurred: %s", e)
             return
 
+        fpk_path = build_dir / f"{directory_name}.fpk"
+
+        try:
+            with open(fpk_path, "wb") as fpk_file:
+                download_response = session.get(fpk_url)
+                fpk_file.write(download_response.content)
+            print(f"[INFO] Downloaded .fpk file to {fpk_path}")
+            logger.info("Downloaded .fpk file to %s", fpk_path)
+        except httpx.RequestError as e:
+            print(f"[ERROR] Failed to download the .fpk file: {e}")
+            logger.error("Failed to download the .fpk file: %s", e)
+            return
+        except Exception as e:
+            print(f"[ERROR] An unexpected error occurred during the .fpk download: {e}")
+            logger.error("An unexpected error occurred during the .fpk download: %s", e)
+            return
+
+        try:
+            decompress_data(fpk_path, build_dir)
+            print(f"[INFO] Decompressed .fpk file into {build_dir}")
+            logger.info("Decompressed .fpk file into %s", build_dir)
+        except Exception as e:
+            print(f"[ERROR] Failed to decompress .fpk file: {e}")
+            logger.error("Failed to decompress .fpk file: %s", e)
+            return
+
+        toml_path = build_dir / 'flatpack.toml'
+
+        if not toml_path.exists():
+            print(f"[ERROR] flatpack.toml not found in {build_dir}.")
+            logger.error("flatpack.toml not found in %s", build_dir)
+            return
+
+    toml_content = toml_path.read_text()
     temp_toml_path.write_text(toml_content)
 
     bash_script_content = parse_toml_to_venv_script(str(temp_toml_path), env_name=flatpack_dir)

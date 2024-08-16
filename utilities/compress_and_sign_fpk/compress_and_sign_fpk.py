@@ -4,10 +4,10 @@ import tarfile
 import tempfile
 import zstandard as zstd
 
-from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives.asymmetric import padding
-from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import padding
 
 logging.basicConfig(filename='debug.log', filemode='w', level=logging.INFO)
 
@@ -67,8 +67,16 @@ def compress_data(input_path, output_path, allowed_dir=None):
         elif os.path.isdir(abs_input_path):
             with tempfile.TemporaryDirectory() as temp_dir:
                 temp_tar_file_path = os.path.join(temp_dir, "temp.tar")
+
                 with tarfile.open(temp_tar_file_path, 'w') as tar:
-                    tar.add(abs_input_path, arcname=os.path.basename(abs_input_path))
+
+                    for root, dirs, files in os.walk(abs_input_path):
+                        for file in files:
+                            file_path = os.path.join(root, file)
+
+                            arcname = os.path.relpath(file_path, start=abs_input_path)
+                            tar.add(file_path, arcname=arcname)
+
                 with open(temp_tar_file_path, 'rb') as f:
                     data = f.read()
                 compressed_data = zstd.compress(data)
