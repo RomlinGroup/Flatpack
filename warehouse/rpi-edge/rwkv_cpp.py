@@ -33,7 +33,7 @@ prompt_data = json.loads("""
     "user": "User",
     "bot": "Assistant",
     "separator": ":",
-    "prompt": "You are a helpful assistant."
+    "prompt": "You are a helpful assistant. Provide accurate, one-sentence answers."
 }
 """)
 
@@ -150,7 +150,6 @@ while True:
     new = f'{user}{separator} {msg}\n\n{bot}{separator}'
     process_tokens(tokenizer_encode(new), new_line_logit_bias=-999999999)
 
-    # Truncate the conversation if it exceeds the maximum context length
     if len(processed_tokens) > MAX_CONTEXT_LENGTH:
         processed_tokens = processed_tokens[-MAX_CONTEXT_LENGTH:]
 
@@ -182,6 +181,10 @@ while True:
         accumulated_tokens += [token]
 
         decoded: str = tokenizer_decode(accumulated_tokens)
+
+        if f'{user}{separator}' in decoded:
+            print("\n[ERROR] Detected user input in bot response. Regenerating...")
+            break
 
         if '\uFFFD' not in decoded:
             print(decoded, end='', flush=True)
