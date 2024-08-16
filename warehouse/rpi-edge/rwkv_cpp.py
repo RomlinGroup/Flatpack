@@ -33,7 +33,7 @@ prompt_data = json.loads("""
     "user": "User",
     "bot": "Assistant",
     "separator": ":",
-    "prompt": "\\nThis is a professional conversation between a knowledgeable AI assistant named Assistant and the user. Assistant provides clear and concise support across a variety of tasks and topics. The conversation is respectful, efficient, and goal-oriented.\\n\\nUser: Hello Assistant, how are you today?\\n\\nAssistant: Hello! I'm doing well, thank you. How can I assist you today?\\n\\nUser: I need some help with a few tasks.\\n\\nAssistant: I'm here to help. What would you like to focus on first?\\n\\n"
+    "prompt": "You are a helpful assistant."
 }
 """)
 
