@@ -188,6 +188,7 @@ while True:
 
         if '\uFFFD' not in decoded:
             print(decoded, end='', flush=True)
+            os.system(f'espeak-ng -v en-us -s 150 -p 70 -g 10 "{decoded.strip()}"')
             accumulated_tokens = []
 
         if thread == 'chat':
