@@ -235,6 +235,7 @@ python bulk_verify_signed_data_with_cli.py --public_key public_key.pem
 ```
 
 ```bash
+curl -s https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/verify_fpk.sh | bash -s -- -key https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/public_key.pem -hash 3c579e20b77cacbbe48ee233028edc4ae04961453e828c9222abd0406d1701bc -fpk <fpk_path>
 ```
 
 ## Micro language models 🤏

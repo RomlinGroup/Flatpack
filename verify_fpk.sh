@@ -2,9 +2,9 @@
 
 usage() {
   echo "Usage: $0 -fpk <fpk_file> -key <public_key_url> -hash <expected_hash>"
-  echo "  -fpk, --fpk_file           Path to the signed .fpk file"
   echo "  -key, --public_key_url     URL to the public key in PEM format"
   echo "  -hash, --expected_hash     Expected SHA256 hash of the public key file"
+  echo "  -fpk, --fpk_file           Path to the signed .fpk file"
   exit 1
 }
 
@@ -28,16 +28,16 @@ fi
 
 while [[ "$#" -gt 0 ]]; do
   case $1 in
-  -fpk | --fpk_file)
-    FPK_FILE="$2"
-    shift
-    ;;
   -key | --public_key_url)
     PUBLIC_KEY_URL="$2"
     shift
     ;;
   -hash | --expected_hash)
     EXPECTED_HASH="$2"
+    shift
+    ;;
+  -fpk | --fpk_file)
+    FPK_FILE="$2"
     shift
     ;;
   *)
@@ -48,19 +48,19 @@ while [[ "$#" -gt 0 ]]; do
   shift
 done
 
-if [ -z "$FPK_FILE" ] || [ -z "$PUBLIC_KEY_URL" ] || [ -z "$EXPECTED_HASH" ]; then
+if [ -z "$PUBLIC_KEY_URL" ] || [ -z "$EXPECTED_HASH" ] || [ -z "$FPK_FILE" ]; then
   echo "Error: Missing required parameters."
   usage
-fi
-
-if [ ! -f "$FPK_FILE" ]; then
-  echo "Error: The specified .fpk file does not exist."
-  exit 4
 fi
 
 if [[ ! "$PUBLIC_KEY_URL" =~ ^https?:// ]]; then
   echo "Error: Invalid URL format."
   exit 5
+fi
+
+if [ ! -f "$FPK_FILE" ]; then
+  echo "Error: The specified .fpk file does not exist."
+  exit 4
 fi
 
 PUBLIC_KEY_PATH=$(mktemp)
@@ -90,7 +90,12 @@ TEMP_SIGNATURE_FILE=$(mktemp)
 trap 'rm -f "$PUBLIC_KEY_PATH" "$TEMP_DATA_FILE" "$TEMP_SIGNATURE_FILE"' EXIT
 
 separator="---SIGNATURE_SEPARATOR---"
-awk -v RS="$separator" -v data="$TEMP_DATA_FILE" -v sig="$TEMP_SIGNATURE_FILE" 'NR==1{print > data} NR==2{print > sig}' "$FPK_FILE"
+# Improved awk command to handle any possible issues with splitting
+awk -v RS="$separator" 'NR==1{print > FILENAME".data"} NR==2{print > FILENAME".sig"}' "$FPK_FILE"
+
+# Moving files to the correct paths
+mv "$FPK_FILE.data" "$TEMP_DATA_FILE"
+mv "$FPK_FILE.sig" "$TEMP_SIGNATURE_FILE"
 
 if [ ! -s "$TEMP_DATA_FILE" ] || [ ! -s "$TEMP_SIGNATURE_FILE" ]; then
   echo "Error: Failed to split data and signature."
