@@ -234,6 +234,9 @@ python bulk_compress_and_sign_fpk.py -p private_key.pem --passphrase $PASSPHRASE
 python bulk_verify_signed_data_with_cli.py --public_key public_key.pem
 ```
 
+```bash
+```
+
 ## Micro language models 🤏
 
 [Micro language models](http://microlanguagemodels.com) with around 100M to 10B parameters, offer a compelling alternative to the deployment and scalability challenges associated with traditional large language models (LLMs). Their smaller size allows for rapid pre-training and fine-tuning, enabling organisations to adapt quickly to market changes or specific requirements. Micro language models can be deployed in edge-adjacent environments like laptops, microprocessors, or smartphones.
