@@ -17,8 +17,8 @@ if ! command -v curl &>/dev/null; then
   exit 2
 fi
 
-if ! command -v openssl &>/dev/null; then
-  echo "Error: openssl is not installed."
+if ! command -v python3 &>/dev/null; then
+  echo "Error: python3 is not installed."
   exit 3
 fi
 
@@ -63,6 +63,22 @@ if [ ! -f "$FPK_FILE" ]; then
   exit 4
 fi
 
+# Set up virtual environment using python3 -m venv
+VENV_DIR=$(mktemp -d)
+python3 -m venv "$VENV_DIR"
+
+# Ensure that the virtual environment is deleted after the script finishes, no matter how it exits
+trap 'deactivate; rm -rf "$VENV_DIR"' EXIT
+
+# Activate the virtual environment
+source "$VENV_DIR/bin/activate"
+
+# Install required Python packages
+pip install --quiet cryptography==42.0.7 zstandard==0.22.0
+
+# Path to the Python script
+PYTHON_SCRIPT="verify_signed_data.py"
+
 PUBLIC_KEY_PATH=$(mktemp)
 
 echo "Downloading public key from $PUBLIC_KEY_URL..."
@@ -84,29 +100,14 @@ if [ "$CALCULATED_HASH" != "$EXPECTED_HASH" ]; then
   exit 8
 fi
 
-TEMP_DATA_FILE=$(mktemp)
-TEMP_SIGNATURE_FILE=$(mktemp)
+echo "Verifying the signature of $FPK_FILE using Python script..."
 
-trap 'rm -f "$PUBLIC_KEY_PATH" "$TEMP_DATA_FILE" "$TEMP_SIGNATURE_FILE"' EXIT
+# Call the Python script for verification
+python3 "$PYTHON_SCRIPT" --public_key "$PUBLIC_KEY_PATH" --fpk "$FPK_FILE"
+VERIFICATION_RESULT=$?
 
-separator="---SIGNATURE_SEPARATOR---"
-
-awk -v RS="$separator" -v data="$TEMP_DATA_FILE" -v sig="$TEMP_SIGNATURE_FILE" 'NR==1{print > data} NR==2{print > sig}' "$FPK_FILE"
-
-if [ ! -s "$TEMP_DATA_FILE" ]; then
-  echo "Error: Data file is empty or was not created."
-  exit 9
-fi
-
-if [ ! -s "$TEMP_SIGNATURE_FILE" ]; then
-  echo "Error: Signature file is empty or was not created."
-  exit 10
-fi
-
-echo "Verifying the signature of $FPK_FILE..."
-
-if openssl dgst -sha256 -sigopt rsa_padding_mode:pss -sigopt rsa_mgf1_md:sha256 -sigopt rsa_pss_saltlen:-1 \
-  -verify "$PUBLIC_KEY_PATH" -signature "$TEMP_SIGNATURE_FILE" "$TEMP_DATA_FILE"; then
+# Handle verification result
+if [ $VERIFICATION_RESULT -eq 0 ]; then
   echo "The signature is valid."
 else
   echo "The signature is NOT valid."

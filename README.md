@@ -231,11 +231,11 @@ python bulk_compress_and_sign_fpk.py -p private_key.pem --passphrase $PASSPHRASE
 ##### Verification
 
 ```bash
-python bulk_verify_signed_data_with_cli.py --public_key public_key.pem
+python verify_signed_data_with_cli.py --f <fpk_path> --public_key public_key.pem
 ```
 
 ```bash
-curl -s https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/verify_fpk.sh | bash -s -- -key https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/public_key.pem -hash 3c579e20b77cacbbe48ee233028edc4ae04961453e828c9222abd0406d1701bc -fpk <fpk_path>
+python bulk_verify_signed_data_with_cli.py --public_key public_key.pem
 ```
 
 ## Micro language models 🤏
