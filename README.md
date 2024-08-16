@@ -231,7 +231,7 @@ python bulk_compress_and_sign_fpk.py -p private_key.pem --passphrase $PASSPHRASE
 ##### Verification
 
 ```bash
-python verify_signed_data_with_cli.py --f <fpk_path> --public_key public_key.pem
+python verify_signed_data_with_cli.py --public_key public_key.pem --f <fpk_path>
 ```
 
 ```bash
