@@ -30,10 +30,10 @@ script_dir: pathlib.Path = pathlib.Path(os.path.abspath(__file__)).parent
 
 prompt_data = json.loads("""
 {
-    "user": "User",
-    "bot": "Assistant",
-    "separator": ":",
-    "prompt": "You are a helpful assistant. Provide accurate, one-sentence answers."
+	"user": "User",
+	"bot": "Assistant",
+	"separator": ":",
+	"prompt": "You are a helpful assistant. Provide accurate, one-sentence answers."
 }
 """)
 
@@ -156,7 +156,6 @@ while True:
     save_thread_state('chat_pre')
 
     thread = 'chat'
-    print(f'\n{bot}{separator}', end='')
 
     start_index: int = len(processed_tokens)
     accumulated_tokens: List[int] = []
@@ -186,16 +185,17 @@ while True:
             print("\n[ERROR] Detected user input in bot response. Regenerating...")
             break
 
-        if '\uFFFD' not in decoded:
-            print(decoded, end='', flush=True)
-            os.system(f'espeak-ng -v en-us -s 150 -p 70 -g 10 "{decoded.strip()}"')
-            accumulated_tokens = []
-
         if thread == 'chat':
             if '\n\n' in tokenizer_decode(processed_tokens[start_index:]):
                 break
 
         if i == MAX_GENERATION_LENGTH - 1:
             print()
+
+    full_response = tokenizer_decode(accumulated_tokens).strip()
+
+    if full_response:
+        print(f"\n{bot}{separator} {full_response}")
+        os.system(f'espeak-ng -v en-us -s 200 "{full_response}"')
 
     save_thread_state(thread)
