@@ -203,12 +203,12 @@ while True:
         full_response = full_response.split(f'{user}{separator}')[0].strip()
 
     if full_response:
-        print(f"\n{bot}{separator} {full_response}")
+        print(f"{bot}{separator} {full_response}")
 
         print(flush=True)
 
         safe_response = shlex.quote(full_response)
 
-        os.system(f'espeak-ng -v en-us -s 200 {safe_response}')
+        os.system(f'espeak-ng -v en-us -s 200 {safe_response} 2>/dev/null')
 
     save_thread_state(thread)
