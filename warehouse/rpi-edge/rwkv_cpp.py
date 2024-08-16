@@ -197,7 +197,7 @@ while True:
     full_response = '\n'.join([line.strip() for line in full_response.split('\n') if line.strip()])
 
     if full_response:
-        print(f"\n{bot}{separator} {full_response}")
+        print(f"{bot}{separator} {full_response}")
 
         print(flush=True)
 
