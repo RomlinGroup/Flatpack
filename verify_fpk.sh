@@ -91,7 +91,6 @@ trap 'rm -f "$PUBLIC_KEY_PATH" "$TEMP_DATA_FILE" "$TEMP_SIGNATURE_FILE"' EXIT
 
 separator="---SIGNATURE_SEPARATOR---"
 
-# Improved awk command to handle splitting
 awk -v RS="$separator" -v data="$TEMP_DATA_FILE" -v sig="$TEMP_SIGNATURE_FILE" 'NR==1{print > data} NR==2{print > sig}' "$FPK_FILE"
 
 if [ ! -s "$TEMP_DATA_FILE" ]; then
@@ -106,8 +105,8 @@ fi
 
 echo "Verifying the signature of $FPK_FILE..."
 
-if openssl dgst -sha256 -verify "$PUBLIC_KEY_PATH" -signature "$TEMP_SIGNATURE_FILE" "$TEMP_DATA_FILE" \
-  -sigopt rsa_padding_mode:pss -sigopt rsa_mgf1_md:sha256 -sigopt rsa_pss_saltlen:-1; then
+if openssl dgst -sha256 -sigopt rsa_padding_mode:pss -sigopt rsa_mgf1_md:sha256 -sigopt rsa_pss_saltlen:-1 \
+  -verify "$PUBLIC_KEY_PATH" -signature "$TEMP_SIGNATURE_FILE" "$TEMP_DATA_FILE"; then
   echo "The signature is valid."
 else
   echo "The signature is NOT valid."
