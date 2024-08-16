@@ -3,8 +3,9 @@ import copy
 import json
 import os
 import pathlib
-import time
 import sampling
+import shlex
+import time
 
 from rwkv_cpp import rwkv_cpp_shared_library, rwkv_cpp_model
 from tokenizer_util import add_tokenizer_argument, get_tokenizer
@@ -108,7 +109,7 @@ print(f'Processed in {int(processing_duration)} s, {int(processing_duration / pr
 save_thread_state('chat_init')
 save_thread_state('chat')
 
-print(f'\nYour name is {user}. Write something and press Enter.')
+print(f'\nYour name is {user}. Write something:')
 
 while True:
     user_input: str = input()
@@ -180,10 +181,8 @@ while True:
         accumulated_tokens += [token]
 
         decoded: str = tokenizer_decode(accumulated_tokens)
-
-        if f'{user}{separator}' in decoded:
-            print("\n[ERROR] Detected user input in bot response. Regenerating...")
-            break
+        decoded = decoded.replace(f'{user}{separator}', '').replace('\r\n', '\n').replace('\r', '\n').strip()
+        decoded = '\n'.join([line.strip() for line in decoded.split('\n') if line.strip()])
 
         if thread == 'chat':
             if '\n\n' in tokenizer_decode(processed_tokens[start_index:]):
@@ -194,11 +193,16 @@ while True:
 
     full_response = tokenizer_decode(accumulated_tokens).strip()
 
+    full_response = full_response.replace('\r\n', '\n').replace('\r', '\n').strip()
+    full_response = '\n'.join([line.strip() for line in full_response.split('\n') if line.strip()])
+
     if full_response:
-        print(f"{bot}{separator} {full_response}")
+        print(f"\n{bot}{separator} {full_response}")
 
         print(flush=True)
 
-        os.system(f'espeak-ng -v en-us -s 200 "{full_response}"')
+        safe_response = shlex.quote(full_response)
+
+        os.system(f'espeak-ng -v en-us -s 200 {safe_response}')
 
     save_thread_state(thread)
