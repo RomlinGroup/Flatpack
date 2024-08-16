@@ -3,37 +3,27 @@ part_bash """
 """
 part_bash """
 git clone https://github.com/BlinkDL/RWKV-LM
+
 cd RWKV-LM/RWKV-v5
+
 mkdir -p data
 """
-part_bash """
-../../../bin/pip list
-
-../../../bin/pip install torch --upgrade --extra-index-url https://download.pytorch.org/whl/cu121
-
-../../../bin/pip install deepspeed wandb ninja --upgrade
-
-wget -nc --continue -O data/minipile.idx https://huggingface.co/datasets/BlinkDL/minipile-tokenized/resolve/main/rwkv_vocab_v20230424/minipile.idx
-
-wget -nc --continue -O data/minipile.bin https://huggingface.co/datasets/BlinkDL/minipile-tokenized/resolve/main/rwkv_vocab_v20230424/minipile.bin
-"""
-
 part_bash """
 wget -nc https://developer.download.nvidia.com/compute/cuda/repos/wsl-ubuntu/x86_64/cuda-keyring_1.1-1_all.deb
 
 sudo dpkg -i cuda-keyring_1.1-1_all.deb
 
 sudo apt-get update
-
 sudo apt-get -y install cuda-toolkit-12-6
 sudo apt-get -y install nvidia-cuda-toolkit
 sudo apt-get -y install ninja-build
-"""
-part_bash """
-chmod +x demo-training-prepare.sh
-chmod +x demo-training-run.sh
-./demo-training-prepare.sh
-./demo-training-run.sh
+
+wget -nc --continue -O data/minipile.idx https://huggingface.co/datasets/BlinkDL/minipile-tokenized/resolve/main/rwkv_vocab_v20230424/minipile.idx
+
+wget -nc --continue -O data/minipile.bin https://huggingface.co/datasets/BlinkDL/minipile-tokenized/resolve/main/rwkv_vocab_v20230424/minipile.bin
+
+../../../bin/pip install torch --upgrade --extra-index-url https://download.pytorch.org/whl/cu121
+../../../bin/pip install deepspeed wandb ninja --upgrade
 """
 part_bash """
 # Prepare training
