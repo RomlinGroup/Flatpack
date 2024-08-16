@@ -220,6 +220,10 @@ python verify_signed_data_with_cli.py --public_key public_key.pem --f <fpk_path>
 python bulk_verify_signed_data_with_cli.py --public_key public_key.pem
 ```
 
+```bash
+curl -o verify_fpk.sh -H 'Cache-Control: no-cache' https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/utilities/compress_and_sign_fpk/verify_fpk.sh && chmod +x verify_fpk.sh && ./verify_fpk.sh <fpk_path>
+```
+
 ## Micro language models 🤏
 
 [Micro language models](http://microlanguagemodels.com) with around 100M to 10B parameters, offer a compelling alternative to the deployment and scalability challenges associated with traditional large language models (LLMs). Their smaller size allows for rapid pre-training and fine-tuning, enabling organisations to adapt quickly to market changes or specific requirements. Micro language models can be deployed in edge-adjacent environments like laptops, microprocessors, or smartphones.
