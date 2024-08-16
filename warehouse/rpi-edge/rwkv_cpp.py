@@ -196,6 +196,9 @@ while True:
 
     if full_response:
         print(f"\n{bot}{separator} {full_response}")
+
+        print(flush=True)
+
         os.system(f'espeak-ng -v en-us -s 200 "{full_response}"')
 
     save_thread_state(thread)
