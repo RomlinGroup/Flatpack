@@ -90,22 +90,26 @@ TEMP_SIGNATURE_FILE=$(mktemp)
 trap 'rm -f "$PUBLIC_KEY_PATH" "$TEMP_DATA_FILE" "$TEMP_SIGNATURE_FILE"' EXIT
 
 separator="---SIGNATURE_SEPARATOR---"
-# Improved awk command to handle any possible issues with splitting
-awk -v RS="$separator" 'NR==1{print > FILENAME".data"} NR==2{print > FILENAME".sig"}' "$FPK_FILE"
 
-# Moving files to the correct paths
-mv "$FPK_FILE.data" "$TEMP_DATA_FILE"
-mv "$FPK_FILE.sig" "$TEMP_SIGNATURE_FILE"
+# Improved awk command to handle splitting
+awk -v RS="$separator" -v data="$TEMP_DATA_FILE" -v sig="$TEMP_SIGNATURE_FILE" 'NR==1{print > data} NR==2{print > sig}' "$FPK_FILE"
 
-if [ ! -s "$TEMP_DATA_FILE" ] || [ ! -s "$TEMP_SIGNATURE_FILE" ]; then
-  echo "Error: Failed to split data and signature."
+if [ ! -s "$TEMP_DATA_FILE" ]; then
+  echo "Error: Data file is empty or was not created."
   exit 9
 fi
 
+if [ ! -s "$TEMP_SIGNATURE_FILE" ]; then
+  echo "Error: Signature file is empty or was not created."
+  exit 10
+fi
+
 echo "Verifying the signature of $FPK_FILE..."
-if openssl dgst -sha256 -verify "$PUBLIC_KEY_PATH" -signature "$TEMP_SIGNATURE_FILE" "$TEMP_DATA_FILE"; then
+
+if openssl dgst -sha256 -verify "$PUBLIC_KEY_PATH" -signature "$TEMP_SIGNATURE_FILE" "$TEMP_DATA_FILE" \
+  -sigopt rsa_padding_mode:pss -sigopt rsa_mgf1_md:sha256 -sigopt rsa_pss_saltlen:-1; then
   echo "The signature is valid."
 else
   echo "The signature is NOT valid."
-  exit 10
+  exit 11
 fi
