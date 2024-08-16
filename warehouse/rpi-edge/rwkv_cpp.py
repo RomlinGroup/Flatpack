@@ -184,6 +184,9 @@ while True:
         decoded = decoded.replace(f'{user}{separator}', '').replace('\r\n', '\n').replace('\r', '\n').strip()
         decoded = '\n'.join([line.strip() for line in decoded.split('\n') if line.strip()])
 
+        if f'{user}{separator}' in decoded:
+            decoded = decoded.split(f'{user}{separator}')[0].strip()
+
         if thread == 'chat':
             if '\n\n' in tokenizer_decode(processed_tokens[start_index:]):
                 break
@@ -196,8 +199,11 @@ while True:
     full_response = full_response.replace('\r\n', '\n').replace('\r', '\n').strip()
     full_response = '\n'.join([line.strip() for line in full_response.split('\n') if line.strip()])
 
+    if f'{user}{separator}' in full_response:
+        full_response = full_response.split(f'{user}{separator}')[0].strip()
+
     if full_response:
-        print(f"{bot}{separator} {full_response}")
+        print(f"\n{bot}{separator} {full_response}")
 
         print(flush=True)
 
