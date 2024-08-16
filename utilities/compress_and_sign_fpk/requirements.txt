@@ -1,2 +1,2 @@
-cryptography==42.0.7
-zstandard==0.22.0
+cryptography==43.0.0
+zstandard==0.23.0
