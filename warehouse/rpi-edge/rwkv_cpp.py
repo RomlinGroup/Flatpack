@@ -1,3 +1,5 @@
+# Code adapted from https://github.com/RWKV/rwkv.cpp/blob/master/python/chat_with_bot.py (MIT License)
+
 import argparse
 import copy
 import json
