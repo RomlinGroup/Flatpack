@@ -70,10 +70,6 @@ warnings.filterwarnings("ignore", category=MarkupResemblesLocatorWarning)
 
 def initialize_database(db_path: str):
     """Initialize the SQLite database."""
-    if os.path.exists(db_path):
-        print(f"[DEBUG] Database already exists at path: {db_path}")
-        return
-
     try:
         db_dir = os.path.dirname(db_path)
         if not os.path.exists(db_dir):
@@ -100,16 +96,6 @@ def initialize_database(db_path: str):
                 hook_name TEXT NOT NULL,
                 hook_script TEXT NOT NULL,
                 hook_type TEXT NOT NULL,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        """)
-
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS flatpack_parts (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                part_id TEXT UNIQUE NOT NULL,
-                part_type TEXT NOT NULL,
-                content TEXT NOT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
@@ -2296,52 +2282,6 @@ def get_token() -> Optional[str]:
     return config.get('token')
 
 
-def parse_content_into_parts(content: str):
-    """Parse the content into individual parts with unique IDs."""
-    parts = []
-    split_parts = content.split('part_')
-
-    for part in split_parts[1:]:
-        part_id_match = re.search(r'(\w+) """', part)
-        if part_id_match:
-            part_id = part_id_match.group(1)
-            part_type = 'bash' if 'part_bash' in part else 'python'
-            code = part.split('"""')[1]
-            parts.append({'part_id': part_id, 'part_type': part_type, 'content': code})
-
-    return parts
-
-
-def save_parts_to_db(parts):
-    """Save or update parts in the SQLite database and remove parts that are no longer present."""
-    db_path = os.path.join(flatpack_directory, 'build', 'flatpack.db')
-    try:
-        ensure_database_initialized()
-        conn = sqlite3.connect(db_path)
-        cursor = conn.cursor()
-
-        cursor.execute("SELECT part_id FROM flatpack_parts")
-        existing_part_ids = {row[0] for row in cursor.fetchall()}
-        current_part_ids = {part['part_id'] for part in parts}
-        part_ids_to_delete = existing_part_ids - current_part_ids
-
-        if part_ids_to_delete:
-            cursor.executemany("DELETE FROM flatpack_parts WHERE part_id = ?",
-                               [(part_id,) for part_id in part_ids_to_delete])
-
-        for part in parts:
-            cursor.execute("""
-                INSERT OR REPLACE INTO flatpack_parts (part_id, part_type, content)
-                VALUES (?, ?, ?)
-            """, (part['part_id'], part['part_type'], part['content']))
-
-        conn.commit()
-        conn.close()
-    except sqlite3.Error as e:
-        logger.error("An error occurred while saving parts: %s", e)
-        raise HTTPException(status_code=500, detail=f"An error occurred while saving parts: {e}")
-
-
 def set_token(token: str):
     try:
         config = load_config()
@@ -2444,9 +2384,6 @@ async def save_file(
 
     try:
         normalized_content = content.replace('\r\n', '\n').replace('\r', '\n')
-        parts = parse_content_into_parts(normalized_content)
-        save_parts_to_db(parts)
-
         escaped_content = escape_content_parts(normalized_content)
         with open(file_path, 'w', newline='\n') as file:
             file.write(escaped_content)
@@ -2510,7 +2447,7 @@ async def add_comment(comment: Comment, token: str = Depends(authenticate_token)
 
 @app.get("/api/comments")
 async def get_all_comments(token: str = Depends(authenticate_token)):
-    """Retrieve all comments from the database, ordered by creation date."""
+    """Retrieve all comments from the database."""
     if not flatpack_directory:
         raise HTTPException(status_code=500, detail="Flatpack directory is not set")
 
