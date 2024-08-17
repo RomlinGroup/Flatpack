@@ -31,7 +31,7 @@ jobs:
       env:
         PASSPHRASE: ${{ secrets.PASSPHRASE }}
       run: |
-        python utilities/compress_and_sign_fpk/bulk_compress_and_sign_fpk.py -p utilities/compress_and_sign_fpk/private_key.pem --passphrase $PASSPHRASE
+        python utilities/compress_and_sign_fpk/git_compress_and_sign_fpk.py -p utilities/compress_and_sign_fpk/private_key.pem --passphrase $PASSPHRASE
 
     - name: Clean up private key
       run: rm utilities/compress_and_sign_fpk/private_key.pem
