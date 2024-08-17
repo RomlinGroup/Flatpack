@@ -30,7 +30,8 @@
 
         h2 {
             color: #5865f2;
-            font-size: 24px;
+            font-size: 14px;
+            line-height: 1;
             margin-bottom: 20px;
         }
 
@@ -72,16 +73,53 @@
             width: 100%;
         }
 
-        .active-highlight {
-            background: #222 !important;
-        }
-
         .color-label {
             height: 5px;
             left: 0;
             position: absolute;
             top: 0;
             width: 100%;
+        }
+
+        .comment-button {
+            background-color: #31efb8;
+            color: #000;
+            border: none;
+            cursor: pointer;
+            position: absolute;
+            bottom: 0px;
+            right: 0px;
+            z-index: 1;
+            width: 28px;
+            height: 28px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .comment-button svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .comment-button:focus {
+            outline: none;
+        }
+
+        .comment-item {
+            border: 1px solid #31efb8;
+            border-left: 5px solid #31efb8;
+            background: #fff;
+            line-height: 1.5em;
+            color: #000;
+            padding: 10px;
+            margin-bottom: 20px;
+            word-break: break-word;
+        }
+
+        .comment-item:last-of-type {
+            margin-bottom: 0px;
         }
 
         .connected {
@@ -114,11 +152,26 @@
             background: #ff8d80;
         }
 
+        .editor {
+            flex: 1;
+            min-height: 50px;
+        }
+
+        .editor:focus {
+            outline: none;
+        }
+
         .editor[data-placeholder]:empty:before {
             color: #888;
             content: attr(data-placeholder);
             display: block;
             font-style: italic;
+        }
+
+        .editor-wrapper {
+            position: relative;
+            display: flex;
+            align-items: flex-start;
         }
 
         .handle,
@@ -203,6 +256,7 @@
             white-space: pre-wrap;
             width: 100%;
             word-wrap: break-word;
+            position: relative;
         }
 
         .part-python,
@@ -370,6 +424,23 @@
             width: 100%;
         }
 
+        #comment-sidebar {
+            display: none;
+            position: fixed;
+            z-index: 2;
+            right: 0;
+            top: 64px;
+            width: 300px;
+            height: 100%;
+            padding: 20px;
+            background: #f0f2ff;
+            overflow-y: auto;
+        }
+
+        #comment-sidebar h2 {
+            color: #5865f2;
+        }
+
         #file-content {
             margin-bottom: 20px;
             opacity: 0;
@@ -378,22 +449,6 @@
 
         #file-content.loaded {
             opacity: 1;
-        }
-
-        #filter {
-            background: #fff;
-            border: 1px solid #5865f2;
-            border-radius: 0;
-            color: #5865f2;
-            font-size: 12px;
-            padding: 5px 10px;
-            position: absolute;
-            right: 20px;
-            top: 20px;
-        }
-
-        #filter:hover {
-            background: #f0f2ff;
         }
 
         #footer {
@@ -408,6 +463,11 @@
             height: 10px;
             margin-right: 5px;
             width: 10px;
+        }
+
+        #heartbeat-indicator {
+            display: flex;
+            align-items: center;
         }
 
         #hooks,
@@ -510,7 +570,32 @@
             color: #000;
         }
 
+        #toggle-comments-btn {
+            background: #31efb8;
+            text-align: center;
+            color: #fff;
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+            margin-right: 20px;
+        }
+
+        #toggle-comments-btn:hover {
+            background: #31efb8;
+        }
+
+        #toggle-comment-sidebar {
+            background: none;
+            position: absolute;
+            cursor: pointer;
+            border: 0px;
+            padding: 0px;
+            right: 20px;
+            top: 20px;
+        }
+
         #toolbar {
+            height: 64px;
             align-items: center;
             background: #5865f2;
             color: #fff;
@@ -527,6 +612,11 @@
         #toolbar h1 {
             font-size: 24px;
             line-height: 1;
+        }
+
+        #toolbar-right {
+            display: flex;
+            align-items: center;
         }
 
         /* Media queries */
@@ -558,12 +648,44 @@
 <body>
 <div id="toolbar">
     <a href="index.html"><h1>FPK Editor</h1></a>
-    <div id="heartbeat-indicator">
-        <span id="heartbeat-dot"></span> <span id="heartbeat-time"></span>
+    <div id="toolbar-right">
+        <button id="toggle-comments-btn" onclick="toggleCommentSidebar()">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16">
+                <rect x="2" y="2" width="12" height="12" fill="#000"/>
+                <rect x="1" y="2" width="1" height="12" fill="#000"/>
+                <rect x="3" y="3" width="10" height="10" fill="#31efb8"/>
+                <rect x="4" y="5" width="8" height="1" fill="#000"/>
+                <rect x="4" y="7" width="8" height="1" fill="#000"/>
+                <rect x="4" y="9" width="8" height="1" fill="#000"/>
+            </svg>
+        </button>
+        <div id="heartbeat-indicator">
+            <span id="heartbeat-dot"></span> <span id="heartbeat-time"></span>
+        </div>
     </div>
 </div> <!-- END #toolbar -->
 
 <div id="status-bar"></div> <!-- END #status-bar -->
+
+<div id="comment-sidebar">
+    <button id="toggle-comment-sidebar" onclick="toggleCommentSidebar()">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 14 14" width="14" height="14">
+            <!-- Draw the pixel X pattern -->
+            <rect x="3" y="3" width="2" height="2" fill="#5865f2"/>
+            <rect x="5" y="5" width="2" height="2" fill="#5865f2"/>
+            <rect x="7" y="7" width="2" height="2" fill="#5865f2"/>
+            <rect x="9" y="9" width="2" height="2" fill="#5865f2"/>
+            <rect x="3" y="11" width="2" height="2" fill="#5865f2"/>
+            <rect x="11" y="3" width="2" height="2" fill="#5865f2"/>
+            <rect x="9" y="5" width="2" height="2" fill="#5865f2"/>
+            <rect x="7" y="7" width="2" height="2" fill="#5865f2"/>
+            <rect x="5" y="9" width="2" height="2" fill="#5865f2"/>
+            <rect x="11" y="11" width="2" height="2" fill="#5865f2"/>
+        </svg>
+    </button>
+    <h2>Comments</h2>
+    <div id="comment-list"></div>
+</div> <!-- END #comment-sidebar -->
 
 <div class="tabs-container">
     <div class="tabs">
@@ -591,12 +713,6 @@
 
 <div class="tab-content active" id="editor-content">
     <div id="wrapper">
-        <select id="filter" onchange="filterContent()" autocomplete="off">
-            <option value="all">Show all</option>
-            <option value="bash">Bash</option>
-            <option value="python">Python</option>
-        </select>
-
         <h2>custom.sh</h2>
         <div id="file-content"></div>
         <div id="button-container">
@@ -643,18 +759,13 @@
     <div class="spinner"></div>
     <p>Please wait...</p>
 </div> <!-- END #loading-overlay -->
+
 <script>
     'use strict';
 
+    const comments = [];
+
     const getBaseUrl = () => window.location.origin;
-
-    const currentSessionID = getSessionID();
-    const storedSessionID = sessionStorage.getItem('sessionID');
-
-    if (!storedSessionID || storedSessionID !== currentSessionID) {
-        sessionStorage.removeItem('apiToken');
-        sessionStorage.setItem('sessionID', currentSessionID);
-    }
 
     const eyeIcon = `
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16">
@@ -667,6 +778,7 @@
 </svg>`;
 
     let currentPart = 1;
+    let highlightTimeout;
     let isBuilding = false;
     let originalContent = '';
 
@@ -683,6 +795,10 @@
         colorLabel.className = 'color-label';
         block.appendChild(colorLabel);
 
+        const editorWrapper = document.createElement('div');
+        editorWrapper.className = 'editor-wrapper';
+        editorWrapper.style.position = 'relative';
+
         const editor = document.createElement('div');
         editor.className = 'editor';
         editor.contentEditable = true;
@@ -690,7 +806,19 @@
 
         addEventListenersToEditor(editor);
 
-        block.appendChild(editor);
+        editorWrapper.appendChild(editor);
+
+        const commentButton = document.createElement('button');
+        commentButton.className = 'comment-button';
+        commentButton.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+            <path d="M1 1h14v12H6l-5 4V1z" fill="#000000"/>
+            </svg>
+        `;
+        commentButton.onclick = () => addCommentToBlock(block);
+        editorWrapper.appendChild(commentButton);
+
+        block.appendChild(editorWrapper);
 
         const controls = document.createElement('div');
         controls.className = 'controls';
@@ -706,8 +834,40 @@
         document.getElementById('file-content').appendChild(block);
     }
 
+    async function addCommentToBlock(block) {
+        const selectedText = window.getSelection().toString();
+        if (selectedText) {
+            const comment = prompt('Enter your comment:');
+            if (comment) {
+                const blockId = block.id;
+                try {
+
+                    await postComment(blockId, selectedText, comment);
+                    await refreshCommentsFromBackend();
+
+                    document.getElementById('comment-sidebar').style.display = 'block';
+
+                } catch (error) {
+                    console.error('Failed to add comment:', error);
+                    alert('Failed to add comment. Please try again.');
+                }
+            }
+        } else {
+            alert('Please select text to comment on.');
+        }
+    }
+
+    function addComment(text, comment, blockId, createdAt) {
+        comments.push({
+            text,
+            comment,
+            blockId,
+            created_at: createdAt || new Date().toISOString()
+        });
+        renderComments();
+    }
+
     function addEventListenersToEditor(editor) {
-        editor.addEventListener('focus', () => logActiveInputArea(editor));
         editor.addEventListener('input', (event) => {
             if (event.target.contentEditable !== 'false') {
                 logCharacter(event);
@@ -914,6 +1074,38 @@
         });
     }
 
+    async function fetchComments() {
+        const apiToken = sessionStorage.getItem('apiToken');
+        const url = `${getBaseUrl()}/api/comments`;
+
+        try {
+            const response = await fetch(url, {
+                headers: {
+                    'Authorization': `Bearer ${apiToken}`
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`Failed to fetch comments: ${response.statusText}`);
+            }
+
+            const fetchedComments = await response.json();
+
+            fetchedComments.forEach(comment => {
+                comments.push({
+                    text: comment.selected_text,
+                    comment: comment.comment,
+                    blockId: comment.block_id,
+                    created_at: comment.created_at
+                });
+            });
+
+            renderComments();
+        } catch (error) {
+            console.error('Error fetching comments:', error);
+        }
+    }
+
     async function fetchHooks(apiToken) {
         try {
             const response = await fetch(`${getBaseUrl()}/api/hooks`, {
@@ -1030,17 +1222,6 @@
         }
     }
 
-    function filterContent() {
-        const filter = document.getElementById('filter').value;
-        const blocks = document.querySelectorAll('.part-python, .part-bash');
-        blocks.forEach(block => {
-            const isPython = block.classList.contains('part-python');
-            const isBash = block.classList.contains('part-bash');
-            const shouldShow = filter === 'all' || (filter === 'python' && isPython) || (filter === 'bash' && isBash);
-            block.style.display = shouldShow ? 'block' : 'none';
-        });
-    }
-
     async function getEvalJSON(apiToken) {
         try {
             const response = await fetch(`${getBaseUrl()}/eval_build.json`, {
@@ -1070,12 +1251,39 @@
         document.getElementById('loading-overlay').style.display = 'none';
     }
 
+    function highlightBlock(blockId) {
+        clearTimeout(highlightTimeout);
+
+        document.querySelectorAll('.part-python .color-label, .part-bash .color-label').forEach(label => {
+            label.style.backgroundColor = '';
+        });
+
+        const block = document.getElementById(blockId);
+
+        if (block) {
+            const colorLabel = block.querySelector('.color-label');
+
+            if (colorLabel) {
+                colorLabel.style.backgroundColor = '#31efb8';
+            }
+
+            block.scrollIntoView({behavior: 'smooth', block: 'center'});
+
+            highlightTimeout = setTimeout(() => {
+                if (colorLabel) {
+                    colorLabel.style.backgroundColor = '';
+                }
+            }, 3000);
+        }
+    }
+
     async function initializeApp(apiToken) {
         try {
             setupEventListeners(apiToken);
             checkHeartbeat(apiToken);
             setInterval(() => checkHeartbeat(apiToken), 1000);
             await loadDefaultFile(apiToken);
+            await fetchComments(apiToken);
             await fetchHooks(apiToken);
             await fetchLatestLogs(apiToken);
             await fetchLogFiles(apiToken);
@@ -1107,13 +1315,6 @@
         } catch (error) {
             console.error('Error loading file:', error);
         }
-    }
-
-    function logActiveInputArea(editor) {
-        document.querySelectorAll('.part-python, .part-bash').forEach(part => {
-            part.classList.remove('active-highlight');
-        });
-        editor.parentNode.classList.add('active-highlight');
     }
 
     function logCharacter(event) {
@@ -1156,6 +1357,59 @@
         }
     }
 
+    async function postComment(blockId, selectedText, comment) {
+        const apiToken = sessionStorage.getItem('apiToken');
+        const url = `${getBaseUrl()}/api/comments`;
+
+        const payload = {
+            block_id: blockId,
+            selected_text: selectedText,
+            comment: comment
+        };
+
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${apiToken}`
+            },
+            body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+            throw new Error(`Failed to add comment: ${response.statusText}`);
+        }
+
+        const jsonResponse = await response.json();
+        return jsonResponse.created_at;
+    }
+
+    async function refreshCommentsFromBackend() {
+        comments.length = 0;
+        await fetchComments();
+        renderComments();
+    }
+
+    function renderComments() {
+        const commentList = document.getElementById('comment-list');
+        commentList.innerHTML = '';
+
+        const sortedComments = comments.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+        sortedComments.forEach((c, index) => {
+            const commentElement = document.createElement('div');
+            commentElement.className = `comment-item comment-item-${index}`;
+            commentElement.innerHTML = `
+        <strong>Selection:</strong> ${c.text}<br>
+        <strong>Comment:</strong> ${c.comment}<br>
+        <strong>Created at:</strong> ${new Date(c.created_at).toLocaleString()}
+        `;
+            commentElement.style.cursor = 'pointer';
+            commentElement.onclick = () => highlightBlock(c.blockId);
+            commentList.appendChild(commentElement);
+        });
+    }
+
     function renderFileContents(contents) {
         const fileContentElement = document.getElementById('file-content');
         fileContentElement.innerHTML = '';
@@ -1181,6 +1435,10 @@
                 colorLabel.className = 'color-label';
                 block.appendChild(colorLabel);
 
+                const editorWrapper = document.createElement('div');
+                editorWrapper.className = 'editor-wrapper';
+                editorWrapper.style.position = 'relative';
+
                 const editor = document.createElement('div');
                 editor.className = 'editor';
                 editor.contentEditable = isDisabled ? 'false' : 'true';
@@ -1192,19 +1450,29 @@
                     .replace(/'/g, '&#39;');
 
                 editor.innerHTML = code;
+                editorWrapper.appendChild(editor);
 
-                block.appendChild(editor);
+                const commentButton = document.createElement('button');
+                commentButton.className = 'comment-button';
+                commentButton.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M1 1h14v12H6l-5 4V1z" fill="#000000"/>
+                    </svg>
+                `;
+                commentButton.onclick = () => addCommentToBlock(block);
+                editorWrapper.appendChild(commentButton);
+
+                block.appendChild(editorWrapper);
 
                 const controls = document.createElement('div');
                 controls.className = 'controls';
-
                 controls.appendChild(createControlElement('handle', type.replace('part_', '')));
                 controls.appendChild(createControlElement('move-up', '&#x25B2;', () => moveBlockUp(block)));
                 controls.appendChild(createControlElement('move-down', '&#x25BC;', () => moveBlockDown(block)));
                 controls.appendChild(createControlElement('delete-button', trashIcon, () => block.remove()));
                 controls.appendChild(createToggleButton(block));
-
                 block.appendChild(controls);
+
                 fileContentElement.appendChild(block);
 
                 if (isDisabled) {
@@ -1271,10 +1539,12 @@
         const parts = Array.from(document.querySelectorAll('.part-python, .part-bash'))
             .map(part => {
                 const editor = part.querySelector('.editor');
+
+                if (!editor) return null;
+
                 let code = editor.innerText;
 
-                code = code.replace(/\n{3,}/g, '\n\n');
-                code = code.replace(/\n+$/, '');
+                code = code.replace(/\n{3,}/g, '\n\n').replace(/\n+$/, '');
 
                 if (code === "") return null;
 
@@ -1304,16 +1574,20 @@
                     'Authorization': `Bearer ${apiToken}`
                 }
             });
-            const responseText = await response.text();
 
-            if (status !== false) showStatus(response.ok ? 'Saved successfully!' : 'Save failed!', response.ok);
+            const responseText = await response.text();
+            if (status !== false) {
+                showStatus(response.ok ? 'Saved successfully!' : 'Save failed!', response.ok);
+            }
 
             if (response.ok) {
                 window.scrollTo(0, 0);
             }
         } catch (error) {
             console.error('Error saving file:', error);
-            if (status !== false) showStatus('Error saving file!', false);
+            if (status !== false) {
+                showStatus('Error saving file!', false);
+            }
         }
     }
 
@@ -1377,6 +1651,15 @@
         }
     }
 
+    function toggleCommentSidebar() {
+        const sidebar = document.getElementById('comment-sidebar');
+        if (sidebar.style.display === 'block') {
+            sidebar.style.display = 'none';
+        } else {
+            sidebar.style.display = 'block';
+        }
+    }
+
     function verifyCode(apiToken) {
         callAPI('verify', apiToken);
     }
@@ -1387,6 +1670,7 @@
         const apiKeyInput = document.getElementById('api-key-input');
         const apiKeyModal = document.getElementById('api-key-modal');
         const apiKeySubmit = document.getElementById('api-key-authorize');
+        const commentSidebar = document.getElementById('comment-sidebar');
 
         function showApiKeyModal() {
             apiKeyModal.style.display = 'flex';
@@ -1394,6 +1678,8 @@
 
         async function validateAndInitialize(apiToken) {
             try {
+                console.log("Validating API token:", apiToken);
+
                 const formData = new FormData();
                 formData.append('api_token', apiToken);
 
@@ -1412,10 +1698,14 @@
                 if (response.ok) {
                     const data = await response.json();
                     if (data.message === 'API token is valid.') {
+                        console.log("API token is valid. Storing in sessionStorage.");
                         sessionStorage.setItem('apiToken', apiToken);
+                        console.log("Stored API token in sessionStorage:", sessionStorage.getItem('apiToken'));
                         await initializeApp(apiToken);
                         document.getElementById('api-key-modal').style.display = 'none';
                         return true;
+                    } else {
+                        console.error('API token validation failed:', data.message);
                     }
                 }
 
@@ -1424,10 +1714,9 @@
                 return false;
 
             } catch (error) {
+                console.error('Error during API token validation:', error);
                 if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
                     alert('Network error. Please try again.');
-                } else {
-                    console.error('Error checking API token:', error);
                 }
                 sessionStorage.removeItem('apiToken');
                 return false;
