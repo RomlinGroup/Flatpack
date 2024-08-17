@@ -13,6 +13,9 @@ jobs:
   compress_and_sign:
     runs-on: ubuntu-latest
 
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE20: true
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
