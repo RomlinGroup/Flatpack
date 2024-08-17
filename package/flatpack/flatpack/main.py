@@ -81,6 +81,16 @@ def initialize_database(db_path: str):
         cursor = conn.cursor()
 
         cursor.execute("""
+            CREATE TABLE IF NOT EXISTS flatpack_comments (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                block_id TEXT NOT NULL,
+                selected_text TEXT NOT NULL,
+                comment TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+
+        cursor.execute("""
             CREATE TABLE IF NOT EXISTS flatpack_hooks (
                 id INTEGER PRIMARY KEY,
                 hook_name TEXT NOT NULL,
@@ -2134,6 +2144,12 @@ atexit.register(fpk_safe_cleanup)
 app = FastAPI()
 
 
+class Comment(BaseModel):
+    block_id: str
+    selected_text: str
+    comment: str
+
+
 class Hook(BaseModel):
     hook_name: str
     hook_script: str
@@ -2402,6 +2418,57 @@ async def test_db():
     except Error as e:
         logger.error("Database connection failed: %s", e)
         return {"message": f"Database connection failed: {e}"}
+
+
+@app.post("/api/comments")
+async def add_comment(comment: Comment, token: str = Depends(authenticate_token)):
+    """Add a new comment to the database."""
+    if not flatpack_directory:
+        raise HTTPException(status_code=500, detail="Flatpack directory is not set")
+
+    db_path = os.path.join(flatpack_directory, 'build', 'flatpack.db')
+
+    try:
+        ensure_database_initialized()
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT INTO flatpack_comments (block_id, selected_text, comment)
+            VALUES (?, ?, ?)
+        """, (comment.block_id, comment.selected_text, comment.comment))
+        conn.commit()
+        conn.close()
+
+        return JSONResponse(content={"message": "Comment added successfully."}, status_code=201)
+    except Error as e:
+        logger.error("An error occurred while adding the comment: %s", e)
+        raise HTTPException(status_code=500, detail=f"An error occurred while adding the comment: {e}")
+
+
+@app.get("/api/comments")
+async def get_all_comments(token: str = Depends(authenticate_token)):
+    """Retrieve all comments from the database."""
+    if not flatpack_directory:
+        raise HTTPException(status_code=500, detail="Flatpack directory is not set")
+
+    db_path = os.path.join(flatpack_directory, 'build', 'flatpack.db')
+
+    try:
+        ensure_database_initialized()
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT id, block_id, selected_text, comment, created_at
+            FROM flatpack_comments
+        """)
+        comments = cursor.fetchall()
+        conn.close()
+
+        return [{"id": row[0], "block_id": row[1], "selected_text": row[2], "comment": row[3], "created_at": row[4]} for
+                row in comments]
+    except Error as e:
+        logger.error("An error occurred while retrieving comments: %s", e)
+        raise HTTPException(status_code=500, detail=f"An error occurred while retrieving comments: {e}")
 
 
 @app.post("/api/build")

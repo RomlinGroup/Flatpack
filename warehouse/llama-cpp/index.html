@@ -84,6 +84,37 @@
             width: 100%;
         }
 
+        .comment-button {
+            background-color: #5865f2;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-size: 14px;
+            position: absolute;
+            bottom: 0px;
+            right: 0px;
+            z-index: 1;
+        }
+
+        .comment-button:focus {
+            outline: none;
+        }
+
+        .comment-button:hover {
+            background-color: #4754c8;
+        }
+
+        .comment-item {
+            border: 1px solid #000;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+
+        .comment-item:last-of-type {
+            margin-bottom: 0px;
+        }
+
         .connected {
             background: #31efb8;
         }
@@ -203,6 +234,7 @@
             white-space: pre-wrap;
             width: 100%;
             word-wrap: break-word;
+            position: relative;
         }
 
         .part-python,
@@ -368,6 +400,20 @@
             display: flex;
             margin-top: 20px;
             width: 100%;
+        }
+
+        #comment-sidebar {
+            display: none;
+            position: fixed;
+            z-index: 2;
+            right: 0;
+            top: 0;
+            width: 250px;
+            height: 100%;
+            padding: 20px;
+            background-color: #f0f2ff;
+            border-left: 1px solid #5865f2;
+            overflow-y: auto;
         }
 
         #file-content {
@@ -565,6 +611,11 @@
 
 <div id="status-bar"></div> <!-- END #status-bar -->
 
+<div id="comment-sidebar">
+    <h2>Comments</h2>
+    <div id="comment-list"></div>
+</div>
+
 <div class="tabs-container">
     <div class="tabs">
         <div class="tab active" data-tab="editor">Editor</div>
@@ -703,8 +754,163 @@
 
         block.appendChild(controls);
 
+        // Add comment button below the block
+        const commentButton = document.createElement('button');
+        commentButton.className = 'comment-button';
+        commentButton.innerHTML = 'Add Comment';
+        commentButton.onclick = () => addCommentToBlock(block);
+        block.appendChild(commentButton);
+
         document.getElementById('file-content').appendChild(block);
     }
+
+    async function postComment(blockId, selectedText, comment) {
+        const apiToken = sessionStorage.getItem('apiToken'); // Assuming the token is stored in sessionStorage
+        const url = `${getBaseUrl()}/api/comments`;
+
+        const payload = {
+            block_id: blockId,
+            selected_text: selectedText,
+            comment: comment
+        };
+
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${apiToken}`
+            },
+            body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+            throw new Error(`Failed to add comment: ${response.statusText}`);
+        }
+    }
+
+    async function addCommentToBlock(block) {
+        const selectedText = window.getSelection().toString();
+        if (selectedText) {
+            const comment = prompt('Enter your comment:');
+            if (comment) {
+                const blockId = block.id;
+                try {
+                    // Send the comment to the backend
+                    await postComment(blockId, selectedText, comment);
+                    addComment(selectedText, comment, blockId);
+                } catch (error) {
+                    console.error('Failed to add comment:', error);
+                    alert('Failed to add comment. Please try again.');
+                }
+            }
+        } else {
+            alert('Please select text to comment on.');
+        }
+    }
+
+    const comments = [];
+
+    function addComment(text, comment, blockId) {
+        comments.push({text, comment, blockId});
+        renderComments();
+    }
+
+    function renderComments() {
+        const commentList = document.getElementById('comment-list');
+        commentList.innerHTML = '';
+
+        comments.forEach((c, index) => {
+            // Add a common class for all comments
+            const commonClass = 'comment-item';
+            const uniqueClass = `comment-item-${index}`;
+
+            const commentElement = document.createElement('div');
+            commentElement.className = `${commonClass} ${uniqueClass}`; // Assign both the common and unique classes
+            commentElement.innerHTML = `<strong>Text:</strong> ${c.text}<br><strong>Comment:</strong> ${c.comment}`;
+            commentElement.style.cursor = 'pointer';
+            commentElement.onclick = () => highlightBlock(c.blockId);
+
+            commentList.appendChild(commentElement);
+        });
+
+        document.getElementById('comment-sidebar').style.display = 'block';
+    }
+
+    async function fetchComments() {
+        const apiToken = sessionStorage.getItem('apiToken');
+        const url = `${getBaseUrl()}/api/comments`;
+
+        try {
+            const response = await fetch(url, {
+                headers: {
+                    'Authorization': `Bearer ${apiToken}`
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`Failed to fetch comments: ${response.statusText}`);
+            }
+
+            const comments = await response.json();
+            renderFetchedComments(comments);
+        } catch (error) {
+            console.error('Error fetching comments:', error);
+        }
+    }
+
+    function renderFetchedComments(comments) {
+        const commentList = document.getElementById('comment-list');
+        commentList.innerHTML = ''; // Clear the current list
+
+        comments.forEach((c, index) => {
+            const commonClass = 'comment-item';
+            const uniqueClass = `comment-item-${index}`;
+
+            const commentElement = document.createElement('div');
+            commentElement.className = `${commonClass} ${uniqueClass}`;
+            commentElement.innerHTML = `<strong>Text:</strong> ${c.selected_text}<br><strong>Comment:</strong> ${c.comment}`;
+            commentElement.style.cursor = 'pointer';
+            commentElement.onclick = () => highlightBlock(c.block_id);
+
+            commentList.appendChild(commentElement);
+        });
+
+        document.getElementById('comment-sidebar').style.display = 'block';
+    }
+
+
+    let highlightTimeout; // Declare a variable to store the timeout ID
+
+    function highlightBlock(blockId) {
+        // Clear any existing timeout to avoid inconsistencies
+        clearTimeout(highlightTimeout);
+
+        // Reset the background color of all .color-label elements
+        document.querySelectorAll('.part-python .color-label, .part-bash .color-label').forEach(label => {
+            label.style.backgroundColor = ''; // Reset color
+        });
+
+        // Find the selected block by its ID
+        const block = document.getElementById(blockId);
+        if (block) {
+            // Change the background color of the .color-label inside the block
+            const colorLabel = block.querySelector('.color-label');
+            if (colorLabel) {
+                colorLabel.style.backgroundColor = '#31efb8'; // Change to the desired highlight color
+            }
+
+            // Scroll to the block
+            block.scrollIntoView({behavior: 'smooth', block: 'center'});
+
+            // Set a new timeout to reset the background color after 3 seconds (3000 milliseconds)
+            highlightTimeout = setTimeout(() => {
+                if (colorLabel) {
+                    colorLabel.style.backgroundColor = ''; // Reset color after timeout
+                }
+            }, 3000);
+        }
+    }
+
 
     function addEventListenersToEditor(editor) {
         editor.addEventListener('focus', () => logActiveInputArea(editor));
@@ -1076,6 +1282,7 @@
             checkHeartbeat(apiToken);
             setInterval(() => checkHeartbeat(apiToken), 1000);
             await loadDefaultFile(apiToken);
+            await fetchComments(apiToken);
             await fetchHooks(apiToken);
             await fetchLatestLogs(apiToken);
             await fetchLogFiles(apiToken);
@@ -1192,19 +1399,24 @@
                     .replace(/'/g, '&#39;');
 
                 editor.innerHTML = code;
-
                 block.appendChild(editor);
 
                 const controls = document.createElement('div');
                 controls.className = 'controls';
-
                 controls.appendChild(createControlElement('handle', type.replace('part_', '')));
                 controls.appendChild(createControlElement('move-up', '&#x25B2;', () => moveBlockUp(block)));
                 controls.appendChild(createControlElement('move-down', '&#x25BC;', () => moveBlockDown(block)));
                 controls.appendChild(createControlElement('delete-button', trashIcon, () => block.remove()));
                 controls.appendChild(createToggleButton(block));
-
                 block.appendChild(controls);
+
+                // Add comment button inside the editor
+                const commentButton = document.createElement('button');
+                commentButton.className = 'comment-button';
+                commentButton.innerHTML = 'Add Comment';
+                commentButton.onclick = () => addCommentToBlock(block);
+                editor.appendChild(commentButton);
+
                 fileContentElement.appendChild(block);
 
                 if (isDisabled) {
@@ -1215,6 +1427,7 @@
 
         document.getElementById('file-content').classList.add('loaded');
     }
+
 
     function renderHooks(hooks) {
         const hooksContainer = document.getElementById('hooks-list');
