@@ -1,0 +1,37 @@
+name: Compress and Sign FPK
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  compress_and_sign:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r utilities/compress_and_sign_fpk/requirements.txt
+
+    - name: Create private_key.pem file from secret
+      run: echo "${{ secrets.PRIVATE_KEY_PEM }}" > utilities/compress_and_sign_fpk/private_key.pem
+
+    - name: Run Bulk Compress and Sign Script
+      env:
+        PASSPHRASE: ${{ secrets.PASSPHRASE }}
+      run: |
+        python utilities/compress_and_sign_fpk/bulk_compress_and_sign_fpk.py -p utilities/compress_and_sign_fpk/private_key.pem --passphrase $PASSPHRASE
+
+    - name: Clean up private key
+      run: rm utilities/compress_and_sign_fpk/private_key.pem
