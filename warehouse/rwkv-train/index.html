@@ -57,7 +57,7 @@
         }
 
         .action:hover {
-            background: #f0f2ff;
+            background: #fff;
         }
 
         .action:last-of-type {
@@ -65,12 +65,13 @@
         }
 
         .actions {
+            position: absolute;
             align-items: flex-start;
-            border-bottom: 1px solid #5865f2;
             display: flex;
             justify-content: flex-end;
-            margin-top: 20px;
-            width: 100%;
+            z-index: 2;
+            right: 20px;
+            top: 20px;
         }
 
         .color-label {
@@ -172,6 +173,19 @@
             position: relative;
             display: flex;
             align-items: flex-start;
+        }
+
+        .filters {
+            align-items: flex-start;
+            border-bottom: 1px solid #5865f2;
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 20px;
+            width: 100%;
+        }
+
+        .floating-sphere {
+            transition: transform 0.5s;
         }
 
         .handle,
@@ -327,7 +341,6 @@
             display: flex;
             justify-content: flex-start;
             margin: 0 auto;
-            margin-top: 64px;
             max-width: 800px;
             width: 100%;
         }
@@ -425,10 +438,21 @@
             width: 100%;
         }
 
+        #canvas {
+            position: relative;
+            background: #f0f2ff;
+            border: 1px solid #5865f2;
+            width: 100%;
+            max-width: 800px;
+            height: 400px;
+            margin-top: 84px;
+            padding: 20px;
+        }
+
         #comment-sidebar {
             display: none;
             position: fixed;
-            z-index: 2147483647;
+            z-index: 2147483646;
             right: 0;
             top: 64px;
             width: 300px;
@@ -463,7 +487,7 @@
             border-radius: 50%;
             display: inline-block;
             height: 10px;
-            margin-right: 5px;
+            margin-right: 10px;
             width: 10px;
         }
 
@@ -517,7 +541,7 @@
             position: fixed;
             top: 0;
             width: 100%;
-            z-index: 9999;
+            z-index: 2147483647;
         }
 
         #loading-overlay p {
@@ -558,6 +582,7 @@
             margin-top: 84px;
             max-width: 800px;
             padding: 20px;
+            margin-bottom: 20px;
             text-align: center;
             width: 100%;
         }
@@ -604,7 +629,7 @@
             height: 64px;
             top: 0px;
             position: fixed;
-            z-index: 2147483647;
+            z-index: 2147483646;
             align-items: center;
             background: #5865f2;
             color: #fff;
@@ -634,6 +659,10 @@
                 margin-right: 20px;
             }
 
+            .tabs {
+                border-left: 0px;
+            }
+
             #hooks,
             #log,
             #wrapper {
@@ -643,6 +672,15 @@
         }
 
         /* Keyframes */
+        @keyframes float {
+            0% {
+                transform: translateY(0);
+            }
+            100% {
+                transform: translateY(-20px);
+            }
+        }
+
         @keyframes spin {
             0% {
                 transform: rotate(0deg);
@@ -679,7 +717,6 @@
 <div id="comment-sidebar">
     <button id="toggle-comment-sidebar" onclick="toggleCommentSidebar()">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 14 14" width="14" height="14">
-            <!-- Draw the pixel X pattern -->
             <rect x="3" y="3" width="2" height="2" fill="#5865f2"/>
             <rect x="5" y="5" width="2" height="2" fill="#5865f2"/>
             <rect x="7" y="7" width="2" height="2" fill="#5865f2"/>
@@ -696,12 +733,7 @@
     <div id="comment-list"></div>
 </div> <!-- END #comment-sidebar -->
 
-<div class="tabs-container">
-    <div class="tabs">
-        <div class="tab active" data-tab="editor">Editor</div>
-        <div class="tab" data-tab="hooks">Hooks</div>
-        <div class="tab" data-tab="log">Log</div>
-    </div>
+<div id="canvas">
     <div class="actions">
         <div class="action" id="save-action">
             S
@@ -718,6 +750,17 @@
             </svg>
         </div>
     </div>
+
+    [CANVAS]
+</div> <!-- END #canvas -->
+
+<div class="tabs-container">
+    <div class="tabs">
+        <div class="tab active" data-tab="editor">Editor</div>
+        <div class="tab" data-tab="hooks">Hooks</div>
+        <div class="tab" data-tab="log">Log</div>
+    </div>
+    <div class="filters"></div>
 </div> <!-- END #tabs-container -->
 
 <div class="tab-content active" id="editor-content">
@@ -772,7 +815,10 @@
 <script>
     'use strict';
 
+    const animationSpeed = 0.005;
     const comments = [];
+    const drawInterval = 100;
+    const sphereRadius = 20;
 
     const getBaseUrl = () => window.location.origin;
 
@@ -786,10 +832,16 @@
   <path d="M2 1h12v2H2zM1 3h2v1H1zM13 3h2v1h-2zM3 4h2v11H3zM7 4h2v11H7zM11 4h2v11h-2zM2 15h12v1H2z" fill="currentColor"/>
 </svg>`;
 
+    let currentDragIndex = null;
     let currentPart = 1;
+    let dragOffsetX = 0;
+    let dragOffsetY = 0;
     let highlightTimeout;
     let isBuilding = false;
+    let isDragging = false;
+    let lastDrawTime = 0;
     let originalContent = '';
+    let spherePositions = [];
 
     function addBashBlock() {
         addBlock('bash');
@@ -888,6 +940,22 @@
 
     function addPythonBlock() {
         addBlock('python');
+    }
+
+    function adjustSpheresOnResize(canvasElement) {
+        const canvasWidth = canvasElement.offsetWidth;
+        const canvasHeight = canvasElement.offsetHeight;
+        const margin = 40;
+
+        spherePositions.forEach(sphere => {
+            sphere.x = Math.min(Math.max(sphere.x, margin), canvasWidth - margin - 40);
+            sphere.y = Math.min(Math.max(sphere.y, margin), canvasHeight - margin - 40);
+
+            sphere.element.style.left = `${sphere.x}px`;
+            sphere.element.style.top = `${sphere.y}px`;
+        });
+
+        drawConnectingLines(canvasElement);
     }
 
     async function buildProject(apiToken) {
@@ -1065,6 +1133,82 @@
         return element;
     }
 
+    function updateSpheres() {
+        const canvasElement = document.getElementById('canvas');
+        let hasMovement = false;
+
+        spherePositions.forEach((spherePosition, index) => {
+            const {element, targetX, targetY} = spherePosition;
+            const {x, y} = smoothPosition(spherePosition, targetX, targetY);
+
+            for (let i = 0; i < spherePositions.length; i++) {
+                if (i !== index) {
+                    const otherSphere = spherePositions[i];
+                    const distX = otherSphere.x - x;
+                    const distY = otherSphere.y - y;
+                    const distance = Math.sqrt(distX * distX + distY * distY);
+
+                    if (distance < sphereRadius * 2) {
+
+                        const overlap = sphereRadius * 2 - distance;
+                        const moveX = (distX / distance) * overlap;
+                        const moveY = (distY / distance) * overlap;
+
+                        spherePosition.x -= moveX * 0.5;
+                        spherePosition.y -= moveY * 0.5;
+                        otherSphere.x += moveX * 0.5;
+                        otherSphere.y += moveY * 0.5;
+
+                        spherePosition.targetX = spherePosition.x - (targetX - spherePosition.x);
+                        spherePosition.targetY = spherePosition.y - (targetY - spherePosition.y);
+                        otherSphere.targetX = otherSphere.x - (otherSphere.targetX - otherSphere.x);
+                        otherSphere.targetY = otherSphere.y - (otherSphere.targetY - otherSphere.y);
+                    }
+                }
+            }
+
+            if (Math.abs(spherePosition.x - targetX) > 0.1 || Math.abs(spherePosition.y - targetY) > 0.1) {
+                hasMovement = true;
+            }
+
+            element.style.left = `${x}px`;
+            element.style.top = `${y}px`;
+        });
+
+        if (hasMovement) {
+            drawConnectingLines(canvasElement);
+        }
+
+        requestAnimationFrame(updateSpheres);
+    }
+
+    function createFloatingSphere(blockId, canvasElement) {
+        const sphere = document.createElement('div');
+        sphere.className = 'floating-sphere';
+        sphere.id = `sphere-${blockId}`;
+
+        const canvasWidth = canvasElement.offsetWidth;
+        const canvasHeight = canvasElement.offsetHeight;
+        const margin = 40;
+
+        const posX = margin + Math.random() * (canvasWidth - 2 * margin - sphereRadius * 2);
+        const posY = margin + Math.random() * (canvasHeight - 2 * margin - sphereRadius * 2);
+
+        sphere.style.width = `${sphereRadius * 2}px`;
+        sphere.style.height = `${sphereRadius * 2}px`;
+        sphere.style.borderRadius = '50%';
+        sphere.style.backgroundColor = '#5865f2';
+        sphere.style.position = 'absolute';
+        sphere.style.left = `${posX}px`;
+        sphere.style.top = `${posY}px`;
+
+        canvasElement.appendChild(sphere);
+
+        spherePositions.push({x: posX, y: posY, targetX: posX, targetY: posY, element: sphere});
+
+        requestAnimationFrame(updateSpheres);
+    }
+
     function createToggleButton(block) {
         return createControlElement('toggle-button', eyeIcon, () => toggleBlock(block));
     }
@@ -1074,6 +1218,45 @@
             el.setAttribute('disabled', 'true');
             el.style.pointerEvents = 'none';
         });
+    }
+
+    function dragSphere(e) {
+        if (isDragging && currentDragIndex !== null) {
+            const spherePosition = spherePositions[currentDragIndex];
+            spherePosition.targetX = e.clientX - dragOffsetX;
+            spherePosition.targetY = e.clientY - dragOffsetY;
+        }
+    }
+
+    function drawConnectingLines(canvasElement) {
+        const existingCanvas = canvasElement.querySelector('canvas');
+        if (existingCanvas) {
+            canvasElement.removeChild(existingCanvas);
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = canvasElement.offsetWidth;
+        canvas.height = canvasElement.offsetHeight;
+        canvas.style.position = 'absolute';
+        canvas.style.top = '0';
+        canvas.style.left = '0';
+        canvasElement.appendChild(canvas);
+
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        if (spherePositions.length < 2) return;
+
+        ctx.beginPath();
+        ctx.strokeStyle = '#5865f2';
+        ctx.lineWidth = 2;
+
+        for (let i = 0; i < spherePositions.length - 1; i++) {
+            ctx.moveTo(spherePositions[i].x + sphereRadius, spherePositions[i].y + sphereRadius);
+            ctx.lineTo(spherePositions[i + 1].x + sphereRadius, spherePositions[i + 1].y + sphereRadius);
+        }
+
+        ctx.stroke();
     }
 
     function enableInteractions() {
@@ -1230,6 +1413,35 @@
             showStatus('Error fetching the selected log!', false);
         }
     }
+
+    function floatSphere(sphere, canvasElement) {
+        const canvasWidth = canvasElement.offsetWidth;
+        const canvasHeight = canvasElement.offsetHeight;
+        const margin = 40;
+        const sphereSize = 40;
+
+        let posX = parseFloat(sphere.style.left);
+        let posY = parseFloat(sphere.style.top);
+
+        let deltaX = (Math.random() - 0.5) * 100;
+        let deltaY = (Math.random() - 0.5) * 100;
+
+        posX = Math.min(Math.max(posX + deltaX, margin), canvasWidth - margin - sphereSize);
+        posY = Math.min(Math.max(posY + deltaY, margin), canvasHeight - margin - sphereSize);
+
+        const sphereIndex = spherePositions.findIndex(pos => pos.element === sphere);
+
+        if (sphereIndex !== -1) {
+            spherePositions[sphereIndex].targetX = posX;
+            spherePositions[sphereIndex].targetY = posY;
+        }
+    }
+
+    setInterval(() => {
+        spherePositions.forEach(spherePos => {
+            floatSphere(spherePos.element, document.getElementById('canvas'));
+        });
+    }, 300);
 
     async function getEvalJSON(apiToken) {
         try {
@@ -1420,6 +1632,7 @@
     }
 
     function renderFileContents(contents) {
+        const canvasElement = document.getElementById('canvas');
         const fileContentElement = document.getElementById('file-content');
         fileContentElement.innerHTML = '';
 
@@ -1437,8 +1650,12 @@
 
                 const block = document.createElement('div');
                 block.className = type.replace('_', '-');
+
                 if (isDisabled) block.classList.add('disabled');
                 block.id = `part-${currentPart++}`;
+
+                console.log(block.id)
+                createFloatingSphere(block.id, canvasElement);
 
                 const colorLabel = document.createElement('div');
                 colorLabel.className = 'color-label';
@@ -1633,15 +1850,42 @@
 
         statusBar.textContent = message;
         statusBar.style.display = 'block';
-        document.querySelector('.tabs-container').style.marginTop = '0px';
+        document.querySelector('#canvas').style.marginTop = '0px';
         statusBar.classList.remove('success', 'error');
         statusBar.classList.add(isSuccess ? 'success' : 'error');
 
         statusBar.hideTimeout = setTimeout(() => {
             statusBar.style.display = 'none';
-            document.querySelector('.tabs-container').style.marginTop = '64px';
+            document.querySelector('#canvas').style.marginTop = '84px';
             statusBar.classList.remove('success', 'error');
         }, 5000);
+    }
+
+    function smoothPosition(position, targetX, targetY) {
+        position.x += (targetX - position.x) * animationSpeed;
+        position.y += (targetY - position.y) * animationSpeed;
+        return position;
+    }
+
+    function startDrag(e, sphere) {
+        isDragging = true;
+        currentDragIndex = spherePositions.findIndex(pos => pos.element === sphere);
+        const rect = sphere.getBoundingClientRect();
+        dragOffsetX = e.clientX - rect.left;
+        dragOffsetY = e.clientY - rect.top;
+    }
+
+    function startSphereMovement() {
+        setInterval(() => {
+            spherePositions.forEach(spherePos => {
+                floatSphere(spherePos.element, document.getElementById('canvas'));
+            });
+        }, 3000);
+    }
+
+    function stopDrag() {
+        isDragging = false;
+        currentDragIndex = null;
     }
 
     function stripFormatting(e) {
@@ -1685,6 +1929,42 @@
 
         function showApiKeyModal() {
             apiKeyModal.style.display = 'flex';
+        }
+
+        function updateConnectedPositions(index, newX, newY) {
+            for (let i = index + 1; i < spherePositions.length; i++) {
+                const prevPosition = spherePositions[i - 1];
+                const currentPosition = spherePositions[i];
+
+                const dx = currentPosition.x - prevPosition.x;
+                const dy = currentPosition.y - prevPosition.y;
+
+                currentPosition.x = newX + dx;
+                currentPosition.y = newY + dy;
+
+                currentPosition.element.style.left = `${currentPosition.x}px`;
+                currentPosition.element.style.top = `${currentPosition.y}px`;
+
+                newX = currentPosition.x;
+                newY = currentPosition.y;
+            }
+
+            for (let i = index - 1; i >= 0; i--) {
+                const nextPosition = spherePositions[i + 1];
+                const currentPosition = spherePositions[i];
+
+                const dx = nextPosition.x - currentPosition.x;
+                const dy = nextPosition.y - currentPosition.y;
+
+                currentPosition.x = newX - dx;
+                currentPosition.y = newY - dy;
+
+                currentPosition.element.style.left = `${currentPosition.x}px`;
+                currentPosition.element.style.top = `${currentPosition.y}px`;
+
+                newX = currentPosition.x;
+                newY = currentPosition.y;
+            }
         }
 
         async function validateAndInitialize(apiToken) {
@@ -1761,6 +2041,20 @@
             addEventListenersToEditor(editor);
             resizeEditor(editor);
         });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const canvasElement = document.getElementById('canvas');
+
+            const parts = document.querySelectorAll('.part-python, .part-bash');
+
+            parts.forEach(part => {
+                createFloatingSphere(part.id, canvasElement);
+            });
+
+            startSphereMovement();
+        });
+
+        window.addEventListener('resize', () => adjustSpheresOnResize(document.getElementById('canvas')));
 
         // BEGIN Tabs
         const editorTab = document.querySelector('.tab[data-tab="editor"]');
