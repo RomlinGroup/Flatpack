@@ -42,22 +42,17 @@
 
         /* Class selectors */
         .action {
-            align-items: center;
-            border: 1px solid #5865f2;
-            border-radius: 50%;
-            color: #5865f2;
+            background: #222;
+            color: #fff;
+            border: none;
             cursor: pointer;
+            width: 28px;
+            height: 28px;
             display: flex;
-            font-size: 14px;
-            height: 30px;
+            align-items: center;
             justify-content: center;
-            line-height: 1;
-            margin-right: 5px;
-            width: 30px;
-        }
-
-        .action:hover {
-            background: #fff;
+            padding: 0;
+            margin-right: 10px;
         }
 
         .action:last-of-type {
@@ -65,13 +60,10 @@
         }
 
         .actions {
-            position: absolute;
-            align-items: flex-start;
             display: flex;
-            justify-content: flex-end;
-            z-index: 2;
-            right: 20px;
-            top: 20px;
+            align-items: center;
+            margin-left: 10px;
+            margin-right: 10px;
         }
 
         .color-label {
@@ -83,7 +75,7 @@
         }
 
         .comment-button {
-            background-color: #31efb8;
+            background-color: #5865f2;
             color: #000;
             border: none;
             cursor: pointer;
@@ -124,7 +116,7 @@
         }
 
         .connected {
-            background: #31efb8;
+            background: #31efb8 !important;
         }
 
         .delete-button,
@@ -150,7 +142,7 @@
         }
 
         .disconnected {
-            background: #ff8d80;
+            background: #ff8d80 !important;
         }
 
         .editor {
@@ -182,10 +174,6 @@
             justify-content: flex-end;
             margin-top: 20px;
             width: 100%;
-        }
-
-        .floating-sphere {
-            transition: transform 0.5s;
         }
 
         .handle,
@@ -341,6 +329,7 @@
             display: flex;
             justify-content: flex-start;
             margin: 0 auto;
+            margin-top: 64px;
             max-width: 800px;
             width: 100%;
         }
@@ -414,7 +403,7 @@
             position: fixed;
             top: 0;
             width: 100%;
-            z-index: 1000;
+            z-index: 2147483647;
         }
 
         #api-key-modal-content {
@@ -436,17 +425,6 @@
             display: flex;
             margin-top: 20px;
             width: 100%;
-        }
-
-        #canvas {
-            position: relative;
-            background: #f0f2ff;
-            border: 1px solid #5865f2;
-            width: 100%;
-            max-width: 800px;
-            height: 400px;
-            margin-top: 84px;
-            padding: 20px;
         }
 
         #comment-sidebar {
@@ -484,11 +462,12 @@
         }
 
         #heartbeat-dot {
+            background: #ff8d80;
             border-radius: 50%;
             display: inline-block;
+            width: 10px;
             height: 10px;
             margin-right: 10px;
-            width: 10px;
         }
 
         #heartbeat-indicator {
@@ -582,7 +561,6 @@
             margin-top: 84px;
             max-width: 800px;
             padding: 20px;
-            margin-bottom: 20px;
             text-align: center;
             width: 100%;
         }
@@ -599,7 +577,6 @@
 
         #toggle-comments-btn {
             background: #31efb8;
-            color: #fff;
             border: none;
             cursor: pointer;
             width: 28px;
@@ -607,12 +584,8 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 0;
             margin-right: 20px;
-        }
-
-        #toggle-comments-btn:hover {
-            background: #31efb8;
+            padding: 0;
         }
 
         #toggle-comment-sidebar {
@@ -631,7 +604,7 @@
             position: fixed;
             z-index: 2147483646;
             align-items: center;
-            background: #5865f2;
+            background: #000;
             color: #fff;
             display: flex;
             justify-content: space-between;
@@ -655,10 +628,6 @@
 
         /* Media queries */
         @media (max-width: 800px) {
-            .action:last-of-type {
-                margin-right: 20px;
-            }
-
             .tabs {
                 border-left: 0px;
             }
@@ -668,6 +637,12 @@
             #wrapper {
                 border-left: 0;
                 border-right: 0;
+            }
+
+            #status-bar {
+                max-width: calc(100% - 40px);
+                margin-left: 20px;
+                margin-right: 20px;
             }
         }
 
@@ -696,19 +671,43 @@
 <div id="toolbar">
     <a href="index.html"><h1>FPK Editor</h1></a>
     <div id="toolbar-right">
+
+        <div class="actions">
+
+            <div class="action" id="save-action">
+                S
+            </div>
+
+            <div class="action" id="verify-action">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16">
+                    <path d="M2 8h2v2H2zM4 10h2v2H4zM6 12h2v2H6zM8 10h2v2H8zM10 8h2v2h-2zM12 6h2v2h-2zM14 4h2v2h-2z"
+                          fill="#fff"/>
+                </svg>
+            </div>
+
+            <div class="action" id="build-action">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16">
+                    <path d="M4 3h2v10H4zM6 4h2v8H6zM8 5h2v6H8zM10 6h2v4h-2zM12 7h2v2h-2z" fill="#fff"/>
+                </svg>
+            </div>
+
+        </div> <!-- END .actions -->
+
         <button id="toggle-comments-btn" onclick="toggleCommentSidebar()">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16">
-                <rect x="2" y="2" width="12" height="12" fill="#000"/>
-                <rect x="1" y="2" width="1" height="12" fill="#000"/>
+                <rect x="2" y="2" width="12" height="12" fill="#000000"/>
+                <rect x="1" y="2" width="1" height="12" fill="#000000"/>
                 <rect x="3" y="3" width="10" height="10" fill="#31efb8"/>
-                <rect x="4" y="5" width="8" height="1" fill="#000"/>
-                <rect x="4" y="7" width="8" height="1" fill="#000"/>
-                <rect x="4" y="9" width="8" height="1" fill="#000"/>
+                <rect x="4" y="5" width="8" height="1" fill="#000000"/>
+                <rect x="4" y="7" width="8" height="1" fill="#000000"/>
+                <rect x="4" y="9" width="8" height="1" fill="#000000"/>
             </svg>
         </button>
+
         <div id="heartbeat-indicator">
-            <span id="heartbeat-dot"></span> <span id="heartbeat-time"></span>
+            <span id="heartbeat-dot"></span> <span id="heartbeat-time">00:00:00</span>
         </div>
+
     </div>
 </div> <!-- END #toolbar -->
 
@@ -733,33 +732,13 @@
     <div id="comment-list"></div>
 </div> <!-- END #comment-sidebar -->
 
-<div id="canvas">
-    <div class="actions">
-        <div class="action" id="save-action">
-            S
-        </div>
-        <div class="action" id="verify-action">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16">
-                <path d="M2 8h2v2H2zM4 10h2v2H4zM6 12h2v2H6zM8 10h2v2H8zM10 8h2v2h-2zM12 6h2v2h-2zM14 4h2v2h-2z"
-                      fill="currentColor"/>
-            </svg>
-        </div>
-        <div class="action" id="build-action">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16">
-                <path d="M4 3h2v10H4zM6 4h2v8H6zM8 5h2v6H8zM10 6h2v4h-2zM12 7h2v2h-2z" fill="currentColor"/>
-            </svg>
-        </div>
-    </div>
-
-    [CANVAS]
-</div> <!-- END #canvas -->
-
 <div class="tabs-container">
     <div class="tabs">
         <div class="tab active" data-tab="editor">Editor</div>
         <div class="tab" data-tab="hooks">Hooks</div>
         <div class="tab" data-tab="log">Log</div>
     </div>
+
     <div class="filters"></div>
 </div> <!-- END #tabs-container -->
 
@@ -815,10 +794,7 @@
 <script>
     'use strict';
 
-    const animationSpeed = 0.005;
     const comments = [];
-    const drawInterval = 100;
-    const sphereRadius = 20;
 
     const getBaseUrl = () => window.location.origin;
 
@@ -832,25 +808,21 @@
   <path d="M2 1h12v2H2zM1 3h2v1H1zM13 3h2v1h-2zM3 4h2v11H3zM7 4h2v11H7zM11 4h2v11h-2zM2 15h12v1H2z" fill="currentColor"/>
 </svg>`;
 
-    let currentDragIndex = null;
     let currentPart = 1;
-    let dragOffsetX = 0;
-    let dragOffsetY = 0;
     let highlightTimeout;
     let isBuilding = false;
-    let isDragging = false;
-    let lastDrawTime = 0;
     let originalContent = '';
-    let spherePositions = [];
 
     function addBashBlock() {
         addBlock('bash');
     }
 
     function addBlock(type) {
+        const uniqueId = `part-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+
         const block = document.createElement('div');
         block.className = `part-${type}`;
-        block.id = `part-${currentPart++}`;
+        block.id = uniqueId;
 
         const colorLabel = document.createElement('div');
         colorLabel.className = 'color-label';
@@ -873,7 +845,7 @@
         commentButton.className = 'comment-button';
         commentButton.innerHTML = `
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-            <path d="M1 1h14v12H6l-5 4V1z" fill="#000000"/>
+            <path d="M1 1h14v12H6l-5 4V1z" fill="#ffffff"/>
             </svg>
         `;
         commentButton.onclick = () => addCommentToBlock(block);
@@ -887,7 +859,7 @@
         controls.appendChild(createControlElement('handle', type));
         controls.appendChild(createControlElement('move-up', '&#x25B2;', () => moveBlockUp(block)));
         controls.appendChild(createControlElement('move-down', '&#x25BC;', () => moveBlockDown(block)));
-        controls.appendChild(createControlElement('delete-button', trashIcon, () => block.remove()));
+        controls.appendChild(createControlElement('delete-button', trashIcon, () => deleteBlock(block)));
         controls.appendChild(createControlElement('toggle-button', eyeIcon, () => toggleBlock(block)));
 
         block.appendChild(controls);
@@ -940,22 +912,6 @@
 
     function addPythonBlock() {
         addBlock('python');
-    }
-
-    function adjustSpheresOnResize(canvasElement) {
-        const canvasWidth = canvasElement.offsetWidth;
-        const canvasHeight = canvasElement.offsetHeight;
-        const margin = 40;
-
-        spherePositions.forEach(sphere => {
-            sphere.x = Math.min(Math.max(sphere.x, margin), canvasWidth - margin - 40);
-            sphere.y = Math.min(Math.max(sphere.y, margin), canvasHeight - margin - 40);
-
-            sphere.element.style.left = `${sphere.x}px`;
-            sphere.element.style.top = `${sphere.y}px`;
-        });
-
-        drawConnectingLines(canvasElement);
     }
 
     async function buildProject(apiToken) {
@@ -1133,84 +1089,13 @@
         return element;
     }
 
-    function updateSpheres() {
-        const canvasElement = document.getElementById('canvas');
-        let hasMovement = false;
-
-        spherePositions.forEach((spherePosition, index) => {
-            const {element, targetX, targetY} = spherePosition;
-            const {x, y} = smoothPosition(spherePosition, targetX, targetY);
-
-            for (let i = 0; i < spherePositions.length; i++) {
-                if (i !== index) {
-                    const otherSphere = spherePositions[i];
-                    const distX = otherSphere.x - x;
-                    const distY = otherSphere.y - y;
-                    const distance = Math.sqrt(distX * distX + distY * distY);
-
-                    if (distance < sphereRadius * 2) {
-
-                        const overlap = sphereRadius * 2 - distance;
-                        const moveX = (distX / distance) * overlap;
-                        const moveY = (distY / distance) * overlap;
-
-                        spherePosition.x -= moveX * 0.5;
-                        spherePosition.y -= moveY * 0.5;
-                        otherSphere.x += moveX * 0.5;
-                        otherSphere.y += moveY * 0.5;
-
-                        spherePosition.targetX = spherePosition.x - (targetX - spherePosition.x);
-                        spherePosition.targetY = spherePosition.y - (targetY - spherePosition.y);
-                        otherSphere.targetX = otherSphere.x - (otherSphere.targetX - otherSphere.x);
-                        otherSphere.targetY = otherSphere.y - (otherSphere.targetY - otherSphere.y);
-                    }
-                }
-            }
-
-            if (Math.abs(spherePosition.x - targetX) > 0.1 || Math.abs(spherePosition.y - targetY) > 0.1) {
-                hasMovement = true;
-            }
-
-            element.style.left = `${x}px`;
-            element.style.top = `${y}px`;
-        });
-
-        if (hasMovement) {
-            drawConnectingLines(canvasElement);
-        }
-
-        requestAnimationFrame(updateSpheres);
-    }
-
-    function createFloatingSphere(blockId, canvasElement) {
-        const sphere = document.createElement('div');
-        sphere.className = 'floating-sphere';
-        sphere.id = `sphere-${blockId}`;
-
-        const canvasWidth = canvasElement.offsetWidth;
-        const canvasHeight = canvasElement.offsetHeight;
-        const margin = 40;
-
-        const posX = margin + Math.random() * (canvasWidth - 2 * margin - sphereRadius * 2);
-        const posY = margin + Math.random() * (canvasHeight - 2 * margin - sphereRadius * 2);
-
-        sphere.style.width = `${sphereRadius * 2}px`;
-        sphere.style.height = `${sphereRadius * 2}px`;
-        sphere.style.borderRadius = '50%';
-        sphere.style.backgroundColor = '#5865f2';
-        sphere.style.position = 'absolute';
-        sphere.style.left = `${posX}px`;
-        sphere.style.top = `${posY}px`;
-
-        canvasElement.appendChild(sphere);
-
-        spherePositions.push({x: posX, y: posY, targetX: posX, targetY: posY, element: sphere});
-
-        requestAnimationFrame(updateSpheres);
-    }
-
     function createToggleButton(block) {
         return createControlElement('toggle-button', eyeIcon, () => toggleBlock(block));
+    }
+
+    function deleteBlock(block) {
+        const blockId = block.id;
+        block.remove();
     }
 
     function disableInteractions() {
@@ -1218,45 +1103,6 @@
             el.setAttribute('disabled', 'true');
             el.style.pointerEvents = 'none';
         });
-    }
-
-    function dragSphere(e) {
-        if (isDragging && currentDragIndex !== null) {
-            const spherePosition = spherePositions[currentDragIndex];
-            spherePosition.targetX = e.clientX - dragOffsetX;
-            spherePosition.targetY = e.clientY - dragOffsetY;
-        }
-    }
-
-    function drawConnectingLines(canvasElement) {
-        const existingCanvas = canvasElement.querySelector('canvas');
-        if (existingCanvas) {
-            canvasElement.removeChild(existingCanvas);
-        }
-
-        const canvas = document.createElement('canvas');
-        canvas.width = canvasElement.offsetWidth;
-        canvas.height = canvasElement.offsetHeight;
-        canvas.style.position = 'absolute';
-        canvas.style.top = '0';
-        canvas.style.left = '0';
-        canvasElement.appendChild(canvas);
-
-        const ctx = canvas.getContext('2d');
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        if (spherePositions.length < 2) return;
-
-        ctx.beginPath();
-        ctx.strokeStyle = '#5865f2';
-        ctx.lineWidth = 2;
-
-        for (let i = 0; i < spherePositions.length - 1; i++) {
-            ctx.moveTo(spherePositions[i].x + sphereRadius, spherePositions[i].y + sphereRadius);
-            ctx.lineTo(spherePositions[i + 1].x + sphereRadius, spherePositions[i + 1].y + sphereRadius);
-        }
-
-        ctx.stroke();
     }
 
     function enableInteractions() {
@@ -1413,35 +1259,6 @@
             showStatus('Error fetching the selected log!', false);
         }
     }
-
-    function floatSphere(sphere, canvasElement) {
-        const canvasWidth = canvasElement.offsetWidth;
-        const canvasHeight = canvasElement.offsetHeight;
-        const margin = 40;
-        const sphereSize = 40;
-
-        let posX = parseFloat(sphere.style.left);
-        let posY = parseFloat(sphere.style.top);
-
-        let deltaX = (Math.random() - 0.5) * 100;
-        let deltaY = (Math.random() - 0.5) * 100;
-
-        posX = Math.min(Math.max(posX + deltaX, margin), canvasWidth - margin - sphereSize);
-        posY = Math.min(Math.max(posY + deltaY, margin), canvasHeight - margin - sphereSize);
-
-        const sphereIndex = spherePositions.findIndex(pos => pos.element === sphere);
-
-        if (sphereIndex !== -1) {
-            spherePositions[sphereIndex].targetX = posX;
-            spherePositions[sphereIndex].targetY = posY;
-        }
-    }
-
-    setInterval(() => {
-        spherePositions.forEach(spherePos => {
-            floatSphere(spherePos.element, document.getElementById('canvas'));
-        });
-    }, 300);
 
     async function getEvalJSON(apiToken) {
         try {
@@ -1621,10 +1438,10 @@
             const commentElement = document.createElement('div');
             commentElement.className = `comment-item comment-item-${index}`;
             commentElement.innerHTML = `
-        <strong>Selection:</strong> ${c.text}<br>
-        <strong>Comment:</strong> ${c.comment}<br>
-        <strong>Created at:</strong> ${new Date(c.created_at).toLocaleString()}
-        `;
+                <strong>Selection:</strong> ${c.text}<br>
+                <strong>Comment:</strong> ${c.comment}<br>
+                <strong>Created at:</strong> ${new Date(c.created_at).toLocaleString()}
+            `;
             commentElement.style.cursor = 'pointer';
             commentElement.onclick = () => highlightBlock(c.blockId);
             commentList.appendChild(commentElement);
@@ -1632,7 +1449,6 @@
     }
 
     function renderFileContents(contents) {
-        const canvasElement = document.getElementById('canvas');
         const fileContentElement = document.getElementById('file-content');
         fileContentElement.innerHTML = '';
 
@@ -1652,10 +1468,11 @@
                 block.className = type.replace('_', '-');
 
                 if (isDisabled) block.classList.add('disabled');
-                block.id = `part-${currentPart++}`;
 
-                console.log(block.id)
-                createFloatingSphere(block.id, canvasElement);
+                const uniqueId = `part-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+                block.id = uniqueId;
+
+                console.log(block.id);
 
                 const colorLabel = document.createElement('div');
                 colorLabel.className = 'color-label';
@@ -1682,7 +1499,7 @@
                 commentButton.className = 'comment-button';
                 commentButton.innerHTML = `
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                    <path d="M1 1h14v12H6l-5 4V1z" fill="#000000"/>
+                    <path d="M1 1h14v12H6l-5 4V1z" fill="#ffffff"/>
                     </svg>
                 `;
                 commentButton.onclick = () => addCommentToBlock(block);
@@ -1695,7 +1512,7 @@
                 controls.appendChild(createControlElement('handle', type.replace('part_', '')));
                 controls.appendChild(createControlElement('move-up', '&#x25B2;', () => moveBlockUp(block)));
                 controls.appendChild(createControlElement('move-down', '&#x25BC;', () => moveBlockDown(block)));
-                controls.appendChild(createControlElement('delete-button', trashIcon, () => block.remove()));
+                controls.appendChild(createControlElement('delete-button', trashIcon, () => deleteBlock(block)));
                 controls.appendChild(createToggleButton(block));
                 block.appendChild(controls);
 
@@ -1839,6 +1656,8 @@
 
     function showStatus(message, isSuccess = true) {
         const statusBar = document.getElementById('status-bar');
+        const tabsContainer = document.querySelector('.tabs-container');
+
         if (!statusBar) {
             console.error('Status bar element not found');
             return;
@@ -1850,42 +1669,21 @@
 
         statusBar.textContent = message;
         statusBar.style.display = 'block';
-        document.querySelector('#canvas').style.marginTop = '0px';
         statusBar.classList.remove('success', 'error');
         statusBar.classList.add(isSuccess ? 'success' : 'error');
 
+        if (tabsContainer) {
+            tabsContainer.style.marginTop = '0px';
+        }
+
         statusBar.hideTimeout = setTimeout(() => {
             statusBar.style.display = 'none';
-            document.querySelector('#canvas').style.marginTop = '84px';
             statusBar.classList.remove('success', 'error');
+
+            if (tabsContainer) {
+                tabsContainer.style.marginTop = '';
+            }
         }, 5000);
-    }
-
-    function smoothPosition(position, targetX, targetY) {
-        position.x += (targetX - position.x) * animationSpeed;
-        position.y += (targetY - position.y) * animationSpeed;
-        return position;
-    }
-
-    function startDrag(e, sphere) {
-        isDragging = true;
-        currentDragIndex = spherePositions.findIndex(pos => pos.element === sphere);
-        const rect = sphere.getBoundingClientRect();
-        dragOffsetX = e.clientX - rect.left;
-        dragOffsetY = e.clientY - rect.top;
-    }
-
-    function startSphereMovement() {
-        setInterval(() => {
-            spherePositions.forEach(spherePos => {
-                floatSphere(spherePos.element, document.getElementById('canvas'));
-            });
-        }, 3000);
-    }
-
-    function stopDrag() {
-        isDragging = false;
-        currentDragIndex = null;
     }
 
     function stripFormatting(e) {
@@ -1896,8 +1694,8 @@
 
     function toggleBlock(block) {
         block.classList.toggle('disabled');
-        const toggleButton = block.querySelector('.toggle-button');
         const editor = block.querySelector('.editor');
+        const blockId = block.id;
 
         if (block.classList.contains('disabled')) {
             editor.contentEditable = 'false';
@@ -1931,45 +1729,15 @@
             apiKeyModal.style.display = 'flex';
         }
 
-        function updateConnectedPositions(index, newX, newY) {
-            for (let i = index + 1; i < spherePositions.length; i++) {
-                const prevPosition = spherePositions[i - 1];
-                const currentPosition = spherePositions[i];
-
-                const dx = currentPosition.x - prevPosition.x;
-                const dy = currentPosition.y - prevPosition.y;
-
-                currentPosition.x = newX + dx;
-                currentPosition.y = newY + dy;
-
-                currentPosition.element.style.left = `${currentPosition.x}px`;
-                currentPosition.element.style.top = `${currentPosition.y}px`;
-
-                newX = currentPosition.x;
-                newY = currentPosition.y;
-            }
-
-            for (let i = index - 1; i >= 0; i--) {
-                const nextPosition = spherePositions[i + 1];
-                const currentPosition = spherePositions[i];
-
-                const dx = nextPosition.x - currentPosition.x;
-                const dy = nextPosition.y - currentPosition.y;
-
-                currentPosition.x = newX - dx;
-                currentPosition.y = newY - dy;
-
-                currentPosition.element.style.left = `${currentPosition.x}px`;
-                currentPosition.element.style.top = `${currentPosition.y}px`;
-
-                newX = currentPosition.x;
-                newY = currentPosition.y;
-            }
-        }
-
         async function validateAndInitialize(apiToken) {
             try {
                 console.log("Validating API token:", apiToken);
+
+                if (!apiToken) {
+                    console.error("No API token provided.");
+                    alert("Please enter a valid API token.");
+                    return false;
+                }
 
                 const formData = new FormData();
                 formData.append('api_token', apiToken);
@@ -1986,29 +1754,37 @@
                     return false;
                 }
 
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.message === 'API token is valid.') {
-                        console.log("API token is valid. Storing in sessionStorage.");
-                        sessionStorage.setItem('apiToken', apiToken);
-                        console.log("Stored API token in sessionStorage:", sessionStorage.getItem('apiToken'));
-                        await initializeApp(apiToken);
-                        document.getElementById('api-key-modal').style.display = 'none';
-                        return true;
-                    } else {
-                        console.error('API token validation failed:', data.message);
-                    }
+                if (!response.ok) {
+                    console.error(`Error: ${response.status} - ${response.statusText}`);
+                    alert(`Failed to validate API token. Server responded with status ${response.status}.`);
+                    sessionStorage.removeItem('apiToken');
+                    return false;
                 }
 
-                sessionStorage.removeItem('apiToken');
-                alert('Please enter a valid API token.');
-                return false;
+                const data = await response.json();
+                console.log("API validation response:", data);
 
+                if (data.message === 'API token is valid.') {
+                    console.log("API token is valid. Storing in sessionStorage.");
+                    sessionStorage.setItem('apiToken', apiToken);
+                    console.log("Stored API token in sessionStorage:", sessionStorage.getItem('apiToken'));
+
+                    await initializeApp(apiToken);
+                    document.getElementById('api-key-modal').style.display = 'none';
+                    return true;
+                } else {
+                    console.error('API token validation failed:', data.message);
+                    alert('API token validation failed. Please try again.');
+                    sessionStorage.removeItem('apiToken');
+                    return false;
+                }
             } catch (error) {
                 console.error('Error during API token validation:', error);
+
                 if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
-                    alert('Network error. Please try again.');
+                    alert('Network error. Please check your connection and try again.');
                 }
+
                 sessionStorage.removeItem('apiToken');
                 return false;
             }
@@ -2041,20 +1817,6 @@
             addEventListenersToEditor(editor);
             resizeEditor(editor);
         });
-
-        document.addEventListener('DOMContentLoaded', () => {
-            const canvasElement = document.getElementById('canvas');
-
-            const parts = document.querySelectorAll('.part-python, .part-bash');
-
-            parts.forEach(part => {
-                createFloatingSphere(part.id, canvasElement);
-            });
-
-            startSphereMovement();
-        });
-
-        window.addEventListener('resize', () => adjustSpheresOnResize(document.getElementById('canvas')));
 
         // BEGIN Tabs
         const editorTab = document.querySelector('.tab[data-tab="editor"]');
