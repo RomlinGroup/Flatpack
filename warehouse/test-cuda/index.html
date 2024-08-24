@@ -197,6 +197,7 @@
         .handle {
             cursor: default;
             padding: 0 10px;
+            border-left: 1px solid #5865f2;
             width: auto;
         }
 
@@ -278,8 +279,20 @@
 
         .part-python.disabled,
         .part-bash.disabled {
-            opacity: 0.5;
-            filter: grayscale(100%);
+            pointer-events: none;
+        }
+
+        .part-python.disabled .editor,
+        .part-bash.disabled .editor {
+            background: #222;
+            cursor: not-allowed;
+            text-decoration: line-through;
+        }
+
+        .part-python.disabled .toggle-button,
+        .part-bash.disabled .toggle-button {
+            pointer-events: auto;
+            opacity: 1;
         }
 
         .spinner {
@@ -811,17 +824,17 @@
 
     const arrowDownIcon = `
 <svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
-  <path d="M8 4v6 M5 8l3 3 3-3" stroke="currentColor" stroke-width="1" fill="none"/>
+  <path d="M8 4v6.5 M5 8l3 3 3-3" stroke="currentColor" stroke-width="1" fill="none" stroke-linecap="square"/>
 </svg>`;
 
     const arrowUpIcon = `
 <svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
-  <path d="M8 12V6 M5 8l3-3 3 3" stroke="currentColor" stroke-width="1" fill="none"/>
+  <path d="M8 12V5.5 M5 8l3-3 3 3" stroke="currentColor" stroke-width="1" fill="none" stroke-linecap="square"/>
 </svg>`;
 
     const eyeIcon = `
 <svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
-  <path d="M2 8c2-3 5-3 6-3s4 0 6 3c-2 3-5 3-6 3s-4 0-6-3z" stroke="currentColor" stroke-width="1" fill="none"/>
+  <path d="M2 8c2-3 5-3 6-3s4 0 6 3c-2 3-5 3-6 3s-4 0-6-3z" stroke="currentColor" stroke-width="1" fill="none" stroke-linejoin="miter" stroke-linecap="butt"/>
   <circle cx="8" cy="8" r="2" stroke="currentColor" stroke-width="1" fill="none"/>
 </svg>`;
 
@@ -1536,7 +1549,13 @@
                 fileContentElement.appendChild(block);
 
                 if (isDisabled) {
-                    const toggleButton = block.querySelector('.toggle-button');
+                    block.classList.add('disabled');
+                    editor.contentEditable = 'false';
+                    editor.style.pointerEvents = 'none';
+                    const controls = block.querySelectorAll('.move-up, .move-down, .delete-button');
+                    controls.forEach(control => control.style.display = 'none');
+                    const commentButton = block.querySelector('.comment-button');
+                    if (commentButton) commentButton.style.display = 'none';
                 }
             }
         });
@@ -1712,12 +1731,19 @@
     function toggleBlock(block) {
         block.classList.toggle('disabled');
         const editor = block.querySelector('.editor');
-        const blockId = block.id;
+        const controls = block.querySelectorAll('.move-up, .move-down, .delete-button');
+        const commentButton = block.querySelector('.comment-button');
 
         if (block.classList.contains('disabled')) {
             editor.contentEditable = 'false';
+            editor.style.pointerEvents = 'none';
+            controls.forEach(control => control.style.display = 'none');
+            commentButton.style.display = 'none';
         } else {
             editor.contentEditable = 'true';
+            editor.style.pointerEvents = 'auto';
+            controls.forEach(control => control.style.display = 'flex');
+            commentButton.style.display = 'flex';
         }
     }
 
