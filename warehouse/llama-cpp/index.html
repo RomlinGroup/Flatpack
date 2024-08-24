@@ -236,17 +236,18 @@
             background-color: #ff8d80;
         }
 
-        .part-python .controls,
-        .part-bash .controls {
+        .part-bash .controls,
+        .part-python .controls {
             border-bottom: 1px solid #5865f2;
             display: flex;
             position: absolute;
+            z-index: 1;
             right: 0;
             top: 0;
         }
 
-        .part-python .editor,
-        .part-bash .editor {
+        .part-bash .editor,
+        .part-python .editor {
             background: none;
             border: none;
             color: #fff;
@@ -263,8 +264,8 @@
             position: relative;
         }
 
-        .part-python,
-        .part-bash {
+        .part-bash,
+        .part-python {
             background: #060c4d;
             border: 1px solid #5865f2;
             color: #fff;
@@ -277,20 +278,26 @@
             word-break: break-all;
         }
 
-        .part-python.disabled,
-        .part-bash.disabled {
+        .part-bash.disabled,
+        .part-python.disabled {
             pointer-events: none;
         }
 
-        .part-python.disabled .editor,
-        .part-bash.disabled .editor {
+        .part-bash.disabled .color-label,
+        .part-python.disabled .color-label {
+            opacity: 1;
+            z-index: 1;
+        }
+
+        .part-bash.disabled .editor,
+        .part-python.disabled .editor {
             background: #222;
             cursor: not-allowed;
             text-decoration: line-through;
         }
 
-        .part-python.disabled .toggle-button,
-        .part-bash.disabled .toggle-button {
+        .part-bash.disabled .toggle-button,
+        .part-python.disabled .toggle-button {
             pointer-events: auto;
             opacity: 1;
         }
@@ -832,7 +839,14 @@
   <path d="M8 12V5.5 M5 8l3-3 3 3" stroke="currentColor" stroke-width="1" fill="none" stroke-linecap="square"/>
 </svg>`;
 
-    const eyeIcon = `
+    const crossedEyeIcon = `
+<svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+  <path d="M2 8c2-3 5-3 6-3s4 0 6 3c-2 3-5 3-6 3s-4 0-6-3z" stroke="currentColor" stroke-width="1" fill="none" stroke-linejoin="miter" stroke-linecap="butt"/>
+  <circle cx="8" cy="8" r="2" stroke="currentColor" stroke-width="1" fill="none"/>
+  <line x1="2" y1="2" x2="14" y2="14" stroke="currentColor" stroke-width="1"/>
+</svg>`;
+
+    const regularEyeIcon = `
 <svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
   <path d="M2 8c2-3 5-3 6-3s4 0 6 3c-2 3-5 3-6 3s-4 0-6-3z" stroke="currentColor" stroke-width="1" fill="none" stroke-linejoin="miter" stroke-linecap="butt"/>
   <circle cx="8" cy="8" r="2" stroke="currentColor" stroke-width="1" fill="none"/>
@@ -1122,7 +1136,12 @@
     }
 
     function createToggleButton(block) {
-        return createControlElement('toggle-button', eyeIcon, () => toggleBlock(block));
+        const button = createControlElement('toggle-button', crossedEyeIcon, () => {
+            toggleBlock(block);
+            button.innerHTML = block.classList.contains('disabled') ? regularEyeIcon : crossedEyeIcon;
+        });
+
+        return button;
     }
 
     function deleteBlock(block) {
