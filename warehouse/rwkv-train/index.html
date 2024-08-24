@@ -42,9 +42,8 @@
 
         /* Class selectors */
         .action {
-            background: #f0f2ff;
-            color: #5865f2;
-            border: none;
+            color: #fff;
+            border: 1px solid #fff;
             cursor: pointer;
             width: 28px;
             height: 28px;
@@ -75,8 +74,8 @@
         }
 
         .comment-button {
-            background-color: #5865f2;
-            color: #fff;
+            background-color: transparent;
+            color: #31efb8;
             border: none;
             cursor: pointer;
             position: absolute;
@@ -195,6 +194,7 @@
         }
 
         .handle {
+            cursor: default;
             padding: 0 10px;
             width: auto;
         }
@@ -249,7 +249,6 @@
             border: none;
             color: #fff;
             font-family: monospace;
-            font-size: 14px;
             height: auto;
             line-height: 1.5em;
             min-height: 50px;
@@ -263,7 +262,7 @@
 
         .part-python,
         .part-bash {
-            background: #000;
+            background: #060c4d;
             border: 1px solid #5865f2;
             color: #fff;
             display: flex;
@@ -368,7 +367,7 @@
 
         #add-bash-button,
         #add-python-button {
-            background: #000;
+            background: #060c4d;
         }
 
         #add-python-button {
@@ -542,7 +541,7 @@
         }
 
         #log-output {
-            background: #000;
+            background: #060c4d;
             border: 1px solid #5865f2;
             color: #fff;
             font-family: monospace;
@@ -580,8 +579,8 @@
         }
 
         #toggle-comments-btn {
-            background: #31efb8;
-            border: none;
+            background: transparent;
+            border: 1px solid #31efb8;
             cursor: pointer;
             width: 28px;
             height: 28px;
@@ -685,13 +684,13 @@
             <div class="action" id="verify-action">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16">
                     <path d="M2 8h2v2H2zM4 10h2v2H4zM6 12h2v2H6zM8 10h2v2H8zM10 8h2v2h-2zM12 6h2v2h-2zM14 4h2v2h-2z"
-                          fill="#5865f2"/>
+                          fill="#fff"/>
                 </svg>
             </div>
 
             <div class="action" id="build-action">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16">
-                    <path d="M4 3h2v10H4zM6 4h2v8H6zM8 5h2v6H8zM10 6h2v4h-2zM12 7h2v2h-2z" fill="#5865f2"/>
+                    <path d="M4 3h2v10H4zM6 4h2v8H6zM8 5h2v6H8zM10 6h2v4h-2zM12 7h2v2h-2z" fill="#fff"/>
                 </svg>
             </div>
 
@@ -699,12 +698,12 @@
 
         <button id="toggle-comments-btn" onclick="toggleCommentSidebar()">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16">
-                <rect x="2" y="2" width="12" height="12" fill="#5865f2"/>
-                <rect x="1" y="2" width="1" height="12" fill="#5865f2"/>
-                <rect x="3" y="3" width="10" height="10" fill="#31efb8"/>
-                <rect x="4" y="5" width="8" height="1" fill="#5865f2"/>
-                <rect x="4" y="7" width="8" height="1" fill="#5865f2"/>
-                <rect x="4" y="9" width="8" height="1" fill="#5865f2"/>
+                <rect x="2" y="2" width="12" height="12" fill="#31efb8"/>
+                <rect x="1" y="2" width="1" height="12" fill="#31efb8"/>
+                <rect x="3" y="3" width="10" height="10" fill="#5865f2"/>
+                <rect x="4" y="5" width="8" height="1" fill="#31efb8"/>
+                <rect x="4" y="7" width="8" height="1" fill="#31efb8"/>
+                <rect x="4" y="9" width="8" height="1" fill="#31efb8"/>
             </svg>
         </button>
 
@@ -802,14 +801,31 @@
 
     const getBaseUrl = () => window.location.origin;
 
+    const addCommentIcon = `
+<svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+  <path d="M3 3h10v7H5l-2 2V3z" stroke="#31efb8" stroke-width="1" fill="none"/>
+</svg>`;
+
+    const arrowDownIcon = `
+<svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+  <path d="M8 4v6 M5 8l3 3 3-3" stroke="currentColor" stroke-width="1" fill="none"/>
+</svg>`;
+
+    const arrowUpIcon = `
+<svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+  <path d="M8 12V6 M5 8l3-3 3 3" stroke="currentColor" stroke-width="1" fill="none"/>
+</svg>`;
+
     const eyeIcon = `
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16">
-  <path d="M0 6h2v4H0zM2 4h3v2H2zM2 10h3v2H2zM5 3h2v2H5zM5 11h2v2H5zM7 2h2v2H7zM7 12h2v2H7zM9 3h2v2H9zM9 11h2v2H9zM11 4h3v2h-3zM11 10h3v2h-3zM14 6h2v4h-2zM6 6h4v4H6z" fill="currentColor"/>
+<svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+  <path d="M2 8c2-3 5-3 6-3s4 0 6 3c-2 3-5 3-6 3s-4 0-6-3z" stroke="currentColor" stroke-width="1" fill="none"/>
+  <circle cx="8" cy="8" r="2" stroke="currentColor" stroke-width="1" fill="none"/>
 </svg>`;
 
     const trashIcon = `
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16">
-  <path d="M2 1h12v2H2zM1 3h2v1H1zM13 3h2v1h-2zM3 4h2v11H3zM7 4h2v11H7zM11 4h2v11h-2zM2 15h12v1H2z" fill="currentColor"/>
+<svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+  <path d="M4 4h8 M5 4v8h6V4 M8 6v4" stroke="currentColor" stroke-width="1" fill="none"/>
+  <path d="M6 2h4" stroke="currentColor" stroke-width="1" fill="none"/>
 </svg>`;
 
     let currentPart = 1;
@@ -847,11 +863,7 @@
 
         const commentButton = document.createElement('button');
         commentButton.className = 'comment-button';
-        commentButton.innerHTML = `
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-            <path d="M1 1h14v12H6l-5 4V1z" fill="#ffffff"/>
-            </svg>
-        `;
+        commentButton.innerHTML = addCommentIcon;
         commentButton.onclick = () => addCommentToBlock(block);
         editorWrapper.appendChild(commentButton);
 
@@ -860,11 +872,11 @@
         const controls = document.createElement('div');
         controls.className = 'controls';
 
-        controls.appendChild(createControlElement('handle', type));
-        controls.appendChild(createControlElement('move-up', '&#x25B2;', () => moveBlockUp(block)));
-        controls.appendChild(createControlElement('move-down', '&#x25BC;', () => moveBlockDown(block)));
+        controls.appendChild(createControlElement('handle', type.replace('part_', '')));
+        controls.appendChild(createControlElement('move-up', arrowUpIcon, () => moveBlockUp(block)));
+        controls.appendChild(createControlElement('move-down', arrowDownIcon, () => moveBlockDown(block)));
         controls.appendChild(createControlElement('delete-button', trashIcon, () => deleteBlock(block)));
-        controls.appendChild(createControlElement('toggle-button', eyeIcon, () => toggleBlock(block)));
+        controls.appendChild(createToggleButton(block));
 
         block.appendChild(controls);
 
@@ -1501,11 +1513,7 @@
 
                 const commentButton = document.createElement('button');
                 commentButton.className = 'comment-button';
-                commentButton.innerHTML = `
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                    <path d="M1 1h14v12H6l-5 4V1z" fill="#ffffff"/>
-                    </svg>
-                `;
+                commentButton.innerHTML = addCommentIcon;
                 commentButton.onclick = () => addCommentToBlock(block);
                 editorWrapper.appendChild(commentButton);
 
@@ -1513,11 +1521,13 @@
 
                 const controls = document.createElement('div');
                 controls.className = 'controls';
+
                 controls.appendChild(createControlElement('handle', type.replace('part_', '')));
-                controls.appendChild(createControlElement('move-up', '&#x25B2;', () => moveBlockUp(block)));
-                controls.appendChild(createControlElement('move-down', '&#x25BC;', () => moveBlockDown(block)));
+                controls.appendChild(createControlElement('move-up', arrowUpIcon, () => moveBlockUp(block)));
+                controls.appendChild(createControlElement('move-down', arrowDownIcon, () => moveBlockDown(block)));
                 controls.appendChild(createControlElement('delete-button', trashIcon, () => deleteBlock(block)));
                 controls.appendChild(createToggleButton(block));
+
                 block.appendChild(controls);
 
                 fileContentElement.appendChild(block);
