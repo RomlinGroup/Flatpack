@@ -92,7 +92,7 @@ def initialize_database(db_path: str):
 
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS flatpack_hooks (
-                id INTEGER PRIMARY KEY,
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
                 hook_name TEXT NOT NULL,
                 hook_script TEXT NOT NULL,
                 hook_type TEXT NOT NULL,
@@ -102,7 +102,7 @@ def initialize_database(db_path: str):
 
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS flatpack_metadata (
-                id INTEGER PRIMARY KEY,
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
                 key TEXT NOT NULL,
                 value TEXT NOT NULL
             )
@@ -2189,13 +2189,17 @@ def add_hook_to_database(hook: Hook):
         ensure_database_initialized()
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
+
         cursor.execute("""
             INSERT INTO flatpack_hooks (hook_name, hook_script, hook_type)
             VALUES (?, ?, ?)
-        """, (hook.hook_name, hook.hook_script, 'python'))
+        """, (hook.hook_name, hook.hook_script, hook.hook_type))
+
+        hook_id = cursor.lastrowid
         conn.commit()
         conn.close()
-        return {"message": "Hook added successfully."}
+
+        return {"message": "Hook added successfully.", "hook_id": hook_id}
     except Error as e:
         logger.error("An error occurred while adding the hook: %s", e)
         print(f"[ERROR] An error occurred while adding the hook: {e}")
@@ -2263,11 +2267,12 @@ def get_all_hooks_from_database():
         ensure_database_initialized()
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
-        cursor.execute("SELECT hook_name, hook_script, hook_type FROM flatpack_hooks")
+        cursor.execute("SELECT id, hook_name, hook_script, hook_type FROM flatpack_hooks")
         hooks = cursor.fetchall()
         conn.close()
 
-        hooks_list = [{"hook_name": hook[0], "hook_script": hook[1], "hook_type": hook[2]} for hook in hooks]
+        hooks_list = [{"id": hook[0], "hook_name": hook[1], "hook_script": hook[2], "hook_type": hook[3]} for hook in
+                      hooks]
         return hooks_list
 
     except Error as e:
@@ -2445,6 +2450,31 @@ async def add_comment(comment: Comment, token: str = Depends(authenticate_token)
         raise HTTPException(status_code=500, detail=f"An error occurred while adding the comment: {e}")
 
 
+@app.delete("/api/comments/{comment_id}")
+async def delete_comment(comment_id: int, token: str = Depends(authenticate_token)):
+    """Delete a comment from the database by its ID."""
+    if not flatpack_directory:
+        raise HTTPException(status_code=500, detail="Flatpack directory is not set")
+
+    db_path = os.path.join(flatpack_directory, 'build', 'flatpack.db')
+
+    try:
+        ensure_database_initialized()
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+
+        cursor.execute("DELETE FROM flatpack_comments WHERE id = ?", (comment_id,))
+        if cursor.rowcount == 0:
+            raise HTTPException(status_code=404, detail="Comment not found")
+        conn.commit()
+        conn.close()
+
+        return JSONResponse(content={"message": "Comment deleted successfully."}, status_code=200)
+    except Error as e:
+        logger.error("An error occurred while deleting the comment: %s", e)
+        raise HTTPException(status_code=500, detail=f"An error occurred while deleting the comment: {e}")
+
+
 @app.get("/api/comments")
 async def get_all_comments(token: str = Depends(authenticate_token)):
     """Retrieve all comments from the database."""
@@ -2513,6 +2543,31 @@ async def add_hook(hook: Hook, token: str = Depends(authenticate_token)):
     except Exception as e:
         logger.error("Failed to add hook: %s", e)
         raise HTTPException(status_code=500, detail="Failed to add hook.")
+
+
+@app.delete("/api/hooks/{hook_id}")
+async def delete_hook(hook_id: int, token: str = Depends(authenticate_token)):
+    """Delete a hook from the database by its ID."""
+    if not flatpack_directory:
+        raise HTTPException(status_code=500, detail="Flatpack directory is not set")
+
+    db_path = os.path.join(flatpack_directory, 'build', 'flatpack.db')
+
+    try:
+        ensure_database_initialized()
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+
+        cursor.execute("DELETE FROM flatpack_hooks WHERE id = ?", (hook_id,))
+        if cursor.rowcount == 0:
+            raise HTTPException(status_code=404, detail="Hook not found")
+        conn.commit()
+        conn.close()
+
+        return JSONResponse(content={"message": "Hook deleted successfully."}, status_code=200)
+    except Error as e:
+        logger.error("An error occurred while deleting the hook: %s", e)
+        raise HTTPException(status_code=500, detail=f"An error occurred while deleting the hook: {e}")
 
 
 @app.get("/api/hooks", response_model=List[Hook])
