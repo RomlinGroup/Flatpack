@@ -2437,15 +2437,24 @@ async def add_comment(comment: Comment, token: str = Depends(authenticate_token)
         ensure_database_initialized()
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
+
         cursor.execute("""
             INSERT INTO flatpack_comments (block_id, selected_text, comment)
             VALUES (?, ?, ?)
         """, (comment.block_id, comment.selected_text, comment.comment))
+
+        comment_id = cursor.lastrowid
+
         conn.commit()
         conn.close()
 
-        return JSONResponse(content={"message": "Comment added successfully."}, status_code=201)
-    except Error as e:
+        return JSONResponse(content={
+            "message": "Comment added successfully.",
+            "comment_id": comment_id,
+            "created_at": datetime.utcnow().isoformat()
+        }, status_code=201)
+
+    except sqlite3.Error as e:
         logger.error("An error occurred while adding the comment: %s", e)
         raise HTTPException(status_code=500, detail=f"An error occurred while adding the comment: {e}")
 
