@@ -1858,15 +1858,10 @@
             hookScriptElement.className = 'hook-script';
             hookScriptElement.textContent = hook.hook_script || 'undefined';
 
-            const hookIdElement = document.createElement('div');
-            hookIdElement.className = 'hook-id';
-            hookIdElement.innerHTML = `ID: ${hook.id}`;
-
             listItem.appendChild(hookLabelElement);
             listItem.appendChild(hookTypeContainer);
             listItem.appendChild(hookNameElement);
             listItem.appendChild(hookScriptElement);
-            listItem.appendChild(hookIdElement);
 
             list.appendChild(listItem);
         });

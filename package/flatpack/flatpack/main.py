@@ -418,14 +418,23 @@ def fpk_build(directory: Union[str, None], use_euxo: bool = False):
                     logger.info("Executing hook: %s", hook_name)
 
                     if hook_type == "bash":
-                        hook_process = subprocess.Popen(hook_script, shell=True, stdout=subprocess.PIPE,
-                                                        stderr=subprocess.STDOUT, text=True)
+
+                        hook_command = shlex.split(hook_script)
+
+                        hook_process = subprocess.Popen(
+                            hook_command,
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.STDOUT,
+                            text=True
+                        )
+
                         for line in hook_process.stdout:
                             print(line, end='')
                             logger.info(line.strip())
                             log_file.write(line)
 
                         hook_process.wait()
+                        
                     elif hook_type == "python":
                         try:
                             exec(hook_script)
