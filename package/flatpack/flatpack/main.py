@@ -287,7 +287,7 @@ def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path, use_euxo: bool = Fa
                     print(f"Skipping part with unsupported language: {language}")
                     continue
 
-                outfile.write(f"log_data \"$CURR\"\n")
+                outfile.write("log_data \"$CURR\"\n")
 
                 outfile.write(
                     f"if [ \"$CURR\" -eq \"{last_count}\" ]; then\n"
@@ -434,7 +434,7 @@ def fpk_build(directory: Union[str, None], use_euxo: bool = False):
                             log_file.write(line)
 
                         hook_process.wait()
-                        
+
                     elif hook_type == "python":
                         try:
                             exec(hook_script)
@@ -2746,7 +2746,7 @@ def fpk_cli_handle_run(args, session):
         return
 
     if not directory.is_relative_to(allowed_directory):
-        print(f"[ERROR] The specified directory is not within allowed paths.")
+        print("[ERROR] The specified directory is not within allowed paths.")
         logger.error("The specified directory is not within allowed paths.")
         return
 
