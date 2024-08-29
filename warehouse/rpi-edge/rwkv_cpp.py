@@ -7,6 +7,7 @@ import os
 import pathlib
 import sampling
 import shlex
+import subprocess
 import time
 
 from rwkv_cpp import rwkv_cpp_shared_library, rwkv_cpp_model
@@ -59,6 +60,16 @@ logits: Optional[rwkv_cpp_model.NumpyArrayOrPyTorchTensor] = None
 state: Optional[rwkv_cpp_model.NumpyArrayOrPyTorchTensor] = None
 
 
+def load_thread_state(_thread: str) -> None:
+    global processed_tokens, logits, state
+
+    thread_state = state_by_thread[_thread]
+
+    processed_tokens = copy.deepcopy(thread_state['tokens'])
+    logits = copy.deepcopy(thread_state['logits'])
+    state = copy.deepcopy(thread_state['state'])
+
+
 def process_tokens(_tokens: List[int], new_line_logit_bias: float = 0.0) -> None:
     global processed_tokens, logits, state
 
@@ -80,14 +91,10 @@ def save_thread_state(_thread: str) -> None:
     }
 
 
-def load_thread_state(_thread: str) -> None:
-    global processed_tokens, logits, state
-
-    thread_state = state_by_thread[_thread]
-
-    processed_tokens = copy.deepcopy(thread_state['tokens'])
-    logits = copy.deepcopy(thread_state['logits'])
-    state = copy.deepcopy(thread_state['state'])
+def speak_text(text: str) -> None:
+    safe_text = shlex.quote(text)
+    command = ["espeak-ng", "-v", "en-us", "-s", "200", safe_text]
+    subprocess.run(command, stderr=subprocess.DEVNULL)
 
 
 def split_last_end_of_line(tokens: List[int]) -> List[int]:
@@ -206,11 +213,8 @@ while True:
 
     if full_response:
         print(f"\n{bot}{separator} {full_response}")
-
         print(flush=True)
 
-        safe_response = shlex.quote(full_response)
-
-        os.system(f'espeak-ng -v en-us -s 200 {safe_response} 2>/dev/null')
+        speak_text(full_response)
 
     save_thread_state(thread)
