@@ -171,10 +171,11 @@ def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path, use_euxo: bool = Fa
             script = infile.read()
 
         script = strip_html(script)
-
-        parts = []
         lines = script.splitlines()
+        parts = []
+
         i = 0
+
         while i < len(lines):
             line = lines[i].strip()
             if line.startswith('part_bash """') or line.startswith('part_python """') or line.startswith(
@@ -1896,8 +1897,10 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
     llama_cpp_dir = "llama.cpp"
     ready_file = os.path.join(llama_cpp_dir, "ready")
     requirements_file = os.path.join(llama_cpp_dir, "requirements.txt")
+
     venv_dir = os.path.join(llama_cpp_dir, "venv")
     venv_python = os.path.join(venv_dir, "bin", "python")
+
     convert_script = os.path.join(llama_cpp_dir, 'convert_hf_to_gguf.py')
 
     if not os.path.exists(llama_cpp_dir):
