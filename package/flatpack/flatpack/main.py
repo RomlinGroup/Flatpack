@@ -2767,7 +2767,7 @@ def fpk_cli_handle_run(args, session):
 
     try:
         port = 8000
-        host = "0.0.0.0"
+        host = "0.0.0.0" if args.share else "127.0.0.1"
 
         if args.share:
             listener = ngrok.forward(f"{host}:{port}", authtoken_from_env=True)
