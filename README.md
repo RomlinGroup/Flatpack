@@ -16,7 +16,7 @@ Welcome, brave explorer! We are still in stealth mode (of sorts), but we are gla
 
 Flatpack democratises AI and ML through micro language models and model compression. Our platform enables users to train custom models with 100M to 10B parameters. We introduce flatpacks (FPKs) to integrate AI and ML into edge computing, electronic components, and robots.
 
-[Got 2 minutes for our pitch?](https://soundcloud.com/flatpack-ai/flatpack)
+🔊 [Got 2 minutes for our pitch?](https://soundcloud.com/flatpack-ai/flatpack)
 
 ## Edge artificial intelligence
 
