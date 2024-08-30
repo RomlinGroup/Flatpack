@@ -18,6 +18,8 @@ Flatpack democratises AI and ML through micro language models and model compress
 
 > **Flatpack:** "Picture merging the Swedish ingenuity of flatpacks (hence our name) and ready-to-assemble furniture with the imaginative appeal of certain Danish snap-together toy bricks. Our method of developing micro language models is designed to be intelligently integrated into the physical world."
 
+🔊 ["Busy? Take 2 minutes to listen to our pitch on SoundCloud."](https://soundcloud.com/flatpack-ai/flatpack)
+
 ## Edge artificial intelligence
 
 Edge artificial intelligence uses local devices to enhance decision-making near data sources, improving privacy, response times,  and security while reducing reliance on cloud connectivity. Benefits include decreased latency, improved scalability, and reduced energy usage.
