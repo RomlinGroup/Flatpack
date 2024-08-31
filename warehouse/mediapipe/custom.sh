@@ -7,6 +7,7 @@ part_python """
 import cv2
 import mediapipe as mp
 import numpy as np
+import json
 
 from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
@@ -23,21 +24,44 @@ detection_result = detector.detect(image)
 
 image_copy = np.copy(image.numpy_view())
 
-for detection in detection_result.detections:
-    bbox = detection.bounding_box
-    start_point = (int(bbox.origin_x), int(bbox.origin_y))
-    end_point = (int(bbox.origin_x + bbox.width), int(bbox.origin_y + bbox.height))
-    cv2.rectangle(image_copy, start_point, end_point, color=(0, 255, 0), thickness=2)
+object_data = []
 
-    category = detection.categories[0]
-    label = f'{category.category_name}: {category.score:.2f}'
-    label_position = (start_point[0], start_point[1] - 10)
+for i, detection in enumerate(detection_result.detections):
+    bbox = detection.bounding_box
+
+    x_min = int(bbox.origin_x)
+    y_min = int(bbox.origin_y)
+    x_max = int(bbox.origin_x + bbox.width)
+    y_max = int(bbox.origin_y + bbox.height)
+
+    coordinates = {
+        \"id\": i,
+        \"category\": detection.categories[0].category_name,
+        \"score\": detection.categories[0].score,
+        \"bounding_box\": {
+            \"x_min\": x_min,
+            \"y_min\": y_min,
+            \"x_max\": x_max,
+            \"y_max\": y_max
+        },
+        \"centroid\": {
+            \"x\": (x_min + x_max) // 2,
+            \"y\": (y_min + y_max) // 2
+        }
+    }
+
+    object_data.append(coordinates)
+
+    cv2.rectangle(image_copy, (x_min, y_min), (x_max, y_max), color=(0, 255, 0), thickness=2)
+    label = f'{detection.categories[0].category_name}: {detection.categories[0].score:.2f}'
+    label_position = (x_min, y_min - 10)
     cv2.putText(image_copy, label, label_position, cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1, cv2.LINE_AA)
 
 image_copy = cv2.cvtColor(image_copy, cv2.COLOR_RGB2BGR)
+cv2.imwrite('output_image_with_boxes.jpg', image_copy)
 
-output_image_path = 'output_image.jpg'
-cv2.imwrite(output_image_path, image_copy)
+with open('detected_objects.json', 'w') as f:
+    json.dump(object_data, f, indent=4)
 
-print(f\"Annotated image saved as {output_image_path}\")
+print(\"Object data saved as detected_objects.json\")
 """
