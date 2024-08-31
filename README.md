@@ -36,7 +36,7 @@ https://pypi.org/project/flatpack
 
 ### Install from PyPI (recommended)
 
-Use this method if you prefer to install flatpack using pipx from https://pipx.pypa.io.
+Use this method if you prefer to install flatpack using [pipx](https://pipx.pypa.io).
 
 ```bash
 pipx install flatpack
