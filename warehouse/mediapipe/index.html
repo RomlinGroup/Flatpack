@@ -355,6 +355,7 @@
             min-height: 50px;
             overflow: hidden;
             padding: 20px;
+            padding-top: 25px;
             white-space: pre-wrap;
             width: 100%;
             word-wrap: break-word;
@@ -470,6 +471,27 @@
             fill: #5865f2;
             height: 16px;
             width: 16px;
+        }
+
+        .widget {
+            background-color: #5865f2;
+            color: #fff;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .widget pre {
+            text-align: left;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            overflow-x: auto;
+            color: #fff;
+        }
+
+        .widget:last-of-type {
+            margin-bottom: 0px;
         }
 
         /* ID selectors */
@@ -638,6 +660,7 @@
             flex-direction: column;
             margin-bottom: 20px;
             padding: 20px;
+            padding-top: 25px;
             transition: background 0.3s ease;
             position: relative;
         }
@@ -885,6 +908,15 @@
 <div class="tab-content active" id="board-content">
     <div id="wrapper">
         <h2>Board</h2>
+
+        <div id="hello-widget" class="widget">
+            <p>Hello, World!</p>
+        </div> <!-- END .widget -->
+
+        <div id="eval-widget" class="widget">
+            <p>Loading eval_data.json...</p>
+        </div> <!-- END .widget -->
+
     </div>
 </div> <!-- END #editor-content -->
 
@@ -967,7 +999,7 @@
     'use strict';
 
     const comments = [];
-
+    const evalWidget = document.getElementById('eval-widget');
     const getBaseUrl = () => window.location.origin;
 
     const addCommentIcon = `
@@ -1150,6 +1182,8 @@
                 }
             }
 
+            fetchEvalData();
+
         } catch (error) {
             console.error('Failed to build project:', error);
             showStatus(`Error: ${error.message}`, false);
@@ -1158,6 +1192,9 @@
             allParts.forEach(label => {
                 label.classList.remove('eval-label');
             });
+
+            fetchEvalData();
+
         } finally {
             hideLoadingOverlay();
             enableInteractions();
@@ -1402,6 +1439,20 @@
             renderComments();
         } catch (error) {
             console.error('Error fetching comments:', error);
+        }
+    }
+
+    async function fetchEvalData() {
+        try {
+            const response = await fetch('eval_data.json');
+            if (response.ok) {
+                const data = await response.json();
+                evalWidget.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+            } else {
+                throw new Error('File not found');
+            }
+        } catch (error) {
+            evalWidget.innerHTML = `<p>Could not load eval_data.json: ${error.message}</p>`;
         }
     }
 
@@ -2212,6 +2263,14 @@
 
         setActiveTab(initialTab);
         // END Tabs
+
+        // BEGIN Widgets
+        document.getElementById('hello-widget').addEventListener('click', function () {
+            this.querySelector('p').textContent = 'You clicked the widget!';
+        });
+
+        fetchEvalData();
+        // END Widgets
     });
 </script>
 </body>
