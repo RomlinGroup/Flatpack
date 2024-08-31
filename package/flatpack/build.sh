@@ -74,4 +74,3 @@ check_flatpack
 
 echo "👉 You may need to restart your terminal or run 'source ~/.zshrc' (or equivalent) for PATH changes to take effect."
 echo "📌 $(flatpack version 2>/dev/null || echo 'Unable to get version')"
-echo "🐍 Using Python version for pipx: $(pipx --version | grep "Python version" | cut -d':' -f2 | xargs)"

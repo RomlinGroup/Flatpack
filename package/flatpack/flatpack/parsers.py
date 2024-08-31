@@ -62,7 +62,9 @@ handle_error() {{
 }}
 
 echo "Checking for Python"
-if [[ -x "$(command -v python3.11)" ]]; then
+if [[ -x "$(command -v python3.12)" ]]; then
+    PYTHON_CMD=python3.12
+elif [[ -x "$(command -v python3.11)" ]]; then
     PYTHON_CMD=python3.11
 elif [[ -x "$(command -v python3.10)" ]]; then
     PYTHON_CMD=python3.10
