@@ -38,6 +38,9 @@ tqdm = "4.66.5"
 from_source = "https://github.com/google-ai-edge/mediapipe"
 to_destination = "mediapipe"
 branch = "master"
+# setup_commands = [
+#   "{{setup_command}}"
+# ]
 
 [[file]]
 from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/mediapipe/index.html"
