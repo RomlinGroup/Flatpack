@@ -69,12 +69,17 @@ warnings.filterwarnings("ignore", category=MarkupResemblesLocatorWarning)
 
 
 def initialize_database(db_path: str):
-    """Initialize the SQLite database."""
+    """Initialize the SQLite database if it doesn't exist."""
     try:
         db_dir = os.path.dirname(db_path)
         if not os.path.exists(db_dir):
             os.makedirs(db_dir)
             print(f"[DEBUG] Created directory for database at path: {db_dir}")
+
+        if os.path.exists(db_path):
+            print(f"[INFO] Database already exists at {db_path}. Skipping initialization.")
+            logger.info("Database already exists at %s. Skipping initialization.", db_path)
+            return
 
         print(f"[DEBUG] Initializing database at path: {db_path}")
         conn = sqlite3.connect(db_path)
@@ -323,32 +328,20 @@ def fpk_build(directory: Union[str, None], use_euxo: bool = False):
 
     Args:
         directory (Union[str, None]): The directory to use for building the flatpack. If None, a cached directory will be used if available.
+        use_euxo (bool): Whether to use 'set -euxo pipefail' in the shell script. Defaults to False.
 
     Returns:
         None
     """
+    cache_file_path = HOME_DIR / ".fpk_unbox.cache"
+
     if directory:
         flatpack_dir = Path.cwd() / directory
-
         if not flatpack_dir.exists():
             print(f"[ERROR] The directory '{flatpack_dir}' does not exist.")
             logger.error("The directory '%s' does not exist.", flatpack_dir)
             return
-
-        db_path = os.path.join(directory, 'build', 'flatpack.db')
-        initialize_database(db_path)
-
-    cache_file_path = HOME_DIR / ".fpk_unbox.cache"
-
-    print(f"[INFO] Looking for cached flatpack in {cache_file_path}.")
-    logger.info("Looking for cached flatpack in %s", cache_file_path)
-
-    last_unboxed_flatpack = None
-
-    if directory and fpk_valid_directory_name(directory):
-        print(f"[INFO] Using provided directory: {directory}")
-        logger.info("Using provided directory: %s", directory)
-        last_unboxed_flatpack = directory
+        last_unboxed_flatpack = str(flatpack_dir)
     elif cache_file_path.exists():
         print(f"[INFO] Found cached flatpack in {cache_file_path}.")
         logger.info("Found cached flatpack in %s", cache_file_path)
@@ -358,34 +351,38 @@ def fpk_build(directory: Union[str, None], use_euxo: bool = False):
         logger.error("No cached flatpack found, and no valid directory provided.")
         return
 
-    if not last_unboxed_flatpack:
-        print("[ERROR] No valid flatpack directory found.")
-        logger.error("No valid flatpack directory found.")
+    flatpack_dir = Path(last_unboxed_flatpack)
+    if not flatpack_dir.exists():
+        print(f"[ERROR] The flatpack directory '{flatpack_dir}' does not exist.")
+        logger.error("The flatpack directory '%s' does not exist.", flatpack_dir)
         return
 
-    custom_sh_path = Path(last_unboxed_flatpack) / 'build' / 'custom.sh'
-    temp_sh_path = Path(last_unboxed_flatpack) / 'build' / 'temp.sh'
+    build_dir = flatpack_dir / 'build'
+    if not build_dir.exists():
+        print(f"[ERROR] The build directory '{build_dir}' does not exist.")
+        logger.error("The build directory '%s' does not exist.", build_dir)
+        return
 
+    custom_sh_path = build_dir / 'custom.sh'
     if not custom_sh_path.exists() or not custom_sh_path.is_file():
-        print(f"[ERROR] custom.sh not found in {last_unboxed_flatpack}. Build process canceled.")
-        logger.error("custom.sh not found in %s. Build process canceled.", last_unboxed_flatpack)
+        print(f"[ERROR] custom.sh not found in {build_dir}. Build process canceled.")
+        logger.error("custom.sh not found in %s. Build process canceled.", build_dir)
         return
-    else:
-        create_temp_sh(custom_sh_path, temp_sh_path, use_euxo=use_euxo)
 
-    building_script_path = Path(last_unboxed_flatpack) / 'build' / 'build.sh'
+    temp_sh_path = build_dir / 'temp.sh'
+    create_temp_sh(custom_sh_path, temp_sh_path, use_euxo=use_euxo)
 
-    log_dir = Path(last_unboxed_flatpack) / 'build' / 'logs'
+    building_script_path = build_dir / 'build.sh'
+    if not building_script_path.exists() or not building_script_path.is_file():
+        print(f"[ERROR] Building script not found in {build_dir}.")
+        logger.error("Building script not found in %s", build_dir)
+        return
+
+    log_dir = build_dir / 'logs'
+    log_dir.mkdir(parents=True, exist_ok=True)
     log_file_time = datetime.utcnow().strftime('%Y_%m_%d_%H_%M_%S')
     log_filename = f"build_{log_file_time}.log"
-
     build_log_file_path = log_dir / log_filename
-    build_log_file_path.parent.mkdir(parents=True, exist_ok=True)
-
-    if not building_script_path.exists() or not building_script_path.is_file():
-        print(f"[ERROR] Building script not found in {last_unboxed_flatpack}.")
-        logger.error("Building script not found in %s", last_unboxed_flatpack)
-        return
 
     safe_script_path = shlex.quote(str(building_script_path.resolve()))
 
@@ -405,7 +402,8 @@ def fpk_build(directory: Union[str, None], use_euxo: bool = False):
 
             process.wait()
 
-            db_path = os.path.join(last_unboxed_flatpack, 'build', 'flatpack.db')
+            db_path = build_dir / 'flatpack.db'
+            initialize_database(str(db_path))
 
             try:
                 conn = sqlite3.connect(db_path)
@@ -419,9 +417,7 @@ def fpk_build(directory: Union[str, None], use_euxo: bool = False):
                     logger.info("Executing hook: %s", hook_name)
 
                     if hook_type == "bash":
-
                         hook_command = shlex.split(hook_script)
-
                         hook_process = subprocess.Popen(
                             hook_command,
                             stdout=subprocess.PIPE,
@@ -449,7 +445,6 @@ def fpk_build(directory: Union[str, None], use_euxo: bool = False):
             except sqlite3.Error as e:
                 print(f"[ERROR] An error occurred while retrieving or executing hooks: {e}")
                 logger.error("An error occurred while retrieving or executing hooks: %s", e)
-                return
 
     except subprocess.CalledProcessError as e:
         print(f"[ERROR] An error occurred while executing the build script: {e}")
@@ -813,8 +808,6 @@ def fpk_fetch_github_dirs(session: httpx.Client) -> List[str]:
         cache_time = datetime.fromisoformat(cache_data['timestamp'])
 
         if datetime.now() - cache_time < GITHUB_CACHE_EXPIRY:
-            print(f"[INFO] Using cached GitHub dirs ({cache_time})")
-            logger.info("Using cached GitHub dirs (%s)", cache_time)
             return cache_data['directories']
 
     try:
@@ -843,6 +836,7 @@ def fpk_fetch_github_dirs(session: httpx.Client) -> List[str]:
 
             print(f"[INFO] Cached GitHub dirs: {directories}")
             logger.info("Cached GitHub dirs: %s", directories)
+
             return directories
 
         message = f"Unexpected response format from GitHub: {json_data}"
@@ -1141,21 +1135,31 @@ def decompress_data(input_path, output_path, allowed_dir=None):
         print(f"[ERROR] An error occurred while decompressing: {e}")
 
 
-def fpk_unbox(directory_name: str, session: httpx.Client, local: bool = False):
+def fpk_unbox(directory_name: str, session: httpx.Client, local: bool = False) -> bool:
     """Unbox a flatpack from GitHub or a local directory.
 
     Args:
         directory_name (str): Name of the flatpack directory.
         session (httpx.Client): HTTP client session for making requests.
         local (bool): Indicates if the flatpack is local. Defaults to False.
+
+    Returns:
+        bool: True if unboxing was successful, False otherwise.
     """
     if not fpk_valid_directory_name(directory_name):
         message = f"Invalid directory name: '{directory_name}'."
         print(f"[ERROR] {message}")
         logger.error("Invalid directory name: '%s'", directory_name)
-        return
+        return False
 
     flatpack_dir = Path.cwd() / directory_name
+
+    if flatpack_dir.exists():
+        message = f"Directory '{directory_name}' already exists. Unboxing aborted to prevent conflicts."
+        print(f"[ERROR] {message}")
+        logger.error(message)
+        return False
+
     build_dir = flatpack_dir / "build"
     db_path = build_dir / 'flatpack.db'
 
@@ -1170,7 +1174,7 @@ def fpk_unbox(directory_name: str, session: httpx.Client, local: bool = False):
             message = f"flatpack.toml not found in the specified directory: '{directory_name}'."
             print(f"[ERROR] {message}")
             logger.error("%s", message)
-            return
+            return False
     else:
         fpk_url = f"{BASE_URL}/{directory_name}/{directory_name}.fpk"
 
@@ -1179,18 +1183,18 @@ def fpk_unbox(directory_name: str, session: httpx.Client, local: bool = False):
             if response.status_code != 200:
                 print(f"[ERROR] .fpk file does not exist at {fpk_url}")
                 logger.error(".fpk file does not exist at %s", fpk_url)
-                return
+                return False
             else:
                 print(f"[INFO] .fpk file found at {fpk_url}")
                 logger.info(".fpk file found at %s", fpk_url)
         except httpx.RequestError as e:
             print(f"[ERROR] Network error occurred while checking .fpk file: {e}")
             logger.error("Network error occurred while checking .fpk file: %s", e)
-            return
+            return False
         except Exception as e:
             print(f"[ERROR] An unexpected error occurred: {e}")
             logger.error("An unexpected error occurred: %s", e)
-            return
+            return False
 
         fpk_path = build_dir / f"{directory_name}.fpk"
 
@@ -1203,11 +1207,11 @@ def fpk_unbox(directory_name: str, session: httpx.Client, local: bool = False):
         except httpx.RequestError as e:
             print(f"[ERROR] Failed to download the .fpk file: {e}")
             logger.error("Failed to download the .fpk file: %s", e)
-            return
+            return False
         except Exception as e:
             print(f"[ERROR] An unexpected error occurred during the .fpk download: {e}")
             logger.error("An unexpected error occurred during the .fpk download: %s", e)
-            return
+            return False
 
         try:
             decompress_data(fpk_path, build_dir)
@@ -1216,14 +1220,14 @@ def fpk_unbox(directory_name: str, session: httpx.Client, local: bool = False):
         except Exception as e:
             print(f"[ERROR] Failed to decompress .fpk file: {e}")
             logger.error("Failed to decompress .fpk file: %s", e)
-            return
+            return False
 
         toml_path = build_dir / 'flatpack.toml'
 
         if not toml_path.exists():
             print(f"[ERROR] flatpack.toml not found in {build_dir}.")
             logger.error("flatpack.toml not found in %s", build_dir)
-            return
+            return False
 
     toml_content = toml_path.read_text()
     temp_toml_path.write_text(toml_content)
@@ -1251,14 +1255,18 @@ def fpk_unbox(directory_name: str, session: httpx.Client, local: bool = False):
 
         fpk_cache_unbox(str(flatpack_dir))
 
+        return True
+
     except subprocess.CalledProcessError as e:
         message = f"Failed to execute the bash script: {e}"
         print(f"[ERROR] {message}")
         logger.error(message)
+        return False
     except Exception as e:
         message = f"An unexpected error occurred: {e}"
         print(f"[ERROR] {message}")
         logger.error(message)
+        return False
     finally:
         bash_script_path.unlink()
 
@@ -2923,25 +2931,24 @@ def fpk_cli_handle_unbox(args, session):
             return
         toml_path = local_directory_path / 'flatpack.toml'
         if not toml_path.exists():
-            print(
-                f"[ERROR] flatpack.toml not found in '{directory_name}'."
-            )
-            logger.error(
-                "flatpack.toml not found in the specified directory: '%s'.",
-                directory_name
-            )
+            print(f"[ERROR] flatpack.toml not found in '{directory_name}'.")
+            logger.error("flatpack.toml not found in the specified directory: '%s'.", directory_name)
             return
 
     print(f"[INFO] Directory name resolved to: '{directory_name}'")
     logger.info("Directory name resolved to: '%s'", directory_name)
 
     try:
-        fpk_unbox(directory_name, session, local=args.local)
-        print(f"[INFO] Unboxed flatpack '{directory_name}' successfully.")
-        logger.info("Unboxed flatpack '%s' successfully.", directory_name)
+        unbox_result = fpk_unbox(directory_name, session, local=args.local)
+        if unbox_result:
+            print(f"[INFO] Unboxed flatpack '{directory_name}' successfully.")
+            logger.info("Unboxed flatpack '%s' successfully.", directory_name)
+        else:
+            print(f"[INFO] Unboxing of flatpack '{directory_name}' was aborted.")
+            logger.info("Unboxing of flatpack '%s' was aborted.", directory_name)
     except Exception as e:
         print(f"[ERROR] Failed to unbox flatpack '{directory_name}': {e}")
-        logger.error(f"Failed to unbox flatpack '{directory_name}': %s", e)
+        logger.error("Failed to unbox flatpack '%s': %s", directory_name, e)
 
 
 def fpk_cli_handle_verify(args, session):
