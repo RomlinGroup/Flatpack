@@ -8,6 +8,7 @@ __pycache__/
 
 /package/flatpack/build
 /package/flatpack/dist
+/package/flatpack/venv
 /package/flatpack/flatpack.egg-info
 /package/flatpack/flatpack.sh
 /package/flatpack/metadata.json
