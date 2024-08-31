@@ -7,8 +7,8 @@ cd "$(dirname "$0")"
 read -p "Are you sure you want to reset? [y/N]: " confirmation
 
 if [[ $confirmation != [yY] ]]; then
-    echo -e "Reset canceled."
-    exit 1
+  echo -e "Reset canceled."
+  exit 1
 fi
 
 # Check and remove directories or files if they exist
