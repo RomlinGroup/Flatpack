@@ -235,9 +235,11 @@ def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path, use_euxo: bool = Fa
             outfile.write("    if [ -n \"$new_files\" ]; then\n")
             outfile.write("        local temp_file=$(mktemp)\n")
             outfile.write("        for file in $new_files; do\n")
-            outfile.write("            if [[ \"$file\" == *\"eval_data.json\" || \"$file\" == *\"eval_build.json\" ]]; then continue; fi\n")
             outfile.write(
-                "            local json_entry=\"{\\\"part\\\": $part_number, \\\"files\\\": [\\\"$file\\\"]}\"\n")
+                "            if [[ \"$file\" == *\"eval_data.json\" || \"$file\" == *\"eval_build.json\" ]]; then continue; fi\n")
+            outfile.write("            local mime_type=$(file --mime-type -b \"$file\")\n")
+            outfile.write(
+                "            local json_entry=\"{\\\"part\\\": $part_number, \\\"file\\\": \\\"$file\\\", \\\"mime_type\\\": \\\"$mime_type\\\"}\"\n")
             outfile.write(
                 "            jq \". + [$json_entry]\" \"$DATA_FILE\" > \"$temp_file\" && mv \"$temp_file\" \"$DATA_FILE\"\n")
             outfile.write("        done\n")
