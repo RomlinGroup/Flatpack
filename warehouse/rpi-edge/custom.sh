@@ -14,7 +14,7 @@ cd rwkv.cpp
 cmake .
 cmake --build . --config Release
 
-wget -nc https://huggingface.co/BlinkDL/rwkv-6-world/resolve/main/RWKV-x060-World-1B6-v2.1-20240328-ctx4096.pth
+wget -q https://huggingface.co/BlinkDL/rwkv-6-world/resolve/main/RWKV-x060-World-1B6-v2.1-20240328-ctx4096.pth
 
 ../../bin/python python/convert_pytorch_to_ggml.py RWKV-x060-World-1B6-v2.1-20240328-ctx4096.pth RWKV-x060-World-1B6-v2.1-20240328-ctx4096.bin FP16
 

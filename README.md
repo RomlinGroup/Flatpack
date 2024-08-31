@@ -107,7 +107,7 @@ flatpack create <flatpack_name>
 ## AgentManager
 
 ```bash
-wget -nc https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/agents/fast_api_local.py
+wget -q https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/agents/fast_api_local.py
 ```
 
 ```bash
