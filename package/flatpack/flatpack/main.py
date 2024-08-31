@@ -596,12 +596,26 @@ def fpk_create(flatpack_name, repo_url="https://github.com/RomlinGroup/template"
         return
 
     files_to_edit = [
-        (os.path.join(flatpack_dir, "README.md"), r"# template", f"# {flatpack_name}"),
-        (os.path.join(flatpack_dir, "flatpack.toml"), r"{{model_name}}", flatpack_name),
-        (os.path.join(flatpack_dir, "build.sh"), r"export DEFAULT_REPO_NAME=template",
-         f"export DEFAULT_REPO_NAME={flatpack_name}"),
-        (os.path.join(flatpack_dir, "build.sh"), r"export FLATPACK_NAME=template",
-         f"export FLATPACK_NAME={flatpack_name}")
+        (
+            os.path.join(flatpack_dir, "README.md"),
+            r"# template",
+            f"# {flatpack_name}"
+        ),
+        (
+            os.path.join(flatpack_dir, "flatpack.toml"),
+            r"{{model_name}}",
+            flatpack_name
+        ),
+        (
+            os.path.join(flatpack_dir, "build.sh"),
+            r"export DEFAULT_REPO_NAME=template",
+            f"export DEFAULT_REPO_NAME={flatpack_name}"
+        ),
+        (
+            os.path.join(flatpack_dir, "build.sh"),
+            r"export FLATPACK_NAME=template",
+            f"export FLATPACK_NAME={flatpack_name}"
+        )
     ]
 
     try:

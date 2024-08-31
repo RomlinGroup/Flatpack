@@ -39,7 +39,8 @@ https://pypi.org/project/flatpack
 Use this method if you prefer to install flatpack using pip from the Python Package Index.
 
 ```bash
-pip install flatpack
+# https://pipx.pypa.io
+pipx install flatpack
 ```
 
 ### Install from source
@@ -51,7 +52,7 @@ git clone https://github.com/RomlinGroup/Flatpack && cd Flatpack/package/flatpac
 ```
 
 ```bash
-pip install --force .
+pipx install --force .
 ```
 
 ### Install on Raspberry Pi OS Lite (64-bit)
