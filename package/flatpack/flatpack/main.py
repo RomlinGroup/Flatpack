@@ -541,7 +541,7 @@ def fpk_create(flatpack_name, repo_url="https://github.com/RomlinGroup/template"
         repo_url (str, optional): The URL of the template repository. Defaults to "https://github.com/RomlinGroup/template".
 
     Raises:
-        ValueError: If the flatpack name format is invalid.
+        ValueError: If the flatpack name format is invalid or if the directory already exists.
     """
     if not re.match(r'^[a-z0-9-]+$', flatpack_name):
         error_message = "Invalid name format. Only lowercase letters, numbers, and hyphens are allowed."
@@ -551,6 +551,13 @@ def fpk_create(flatpack_name, repo_url="https://github.com/RomlinGroup/template"
 
     flatpack_name = flatpack_name.lower().replace(' ', '-')
     current_dir = os.getcwd()
+    flatpack_dir = os.path.join(current_dir, flatpack_name)
+
+    if os.path.exists(flatpack_dir):
+        error_message = f"Directory '{flatpack_name}' already exists. Aborting creation."
+        print(f"[ERROR] {error_message}")
+        logger.error("%s", error_message)
+        raise ValueError(error_message)
 
     try:
         template_dir = fpk_download_and_extract_template(repo_url, current_dir)
@@ -559,8 +566,6 @@ def fpk_create(flatpack_name, repo_url="https://github.com/RomlinGroup/template"
         print(f"[ERROR] {error_message}")
         logger.error("Failed to download and extract template: %s", e)
         return
-
-    flatpack_dir = os.path.join(current_dir, flatpack_name)
 
     try:
         os.makedirs(flatpack_dir, exist_ok=True)
@@ -1154,39 +1159,41 @@ def fpk_unbox(directory_name: str, session: httpx.Client, local: bool = False) -
 
     flatpack_dir = Path.cwd() / directory_name
 
-    if flatpack_dir.exists():
-        message = f"Directory '{directory_name}' already exists. Unboxing aborted to prevent conflicts."
-        print(f"[ERROR] {message}")
-        logger.error(message)
-        return False
-
-    build_dir = flatpack_dir / "build"
-    db_path = build_dir / 'flatpack.db'
-
-    flatpack_dir.mkdir(parents=True, exist_ok=True)
-    build_dir.mkdir(parents=True, exist_ok=True)
-    temp_toml_path = build_dir / 'temp_flatpack.toml'
-
     if local:
+        if not flatpack_dir.exists():
+            message = f"Local directory '{directory_name}' does not exist."
+            print(f"[ERROR] {message}")
+            logger.error(message)
+            return False
         toml_path = flatpack_dir / 'flatpack.toml'
-
         if not toml_path.exists():
             message = f"flatpack.toml not found in the specified directory: '{directory_name}'."
             print(f"[ERROR] {message}")
             logger.error("%s", message)
             return False
     else:
-        fpk_url = f"{BASE_URL}/{directory_name}/{directory_name}.fpk"
+        if flatpack_dir.exists():
+            message = f"Directory '{directory_name}' already exists. Unboxing aborted to prevent conflicts."
+            print(f"[ERROR] {message}")
+            logger.error(message)
+            return False
+        flatpack_dir.mkdir(parents=True, exist_ok=True)
 
+    build_dir = flatpack_dir / "build"
+    build_dir.mkdir(parents=True, exist_ok=True)
+    db_path = build_dir / 'flatpack.db'
+    temp_toml_path = build_dir / 'temp_flatpack.toml'
+
+    if not local:
+        fpk_url = f"{BASE_URL}/{directory_name}/{directory_name}.fpk"
         try:
             response = session.head(fpk_url)
             if response.status_code != 200:
                 print(f"[ERROR] .fpk file does not exist at {fpk_url}")
                 logger.error(".fpk file does not exist at %s", fpk_url)
                 return False
-            else:
-                print(f"[INFO] .fpk file found at {fpk_url}")
-                logger.info(".fpk file found at %s", fpk_url)
+            print(f"[INFO] .fpk file found at {fpk_url}")
+            logger.info(".fpk file found at %s", fpk_url)
         except httpx.RequestError as e:
             print(f"[ERROR] Network error occurred while checking .fpk file: {e}")
             logger.error("Network error occurred while checking .fpk file: %s", e)
@@ -1197,7 +1204,6 @@ def fpk_unbox(directory_name: str, session: httpx.Client, local: bool = False) -
             return False
 
         fpk_path = build_dir / f"{directory_name}.fpk"
-
         try:
             with open(fpk_path, "wb") as fpk_file:
                 download_response = session.get(fpk_url)
@@ -1223,7 +1229,6 @@ def fpk_unbox(directory_name: str, session: httpx.Client, local: bool = False) -
             return False
 
         toml_path = build_dir / 'flatpack.toml'
-
         if not toml_path.exists():
             print(f"[ERROR] flatpack.toml not found in {build_dir}.")
             logger.error("flatpack.toml not found in %s", build_dir)
