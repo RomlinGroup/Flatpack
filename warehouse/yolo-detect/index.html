@@ -1,0 +1,2218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FPK Editor</title>
+    <style>
+        /* Reset and global styles */
+        * {
+            -moz-osx-font-smoothing: grayscale;
+            -ms-text-size-adjust: 100%;
+            -webkit-font-smoothing: antialiased;
+            -webkit-text-size-adjust: 100%;
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            text-rendering: optimizeLegibility;
+        }
+
+        /* Element selectors */
+        body {
+            align-items: center;
+            background: #fff;
+            display: flex;
+            flex-direction: column;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            justify-content: center;
+        }
+
+        a {
+            color: #5865f2;
+            text-decoration: none;
+        }
+
+        h2 {
+            color: #5865f2;
+            font-size: 14px;
+            line-height: 1;
+            margin-bottom: 20px;
+        }
+
+        textarea {
+            resize: none !important;
+        }
+
+        /* Class selectors */
+        .action {
+            color: #fff;
+            border: 1px solid #fff;
+            cursor: pointer;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            margin-right: 10px;
+        }
+
+        .action:last-of-type {
+            margin-right: 0;
+        }
+
+        .actions {
+            display: flex;
+            align-items: center;
+            margin-left: 10px;
+            margin-right: 10px;
+        }
+
+        .color-label {
+            height: 5px;
+            left: 0;
+            position: absolute;
+            top: 0;
+            width: 100%;
+        }
+
+        .comment-button {
+            background-color: transparent;
+            color: #31efb8;
+            border: none;
+            cursor: pointer;
+            position: absolute;
+            bottom: 0px;
+            right: 0px;
+            z-index: 1;
+            width: 28px;
+            height: 28px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .comment-button svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .comment-button:focus {
+            outline: none;
+        }
+
+        .comment-item {
+            border: 1px solid #31efb8;
+            border-left: 5px solid #31efb8;
+            background: #fff;
+            font-size: 12px;
+            line-height: 1.5em;
+            color: #000;
+            padding: 10px;
+            margin-bottom: 20px;
+            word-break: break-word;
+            position: relative;
+        }
+
+        .comment-item:last-of-type {
+            margin-bottom: 0px;
+        }
+
+        .connected {
+            background: #31efb8 !important;
+        }
+
+        .delete-button,
+        .move-up,
+        .move-down {
+            align-items: center;
+            border: 1px solid;
+            color: #fff;
+            cursor: pointer;
+            display: flex;
+            font-size: 16px;
+            height: 28px;
+            justify-content: center;
+            line-height: 28px;
+            text-align: center;
+            width: 28px;
+        }
+
+        .delete-button svg {
+            width: 16px;
+            height: 16px;
+            fill: #5865f2;
+        }
+
+        .delete-link {
+            position: absolute;
+            right: 10px;
+            top: 10px;
+        }
+
+        .disconnected {
+            background: #ff8d80 !important;
+        }
+
+        .editor {
+            flex: 1;
+            min-height: 50px;
+        }
+
+        .editor:focus {
+            outline: none;
+        }
+
+        .editor[data-placeholder]:empty:before {
+            color: #888;
+            content: attr(data-placeholder);
+            display: block;
+            font-style: italic;
+        }
+
+        .editor-wrapper {
+            position: relative;
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .filters {
+            align-items: flex-start;
+            border-bottom: 1px solid #5865f2;
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 20px;
+            width: 100%;
+        }
+
+        .form-button {
+            background: #5865f2;
+            border: none;
+            color: #fff;
+            cursor: pointer;
+            font-size: 14px;
+            padding: 10px 20px;
+            transition: background-color 0.3s ease;
+        }
+
+        .form-button:hover {
+            background: #4755d5;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            background: #fff;
+            border: 1px solid #5865f2;
+            box-sizing: border-box;
+            color: #000;
+            font-size: 12px;
+            padding: 10px;
+            width: 100%;
+        }
+
+        .form-group label {
+            color: #5865f2;
+            display: block;
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .form-group textarea {
+            font-size: 12px;
+            resize: vertical;
+        }
+
+        .handle,
+        .move-up,
+        .move-down,
+        .toggle-button,
+        .delete-button {
+            align-items: center;
+            background: #fff;
+            border: 0;
+            border-right: 1px solid #5865f2;
+            color: #5865f2;
+            cursor: pointer;
+            display: flex;
+            font-size: 12px;
+            height: 28px;
+            justify-content: center;
+            width: 28px;
+        }
+
+        .handle {
+            cursor: default;
+            padding: 0 10px;
+            border-left: 1px solid #5865f2;
+            width: auto;
+        }
+
+        .hook-label {
+            background: #31efb8;
+            height: 5px;
+            left: 0;
+            position: absolute;
+            top: 0;
+            width: 100%;
+        }
+
+        .hook-name {
+            color: #31efb8;
+            font-family: monospace;
+            font-size: 12px;
+            line-height: 1.5em;
+        }
+
+        .hook-script {
+            color: #fff;
+            font-family: monospace;
+            font-size: 12px;
+            line-height: 1.5em;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .hook-type {
+            background: #31efb8;
+            color: #060c4d;
+            height: 28px;
+            padding: 0 10px;
+            font-family: monospace;
+            font-size: 12px;
+            line-height: 28px;
+            position: absolute;
+            right: 0px;
+            top: 0px;
+        }
+
+        .hook-type-container {
+            display: flex;
+            align-items: center;
+            position: absolute;
+            right: 0px;
+            top: 0px;
+            z-index: 2;
+        }
+
+        .hook-type-container .hook-type {
+            right: 28px;
+        }
+
+        .hook-type-container .delete-button {
+            border: none;
+            border-left: 1px solid #060c4d;
+            background: #31efb8;
+            padding: 0;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2;
+        }
+
+        .hook-type-container .delete-button svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .part-bash .color-label,
+        .part-python .color-label {
+            background-color: #5865f2;
+        }
+
+        .part-bash .eval-label,
+        .part-python .eval-label {
+            background-color: #ff8d80;
+        }
+
+        .part-bash .controls,
+        .part-python .controls {
+            border-bottom: 1px solid #5865f2;
+            display: flex;
+            position: absolute;
+            z-index: 1;
+            right: 0;
+            top: 0;
+        }
+
+        .part-bash .editor,
+        .part-python .editor {
+            background: none;
+            border: none;
+            color: #fff;
+            font-family: monospace;
+            height: auto;
+            font-size: 12px;
+            line-height: 1.5em;
+            min-height: 50px;
+            overflow: hidden;
+            padding: 20px;
+            white-space: pre-wrap;
+            width: 100%;
+            word-wrap: break-word;
+            position: relative;
+        }
+
+        .part-bash,
+        .part-python {
+            background: #060c4d;
+            border: 1px solid #5865f2;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            margin: 20px 0;
+            overflow-wrap: break-word;
+            position: relative;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .part-bash.disabled,
+        .part-python.disabled {
+            pointer-events: none;
+        }
+
+        .part-bash.disabled .color-label,
+        .part-python.disabled .color-label {
+            opacity: 1;
+            z-index: 1;
+        }
+
+        .part-bash.disabled .editor,
+        .part-python.disabled .editor {
+            background: #222;
+            cursor: not-allowed;
+            text-decoration: line-through;
+        }
+
+        .part-bash.disabled .toggle-button,
+        .part-python.disabled .toggle-button {
+            pointer-events: auto;
+            opacity: 1;
+        }
+
+        .spinner {
+            animation: spin 1s linear infinite;
+            border: 10px solid #ffffff;
+            border-radius: 50%;
+            border-top: 10px solid #5865f2;
+            height: 60px;
+            width: 60px;
+        }
+
+        .tab {
+            background: #f0f2ff;
+            border-right: 1px solid #5865f2;
+            border-top: 1px solid #5865f2;
+            color: #5865f2;
+            cursor: pointer;
+            font-size: 14px;
+            padding: 10px 20px;
+        }
+
+        .tab-content {
+            display: none;
+            margin: 0 auto;
+            max-width: 800px;
+            width: 100%;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .tab.active {
+            background: #fff;
+            border-bottom: none;
+            height: calc(100% + 1px);
+            top: -1px;
+        }
+
+        .tabs {
+            border-bottom: 1px solid #5865f2;
+            border-left: 1px solid #5865f2;
+            display: flex;
+            margin-top: 20px;
+        }
+
+        .tabs-container {
+            display: flex;
+            justify-content: flex-start;
+            margin: 0 auto;
+            margin-top: 64px;
+            max-width: 800px;
+            width: 100%;
+        }
+
+        .toggle-button {
+            align-items: center;
+            background: #fff;
+            border: 0;
+            border-right: 0px;
+            color: #5865f2;
+            cursor: pointer;
+            display: flex;
+            font-size: 12px;
+            height: 28px;
+            justify-content: center;
+            width: 28px;
+        }
+
+        .toggle-button svg {
+            fill: #5865f2;
+            height: 16px;
+            width: 16px;
+        }
+
+        /* ID selectors */
+        #add-bash-button,
+        #add-python-button,
+        #save-button {
+            background: #5865f2;
+            border: none;
+            color: #fff;
+            cursor: pointer;
+            font-size: 14px;
+            padding: 10px 20px;
+        }
+
+        #add-bash-button,
+        #add-python-button {
+            background: #060c4d;
+        }
+
+        #add-hook-form {
+            background: #f0f2ff;
+            border: 1px solid #5865f2;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        #add-hook-form h3 {
+            color: #5865f2;
+            font-size: 14px;
+            line-height: 1;
+            margin-bottom: 20px;
+        }
+
+        #add-python-button {
+            margin-left: 20px;
+        }
+
+        #api-key-authorize {
+            background: #5865f2;
+            border: none;
+            color: #fff;
+            cursor: pointer;
+            font-size: 14px;
+            padding: 10px 20px;
+        }
+
+        #api-key-input {
+            border: 1px solid #5865f2;
+            box-sizing: border-box;
+            display: block;
+            margin: 0 auto 20px;
+            padding: 10px;
+            width: 100%;
+        }
+
+        #api-key-modal {
+            align-items: center;
+            background-color: rgba(6, 12, 77, 0.75);
+            display: flex;
+            height: 100%;
+            justify-content: center;
+            left: 0;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 2147483647;
+        }
+
+        #api-key-modal-content {
+            background: #fff;
+            box-sizing: border-box;
+            margin-left: 20px;
+            margin-right: 20px;
+            max-width: 400px;
+            padding: 20px;
+            text-align: center;
+            width: 100%;
+        }
+
+        #api-key-modal-content p {
+            margin-bottom: 20px;
+        }
+
+        #button-container {
+            display: flex;
+            margin-top: 20px;
+            width: 100%;
+        }
+
+        #comment-sidebar {
+            display: none;
+            position: fixed;
+            z-index: 2147483646;
+            right: 0;
+            top: 64px;
+            width: 300px;
+            height: 100%;
+            padding: 20px;
+            padding-bottom: 84px;
+            background: #f0f2ff;
+            border-left: 1px solid #5865f2;
+            overflow-y: auto;
+        }
+
+        #comment-sidebar h2 {
+            color: #5865f2;
+        }
+
+        #file-content {
+            margin-bottom: 20px;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        #file-content.loaded {
+            opacity: 1;
+        }
+
+        #footer {
+            font-size: 14px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        #heartbeat-dot {
+            background: #ff8d80;
+            border-radius: 50%;
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            margin-right: 10px;
+        }
+
+        #heartbeat-indicator {
+            display: flex;
+            align-items: center;
+        }
+
+        #heartbeat-time {
+            width: 55px;
+        }
+
+        #hooks,
+        #log,
+        #wrapper {
+            background: #fff;
+            border: 1px solid #5865f2;
+            border-top: 0;
+            margin: 0 auto 20px;
+            max-width: 800px;
+            padding: 20px;
+            position: relative;
+            width: 100%;
+        }
+
+        #hooks-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        #hooks-list li {
+            background: #060c4d;
+            border: 1px solid #31efb8;
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 20px;
+            padding: 20px;
+            transition: background 0.3s ease;
+            position: relative;
+        }
+
+        #hooks-list li:last-of-type {
+            margin-bottom: 0px;
+        }
+
+        #loading-overlay {
+            align-items: center;
+            background-color: rgba(6, 12, 77, 0.75);
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            justify-content: center;
+            left: 0;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 2147483647;
+        }
+
+        #loading-overlay p {
+            color: #ffffff;
+            font-size: 24px;
+            margin-top: 20px;
+        }
+
+        #log-dropdown {
+            background: #f0f2ff;
+            border: 1px solid #5865f2;
+            display: block;
+            margin-bottom: 20px;
+            font-size: 12px;
+            padding: 10px;
+            width: 100%;
+        }
+
+        #log-output {
+            background: #fff;
+            border: 1px solid #5865f2;
+            color: #000;
+            font-family: monospace;
+            font-size: 12px;
+            line-height: 1.5em;
+            padding: 20px;
+        }
+
+        #save-button {
+            margin-left: auto;
+            margin-right: 0;
+        }
+
+        #server-time {
+            font-size: 14px;
+        }
+
+        #status-bar {
+            display: none;
+            margin-top: 84px;
+            max-width: 800px;
+            padding: 20px;
+            text-align: center;
+            width: 100%;
+        }
+
+        #status-bar.error {
+            background: #ff8d80;
+            color: #000;
+        }
+
+        #status-bar.success {
+            background: #31efb8;
+            color: #000;
+        }
+
+        #toggle-comments-btn {
+            background: transparent;
+            border: 1px solid #31efb8;
+            cursor: pointer;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 20px;
+            padding: 0;
+        }
+
+        #toggle-comment-sidebar {
+            background: none;
+            position: absolute;
+            cursor: pointer;
+            border: 0px;
+            padding: 0px;
+            right: 20px;
+            top: 20px;
+        }
+
+        #toolbar {
+            height: 64px;
+            top: 0px;
+            position: fixed;
+            z-index: 2147483646;
+            align-items: center;
+            background: #060c4d;
+            color: #fff;
+            display: flex;
+            justify-content: space-between;
+            padding: 20px;
+            width: 100%;
+        }
+
+        #toolbar a {
+            color: #fff;
+        }
+
+        #toolbar h1 {
+            font-size: 24px;
+            line-height: 1;
+        }
+
+        #toolbar-right {
+            display: flex;
+            align-items: center;
+        }
+
+        /* Media queries */
+        @media (max-width: 800px) {
+            .tabs {
+                border-left: 0px;
+            }
+
+            #hooks,
+            #log,
+            #wrapper {
+                border-left: 0;
+                border-right: 0;
+            }
+
+            #status-bar {
+                max-width: calc(100% - 40px);
+                margin-left: 20px;
+                margin-right: 20px;
+            }
+        }
+
+        /* Keyframes */
+        @keyframes float {
+            0% {
+                transform: translateY(0);
+            }
+            100% {
+                transform: translateY(-20px);
+            }
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+<body>
+<div id="toolbar">
+    <a href="index.html"><h1>FPK Editor</h1></a>
+    <div id="toolbar-right">
+
+        <div class="actions">
+
+            <div class="action" id="save-action">
+                S
+            </div>
+
+            <div class="action" id="verify-action">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16">
+                    <path d="M2 8h2v2H2zM4 10h2v2H4zM6 12h2v2H6zM8 10h2v2H8zM10 8h2v2h-2zM12 6h2v2h-2zM14 4h2v2h-2z"
+                          fill="#fff"/>
+                </svg>
+            </div>
+
+            <div class="action" id="build-action">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16">
+                    <path d="M4 3h2v10H4zM6 4h2v8H6zM8 5h2v6H8zM10 6h2v4h-2zM12 7h2v2h-2z" fill="#fff"/>
+                </svg>
+            </div>
+
+        </div> <!-- END .actions -->
+
+        <button id="toggle-comments-btn" onclick="toggleCommentSidebar()">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16">
+                <rect x="2" y="2" width="12" height="12" fill="#31efb8"/>
+                <rect x="1" y="2" width="1" height="12" fill="#31efb8"/>
+                <rect x="3" y="3" width="10" height="10" fill="#060c4d"/>
+                <rect x="4" y="5" width="8" height="1" fill="#31efb8"/>
+                <rect x="4" y="7" width="8" height="1" fill="#31efb8"/>
+                <rect x="4" y="9" width="8" height="1" fill="#31efb8"/>
+            </svg>
+        </button>
+
+        <div id="heartbeat-indicator">
+            <span id="heartbeat-dot"></span> <span id="heartbeat-time">00:00:00</span>
+        </div>
+
+    </div>
+</div> <!-- END #toolbar -->
+
+<div id="status-bar"></div> <!-- END #status-bar -->
+
+<div id="comment-sidebar">
+    <button id="toggle-comment-sidebar" onclick="toggleCommentSidebar()">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 14 14" width="14" height="14">
+            <rect x="3" y="3" width="2" height="2" fill="#5865f2"/>
+            <rect x="5" y="5" width="2" height="2" fill="#5865f2"/>
+            <rect x="7" y="7" width="2" height="2" fill="#5865f2"/>
+            <rect x="9" y="9" width="2" height="2" fill="#5865f2"/>
+            <rect x="3" y="11" width="2" height="2" fill="#5865f2"/>
+            <rect x="11" y="3" width="2" height="2" fill="#5865f2"/>
+            <rect x="9" y="5" width="2" height="2" fill="#5865f2"/>
+            <rect x="7" y="7" width="2" height="2" fill="#5865f2"/>
+            <rect x="5" y="9" width="2" height="2" fill="#5865f2"/>
+            <rect x="11" y="11" width="2" height="2" fill="#5865f2"/>
+        </svg>
+    </button>
+    <h2>Comments</h2>
+    <div id="comment-list"></div>
+</div> <!-- END #comment-sidebar -->
+
+<div class="tabs-container">
+    <div class="tabs">
+        <div class="tab active" data-tab="board">Board</div>
+        <div class="tab" data-tab="editor">Editor</div>
+        <div class="tab" data-tab="hooks">Hooks</div>
+        <div class="tab" data-tab="log">Log</div>
+    </div>
+
+    <div class="filters"></div>
+</div> <!-- END #tabs-container -->
+
+<div class="tab-content active" id="board-content">
+    <div id="wrapper">
+        <h2>Board</h2>
+    </div>
+</div> <!-- END #editor-content -->
+
+<div class="tab-content" id="editor-content">
+    <div id="wrapper">
+        <h2>custom.sh</h2>
+        <div id="file-content"></div>
+        <div id="button-container">
+            <button id="add-bash-button" onclick="addBashBlock()">Bash</button>
+            <button id="add-python-button" onclick="addPythonBlock()">Python</button>
+            <button id="save-button">Save</button>
+        </div>
+    </div>
+</div> <!-- END #editor-content -->
+
+<div class="tab-content" id="hooks-content">
+    <div id="hooks">
+        <div id="add-hook-form">
+            <h3>Add new hook</h3>
+            <form id="hook-form" autocomplete="off">
+                <div class="form-group">
+                    <label for="hook-name">Name</label>
+                    <input type="text" id="hook-name" name="hook-name" required autocomplete="off">
+                </div>
+
+                <div class="form-group">
+                    <label for="hook-type">Type</label>
+                    <select id="hook-type" name="hook-type" required autocomplete="off">
+                        <option value="bash">Bash</option>
+                        <option value="python">Python</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="hook-script">Script</label>
+                    <textarea id="hook-script" name="hook-script" rows="4" required autocomplete="off"></textarea>
+                </div>
+
+                <button type="submit" class="form-button">Submit</button>
+            </form>
+        </div>
+
+        <h2>Hooks</h2>
+        <div id="hooks-list"></div>
+
+    </div>
+</div>
+
+<div class="tab-content" id="log-content">
+    <div id="log">
+        <h2>Log</h2>
+        <select id="log-dropdown" onchange="fetchSelectedLog()">
+            <option value="">Select a log file</option>
+        </select>
+        <div id="log-output">
+            [PLACEHOLDER]
+        </div>
+    </div>
+</div> <!-- END #log-content -->
+
+<div id="footer">
+    Powered by <a href="https://fpk.ai">Flatpack</a>
+</div> <!-- END #footer -->
+
+<div id="api-key-modal" style="display: none;">
+    <div id="api-key-modal-content">
+        <h2>Enter API token</h2>
+        <p>The API token can be found in your terminal.</p>
+        <input type="password" id="api-key-input" placeholder="Enter your API token" autocomplete="off">
+        <button id="api-key-authorize">Authorize</button>
+    </div>
+</div> <!-- END #api-key-modal -->
+
+<div id="loading-overlay" style="display: none;">
+    <div class="spinner"></div>
+    <p>Please wait...</p>
+</div> <!-- END #loading-overlay -->
+
+<script>
+    'use strict';
+
+    const comments = [];
+
+    const getBaseUrl = () => window.location.origin;
+
+    const addCommentIcon = `
+<svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+  <path d="M3 3h10v7H5l-2 2V3z" stroke="#31efb8" stroke-width="1" fill="none"/>
+</svg>`;
+
+    const arrowDownIcon = `
+<svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+  <path d="M8 4v6.5 M5 8l3 3 3-3" stroke="#5865f2" stroke-width="1" fill="none" stroke-linecap="square"/>
+</svg>`;
+
+    const arrowUpIcon = `
+<svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+  <path d="M8 12V5.5 M5 8l3-3 3 3" stroke="#5865f2" stroke-width="1" fill="none" stroke-linecap="square"/>
+</svg>`;
+
+    const crossedEyeIcon = `
+<svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+  <path d="M2 8c2-3 5-3 6-3s4 0 6 3c-2 3-5 3-6 3s-4 0-6-3z" stroke="#5865f2" stroke-width="1" fill="none" stroke-linejoin="miter" stroke-linecap="butt"/>
+  <circle cx="8" cy="8" r="2" stroke="#5865f2" stroke-width="1" fill="none"/>
+  <line x1="2" y1="2" x2="14" y2="14" stroke="#5865f2" stroke-width="1"/>
+</svg>`;
+
+    const editorTrashIcon = `
+<svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+  <path d="M4 4h8 M5 4v8h6V4 M8 6v4" stroke="#5865f2" stroke-width="1" fill="none"/>
+  <path d="M6 2h4" stroke="#5865f2" stroke-width="1" fill="none"/>
+</svg>`;
+
+    const hooksTrashIcon = `
+<svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+  <path d="M4 4h8 M5 4v8h6V4 M8 6v4" stroke="#060c4d" stroke-width="1" fill="none"/>
+  <path d="M6 2h4" stroke="#060c4d" stroke-width="1" fill="none"/>
+</svg>`;
+
+    const regularEyeIcon = `
+<svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+  <path d="M2 8c2-3 5-3 6-3s4 0 6 3c-2 3-5 3-6 3s-4 0-6-3z" stroke="#5865f2" stroke-width="1" fill="none" stroke-linejoin="miter" stroke-linecap="butt"/>
+  <circle cx="8" cy="8" r="2" stroke="#5865f2" stroke-width="1" fill="none"/>
+</svg>`;
+
+    let currentPart = 1;
+    let highlightTimeout;
+    let isBuilding = false;
+    let originalContent = '';
+
+    function addBashBlock() {
+        addBlock('bash');
+    }
+
+    function addBlock(type) {
+        const uniqueId = `part-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+
+        const block = document.createElement('div');
+        block.className = `part-${type}`;
+        block.id = uniqueId;
+
+        const colorLabel = document.createElement('div');
+        colorLabel.className = 'color-label';
+        block.appendChild(colorLabel);
+
+        const editorWrapper = document.createElement('div');
+        editorWrapper.className = 'editor-wrapper';
+        editorWrapper.style.position = 'relative';
+
+        const editor = document.createElement('div');
+        editor.className = 'editor';
+        editor.contentEditable = true;
+        editor.setAttribute('data-placeholder', `Enter your ${type} code here...`);
+
+        addEventListenersToEditor(editor);
+
+        editorWrapper.appendChild(editor);
+
+        const commentButton = document.createElement('button');
+        commentButton.className = 'comment-button';
+        commentButton.innerHTML = addCommentIcon;
+        commentButton.onclick = () => addCommentToBlock(block);
+        editorWrapper.appendChild(commentButton);
+
+        block.appendChild(editorWrapper);
+
+        const controls = document.createElement('div');
+        controls.className = 'controls';
+
+        controls.appendChild(createControlElement('handle', type.replace('part_', '')));
+        controls.appendChild(createControlElement('move-up', arrowUpIcon, () => moveBlockUp(block)));
+        controls.appendChild(createControlElement('move-down', arrowDownIcon, () => moveBlockDown(block)));
+        controls.appendChild(createControlElement('delete-button', editorTrashIcon, () => deleteBlock(block)));
+        controls.appendChild(createToggleButton(block));
+
+        block.appendChild(controls);
+
+        document.getElementById('file-content').appendChild(block);
+    }
+
+    async function addCommentToBlock(block) {
+        const selectedText = window.getSelection().toString();
+        if (selectedText) {
+            const comment = prompt('Enter your comment:');
+            if (comment) {
+                const blockId = block.id;
+                try {
+                    const {commentId, createdAt} = await postComment(blockId, selectedText, comment);
+
+                    await refreshCommentsFromBackend();
+                    document.getElementById('comment-sidebar').style.display = 'block';
+
+                } catch (error) {
+                    console.error('Failed to add comment:', error);
+                    alert('Failed to add comment. Please try again.');
+                }
+            }
+        } else {
+            alert('Please select text to comment on.');
+        }
+    }
+
+    function addComment(text, comment, blockId, createdAt, commentId) {
+        comments.push({
+            text,
+            comment,
+            blockId,
+            created_at: createdAt || new Date().toISOString(),
+            id: commentId
+        });
+        renderComments();
+    }
+
+    function addEventListenersToEditor(editor) {
+        editor.addEventListener('input', (event) => {
+            if (event.target.contentEditable !== 'false') {
+                logCharacter(event);
+                resizeEditor(event.target);
+            }
+        });
+        editor.addEventListener('paste', stripFormatting);
+    }
+
+    function addPythonBlock() {
+        addBlock('python');
+    }
+
+    async function buildProject(apiToken) {
+        showLoadingOverlay();
+        disableInteractions();
+
+        try {
+            await saveFile(false, apiToken);
+            await callAPI('build', apiToken);
+            await fetchLogFiles(apiToken);
+
+            const data = await getEvalJSON(apiToken);
+
+            const evalPart = data.eval;
+            const isSuccess = data.curr === data.last || evalPart === null;
+
+            showStatus(JSON.stringify(data), isSuccess);
+
+            const allParts = document.querySelectorAll('.color-label.eval-label');
+
+            allParts.forEach(label => {
+                label.classList.remove('eval-label');
+            });
+
+            if (data.last === 0) {
+                showStatus("Build completed successfully (no active parts)", true);
+            } else if (evalPart !== null) {
+                const partDiv = document.getElementById('part-' + evalPart);
+                if (partDiv) {
+                    const colorLabelDiv = partDiv.querySelector('.color-label');
+                    if (colorLabelDiv) {
+                        if (isSuccess) {
+                            colorLabelDiv.classList.remove('eval-label');
+                        } else {
+                            colorLabelDiv.classList.add('eval-label');
+                        }
+                    }
+                }
+            }
+
+        } catch (error) {
+            console.error('Failed to build project:', error);
+            showStatus(`Error: ${error.message}`, false);
+
+            const allParts = document.querySelectorAll('.color-label.eval-label');
+            allParts.forEach(label => {
+                label.classList.remove('eval-label');
+            });
+        } finally {
+            hideLoadingOverlay();
+            enableInteractions();
+        }
+    }
+
+    async function callAPI(endpoint, apiToken, method = "POST", data = null) {
+        return new Promise((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            const url = `${getBaseUrl()}/api/${endpoint}`;
+
+            xhr.open(method, url, true);
+            xhr.setRequestHeader("Authorization", `Bearer ${apiToken}`);
+
+            if (method === "POST" && data) {
+                xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+            }
+
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4) {
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        try {
+                            const json = JSON.parse(xhr.responseText);
+                            console.log(`API call to ${endpoint} succeeded:`, json);
+                            resolve(json);
+                        } catch (e) {
+                            console.error('Error parsing response JSON:', e);
+                            reject(e);
+                        }
+                    } else {
+                        console.error(`HTTP Error: ${xhr.status} ${xhr.statusText}`);
+                        console.error('Response:', xhr.responseText);
+                        reject(new Error(`HTTP Error: ${xhr.status} ${xhr.statusText}`));
+                    }
+                }
+            };
+
+            xhr.onerror = function () {
+                console.error('Network error');
+                reject(new Error('Network error'));
+            };
+
+            try {
+                if (method === "POST" && data) {
+                    const params = new URLSearchParams();
+                    for (const key in data) {
+                        if (data.hasOwnProperty(key)) {
+                            params.append(key, data[key]);
+                        }
+                    }
+                    xhr.send(params.toString());
+                } else {
+                    xhr.send();
+                }
+            } catch (e) {
+                console.error('Request failed:', e);
+                reject(e);
+            }
+        });
+    }
+
+    async function checkApiTokenValidity(apiToken) {
+        try {
+            const response = await callAPI('validate_token', apiToken, 'GET');
+            return response.valid;
+        } catch (error) {
+            console.error('Error checking API token:', error);
+            return false;
+        }
+    }
+
+    async function checkHeartbeat(apiToken) {
+        const heartbeatDot = document.getElementById('heartbeat-dot');
+        const heartbeatTime = document.getElementById('heartbeat-time');
+
+        if (!heartbeatDot || !heartbeatTime) {
+            console.error('Heartbeat elements are missing.');
+            return;
+        }
+
+        try {
+            const response = await fetch(`${getBaseUrl()}/api/heartbeat`, {
+                headers: {'Authorization': `Bearer ${apiToken}`}
+            });
+            if (response.ok) {
+                const data = await response.json();
+                const date = new Date(data.server_time);
+                const formattedDate = date.toLocaleString('sv-SE', {
+                    hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
+                });
+                heartbeatTime.textContent = formattedDate;
+                heartbeatDot.classList.remove('disconnected');
+                heartbeatDot.classList.add('connected');
+
+                if (isBuilding) {
+                    isBuilding = false;
+                    hideLoadingOverlay();
+                    enableInteractions();
+                }
+            } else {
+                setDisconnectedState();
+            }
+        } catch (error) {
+            setDisconnectedState();
+        }
+
+        function setDisconnectedState() {
+            heartbeatTime.textContent = 'Disconnected';
+            heartbeatDot.classList.remove('connected');
+            heartbeatDot.classList.add('disconnected');
+
+            if (!isBuilding) {
+                isBuilding = true;
+                showLoadingOverlay();
+                disableInteractions();
+            }
+        }
+    }
+
+    function createControlElement(className, innerHTML, onClick) {
+        const element = document.createElement('div');
+        element.className = className;
+        element.innerHTML = innerHTML;
+        if (onClick) {
+            element.onclick = onClick;
+        }
+        return element;
+    }
+
+    function createToggleButton(block) {
+        const button = createControlElement('toggle-button', crossedEyeIcon, () => {
+            toggleBlock(block);
+            button.innerHTML = block.classList.contains('disabled') ? regularEyeIcon : crossedEyeIcon;
+        });
+
+        return button;
+    }
+
+    function deleteBlock(block) {
+        const blockId = block.id;
+        block.remove();
+    }
+
+    async function deleteComment(commentId) {
+        console.log("deleteComment", commentId);
+
+        const apiToken = sessionStorage.getItem('apiToken');
+        const url = `${getBaseUrl()}/api/comments/${commentId}`;
+
+        try {
+            const response = await fetch(url, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${apiToken}`
+                }
+            });
+
+            if (response.ok) {
+                alert('Comment deleted successfully.');
+                await refreshCommentsFromBackend();
+            } else {
+                const errorData = await response.json();
+                alert(`Failed to delete comment: ${errorData.detail}`);
+            }
+        } catch (error) {
+            console.error('Error deleting comment:', error);
+            alert('Failed to delete comment. Please try again.');
+        }
+    }
+
+    async function deleteHook(hookId) {
+        const apiToken = sessionStorage.getItem('apiToken');
+        try {
+            const response = await fetch(`${getBaseUrl()}/api/hooks/${hookId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${apiToken}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                showStatus(`Failed to delete hook: ${errorData.detail}`, false);
+            } else {
+                showStatus('Hook deleted successfully!', true);
+                document.querySelector(`[data-hook-id="${hookId}"]`).remove();
+            }
+        } catch (error) {
+            console.error('Error deleting hook:', error);
+            showStatus('Error deleting hook!', false);
+        }
+    }
+
+    function disableInteractions() {
+        document.querySelectorAll('button, .action, .editor').forEach(el => {
+            el.setAttribute('disabled', 'true');
+            el.style.pointerEvents = 'none';
+        });
+    }
+
+    function enableInteractions() {
+        document.querySelectorAll('button, .action, .editor').forEach(el => {
+            el.removeAttribute('disabled');
+            el.style.pointerEvents = 'auto';
+        });
+    }
+
+    async function fetchComments() {
+        const apiToken = sessionStorage.getItem('apiToken');
+        const url = `${getBaseUrl()}/api/comments`;
+
+        try {
+            const response = await fetch(url, {
+                headers: {
+                    'Authorization': `Bearer ${apiToken}`
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`Failed to fetch comments: ${response.statusText}`);
+            }
+
+            const fetchedComments = await response.json();
+
+            comments.length = 0;
+
+            fetchedComments.forEach(comment => {
+                if (comment.id) {
+                    comments.push({
+                        id: comment.id,
+                        text: comment.selected_text,
+                        comment: comment.comment,
+                        blockId: comment.block_id,
+                        created_at: comment.created_at
+                    });
+                } else {
+                    console.error('Comment fetched without an ID:', comment);
+                }
+            });
+
+            renderComments();
+        } catch (error) {
+            console.error('Error fetching comments:', error);
+        }
+    }
+
+    async function fetchHooks(apiToken) {
+        try {
+            const response = await fetch(`${getBaseUrl()}/api/hooks`, {
+                headers: {
+                    'Authorization': `Bearer ${apiToken}`
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                console.log("API response for hooks:", data);
+                renderHooks(data.hooks);
+            } else {
+                console.error('Error response:', response.status, response.statusText);
+                showStatus('Error fetching hooks!', false);
+            }
+        } catch (error) {
+            console.error('Fetch error:', error);
+            showStatus('Error fetching hooks!', false);
+        }
+    }
+
+    async function fetchLatestLogs(apiToken) {
+        try {
+            const response = await fetch('/api/logs', {
+                headers: {
+                    'Authorization': `Bearer ${apiToken}`
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                const logs = data.logs;
+
+                if (logs.length > 0) {
+                    const latestLog = logs[0];
+                    const logResponse = await fetch(`/api/logs/${latestLog}`, {
+                        headers: {
+                            'Authorization': `Bearer ${apiToken}`
+                        }
+                    });
+
+                    if (logResponse.ok) {
+                        const logData = await logResponse.json();
+                        renderLogContent(logData.log);
+                    } else {
+                        renderLogContent("Error fetching the latest log.");
+                        showStatus('Error fetching the latest log!', false);
+                    }
+                } else {
+                    console.error('No log files found.');
+                    renderLogContent("No log files found.");
+                    showStatus('No log files found!', false);
+                }
+            } else {
+                renderLogContent("Error fetching log files.");
+                showStatus('Error fetching log files!', false);
+            }
+        } catch (error) {
+            renderLogContent("Error fetching log files.");
+            showStatus('Error fetching log files!', false);
+        }
+    }
+
+    async function fetchLogFiles(apiToken) {
+        try {
+            const response = await fetch(`${getBaseUrl()}/api/logs`, {
+                headers: {
+                    'Authorization': `Bearer ${apiToken}`
+                }
+            });
+            if (response.ok) {
+                const data = await response.json();
+                populateLogDropdown(data.logs);
+            } else {
+                showStatus('Error fetching log files!', false);
+            }
+        } catch (error) {
+            console.error('Error fetching log files:', error);
+            showStatus('Error fetching log files!', false);
+        }
+    }
+
+    async function fetchSelectedLog() {
+        const apiToken = sessionStorage.getItem('apiToken');
+        const logDropdown = document.getElementById('log-dropdown');
+        const selectedLog = logDropdown.value;
+
+        if (!selectedLog) {
+            renderLogContent('No log file selected.');
+            return;
+        }
+
+        try {
+            const response = await fetch(`${getBaseUrl()}/api/logs/${selectedLog}`, {
+                headers: {
+                    'Authorization': `Bearer ${apiToken}`
+                }
+            });
+            if (response.ok) {
+                const data = await response.json();
+                renderLogContent(data.log);
+            } else {
+                if (response.status === 404) {
+                    renderLogContent(`Log file not found: ${selectedLog}`);
+                } else {
+                    console.error('Failed to fetch the selected log:', response.statusText);
+                    renderLogContent("Error fetching the selected log.");
+                    showStatus('Error fetching the selected log!', false);
+                }
+            }
+        } catch (error) {
+            console.error('Error fetching the selected log:', error);
+            renderLogContent("Error fetching the selected log.");
+            showStatus('Error fetching the selected log!', false);
+        }
+    }
+
+    async function getEvalJSON(apiToken) {
+        try {
+            const response = await fetch(`${getBaseUrl()}/eval_build.json`, {
+                headers: {
+                    'Authorization': `Bearer ${apiToken}`
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`Network response was not ok: ${response.statusText}`);
+            }
+
+            const data = await response.json();
+            return data;
+
+        } catch (error) {
+            console.error('Fetch error:', error);
+            throw error;
+        }
+    }
+
+    function getSessionID() {
+        return Date.now().toString(36) + Math.random().toString(36).substr(2);
+    }
+
+    function hideLoadingOverlay() {
+        document.getElementById('loading-overlay').style.display = 'none';
+    }
+
+    function highlightBlock(blockId) {
+        clearTimeout(highlightTimeout);
+
+        document.querySelectorAll('.part-python .color-label, .part-bash .color-label').forEach(label => {
+            label.style.backgroundColor = '';
+        });
+
+        const block = document.getElementById(blockId);
+
+        if (block) {
+            const colorLabel = block.querySelector('.color-label');
+
+            if (colorLabel) {
+                colorLabel.style.backgroundColor = '#31efb8';
+            }
+
+            block.scrollIntoView({behavior: 'smooth', block: 'center'});
+
+            highlightTimeout = setTimeout(() => {
+                if (colorLabel) {
+                    colorLabel.style.backgroundColor = '';
+                }
+            }, 3000);
+        }
+    }
+
+    async function initializeApp(apiToken) {
+        try {
+            setupEventListeners(apiToken);
+            checkHeartbeat(apiToken);
+            setInterval(() => checkHeartbeat(apiToken), 1000);
+            await loadDefaultFile(apiToken);
+            await fetchComments(apiToken);
+            await fetchHooks(apiToken);
+            await fetchLatestLogs(apiToken);
+            await fetchLogFiles(apiToken);
+        } catch (error) {
+            console.error('Error initializing app:', error);
+        }
+    }
+
+    async function loadDefaultFile(apiToken) {
+        try {
+            const response = await fetch(`${getBaseUrl()}/load_file?filename=custom.sh&_=${Date.now()}`, {
+                headers: {
+                    'Authorization': `Bearer ${apiToken}`
+                }
+            });
+
+            if (response.ok) {
+                const json = await response.json();
+                originalContent = json.content;
+                renderFileContents(originalContent);
+                resizeAllTextareas();
+
+                document.querySelectorAll('.editor').forEach(editor => {
+                    addEventListenersToEditor(editor);
+                });
+            } else {
+                console.error('Error loading file:', response.statusText);
+            }
+        } catch (error) {
+            console.error('Error loading file:', error);
+        }
+    }
+
+    function logCharacter(event) {
+        const editor = event.target;
+        const type = editor.closest('.part-python') ? 'python' : 'bash';
+    }
+
+    function moveBlockDown(block) {
+        const next = block.nextElementSibling;
+        if (next) {
+            block.parentNode.insertBefore(next, block);
+        }
+    }
+
+    function moveBlockUp(block) {
+        const prev = block.previousElementSibling;
+        if (prev) {
+            block.parentNode.insertBefore(block, prev);
+        }
+    }
+
+    function populateLogDropdown(logs) {
+        const logDropdown = document.getElementById('log-dropdown');
+        logDropdown.innerHTML = '';
+
+        if (logs.length === 0) {
+            const defaultOption = document.createElement('option');
+            defaultOption.textContent = 'Select a log file';
+            logDropdown.appendChild(defaultOption);
+        } else {
+            logs.forEach(log => {
+                const option = document.createElement('option');
+                option.value = log;
+                option.textContent = log;
+                logDropdown.appendChild(option);
+            });
+
+            logDropdown.value = logs[0];
+            fetchSelectedLog();
+        }
+    }
+
+    async function postComment(blockId, selectedText, comment) {
+        const apiToken = sessionStorage.getItem('apiToken');
+        const url = `${getBaseUrl()}/api/comments`;
+
+        const payload = {
+            block_id: blockId,
+            selected_text: selectedText,
+            comment: comment
+        };
+
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${apiToken}`
+            },
+            body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+            throw new Error(`Failed to add comment: ${response.statusText}`);
+        }
+
+        const jsonResponse = await response.json();
+        if (jsonResponse.comment_id) {
+            return {
+                commentId: jsonResponse.comment_id,
+                createdAt: jsonResponse.created_at
+            };
+        } else {
+            throw new Error('comment_id is undefined in response');
+        }
+    }
+
+    async function refreshCommentsFromBackend() {
+        comments.length = 0;
+        await fetchComments();
+        renderComments();
+    }
+
+    function renderComments() {
+        const commentList = document.getElementById('comment-list');
+        commentList.innerHTML = '';
+
+        if (comments.length === 0) {
+            commentList.innerHTML = '<p>No comments available.</p>';
+            return;
+        }
+
+        const sortedComments = comments.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+        sortedComments.forEach((c, index) => {
+            if (c.id) {
+                const commentElement = document.createElement('div');
+                commentElement.className = `comment-item comment-item-${index}`;
+                commentElement.innerHTML = `
+                <strong>ID:</strong> ${c.id}<br>
+                <strong>Selection:</strong> ${c.text}<br>
+                <strong>Comment:</strong> ${c.comment}<br>
+                <strong>Created at:</strong> ${new Date(c.created_at).toLocaleString()}<br>
+                <div class="delete-link"><a href="javascript:void(0);" onclick="deleteComment(${c.id})">Delete</a></div>
+            `;
+                commentElement.style.cursor = 'pointer';
+                commentElement.onclick = () => highlightBlock(c.blockId);
+                commentList.appendChild(commentElement);
+            } else {
+                console.error('Comment without an ID:', c);
+            }
+        });
+    }
+
+    function renderFileContents(contents) {
+        const fileContentElement = document.getElementById('file-content');
+        fileContentElement.innerHTML = '';
+
+        const parts = contents.split(/((?:disabled )?part_[a-z]+ """[\s\S]*?""")/).filter(Boolean);
+        parts.forEach(part => {
+            const match = part.match(/(disabled )?(part_[a-z]+) """([\s\S]*?)"""/);
+            if (match) {
+                const isDisabled = !!match[1];
+                const type = match[2];
+                let code = match[3].trim();
+
+                if (type === 'part_bash') {
+                    code = code.replace(/\\\$/g, '$');
+                }
+
+                const block = document.createElement('div');
+                block.className = type.replace('_', '-');
+
+                if (isDisabled) block.classList.add('disabled');
+
+                const uniqueId = `part-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+                block.id = uniqueId;
+
+                console.log(block.id);
+
+                const colorLabel = document.createElement('div');
+                colorLabel.className = 'color-label';
+                block.appendChild(colorLabel);
+
+                const editorWrapper = document.createElement('div');
+                editorWrapper.className = 'editor-wrapper';
+                editorWrapper.style.position = 'relative';
+
+                const editor = document.createElement('div');
+                editor.className = 'editor';
+                editor.contentEditable = isDisabled ? 'false' : 'true';
+
+                code = code.replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#39;');
+
+                editor.innerHTML = code;
+                editorWrapper.appendChild(editor);
+
+                const commentButton = document.createElement('button');
+                commentButton.className = 'comment-button';
+                commentButton.innerHTML = addCommentIcon;
+                commentButton.onclick = () => addCommentToBlock(block);
+                editorWrapper.appendChild(commentButton);
+
+                block.appendChild(editorWrapper);
+
+                const controls = document.createElement('div');
+                controls.className = 'controls';
+
+                controls.appendChild(createControlElement('handle', type.replace('part_', '')));
+                controls.appendChild(createControlElement('move-up', arrowUpIcon, () => moveBlockUp(block)));
+                controls.appendChild(createControlElement('move-down', arrowDownIcon, () => moveBlockDown(block)));
+                controls.appendChild(createControlElement('delete-button', editorTrashIcon, () => deleteBlock(block)));
+                controls.appendChild(createToggleButton(block));
+
+                block.appendChild(controls);
+
+                fileContentElement.appendChild(block);
+
+                if (isDisabled) {
+                    block.classList.add('disabled');
+                    editor.contentEditable = 'false';
+                    editor.style.pointerEvents = 'none';
+                    const controls = block.querySelectorAll('.move-up, .move-down, .delete-button');
+                    controls.forEach(control => control.style.display = 'none');
+                    const commentButton = block.querySelector('.comment-button');
+                    if (commentButton) commentButton.style.display = 'none';
+                }
+            }
+        });
+
+        document.getElementById('file-content').classList.add('loaded');
+    }
+
+    function renderHooks(hooks) {
+        const hooksContainer = document.getElementById('hooks-list');
+        hooksContainer.innerHTML = '';
+
+        if (!hooks || hooks.length === 0) {
+            hooksContainer.innerHTML += '<p>No hooks available.</p>';
+            return;
+        }
+
+        const list = document.createElement('ul');
+        hooks.forEach(hook => {
+            const listItem = document.createElement('li');
+
+            listItem.setAttribute('data-hook-id', hook.id);
+
+            const hookLabelElement = document.createElement('div');
+            hookLabelElement.className = 'hook-label';
+
+            const hookTypeContainer = document.createElement('div');
+            hookTypeContainer.className = 'hook-type-container';
+
+            const hookTypeElement = document.createElement('div');
+            hookTypeElement.className = 'hook-type';
+            hookTypeElement.innerHTML = `${hook.hook_type || 'undefined'}`;
+
+            const deleteButton = document.createElement('button');
+            deleteButton.className = 'delete-button';
+            deleteButton.innerHTML = hooksTrashIcon;
+            deleteButton.addEventListener('click', async () => {
+                if (confirm('Are you sure you want to delete this hook?')) {
+                    await deleteHook(hook.id);
+                    await fetchHooks(sessionStorage.getItem('apiToken'));
+                }
+            });
+
+            hookTypeContainer.appendChild(hookTypeElement);
+            hookTypeContainer.appendChild(deleteButton);
+
+            const hookNameElement = document.createElement('div');
+            hookNameElement.className = 'hook-name';
+            hookNameElement.innerHTML = `@${hook.hook_name || 'undefined'}`;
+
+            const hookScriptElement = document.createElement('pre');
+            hookScriptElement.className = 'hook-script';
+            hookScriptElement.textContent = hook.hook_script || 'undefined';
+
+            listItem.appendChild(hookLabelElement);
+            listItem.appendChild(hookTypeContainer);
+            listItem.appendChild(hookNameElement);
+            listItem.appendChild(hookScriptElement);
+
+            list.appendChild(listItem);
+        });
+        hooksContainer.appendChild(list);
+    }
+
+    function renderLogContent(content) {
+        const logContentElement = document.getElementById('log-output');
+        logContentElement.innerText = typeof content === 'string' ? content : JSON.stringify(content, null, 2);
+    }
+
+    function resizeAllTextareas() {
+        const editors = document.querySelectorAll('.editor');
+        editors.forEach(editor => {
+            editor.style.height = 'auto';
+            editor.style.height = `${editor.scrollHeight}px`;
+        });
+    }
+
+    function resizeEditor(editor) {
+        editor.style.height = 'auto';
+        editor.style.height = `${editor.scrollHeight}px`;
+    }
+
+    async function saveFile(status = false, apiToken) {
+        const parts = Array.from(document.querySelectorAll('.part-python, .part-bash'))
+            .map(part => {
+                const editor = part.querySelector('.editor');
+
+                if (!editor) return null;
+
+                let code = editor.innerText;
+
+                code = code.replace(/\n{3,}/g, '\n\n').replace(/\n+$/, '');
+
+                if (code === "") return null;
+
+                const type = part.classList.contains('part-python') ? 'part_python' : 'part_bash';
+
+                if (type === 'part_bash') {
+                    code = code.replace(/\$/g, '\\$');
+                }
+
+                if (part.classList.contains('disabled')) {
+                    return `disabled ${type} """\n${code}\n"""`;
+                } else {
+                    return `${type} """\n${code}\n"""`;
+                }
+            })
+            .filter(Boolean);
+
+        const formData = new FormData();
+        formData.append('filename', 'custom.sh');
+        formData.append('content', parts.join('\n'));
+
+        try {
+            const response = await fetch('/save_file', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'Authorization': `Bearer ${apiToken}`
+                }
+            });
+
+            const responseText = await response.text();
+            if (status !== false) {
+                showStatus(response.ok ? 'Saved successfully!' : 'Save failed!', response.ok);
+            }
+
+            if (response.ok) {
+                window.scrollTo(0, 0);
+            }
+        } catch (error) {
+            console.error('Error saving file:', error);
+            if (status !== false) {
+                showStatus('Error saving file!', false);
+            }
+        }
+    }
+
+    function setupEventListeners(apiToken) {
+        const saveAction = document.getElementById('save-action');
+        const verifyAction = document.getElementById('verify-action');
+        const buildAction = document.getElementById('build-action');
+        const saveButton = document.getElementById('save-button');
+
+        if (saveAction && verifyAction && buildAction && saveButton) {
+            saveAction.addEventListener('click', () => saveFile(true, apiToken));
+            verifyAction.addEventListener('click', () => verifyCode(apiToken));
+            buildAction.addEventListener('click', () => buildProject(apiToken));
+            saveButton.addEventListener('click', () => saveFile(true, apiToken));
+        } else {
+            console.error('One or more action buttons are missing.');
+        }
+    }
+
+    function showLoadingOverlay() {
+        document.getElementById('loading-overlay').style.display = 'flex';
+    }
+
+    function showStatus(message, isSuccess = true) {
+        const statusBar = document.getElementById('status-bar');
+        const tabsContainer = document.querySelector('.tabs-container');
+
+        if (!statusBar) {
+            console.error('Status bar element not found');
+            return;
+        }
+
+        if (statusBar.hideTimeout) {
+            clearTimeout(statusBar.hideTimeout);
+        }
+
+        statusBar.textContent = message;
+        statusBar.style.display = 'block';
+        statusBar.classList.remove('success', 'error');
+        statusBar.classList.add(isSuccess ? 'success' : 'error');
+
+        if (tabsContainer) {
+            tabsContainer.style.marginTop = '0px';
+        }
+
+        statusBar.hideTimeout = setTimeout(() => {
+            statusBar.style.display = 'none';
+            statusBar.classList.remove('success', 'error');
+
+            if (tabsContainer) {
+                tabsContainer.style.marginTop = '';
+            }
+        }, 5000);
+    }
+
+    function stripFormatting(e) {
+        e.preventDefault();
+        const text = (e.originalEvent || e).clipboardData.getData('text/plain');
+        document.execCommand('insertText', false, text);
+    }
+
+    function toggleBlock(block) {
+        block.classList.toggle('disabled');
+        const editor = block.querySelector('.editor');
+        const controls = block.querySelectorAll('.move-up, .move-down, .delete-button');
+        const commentButton = block.querySelector('.comment-button');
+
+        if (block.classList.contains('disabled')) {
+            editor.contentEditable = 'false';
+            editor.style.pointerEvents = 'none';
+            controls.forEach(control => control.style.display = 'none');
+            commentButton.style.display = 'none';
+        } else {
+            editor.contentEditable = 'true';
+            editor.style.pointerEvents = 'auto';
+            controls.forEach(control => control.style.display = 'flex');
+            commentButton.style.display = 'flex';
+        }
+    }
+
+    function toggleCommentSidebar() {
+        const sidebar = document.getElementById('comment-sidebar');
+        if (sidebar.style.display === 'block') {
+            sidebar.style.display = 'none';
+            localStorage.setItem('commentSidebarState', 'hidden');
+        } else {
+            sidebar.style.display = 'block';
+            localStorage.setItem('commentSidebarState', 'shown');
+        }
+    }
+
+    function verifyCode(apiToken) {
+        callAPI('verify', apiToken);
+    }
+
+    document.getElementById('hook-form').addEventListener('submit', async function (event) {
+        event.preventDefault();
+
+        const apiToken = sessionStorage.getItem('apiToken');
+        const hookName = document.getElementById('hook-name').value.trim();
+        const hookType = document.getElementById('hook-type').value;
+        const hookScript = document.getElementById('hook-script').value.trim();
+
+        if (hookName && hookType && hookScript) {
+            try {
+                const response = await fetch(`${getBaseUrl()}/api/hooks`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiToken}`
+                    },
+                    body: JSON.stringify({
+                        hook_name: hookName,
+                        hook_type: hookType,
+                        hook_script: hookScript
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('New hook created with ID:', data.hook_id);
+
+                    await fetchHooks(apiToken);
+
+                    showStatus('Hook added successfully!', true);
+                } else {
+                    const data = await response.json();
+                    showStatus(`Error: ${data.detail}`, false);
+                }
+            } catch (error) {
+                showStatus(`Error: ${error.message}`, false);
+            }
+        } else {
+            showStatus('Please fill in all fields.', false);
+        }
+    });
+
+    window.addEventListener('resize', resizeAllTextareas);
+
+    document.addEventListener('DOMContentLoaded', async () => {
+        const apiKeyInput = document.getElementById('api-key-input');
+        const apiKeyModal = document.getElementById('api-key-modal');
+        const apiKeySubmit = document.getElementById('api-key-authorize');
+        const commentSidebar = document.getElementById('comment-sidebar');
+
+        function showApiKeyModal() {
+            apiKeyModal.style.display = 'flex';
+        }
+
+        async function validateAndInitialize(apiToken) {
+            try {
+
+                if (!apiToken) {
+                    console.error("No API token provided.");
+                    alert("Please enter a valid API token.");
+                    return false;
+                }
+
+                const formData = new FormData();
+                formData.append('api_token', apiToken);
+
+                const response = await fetch(`${getBaseUrl()}/api/validate_token`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.status === 401) {
+                    console.error('Unauthorized: Invalid API token.');
+                    alert('Please enter a valid API token.');
+                    sessionStorage.removeItem('apiToken');
+                    return false;
+                }
+
+                if (!response.ok) {
+                    console.error(`Error: ${response.status} - ${response.statusText}`);
+                    alert(`Failed to validate API token. Server responded with status ${response.status}.`);
+                    sessionStorage.removeItem('apiToken');
+                    return false;
+                }
+
+                const data = await response.json();
+                console.log("API validation response:", data);
+
+                if (data.message === 'API token is valid.') {
+                    console.log("API token is valid. Storing in sessionStorage.");
+                    sessionStorage.setItem('apiToken', apiToken);
+
+                    await initializeApp(apiToken);
+                    document.getElementById('api-key-modal').style.display = 'none';
+                    return true;
+                } else {
+                    console.error('API token validation failed:', data.message);
+                    alert('API token validation failed. Please try again.');
+                    sessionStorage.removeItem('apiToken');
+                    return false;
+                }
+            } catch (error) {
+                console.error('Error during API token validation:', error);
+
+                if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
+                    alert('Network error. Please check your connection and try again.');
+                }
+
+                sessionStorage.removeItem('apiToken');
+                return false;
+            }
+        }
+
+        apiKeySubmit.addEventListener('click', async () => {
+            const apiKey = apiKeyInput.value.trim();
+            if (apiKey) {
+                const isValid = await validateAndInitialize(apiKey);
+                if (!isValid) {
+                    showApiKeyModal();
+                }
+            } else {
+                alert('Please enter a valid API token.');
+            }
+        });
+
+        const storedApiToken = sessionStorage.getItem('apiToken');
+
+        if (storedApiToken) {
+            const isValid = await validateAndInitialize(storedApiToken);
+            if (!isValid) {
+                showApiKeyModal();
+            }
+        } else {
+            showApiKeyModal();
+        }
+
+        document.querySelectorAll('.editor').forEach(editor => {
+            addEventListenersToEditor(editor);
+            resizeEditor(editor);
+        });
+
+        const savedSidebarState = localStorage.getItem('commentSidebarState');
+        if (savedSidebarState === 'shown') {
+            commentSidebar.style.display = 'block';
+        } else {
+            commentSidebar.style.display = 'none';
+        }
+
+        // BEGIN Tabs
+        const boardTab = document.querySelector('.tab[data-tab="board"]');
+        const editorTab = document.querySelector('.tab[data-tab="editor"]');
+        const hooksTab = document.querySelector('.tab[data-tab="hooks"]');
+        const logTab = document.querySelector('.tab[data-tab="log"]');
+
+        const setActiveTab = (tab) => {
+            const tabs = document.querySelectorAll('.tab');
+            const tabContents = document.querySelectorAll('.tab-content');
+            tabs.forEach(t => t.classList.remove('active'));
+            tabContents.forEach(tc => tc.classList.remove('active'));
+
+            tab.classList.add('active');
+            document.getElementById(`${tab.dataset.tab}-content`).classList.add('active');
+            sessionStorage.setItem('activeTab', tab.dataset.tab);
+            resizeAllTextareas();
+        };
+
+        boardTab.addEventListener('click', () => setActiveTab(boardTab));
+        editorTab.addEventListener('click', () => setActiveTab(editorTab));
+        hooksTab.addEventListener('click', () => setActiveTab(hooksTab));
+        logTab.addEventListener('click', () => setActiveTab(logTab));
+
+        const activeTab = sessionStorage.getItem('activeTab');
+
+        const initialTab = activeTab && document.querySelector(`.tab[data-tab="${activeTab}"]`) ?
+            document.querySelector(`.tab[data-tab="${activeTab}"]`) : boardTab;
+
+        setActiveTab(initialTab);
+        // END Tabs
+    });
+</script>
+</body>
+</html>
