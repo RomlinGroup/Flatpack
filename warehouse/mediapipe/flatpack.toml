@@ -29,17 +29,18 @@ sox = "*"
 wget = "*"
 
 [packages.python]
+mediapipe = "0.10.15"
 numpy = "2.0.1"
 tiktoken = "0.7.0"
 tqdm = "4.66.5"
 
-# [[git]]
-# from_source = "{{git_source_url}}"
-# to_destination = "{{git_destination_dir}}"
-# branch = "{{branch_name}}"
-# setup_commands = [
-#   "{{setup_command}}"
-# ]
+[[git]]
+from_source = "https://github.com/google-ai-edge/mediapipe"
+to_destination = "mediapipe"
+branch = "master"
+setup_commands = [
+    "{{setup_command}}"
+]
 
 [[file]]
 from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/mediapipe/index.html"
