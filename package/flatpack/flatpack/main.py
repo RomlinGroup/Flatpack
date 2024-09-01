@@ -113,6 +113,16 @@ def initialize_database(db_path: str):
             )
         """)
 
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS flatpack_schedule (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                type TEXT NOT NULL,
+                pattern TEXT,
+                datetimes TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+
         conn.commit()
         conn.close()
         print(f"[INFO] Database initialized successfully at {db_path}")
@@ -2696,6 +2706,107 @@ async def get_log_file(request: Request, log_filename: str, token: str = Depends
             raise HTTPException(status_code=500, detail=f"Error reading log file: {e}")
     else:
         raise HTTPException(status_code=404, detail="Log file not found")
+
+
+@app.delete("/api/schedule/{entry_id}")
+async def delete_schedule_entry(entry_id: int, token: str = Depends(authenticate_token)):
+    if not flatpack_directory:
+        raise HTTPException(status_code=500, detail="Flatpack directory is not set")
+
+    db_path = os.path.join(flatpack_directory, 'build', 'flatpack.db')
+
+    try:
+        ensure_database_initialized()
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+
+        cursor.execute("SELECT datetimes FROM flatpack_schedule WHERE type = 'manual' ORDER BY created_at DESC LIMIT 1")
+        result = cursor.fetchone()
+        if not result:
+            raise HTTPException(status_code=404, detail="No schedule found")
+
+        existing_datetimes = json.loads(result[0])
+
+        if 0 <= entry_id < len(existing_datetimes):
+            del existing_datetimes[entry_id]
+
+            cursor.execute("""
+                INSERT INTO flatpack_schedule (type, pattern, datetimes)
+                VALUES (?, ?, ?)
+            """, ('manual', None, json.dumps(existing_datetimes)))
+
+            conn.commit()
+            conn.close()
+
+            return JSONResponse(content={"message": "Schedule entry deleted successfully."}, status_code=200)
+        else:
+            raise HTTPException(status_code=404, detail="Entry not found")
+    except Exception as e:
+        logger.error("An error occurred while deleting the schedule entry: %s", e)
+        raise HTTPException(status_code=500, detail=f"An error occurred while deleting the schedule entry: {e}")
+
+
+@app.get("/api/schedule")
+async def get_schedule(token: str = Depends(authenticate_token)):
+    if not flatpack_directory:
+        raise HTTPException(status_code=500, detail="Flatpack directory is not set")
+
+    db_path = os.path.join(flatpack_directory, 'build', 'flatpack.db')
+
+    try:
+        ensure_database_initialized()
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+
+        cursor.execute("SELECT type, pattern, datetimes FROM flatpack_schedule ORDER BY created_at DESC")
+        results = cursor.fetchall()
+        conn.close()
+
+        if results:
+            schedules = []
+            for schedule_type, pattern, datetimes in results:
+                schedules.append({
+                    "type": schedule_type,
+                    "pattern": pattern,
+                    "datetimes": json.loads(datetimes)
+                })
+            return JSONResponse(content={"schedules": schedules}, status_code=200)
+        else:
+            return JSONResponse(content={"schedules": []}, status_code=200)
+    except Exception as e:
+        logger.error("An error occurred while retrieving the schedules: %s", e)
+        raise HTTPException(status_code=500, detail=f"An error occurred while retrieving the schedules: {e}")
+
+
+@app.post("/api/schedule")
+async def save_schedule(request: Request, token: str = Depends(authenticate_token)):
+    if not flatpack_directory:
+        raise HTTPException(status_code=500, detail="Flatpack directory is not set")
+
+    db_path = os.path.join(flatpack_directory, 'build', 'flatpack.db')
+
+    try:
+        data = await request.json()
+        schedule_type = data.get('type')
+        pattern = data.get('pattern')
+        datetimes = data.get('datetimes', [])
+
+        ensure_database_initialized()
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            INSERT INTO flatpack_schedule (type, pattern, datetimes)
+            VALUES (?, ?, ?)
+        """, (schedule_type, pattern, json.dumps(datetimes)))
+
+        conn.commit()
+        conn.close()
+
+        return JSONResponse(content={"message": "Schedule saved successfully."}, status_code=200)
+    except Exception as e:
+        logger.error("An error occurred while saving the schedule: %s", e)
+        raise HTTPException(status_code=500, detail=f"An error occurred while saving the schedule: {e}")
 
 
 @app.post("/api/validate_token")
