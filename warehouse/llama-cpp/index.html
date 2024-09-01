@@ -146,10 +146,24 @@
             fill: #5865f2;
         }
 
+        .delete-datetime-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 10px;
+            vertical-align: middle;
+            height: 16px;
+            line-height: 16px;
+        }
+
         .delete-link {
             position: absolute;
             right: 10px;
             top: 10px;
+        }
+
+        .delete-schedule-link, .remove-link {
+            color: #ff8d80;
         }
 
         .disconnected {
@@ -400,6 +414,14 @@
             opacity: 1;
         }
 
+        .schedule-container {
+            margin-bottom: 20px;
+        }
+
+        .schedule-container:last-of-type {
+            margin-bottom: 0px;
+        }
+
         .spinner {
             animation: spin 1s linear infinite;
             border: 10px solid #ffffff;
@@ -509,6 +531,16 @@
             background: #060c4d;
         }
 
+        #add-datetime {
+            background: #060c4d;
+            border: none;
+            color: #fff;
+            cursor: pointer;
+            font-size: 14px;
+            padding: 10px 20px;
+            margin-bottom: 20px;
+        }
+
         #add-hook-form {
             background: #f0f2ff;
             border: 1px solid #5865f2;
@@ -596,6 +628,37 @@
 
         #comment-sidebar h2 {
             color: #5865f2;
+        }
+
+        #cron-labels {
+            margin-bottom: 20px;
+        }
+
+        #cron-widget input[type="text"],
+        #cron-widget input[type="datetime-local"] {
+            background: #fff;
+            border: 1px solid #5865f2;
+            box-sizing: border-box;
+            color: #000;
+            font-size: 12px;
+            padding: 10px;
+            margin-bottom: 20px;
+            width: 100%;
+        }
+
+        #datetime-list {
+            border: 1px solid #060c4d;
+            list-style-type: none;
+            margin-bottom: 20px;
+            padding: 10px;
+        }
+
+        #datetime-list li {
+            margin-bottom: 10px;
+        }
+
+        #datetime-list li:last-of-type {
+            margin-bottom: 0px;
         }
 
         #file-content {
@@ -710,6 +773,19 @@
         #save-button {
             margin-left: auto;
             margin-right: 0;
+        }
+
+        #save-schedule {
+            background: #5865f2;
+            border: none;
+            color: #fff;
+            cursor: pointer;
+            font-size: 14px;
+            padding: 10px 20px;
+        }
+
+        #schedules-container {
+            margin-top: 20px;
         }
 
         #server-time {
@@ -911,11 +987,37 @@
             <p>Hello, World!</p>
         </div> <!-- END .widget -->
 
+        <div id="cron-widget" class="widget">
+
+            <div id="cron-labels">
+                <label>
+                    <input type="radio" name="schedule-type" value="manual" checked autocomplete="off"> Manual
+                </label>
+                <label>
+                    <input type="radio" name="schedule-type" value="recurring" autocomplete="off"> Recurring
+                </label>
+            </div>
+
+            <div id="recurring-schedule">
+                <input type="text" id="cron-pattern" placeholder="* * * * *" required autocomplete="off">
+            </div>
+
+            <div id="manual-schedule" style="display: none;">
+                <input type="datetime-local" id="manual-datetime" required autocomplete="off">
+                <button id="add-datetime">Add Date/Time</button>
+                <ul id="datetime-list"></ul>
+            </div>
+
+            <button id="save-schedule">Save</button>
+
+            <div id="schedules-container"></div>
+        </div> <!-- END .widget -->
+
         <div id="eval-widget" class="widget">
             <p>Loading eval_data.json...</p>
         </div> <!-- END .widget -->
 
-    </div>
+    </div> <!-- END #wrapper -->
 </div> <!-- END #editor-content -->
 
 <div class="tab-content" id="editor-content">
@@ -927,7 +1029,7 @@
             <button id="add-python-button" onclick="addPythonBlock()">Python</button>
             <button id="save-button">Save</button>
         </div>
-    </div>
+    </div> <!-- END #wrapper -->
 </div> <!-- END #editor-content -->
 
 <div class="tab-content" id="hooks-content">
@@ -960,7 +1062,7 @@
         <h2>Hooks</h2>
         <div id="hooks-list"></div>
 
-    </div>
+    </div> <!-- END #hooks -->
 </div>
 
 <div class="tab-content" id="log-content">
@@ -972,7 +1074,7 @@
         <div id="log-output">
             [PLACEHOLDER]
         </div>
-    </div>
+    </div> <!-- END #log -->
 </div> <!-- END #log-content -->
 
 <div id="footer">
@@ -997,7 +1099,17 @@
     'use strict';
 
     const comments = [];
+
+    const cronPattern = document.getElementById('cron-pattern');
+    const cronWidget = document.getElementById('cron-widget');
+    const datetimeList = document.getElementById('datetime-list');
     const evalWidget = document.getElementById('eval-widget');
+    const manualDatetime = document.getElementById('manual-datetime');
+    const manualSchedule = document.getElementById('manual-schedule');
+    const recurringSchedule = document.getElementById('recurring-schedule');
+    const saveScheduleBtn = document.getElementById('save-schedule');
+    const scheduleTypeInputs = cronWidget.querySelectorAll('input[name="schedule-type"]');
+
     const getBaseUrl = () => window.location.origin;
 
     const addCommentIcon = `
@@ -1034,6 +1146,11 @@
   <path d="M6 2h4" stroke="#060c4d" stroke-width="1" fill="none"/>
 </svg>`;
 
+    const minusIcon = `
+<svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+  <rect x="3" y="5" width="10" height="2" fill="#ff8d80"/>
+</svg>`;
+
     const regularEyeIcon = `
 <svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
   <path d="M2 8c2-3 5-3 6-3s4 0 6 3c-2 3-5 3-6 3s-4 0-6-3z" stroke="#5865f2" stroke-width="1" fill="none" stroke-linejoin="miter" stroke-linecap="butt"/>
@@ -1043,6 +1160,7 @@
     let currentPart = 1;
     let highlightTimeout;
     let isBuilding = false;
+    let manualDatetimes = [];
     let originalContent = '';
 
     function addBashBlock() {
@@ -1113,7 +1231,7 @@
                 }
             }
         } else {
-            alert('Please select text to comment on.');
+            showStatus('Please select text to comment on.', false);
         }
     }
 
@@ -1126,6 +1244,27 @@
             id: commentId
         });
         renderComments();
+    }
+
+    function addDatetimeToList(datetime) {
+        const li = document.createElement('li');
+        li.textContent = new Date(datetime).toLocaleString();
+        li.dataset.datetime = datetime;
+
+        const removeLink = document.createElement('a');
+        removeLink.textContent = 'Remove';
+        removeLink.href = '#';
+        removeLink.className = 'remove-link';
+        removeLink.style.marginLeft = '10px';
+        removeLink.onclick = (event) => {
+            event.preventDefault();
+            datetimeList.removeChild(li);
+            checkDatetimeListEmpty();
+        };
+
+        li.appendChild(removeLink);
+        datetimeList.appendChild(li);
+        checkDatetimeListEmpty();
     }
 
     function addEventListenersToEditor(editor) {
@@ -1264,6 +1403,14 @@
         }
     }
 
+    function checkDatetimeListEmpty() {
+        if (datetimeList.children.length === 0) {
+            datetimeList.style.display = 'none';
+        } else {
+            datetimeList.style.display = 'block';
+        }
+    }
+
     async function checkHeartbeat(apiToken) {
         const heartbeatDot = document.getElementById('heartbeat-dot');
         const heartbeatTime = document.getElementById('heartbeat-time');
@@ -1351,15 +1498,15 @@
             });
 
             if (response.ok) {
-                alert('Comment deleted successfully.');
+                showStatus('Comment deleted successfully.', true);
                 await refreshCommentsFromBackend();
             } else {
                 const errorData = await response.json();
-                alert(`Failed to delete comment: ${errorData.detail}`);
+                showStatus(`Failed to delete comment: ${errorData.detail}`, false);
             }
         } catch (error) {
             console.error('Error deleting comment:', error);
-            alert('Failed to delete comment. Please try again.');
+            showStatus('Failed to delete comment. Please try again.', false);
         }
     }
 
@@ -1385,6 +1532,50 @@
             console.error('Error deleting hook:', error);
             showStatus('Error deleting hook!', false);
         }
+    }
+
+    function deleteScheduleEntry(scheduleId, datetimeIndex = null) {
+        const apiToken = sessionStorage.getItem('apiToken');
+        const url = datetimeIndex !== null
+            ? `/api/schedule/${scheduleId}?datetime_index=${datetimeIndex}`
+            : `/api/schedule/${scheduleId}`;
+
+        fetch(url, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${apiToken}`
+            }
+        })
+            .then(response => {
+                return response.json().then(data => ({
+                    status: response.status,
+                    data: data
+                }));
+            })
+            .then(({status, data}) => {
+                if (status >= 200 && status < 300) {
+                    showStatus(data.message, true);
+
+                    if (datetimeIndex !== null) {
+                        const scheduleContainer = document.querySelector(`[data-schedule-id="${scheduleId}"]`);
+                        const datetimesContainer = scheduleContainer.querySelector('.datetimes-container');
+
+                        if (datetimesContainer.children.length === 1) {
+                            deleteScheduleEntry(scheduleId);
+                        } else {
+                            fetchSchedule();
+                        }
+                    } else {
+                        fetchSchedule();
+                    }
+                } else {
+                    showStatus(data.detail || 'An error occurred', false);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showStatus('An error occurred during deletion. Please try again.', false);
+            });
     }
 
     function disableInteractions() {
@@ -1537,6 +1728,32 @@
         }
     }
 
+    async function fetchSchedule() {
+        const apiToken = sessionStorage.getItem('apiToken');
+
+        if (!apiToken) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`${getBaseUrl()}/api/schedule`, {
+                headers: {
+                    'Authorization': `Bearer ${apiToken}`
+                }
+            });
+            if (response.ok) {
+                const data = await response.json();
+                renderExistingSchedule(data);
+            } else {
+                console.error('Failed to fetch schedule:', response.statusText);
+                showStatus('Failed to fetch schedule. Please try again.', false);
+            }
+        } catch (error) {
+            console.error('Error fetching schedule:', error);
+            showStatus('An error occurred while fetching the schedule. Please try again.', false);
+        }
+    }
+
     async function fetchSelectedLog() {
         const apiToken = sessionStorage.getItem('apiToken');
         const logDropdown = document.getElementById('log-dropdown');
@@ -1637,6 +1854,7 @@
             await fetchHooks(apiToken);
             await fetchLatestLogs(apiToken);
             await fetchLogFiles(apiToken);
+            await fetchSchedule(apiToken);
         } catch (error) {
             console.error('Error initializing app:', error);
         }
@@ -1776,6 +1994,92 @@
                 console.error('Comment without an ID:', c);
             }
         });
+    }
+
+    function renderDatetimeList() {
+        datetimeList.innerHTML = '';
+        manualDatetimes.forEach((datetime, index) => {
+            const li = document.createElement('li');
+            li.textContent = new Date(datetime).toLocaleString();
+            const removeBtn = document.createElement('button');
+            removeBtn.textContent = 'Remove';
+            removeBtn.onclick = () => deleteScheduleEntry(index);
+            li.appendChild(removeBtn);
+            datetimeList.appendChild(li);
+        });
+    }
+
+    function renderExistingSchedule(data) {
+        const schedulesContainer = document.getElementById('schedules-container');
+        schedulesContainer.innerHTML = '';
+
+        if (data.schedules && data.schedules.length > 0) {
+            data.schedules.forEach((schedule, scheduleIndex) => {
+                const scheduleContainer = document.createElement('div');
+                scheduleContainer.className = 'schedule-container';
+                scheduleContainer.setAttribute('data-schedule-id', schedule.id);
+
+                const scheduleHeader = document.createElement('div');
+                scheduleHeader.className = 'schedule-header';
+                scheduleHeader.textContent = `Schedule ${scheduleIndex + 1} (ID: ${schedule.id}):`;
+                scheduleContainer.appendChild(scheduleHeader);
+
+                const scheduleType = document.createElement('div');
+                scheduleType.className = 'schedule-type';
+                scheduleType.textContent = `Type: ${schedule.type === 'recurring' ? 'Recurring' : 'Manual'}`;
+                scheduleContainer.appendChild(scheduleType);
+
+                if (schedule.type === 'recurring') {
+                    const cronPattern = document.createElement('div');
+                    cronPattern.className = 'cron-pattern';
+                    cronPattern.textContent = `Cron Pattern: ${schedule.pattern || 'Not set'}`;
+                    scheduleContainer.appendChild(cronPattern);
+                } else if (schedule.type === 'manual') {
+                    const datetimesContainer = document.createElement('div');
+                    datetimesContainer.className = 'datetimes-container';
+
+                    if (schedule.datetimes && schedule.datetimes.length > 0) {
+                        schedule.datetimes.forEach((dt, datetimeIndex) => {
+                            const datetimeItem = document.createElement('div');
+                            datetimeItem.className = 'datetime-item';
+                            datetimeItem.textContent = `${datetimeIndex + 1}. ${new Date(dt).toLocaleString()}`;
+
+                            const deleteDatetimeButton = document.createElement('span');
+                            deleteDatetimeButton.className = 'delete-datetime-button';
+                            deleteDatetimeButton.innerHTML = minusIcon;
+                            deleteDatetimeButton.style.cursor = 'pointer';
+                            deleteDatetimeButton.onclick = () => deleteScheduleEntry(schedule.id, datetimeIndex);
+
+                            datetimeItem.appendChild(deleteDatetimeButton);
+                            datetimesContainer.appendChild(datetimeItem);
+                        });
+                    } else {
+                        const noDatetimes = document.createElement('div');
+                        noDatetimes.textContent = 'No datetimes set';
+                        datetimesContainer.appendChild(noDatetimes);
+                    }
+
+                    scheduleContainer.appendChild(datetimesContainer);
+                }
+
+                const deleteScheduleButton = document.createElement('a');
+                deleteScheduleButton.className = 'delete-schedule-link';
+                deleteScheduleButton.textContent = 'Delete';
+                deleteScheduleButton.href = '#';
+                deleteScheduleButton.style.cursor = 'pointer';
+                deleteScheduleButton.onclick = (event) => {
+                    event.preventDefault();
+                    deleteScheduleEntry(schedule.id);
+                };
+
+                scheduleContainer.appendChild(deleteScheduleButton);
+                schedulesContainer.appendChild(scheduleContainer);
+            });
+        } else {
+            const noSchedules = document.createElement('div');
+            noSchedules.textContent = 'No schedules available.';
+            schedulesContainer.appendChild(noSchedules);
+        }
     }
 
     function renderFileContents(contents) {
@@ -1991,6 +2295,30 @@
         }
     }
 
+    async function sendScheduleToServer(scheduleData) {
+        const apiToken = sessionStorage.getItem('apiToken');
+        try {
+            const response = await fetch(`${getBaseUrl()}/api/schedule`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${apiToken}`
+                },
+                body: JSON.stringify(scheduleData)
+            });
+
+            if (response.ok) {
+                showStatus('Schedule saved successfully!', true);
+                await fetchSchedule();
+            } else {
+                showStatus('Failed to save schedule.', false);
+            }
+        } catch (error) {
+            console.error('Error saving schedule:', error);
+            showStatus('Error saving schedule.', false);
+        }
+    }
+
     function setupEventListeners(apiToken) {
         const saveAction = document.getElementById('save-action');
         const verifyAction = document.getElementById('verify-action');
@@ -2004,6 +2332,20 @@
             saveButton.addEventListener('click', () => saveFile(true, apiToken));
         } else {
             console.error('One or more action buttons are missing.');
+        }
+    }
+
+    function setScheduleType(type) {
+        const input = cronWidget.querySelector(`input[name="schedule-type"][value="${type}"]`);
+        if (input) {
+            input.checked = true;
+            if (type === 'recurring') {
+                recurringSchedule.style.display = 'block';
+                manualSchedule.style.display = 'none';
+            } else {
+                recurringSchedule.style.display = 'none';
+                manualSchedule.style.display = 'block';
+            }
         }
     }
 
@@ -2263,11 +2605,87 @@
         // END Tabs
 
         // BEGIN Widgets
+
+        // Hello, World!
         document.getElementById('hello-widget').addEventListener('click', function () {
             this.querySelector('p').textContent = 'You clicked the widget!';
         });
 
+        // eval_data.json
         fetchEvalData();
+
+        // Schedule
+        setScheduleType('manual');
+
+        scheduleTypeInputs.forEach(input => {
+            input.addEventListener('change', (e) => {
+                if (e.target.value === 'recurring') {
+                    recurringSchedule.style.display = 'block';
+                    manualSchedule.style.display = 'none';
+                } else {
+                    recurringSchedule.style.display = 'none';
+                    manualSchedule.style.display = 'block';
+                }
+            });
+        });
+
+        document.getElementById('add-datetime').addEventListener('click', () => {
+            const datetimeInput = document.getElementById('manual-datetime');
+            const datetimeValue = datetimeInput.value;
+
+            if (datetimeValue) {
+                addDatetimeToList(datetimeValue);
+                datetimeInput.value = '';
+            } else {
+                showStatus("Please select a date and time.", false);
+            }
+        });
+
+        saveScheduleBtn.addEventListener('click', async () => {
+            const scheduleType = document.querySelector('input[name="schedule-type"]:checked').value;
+
+            let scheduleData;
+
+            if (scheduleType === 'recurring') {
+                const cronPatternValue = cronPattern.value.trim();
+
+                if (!cronPatternValue) {
+                    showStatus('Please enter a valid cron pattern.', false);
+                    return;
+                }
+
+                scheduleData = {
+                    type: 'recurring',
+                    pattern: cronPatternValue,
+                    datetimes: []
+                };
+            } else if (scheduleType === 'manual') {
+                const datetimes = [];
+
+                datetimeList.querySelectorAll('li').forEach(li => {
+                    datetimes.push(li.dataset.datetime);
+                });
+
+                if (datetimes.length === 0) {
+                    showStatus('Please add at least one date-time for the manual schedule.', false);
+                    return;
+                }
+
+                scheduleData = {
+                    type: 'manual',
+                    pattern: null,
+                    datetimes: datetimes
+                };
+            }
+
+            await sendScheduleToServer(scheduleData);
+
+            datetimeList.style.display = 'none';
+            datetimeList.innerHTML = '';
+        });
+
+        checkDatetimeListEmpty();
+        fetchSchedule();
         // END Widgets
     });
 </script>
