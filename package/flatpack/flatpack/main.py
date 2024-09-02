@@ -68,7 +68,7 @@ MAX_ATTEMPTS = 5
 VALIDATION_ATTEMPTS = 0
 
 SERVER_START_TIME = None
-COOLDOWN_PERIOD = timedelta(minutes=5)
+COOLDOWN_PERIOD = timedelta(minutes=1)
 
 warnings.filterwarnings("ignore", category=MarkupResemblesLocatorWarning)
 
@@ -79,15 +79,18 @@ class Comment(BaseModel):
     comment: str
 
 
+class EndpointFilter(logging.Filter):
+    def filter(self, record):
+        return all(
+            endpoint not in record.getMessage()
+            for endpoint in ['GET /api/heartbeat', 'GET /api/build-status']
+        )
+
+
 class Hook(BaseModel):
     hook_name: str
     hook_script: str
     hook_type: str
-
-
-class EndpointFilter(logging.Filter):
-    def filter(self, record):
-        return 'GET /api/heartbeat' not in record.getMessage()
 
 
 def setup_logging(log_path: Path):
@@ -610,10 +613,37 @@ def load_config():
         return {}
 
 
-async def run_build_process(schedule_id):
-    logger.info("Running build process for schedule %s", schedule_id)
-    print(f"[INFO] Running build process for schedule {schedule_id}...")
-    fpk_build(flatpack_directory)
+async def run_build_process(schedule_id=None):
+    logger.info("Running build process...")
+    try:
+        status_file = os.path.join(flatpack_directory, 'build', 'build_status.json')
+
+        with open(status_file, 'w') as f:
+            json.dump({
+                "status": "in_progress",
+                "started_at": datetime.now().isoformat(),
+                "schedule_id": schedule_id
+            }, f)
+
+        fpk_build(flatpack_directory)
+
+        with open(status_file, 'w') as f:
+            json.dump({
+                "status": "completed",
+                "completed_at": datetime.now().isoformat(),
+                "schedule_id": schedule_id
+            }, f)
+        logger.info("Build process completed.")
+    except Exception as e:
+        logger.error("Build process failed: %s", e)
+
+        with open(status_file, 'w') as f:
+            json.dump({
+                "status": "failed",
+                "failed_at": datetime.now().isoformat(),
+                "schedule_id": schedule_id,
+                "error": str(e)
+            }, f)
 
 
 async def run_scheduler():
@@ -2606,6 +2636,39 @@ async def test_db():
         return {"message": f"Database connection failed: {e}"}
 
 
+@app.get("/api/build-status")
+async def get_build_status(token: str = Depends(authenticate_token)):
+    """Get the current build status."""
+    if not flatpack_directory:
+        raise HTTPException(status_code=500, detail="Flatpack directory is not set")
+
+    status_file = os.path.join(flatpack_directory, 'build', 'build_status.json')
+
+    if os.path.exists(status_file):
+        with open(status_file, 'r') as f:
+            status_data = json.load(f)
+        return JSONResponse(content=status_data)
+    else:
+        return JSONResponse(content={"status": "no_builds"})
+
+
+@app.post("/api/clear-build-status")
+async def clear_build_status(token: str = Depends(authenticate_token)):
+    """Clear the current build status."""
+    if not flatpack_directory:
+        raise HTTPException(status_code=500, detail="Flatpack directory is not set")
+
+    status_file = os.path.join(flatpack_directory, 'build', 'build_status.json')
+
+    try:
+        if os.path.exists(status_file):
+            os.remove(status_file)
+        return JSONResponse(content={"message": "Build status cleared successfully."})
+    except Exception as e:
+        logger.error("Error clearing build status: %s", e)
+        raise HTTPException(status_code=500, detail=f"Error clearing build status: {e}")
+
+
 @app.post("/api/comments")
 async def add_comment(comment: Comment, token: str = Depends(authenticate_token)):
     """Add a new comment to the database."""
@@ -2695,6 +2758,7 @@ async def get_all_comments(token: str = Depends(authenticate_token)):
 @app.post("/api/build")
 async def build_flatpack(
         request: Request,
+        background_tasks: BackgroundTasks,
         token: str = Depends(authenticate_token)
 ):
     """Trigger the build process for the flatpack."""
@@ -2702,17 +2766,14 @@ async def build_flatpack(
         raise HTTPException(status_code=500, detail="Flatpack directory is not set")
 
     try:
-        logger.info("Building flatpack located at %s", flatpack_directory)
-        print(f"[INFO] Building flatpack located at {flatpack_directory}")
-
-        fpk_build(flatpack_directory)
-
+        background_tasks.add_task(run_build_process, schedule_id=None)
+        logger.info("Started build process for flatpack located at %s", flatpack_directory)
         return JSONResponse(
-            content={"flatpack": flatpack_directory, "message": "Build process completed successfully."},
+            content={"flatpack": flatpack_directory, "message": "Build process started in background."},
             status_code=200)
     except Exception as e:
-        logger.error("Build process failed: %s", e)
-        return JSONResponse(content={"flatpack": flatpack_directory, "message": f"Build process failed: {e}"},
+        logger.error("Failed to start build process: %s", e)
+        return JSONResponse(content={"flatpack": flatpack_directory, "message": f"Failed to start build process: {e}"},
                             status_code=500)
 
 
@@ -3048,8 +3109,8 @@ def fpk_cli_handle_run(args, session):
         config = uvicorn.Config(app, host=host, port=port)
         server = uvicorn.Server(config)
 
-        # background_tasks = BackgroundTasks()
-        # background_tasks.add_task(run_scheduler)
+        background_tasks = BackgroundTasks()
+        background_tasks.add_task(run_scheduler)
 
         server.run()
 
