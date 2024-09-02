@@ -2951,8 +2951,8 @@ def fpk_cli_handle_run(args, session):
         config = uvicorn.Config(app, host=host, port=port)
         server = uvicorn.Server(config)
 
-        background_tasks = BackgroundTasks()
-        background_tasks.add_task(run_scheduler)
+        # background_tasks = BackgroundTasks()
+        # background_tasks.add_task(run_scheduler)
 
         server.run()
 
