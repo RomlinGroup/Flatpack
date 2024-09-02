@@ -19,7 +19,7 @@ import tarfile
 import tempfile
 import warnings
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from importlib.metadata import version
 from io import BytesIO
 from logging.handlers import RotatingFileHandler
@@ -67,71 +67,27 @@ VERSION = version("flatpack")
 MAX_ATTEMPTS = 5
 VALIDATION_ATTEMPTS = 0
 
+SERVER_START_TIME = None
+COOLDOWN_PERIOD = timedelta(minutes=5)
+
 warnings.filterwarnings("ignore", category=MarkupResemblesLocatorWarning)
 
 
-def initialize_database(db_path: str):
-    """Initialize the SQLite database if it doesn't exist."""
-    try:
-        db_dir = os.path.dirname(db_path)
-        if not os.path.exists(db_dir):
-            os.makedirs(db_dir)
-            print(f"[DEBUG] Created directory for database at path: {db_dir}")
+class Comment(BaseModel):
+    block_id: str
+    selected_text: str
+    comment: str
 
-        if os.path.exists(db_path):
-            print(f"[INFO] Database already exists at {db_path}. Skipping initialization.")
-            logger.info("Database already exists at %s. Skipping initialization.", db_path)
-            return
 
-        print(f"[DEBUG] Initializing database at path: {db_path}")
-        conn = sqlite3.connect(db_path)
-        cursor = conn.cursor()
+class Hook(BaseModel):
+    hook_name: str
+    hook_script: str
+    hook_type: str
 
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS flatpack_comments (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                block_id TEXT NOT NULL,
-                selected_text TEXT NOT NULL,
-                comment TEXT NOT NULL,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        """)
 
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS flatpack_hooks (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                hook_name TEXT NOT NULL,
-                hook_script TEXT NOT NULL,
-                hook_type TEXT NOT NULL,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        """)
-
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS flatpack_metadata (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                key TEXT NOT NULL,
-                value TEXT NOT NULL
-            )
-        """)
-
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS flatpack_schedule (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                type TEXT NOT NULL,
-                pattern TEXT,
-                datetimes TEXT,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        """)
-
-        conn.commit()
-        conn.close()
-        print(f"[INFO] Database initialized successfully at {db_path}")
-        logger.info("Database initialized successfully at %s", db_path)
-    except Error as e:
-        print(f"[ERROR] An error occurred while initializing the database: {e}")
-        logger.error("An error occurred while initializing the database: %s", e)
+class EndpointFilter(logging.Filter):
+    def filter(self, record):
+        return 'GET /api/heartbeat' not in record.getMessage()
 
 
 def setup_logging(log_path: Path):
@@ -177,9 +133,108 @@ signal.signal(signal.SIGINT, handle_termination_signal)
 signal.signal(signal.SIGTERM, handle_termination_signal)
 
 
-def strip_html(content: str) -> str:
-    soup = BeautifulSoup(content, 'html.parser')
-    return soup.get_text()
+def add_hook_to_database(hook: Hook):
+    global flatpack_directory
+
+    if not flatpack_directory:
+        raise HTTPException(status_code=500, detail="Flatpack directory is not set")
+
+    db_path = os.path.join(flatpack_directory, 'build', 'flatpack.db')
+
+    try:
+        ensure_database_initialized()
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            INSERT INTO flatpack_hooks (hook_name, hook_script, hook_type)
+            VALUES (?, ?, ?)
+        """, (hook.hook_name, hook.hook_script, hook.hook_type))
+
+        hook_id = cursor.lastrowid
+        conn.commit()
+        conn.close()
+
+        return {"message": "Hook added successfully.", "hook_id": hook_id}
+    except Error as e:
+        logger.error("An error occurred while adding the hook: %s", e)
+        print(f"[ERROR] An error occurred while adding the hook: {e}")
+        raise HTTPException(status_code=500, detail=f"An error occurred while adding the hook: {e}")
+
+
+def authenticate_token(request: Request):
+    """Authenticate the token."""
+    global VALIDATION_ATTEMPTS
+    token = request.headers.get('Authorization')
+    stored_token = get_token()
+
+    if not stored_token:
+        logger.error("Stored token is not set")
+        print("Stored token is not set")
+        return
+
+    if token is None or token != f"Bearer {stored_token}":
+        VALIDATION_ATTEMPTS += 1
+        logger.error(f"Invalid or missing token. Attempt {VALIDATION_ATTEMPTS}")
+        print(f"Invalid or missing token. Attempt {VALIDATION_ATTEMPTS}")
+        if VALIDATION_ATTEMPTS >= MAX_ATTEMPTS:
+            shutdown_server()
+        raise HTTPException(status_code=403, detail="Invalid or missing token")
+
+
+async def check_and_run_schedules():
+    global SERVER_START_TIME
+    if not flatpack_directory:
+        logger.error("Flatpack directory is not set.")
+        print("[ERROR] Flatpack directory is not set.")
+        return
+
+    now = datetime.now(timezone.utc)
+
+    if SERVER_START_TIME and (now - SERVER_START_TIME) < COOLDOWN_PERIOD:
+        logger.info("In cooldown period. Skipping schedule check.")
+        print("[INFO] In cooldown period. Skipping schedule check.")
+        return
+
+    db_path = os.path.join(flatpack_directory, 'build', 'flatpack.db')
+
+    try:
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+
+        cursor.execute("SELECT id, type, pattern, datetimes FROM flatpack_schedule")
+        schedules = cursor.fetchall()
+
+        for schedule_id, schedule_type, pattern, datetimes in schedules:
+            if schedule_type == 'recurring':
+                if pattern:
+                    cron = croniter(pattern, now)
+                    prev_run = cron.get_prev(datetime)
+                    next_run = cron.get_next(datetime)
+                    if prev_run <= now < next_run:
+                        await run_build_process(schedule_id)
+                        logger.info("Executed recurring build for schedule %s", schedule_id)
+                        print(f"[INFO] Executed recurring build for schedule {schedule_id}")
+
+            elif schedule_type == 'manual':
+                if datetimes:
+                    datetimes_list = json.loads(datetimes)
+                    for dt in datetimes_list:
+                        scheduled_time = datetime.fromisoformat(dt).replace(tzinfo=timezone.utc)
+                        if scheduled_time <= now:
+                            await run_build_process(schedule_id)
+                            logger.info("Executed manual build for schedule %s", schedule_id)
+                            print(f"[INFO] Executed manual build for schedule {schedule_id}")
+
+    except sqlite3.Error as e:
+        logger.error("Database error: %s", e)
+        print(f"[ERROR] Database error: {e}")
+    except Exception as e:
+        logger.error("An error occurred: %s", e)
+        print(f"[ERROR] An error occurred: {e}")
+    finally:
+        if conn:
+            conn.close()
 
 
 def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path, use_euxo: bool = False):
@@ -330,12 +385,372 @@ def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path, use_euxo: bool = Fa
         context_python_script_path.unlink()
         exec_python_script_path.unlink()
 
-        print(f"[INFO] Temp script generated successfully at {temp_sh_path}")
         logger.info("Temp script generated successfully at %s", temp_sh_path)
+        print(f"[INFO] Temp script generated successfully at {temp_sh_path}")
 
     except Exception as e:
-        print(f"[ERROR] An error occurred while creating temp script: {e}")
         logger.error("An error occurred while creating temp script: %s", e)
+        print(f"[ERROR] An error occurred while creating temp script: {e}")
+
+
+def create_venv(venv_dir: str):
+    """
+    Create a virtual environment in the specified directory.
+
+    Args:
+        venv_dir (str): The directory where the virtual environment will be created.
+
+    Returns:
+        None
+    """
+    python_executable = sys.executable
+
+    try:
+        subprocess.run(
+            [python_executable, "-m", "venv", venv_dir],
+            check=True
+        )
+        logger.info("Virtual environment created successfully in '%s'.", venv_dir)
+        print(f"[INFO] Virtual environment created successfully in '{venv_dir}'.")
+    except subprocess.CalledProcessError as e:
+        logger.error("Failed to create virtual environment: %s", e)
+        print(f"[ERROR] Failed to create virtual environment: {e}")
+    except Exception as e:
+        logger.error("An unexpected error occurred while creating virtual environment: %s", e)
+        print(f"[ERROR] An unexpected error occurred while creating virtual environment: {e}")
+
+
+def decompress_data(input_path, output_path, allowed_dir=None):
+    try:
+        abs_input_path = validate_file_path(input_path, allowed_dir=allowed_dir)
+        abs_output_path = validate_file_path(output_path, is_input=False, allowed_dir=allowed_dir)
+
+        with open(abs_input_path, 'rb') as f:
+            compressed_data = f.read()
+
+        decompressed_data = zstd.decompress(compressed_data)
+
+        try:
+            with tempfile.NamedTemporaryFile() as tmp_file:
+                tmp_file.write(decompressed_data)
+                tmp_file.seek(0)
+
+                with tarfile.open(fileobj=tmp_file, mode='r:') as tar:
+
+                    for member in tar.getmembers():
+                        member_path = os.path.join(abs_output_path, member.name)
+                        if not os.path.commonprefix([abs_output_path, os.path.abspath(member_path)]) == abs_output_path:
+                            raise Exception(f"Attempted Path Traversal in Tar File: {member.name}")
+                    tar.extractall(path=abs_output_path)
+        except tarfile.ReadError:
+
+            with open(abs_output_path, 'wb') as f:
+                f.write(decompressed_data)
+
+    except Exception as e:
+        logging.error("An error occurred while decompressing: %s", e)
+        print(f"[ERROR] An error occurred while decompressing: {e}")
+
+
+def ensure_database_initialized():
+    if flatpack_directory:
+        db_path = os.path.join(flatpack_directory, 'build', 'flatpack.db')
+        initialize_database(db_path)
+
+
+def escape_content_parts(content: str) -> str:
+    """Escape special characters within content parts."""
+    parts = content.split('part_')
+    escaped_content = parts[0]
+    for part in parts[1:]:
+        if part.startswith('bash """') or part.startswith('python """'):
+            type_and_content = part.split('"""', 1)
+            if len(type_and_content) > 1:
+                type_and_header, code = type_and_content
+                code, footer = code.rsplit('"""', 1)
+                escaped_content += f'part_{type_and_header}"""{escape_special_chars(code)}"""{footer}'
+            else:
+                escaped_content += f'part_{part}'
+        else:
+            escaped_content += f'part_{part}'
+    return escaped_content
+
+
+def escape_special_chars(content: str) -> str:
+    """Escape special characters in a given string."""
+    return content.replace('"', '\\"')
+
+
+def generate_secure_token(length=32):
+    """Generate a secure token of the specified length.
+
+    Args:
+        length (int): The length of the token to generate. Default is 32.
+
+    Returns:
+        str: A securely generated token.
+    """
+    alphabet = string.ascii_letters + string.digits + '-._~'
+    return ''.join(secrets.choice(alphabet) for _ in range(length))
+
+
+def get_all_hooks_from_database():
+    global flatpack_directory
+
+    if not flatpack_directory:
+        raise HTTPException(status_code=500, detail="Flatpack directory is not set")
+
+    db_path = os.path.join(flatpack_directory, 'build', 'flatpack.db')
+
+    try:
+        ensure_database_initialized()
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        cursor.execute("SELECT id, hook_name, hook_script, hook_type FROM flatpack_hooks")
+        hooks = cursor.fetchall()
+        conn.close()
+
+        hooks_list = [{"id": hook[0], "hook_name": hook[1], "hook_script": hook[2], "hook_type": hook[3]} for hook in
+                      hooks]
+        return hooks_list
+
+    except Error as e:
+        logger.error("An error occurred while fetching hooks: %s", e)
+        print(f"[ERROR] An error occurred while fetching hooks: {e}")
+        raise HTTPException(status_code=500, detail=f"An error occurred while fetching hooks: {e}")
+
+
+def get_token() -> Optional[str]:
+    """Retrieve the token from the configuration file."""
+    config = load_config()
+    return config.get('token')
+
+
+def initialize_database(db_path: str):
+    """Initialize the SQLite database if it doesn't exist."""
+    try:
+        db_dir = os.path.dirname(db_path)
+        if not os.path.exists(db_dir):
+            os.makedirs(db_dir)
+            print(f"[DEBUG] Created directory for database at path: {db_dir}")
+
+        if os.path.exists(db_path):
+            return
+
+        print(f"[DEBUG] Initializing database at path: {db_path}")
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS flatpack_comments (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                block_id TEXT NOT NULL,
+                selected_text TEXT NOT NULL,
+                comment TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS flatpack_hooks (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                hook_name TEXT NOT NULL,
+                hook_script TEXT NOT NULL,
+                hook_type TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS flatpack_metadata (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                key TEXT NOT NULL,
+                value TEXT NOT NULL
+            )
+        """)
+
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS flatpack_schedule (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                type TEXT NOT NULL,
+                pattern TEXT,
+                datetimes TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+
+        conn.commit()
+        conn.close()
+        logger.info("Database initialized successfully at %s", db_path)
+        print(f"[INFO] Database initialized successfully at {db_path}")
+    except Error as e:
+        logger.error("An error occurred while initializing the database: %s", e)
+        print(f"[ERROR] An error occurred while initializing the database: {e}")
+
+
+def load_config():
+    """Load the configuration from the file.
+
+    Returns:
+        dict: The loaded configuration.
+    """
+    if not os.path.exists(CONFIG_FILE_PATH):
+        logger.warning("Configuration file does not exist: %s", CONFIG_FILE_PATH)
+        print(f"[WARNING] Configuration file does not exist: {CONFIG_FILE_PATH}")
+        return {}
+
+    try:
+        with open(CONFIG_FILE_PATH, 'r') as config_file:
+            config = toml.load(config_file)
+            return config
+    except Exception as e:
+        error_message = f"Error loading config: {e}"
+        logger.error("Error loading config: %s", e)
+        print(f"[ERROR] {error_message}")
+        return {}
+
+
+async def run_build_process(schedule_id):
+    logger.info("Running build process for schedule %s", schedule_id)
+    print(f"[INFO] Running build process for schedule {schedule_id}...")
+    fpk_build(flatpack_directory)
+
+
+async def run_scheduler():
+    while True:
+        await check_and_run_schedules()
+        await asyncio.sleep(60)
+
+
+def save_config(config):
+    """Save the configuration to the file, sorting keys alphabetically.
+
+    Args:
+        config (dict): The configuration to save.
+    """
+    sorted_config = {k: config[k] for k in sorted(config)}
+
+    try:
+        with open(CONFIG_FILE_PATH, "w") as config_file:
+            toml.dump(sorted_config, config_file)
+        os.chmod(CONFIG_FILE_PATH, 0o600)
+        logger.info("Configuration saved successfully to %s", CONFIG_FILE_PATH)
+        print(f"[INFO] Configuration saved successfully to {CONFIG_FILE_PATH}")
+    except Exception as e:
+        error_message = f"Error saving config: {e}"
+        logger.error("Error saving config: %s", error_message)
+        print(f"[ERROR] {error_message}")
+
+
+def set_token(token: str):
+    try:
+        config = load_config()
+        config['token'] = token
+        save_config(config)
+        logger.info("Token set successfully.")
+        print("[INFO] Token set successfully!")
+    except Exception as e:
+        logger.error("Failed to set token: %s", str(e))
+        print(f"[ERROR] Failed to set token: {str(e)}")
+
+
+def setup_static_directory(fastapi_app: FastAPI, directory: str):
+    """Setup the static directory for serving static files."""
+    global flatpack_directory
+    flatpack_directory = os.path.abspath(directory)
+
+    if os.path.exists(flatpack_directory) and os.path.isdir(flatpack_directory):
+        static_dir = os.path.join(flatpack_directory, 'build')
+        fastapi_app.mount(
+            "/",
+            StaticFiles(directory=static_dir, html=True),
+            name="static"
+        )
+        logger.info("Static files will be served from: %s", static_dir)
+        print(f"[INFO] Static files will be served from: {static_dir}")
+    else:
+        logger.error("The directory '%s' does not exist or is not a directory.", flatpack_directory)
+        print(f"[ERROR] The directory '{flatpack_directory}' does not exist or is not a directory.")
+        raise ValueError(error_message)
+
+
+def shutdown_server():
+    """Shutdown the FastAPI server."""
+    logging.getLogger("uvicorn.error").info("Shutting down the server after maximum validation attempts.")
+    os._exit(0)
+
+
+def strip_html(content: str) -> str:
+    soup = BeautifulSoup(content, 'html.parser')
+    return soup.get_text()
+
+
+def unescape_content_parts(content: str) -> str:
+    """Unescape special characters within content parts."""
+    parts = content.split('part_')
+    unescaped_content = parts[0]
+    for part in parts[1:]:
+        if part.startswith('bash """') or part.startswith('python """'):
+            type_and_content = part.split('"""', 1)
+            if len(type_and_content) > 1:
+                type_and_header, code = type_and_content
+                code, footer = code.rsplit('"""', 1)
+                unescaped_content += f'part_{type_and_header}"""{unescape_special_chars(code)}"""{footer}'
+            else:
+                unescaped_content += f'part_{part}'
+        else:
+            unescaped_content += f'part_{part}'
+    return unescaped_content
+
+
+def unescape_special_chars(content: str) -> str:
+    """Unescape special characters in a given string."""
+    return content.replace('\\"', '"')
+
+
+def validate_api_token(api_token: str) -> bool:
+    """Validate the API token."""
+    return api_token == get_token()
+
+
+def validate_file_path(path, is_input=True, allowed_dir=None):
+    """
+    Validate the file path to prevent directory traversal attacks.
+
+    Parameters:
+        path (str): The path to validate.
+        is_input (bool): Flag indicating if the path is for input. Defaults to True.
+        allowed_dir (str): The allowed directory for the path. Defaults to None.
+
+    Returns:
+        str: The absolute path if valid.
+
+    Raises:
+        ValueError: If the path is outside the allowed directory or invalid.
+        FileNotFoundError: If the path does not exist.
+    """
+    absolute_path = os.path.abspath(path)
+
+    if allowed_dir:
+        allowed_dir_absolute = os.path.abspath(allowed_dir)
+        if not absolute_path.startswith(allowed_dir_absolute):
+            raise ValueError(
+                f"Path '{path}' is outside the allowed directory '{allowed_dir}'."
+            )
+
+    if is_input:
+        if not os.path.exists(absolute_path):
+            raise FileNotFoundError(f"The path '{absolute_path}' does not exist.")
+        if not (os.path.isfile(absolute_path) or os.path.isdir(absolute_path)):
+            raise ValueError(
+                f"The path '{absolute_path}' is neither a file nor a directory."
+            )
+    else:
+        output_dir = os.path.dirname(absolute_path)
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+
+    return absolute_path
 
 
 def fpk_build(directory: Union[str, None], use_euxo: bool = False):
@@ -353,35 +768,35 @@ def fpk_build(directory: Union[str, None], use_euxo: bool = False):
     if directory:
         flatpack_dir = Path.cwd() / directory
         if not flatpack_dir.exists():
-            print(f"[ERROR] The directory '{flatpack_dir}' does not exist.")
             logger.error("The directory '%s' does not exist.", flatpack_dir)
+            print(f"[ERROR] The directory '{flatpack_dir}' does not exist.")
             return
         last_unboxed_flatpack = str(flatpack_dir)
     elif cache_file_path.exists():
-        print(f"[INFO] Found cached flatpack in {cache_file_path}.")
         logger.info("Found cached flatpack in %s", cache_file_path)
+        print(f"[INFO] Found cached flatpack in {cache_file_path}.")
         last_unboxed_flatpack = cache_file_path.read_text().strip()
     else:
-        print("[ERROR] No cached flatpack found, and no valid directory provided.")
         logger.error("No cached flatpack found, and no valid directory provided.")
+        print("[ERROR] No cached flatpack found, and no valid directory provided.")
         return
 
     flatpack_dir = Path(last_unboxed_flatpack)
     if not flatpack_dir.exists():
-        print(f"[ERROR] The flatpack directory '{flatpack_dir}' does not exist.")
         logger.error("The flatpack directory '%s' does not exist.", flatpack_dir)
+        print(f"[ERROR] The flatpack directory '{flatpack_dir}' does not exist.")
         return
 
     build_dir = flatpack_dir / 'build'
     if not build_dir.exists():
-        print(f"[ERROR] The build directory '{build_dir}' does not exist.")
         logger.error("The build directory '%s' does not exist.", build_dir)
+        print(f"[ERROR] The build directory '{build_dir}' does not exist.")
         return
 
     custom_sh_path = build_dir / 'custom.sh'
     if not custom_sh_path.exists() or not custom_sh_path.is_file():
-        print(f"[ERROR] custom.sh not found in {build_dir}. Build process canceled.")
         logger.error("custom.sh not found in %s. Build process canceled.", build_dir)
+        print(f"[ERROR] custom.sh not found in {build_dir}. Build process canceled.")
         return
 
     temp_sh_path = build_dir / 'temp.sh'
@@ -389,8 +804,8 @@ def fpk_build(directory: Union[str, None], use_euxo: bool = False):
 
     building_script_path = build_dir / 'build.sh'
     if not building_script_path.exists() or not building_script_path.is_file():
-        print(f"[ERROR] Building script not found in {build_dir}.")
         logger.error("Building script not found in %s", build_dir)
+        print(f"[ERROR] Building script not found in {build_dir}.")
         return
 
     log_dir = build_dir / 'logs'
@@ -411,9 +826,9 @@ def fpk_build(directory: Union[str, None], use_euxo: bool = False):
             )
 
             for line in process.stdout:
-                print(line, end='')
                 logger.info(line.strip())
                 log_file.write(line)
+                print(line, end='')
 
             process.wait()
 
@@ -428,8 +843,8 @@ def fpk_build(directory: Union[str, None], use_euxo: bool = False):
                 conn.close()
 
                 for hook_name, hook_script, hook_type in hooks:
-                    print(f"[INFO] Executing hook: {hook_name}")
                     logger.info("Executing hook: %s", hook_name)
+                    print(f"[INFO] Executing hook: {hook_name}")
 
                     if hook_type == "bash":
                         hook_command = shlex.split(hook_script)
@@ -441,9 +856,9 @@ def fpk_build(directory: Union[str, None], use_euxo: bool = False):
                         )
 
                         for line in hook_process.stdout:
-                            print(line, end='')
                             logger.info(line.strip())
                             log_file.write(line)
+                            print(line, end='')
 
                         hook_process.wait()
 
@@ -451,22 +866,22 @@ def fpk_build(directory: Union[str, None], use_euxo: bool = False):
                         try:
                             exec(hook_script)
                         except Exception as e:
-                            print(f"[ERROR] An error occurred while executing Python hook {hook_name}: {e}")
                             logger.error("An error occurred while executing Python hook %s: %s", hook_name, e)
+                            print(f"[ERROR] An error occurred while executing Python hook {hook_name}: {e}")
                     else:
-                        print(f"[WARNING] Unsupported hook type for {hook_name}. Skipping.")
                         logger.warning("Unsupported hook type for %s. Skipping.", hook_name)
+                        print(f"[WARNING] Unsupported hook type for {hook_name}. Skipping.")
 
             except sqlite3.Error as e:
-                print(f"[ERROR] An error occurred while retrieving or executing hooks: {e}")
                 logger.error("An error occurred while retrieving or executing hooks: %s", e)
+                print(f"[ERROR] An error occurred while retrieving or executing hooks: {e}")
 
     except subprocess.CalledProcessError as e:
-        print(f"[ERROR] An error occurred while executing the build script: {e}")
         logger.error("An error occurred while executing the build script: %s", e)
+        print(f"[ERROR] An error occurred while executing the build script: {e}")
     except Exception as e:
-        print(f"[ERROR] An unexpected error occurred: {e}")
         logger.error("An unexpected error occurred: %s", e)
+        print(f"[ERROR] An unexpected error occurred: {e}")
 
 
 def fpk_cache_unbox(directory_name: str):
@@ -483,17 +898,17 @@ def fpk_cache_unbox(directory_name: str):
     try:
         with open(cache_file_path, 'w') as f:
             f.write(directory_name)
-        print(f"[INFO] Cached the directory name '{directory_name}' to {cache_file_path}.")
 
         logger.info(
             "Cached the directory name '%s' to %s",
             directory_name,
             cache_file_path
         )
+        print(f"[INFO] Cached the directory name '{directory_name}' to {cache_file_path}.")
 
     except IOError as e:
-        print(f"[ERROR] Failed to cache the directory name '{directory_name}': {e}")
         logger.error("Failed to cache the directory name '%s': %s", directory_name, e)
+        print(f"[ERROR] Failed to cache the directory name '{directory_name}': {e}")
 
 
 def fpk_check_ngrok_auth():
@@ -509,13 +924,13 @@ def fpk_check_ngrok_auth():
             "NGROK_AUTHTOKEN is not set. Please set it using:\n"
             "export NGROK_AUTHTOKEN='your_ngrok_auth_token'"
         )
-        print(f"[ERROR] {message}")
         logger.error("%s", message)
+        print(f"[ERROR] {message}")
         sys.exit(1)
     else:
         message = "NGROK_AUTHTOKEN is set."
-        print(f"[INFO] {message}")
         logger.info("%s", message)
+        print(f"[INFO] {message}")
 
 
 def fpk_colorize(text, color):
@@ -541,8 +956,8 @@ def fpk_colorize(text, color):
     }
 
     if color not in colors:
-        print(f"[ERROR] Invalid color '{color}' provided. Returning the original text.")
         logger.error("Invalid color '%s' provided. Returning the original text.", color)
+        print(f"[ERROR] Invalid color '{color}' provided. Returning the original text.")
         return text
 
     return colors[color] + text + colors["default"]
@@ -560,8 +975,8 @@ def fpk_create(flatpack_name, repo_url="https://github.com/RomlinGroup/template"
     """
     if not re.match(r'^[a-z0-9-]+$', flatpack_name):
         error_message = "Invalid name format. Only lowercase letters, numbers, and hyphens are allowed."
-        print(f"[ERROR] {error_message}")
         logger.error("%s", error_message)
+        print(f"[ERROR] {error_message}")
         raise ValueError(error_message)
 
     flatpack_name = flatpack_name.lower().replace(' ', '-')
@@ -570,26 +985,26 @@ def fpk_create(flatpack_name, repo_url="https://github.com/RomlinGroup/template"
 
     if os.path.exists(flatpack_dir):
         error_message = f"Directory '{flatpack_name}' already exists. Aborting creation."
-        print(f"[ERROR] {error_message}")
         logger.error("%s", error_message)
+        print(f"[ERROR] {error_message}")
         raise ValueError(error_message)
 
     try:
         template_dir = fpk_download_and_extract_template(repo_url, current_dir)
     except Exception as e:
         error_message = f"Failed to download and extract template: {e}"
-        print(f"[ERROR] {error_message}")
         logger.error("Failed to download and extract template: %s", e)
+        print(f"[ERROR] {error_message}")
         return
 
     try:
         os.makedirs(flatpack_dir, exist_ok=True)
-        print(f"[INFO] Created flatpack directory: {flatpack_dir}")
         logger.info("Created flatpack directory: %s", flatpack_dir)
+        print(f"[INFO] Created flatpack directory: {flatpack_dir}")
     except OSError as e:
         error_message = f"Failed to create flatpack directory: {e}"
-        print(f"[ERROR] {error_message}")
         logger.error("Failed to create flatpack directory: %s", e)
+        print(f"[ERROR] {error_message}")
         return
 
     try:
@@ -602,12 +1017,12 @@ def fpk_create(flatpack_name, repo_url="https://github.com/RomlinGroup/template"
                 shutil.copytree(s, d, dirs_exist_ok=True)
             else:
                 shutil.copy2(s, d)
-        print(f"[INFO] Copied template files to flatpack directory: {flatpack_dir}")
         logger.info("Copied template files to flatpack directory: %s", flatpack_dir)
+        print(f"[INFO] Copied template files to flatpack directory: {flatpack_dir}")
     except OSError as e:
         error_message = f"Failed to copy template files: {e}"
-        print(f"[ERROR] {error_message}")
         logger.error("Failed to copy template files: %s", e)
+        print(f"[ERROR] {error_message}")
         return
 
     files_to_edit = [
@@ -640,26 +1055,26 @@ def fpk_create(flatpack_name, repo_url="https://github.com/RomlinGroup/template"
             newdata = re.sub(pattern, replacement, filedata)
             with open(file_path, 'w') as file:
                 file.write(newdata)
-        print(f"[INFO] Edited template files for flatpack: {flatpack_name}")
         logger.info("Edited template files for flatpack: %s", flatpack_name)
+        print(f"[INFO] Edited template files for flatpack: {flatpack_name}")
     except OSError as e:
         error_message = f"Failed to edit template files: {e}"
-        print(f"[ERROR] {error_message}")
         logger.error("Failed to edit template files: %s", e)
+        print(f"[ERROR] {error_message}")
         return
 
     try:
         shutil.rmtree(template_dir)
-        print(f"[INFO] Removed temporary template directory: {template_dir}")
         logger.info("Removed temporary template directory: %s", template_dir)
+        print(f"[INFO] Removed temporary template directory: {template_dir}")
     except OSError as e:
         error_message = f"Failed to remove temporary template directory: {e}"
-        print(f"[ERROR] {error_message}")
         logger.error("Failed to remove temporary template directory: %s", e)
+        print(f"[ERROR] {error_message}")
         return
 
-    print(f"[INFO] Successfully created {flatpack_name}.")
     logger.info("Successfully created %s", flatpack_name)
+    print(f"[INFO] Successfully created {flatpack_name}.")
 
 
 def fpk_display_disclaimer(directory_name: str, local: bool):
@@ -705,13 +1120,13 @@ https://fpk.ai/w/{directory_name}
     else:
         please_note_colored = ""
 
-    disclaimer_message = disclaimer_template.format(please_note=please_note_colored)
-    print(disclaimer_message)
     logger.info(
         "Displayed disclaimer for flatpack '%s' with local set to %s.",
         directory_name,
         local
     )
+    disclaimer_message = disclaimer_template.format(please_note=please_note_colored)
+    print(disclaimer_message)
 
 
 def fpk_download_and_extract_template(repo_url, dest_dir):
@@ -734,26 +1149,26 @@ def fpk_download_and_extract_template(repo_url, dest_dir):
         with ZipFile(BytesIO(response.content)) as zip_ref:
             zip_ref.extractall(dest_dir)
 
-        print(f"[INFO] Downloaded and extracted template from {repo_url} to {dest_dir}")
         logger.info(
             "Downloaded and extracted template from %s to %s",
             repo_url,
             dest_dir
         )
+        print(f"[INFO] Downloaded and extracted template from {repo_url} to {dest_dir}")
 
         return template_dir
     except requests.RequestException as e:
         error_message = f"Failed to download template from {repo_url}: {e}"
 
-        print(f"[ERROR] {error_message}")
         logger.error("%s", error_message)
+        print(f"[ERROR] {error_message}")
 
         raise RuntimeError(error_message)
     except (OSError, IOError) as e:
         error_message = f"Failed to extract template to {dest_dir}: {e}"
 
-        print(f"[ERROR] {error_message}")
         logger.error("%s", error_message)
+        print(f"[ERROR] {error_message}")
 
         raise RuntimeError(error_message)
 
@@ -771,8 +1186,8 @@ def fpk_fetch_flatpack_toml_from_dir(directory_name: str, session: httpx.Client)
     if not fpk_valid_directory_name(directory_name):
         message = f"Invalid directory name: '{directory_name}'."
 
-        print(f"[ERROR] {message}")
         logger.error("%s", message)
+        print(f"[ERROR] {message}")
 
         return None
 
@@ -783,29 +1198,29 @@ def fpk_fetch_flatpack_toml_from_dir(directory_name: str, session: httpx.Client)
         response = session.get(toml_url)
         response.raise_for_status()
 
-        print(f"[INFO] Successfully fetched TOML from {toml_url}")
         logger.info("Successfully fetched TOML from %s", toml_url)
+        print(f"[INFO] Successfully fetched TOML from {toml_url}")
 
         return response.text
     except httpx.HTTPStatusError as e:
         message = f"HTTP error occurred: {e.response.status_code} - {e.response.text}"
 
-        print(f"[ERROR] {message}")
         logger.error("%s", message)
+        print(f"[ERROR] {message}")
 
         return None
     except httpx.RequestError as e:
         message = f"Network error occurred: {e}"
 
-        print(f"[ERROR] {message}")
         logger.error("%s", message)
+        print(f"[ERROR] {message}")
 
         return None
     except Exception as e:
         message = f"An unexpected error occurred: {e}"
 
-        print(f"[ERROR] {message}")
         logger.error("%s", message)
+        print(f"[ERROR] {message}")
 
         return None
 
@@ -854,25 +1269,25 @@ def fpk_fetch_github_dirs(session: httpx.Client) -> List[str]:
                     'directories': directories
                 }, f)
 
-            print(f"[INFO] Cached GitHub dirs: {directories}")
             logger.info("Cached GitHub dirs: %s", directories)
+            print(f"[INFO] Cached GitHub dirs: {directories}")
 
             return directories
 
         message = f"Unexpected response format from GitHub: {json_data}"
-        print(f"[ERROR] {message}")
         logger.error("%s", message)
+        print(f"[ERROR] {message}")
         return []
 
     except httpx.HTTPError as e:
         message = f"Unable to connect to GitHub: {e}"
-        print(f"[ERROR] {message}")
         logger.error("%s", message)
+        print(f"[ERROR] {message}")
         sys.exit(1)
     except (ValueError, KeyError) as e:
         message = f"Error processing the response from GitHub: {e}"
-        print(f"[ERROR] {message}")
         logger.error("%s", message)
+        print(f"[ERROR] {message}")
         return []
 
 
@@ -902,14 +1317,14 @@ def fpk_find_models(directory_path: str = None) -> List[str]:
                     model_files.append(model_file_path)
                     logger.info("Found model file: %s", model_file_path)
 
-        print(f"[INFO] Found {len(model_files)} model file(s).")
         logger.info("Total number of model files found: %d", len(model_files))
+        print(f"[INFO] Found {len(model_files)} model file(s).")
 
     except Exception as e:
         error_message = f"An error occurred while searching for model files: {e}"
 
-        print(f"[ERROR] {error_message}")
         logger.error("%s", error_message)
+        print(f"[ERROR] {error_message}")
 
     return model_files
 
@@ -924,16 +1339,16 @@ def fpk_get_api_key() -> Optional[str]:
         config = load_config()
         api_key = config.get('api_key')
         if api_key:
-            print("[INFO] API key retrieved successfully.")
             logger.info("API key retrieved successfully.")
+            print("[INFO] API key retrieved successfully.")
         else:
-            print("[INFO] API key not found in the configuration.")
             logger.info("API key not found in the configuration.")
+            print("[INFO] API key not found in the configuration.")
         return api_key
     except Exception as e:
         error_message = f"An error occurred while retrieving the API key: {e}"
-        print(f"[ERROR] {error_message}")
         logger.error(error_message)
+        print(f"[ERROR] {error_message}")
         return None
 
 
@@ -948,23 +1363,41 @@ def fpk_get_last_flatpack() -> Optional[str]:
         if cache_file_path.exists():
             with cache_file_path.open('r') as cache_file:
                 last_flatpack = cache_file.read().strip()
-                print(
-                    "[INFO] Last unboxed flatpack directory retrieved: %s",
-                    last_flatpack
-                )
                 logger.info(
                     "Last unboxed flatpack directory retrieved: %s",
                     last_flatpack
                 )
+                print(
+                    "[INFO] Last unboxed flatpack directory retrieved: %s",
+                    last_flatpack
+                )
                 return last_flatpack
         else:
-            print("[WARNING] Cache file does not exist: %s", cache_file_path)
             logger.warning("Cache file does not exist: %s", cache_file_path)
+            print("[WARNING] Cache file does not exist: %s", cache_file_path)
     except (OSError, IOError) as e:
         error_message = f"An error occurred while accessing the cache file: {e}"
-        print("[ERROR] %s", error_message)
         logger.error("%s", error_message)
+        print("[ERROR] %s", error_message)
     return None
+
+
+def fpk_initialize_vector_manager(args):
+    """Initialize the Vector Manager.
+
+    Args:
+        args: The command-line arguments.
+
+    Returns:
+        VectorManager: An instance of VectorManager.
+    """
+    data_dir = getattr(args, 'data_dir', '.')
+    logger.info(
+        "Initializing Vector Manager and data directory: %s",
+        data_dir
+    )
+    print(f"[INFO] Initializing Vector Manager and data directory: {data_dir}")
+    return VectorManager(model_id='all-MiniLM-L6-v2', directory=data_dir)
 
 
 def fpk_is_raspberry_pi() -> bool:
@@ -977,14 +1410,14 @@ def fpk_is_raspberry_pi() -> bool:
         with open('/proc/cpuinfo', 'r') as f:
             for line in f:
                 if line.startswith('Hardware') and 'BCM' in line:
-                    print("[INFO] Running on a Raspberry Pi.")
                     logger.info("Running on a Raspberry Pi.")
+                    print("[INFO] Running on a Raspberry Pi.")
                     return True
     except IOError as e:
-        print("[WARNING] Could not access /proc/cpuinfo:", e)
         logger.warning("Could not access /proc/cpuinfo: %s", e)
-    print("[INFO] Not running on a Raspberry Pi.")
+        print("[WARNING] Could not access /proc/cpuinfo:", e)
     logger.info("Not running on a Raspberry Pi.")
+    print("[INFO] Not running on a Raspberry Pi.")
     return False
 
 
@@ -1004,8 +1437,8 @@ def fpk_list_directories(session: httpx.Client) -> str:
         return directories_str
     except Exception as e:
         error_message = f"An error occurred while listing directories: {e}"
-        print("[ERROR] %s", error_message)
         logger.error(error_message)
+        print("[ERROR] %s", error_message)
         return ""
 
 
@@ -1025,48 +1458,6 @@ def fpk_safe_cleanup():
         print(f"Exception during safe_cleanup: {e}")
 
 
-def load_config():
-    """Load the configuration from the file.
-
-    Returns:
-        dict: The loaded configuration.
-    """
-    if not os.path.exists(CONFIG_FILE_PATH):
-        print(f"[WARNING] Configuration file does not exist: {CONFIG_FILE_PATH}")
-        logger.warning("Configuration file does not exist: %s", CONFIG_FILE_PATH)
-        return {}
-
-    try:
-        with open(CONFIG_FILE_PATH, 'r') as config_file:
-            config = toml.load(config_file)
-            return config
-    except Exception as e:
-        error_message = f"Error loading config: {e}"
-        print(f"[ERROR] {error_message}")
-        logger.error("Error loading config: %s", e)
-        return {}
-
-
-def save_config(config):
-    """Save the configuration to the file, sorting keys alphabetically.
-
-    Args:
-        config (dict): The configuration to save.
-    """
-    sorted_config = {k: config[k] for k in sorted(config)}
-
-    try:
-        with open(CONFIG_FILE_PATH, "w") as config_file:
-            toml.dump(sorted_config, config_file)
-        os.chmod(CONFIG_FILE_PATH, 0o600)
-        print(f"[INFO] Configuration saved successfully to {CONFIG_FILE_PATH}")
-        logger.info("Configuration saved successfully to %s", CONFIG_FILE_PATH)
-    except Exception as e:
-        error_message = f"Error saving config: {e}"
-        print(f"[ERROR] {error_message}")
-        logger.error("Error saving config: %s", error_message)
-
-
 def fpk_set_secure_file_permissions(file_path):
     """Set secure file permissions for the specified file.
 
@@ -1075,84 +1466,12 @@ def fpk_set_secure_file_permissions(file_path):
     """
     try:
         os.chmod(file_path, stat.S_IRUSR | stat.S_IWUSR)
-        print(f"[INFO] Set secure file permissions for {file_path}")
         logger.info("Set secure file permissions for %s", file_path)
+        print(f"[INFO] Set secure file permissions for {file_path}")
     except OSError as e:
         error_message = f"Failed to set secure file permissions for {file_path}: {e}"
-        print(f"[ERROR] {error_message}")
         logger.error("Failed to set secure file permissions for %s: %s", file_path, e)
-
-
-def validate_file_path(path, is_input=True, allowed_dir=None):
-    """
-    Validate the file path to prevent directory traversal attacks.
-
-    Parameters:
-        path (str): The path to validate.
-        is_input (bool): Flag indicating if the path is for input. Defaults to True.
-        allowed_dir (str): The allowed directory for the path. Defaults to None.
-
-    Returns:
-        str: The absolute path if valid.
-
-    Raises:
-        ValueError: If the path is outside the allowed directory or invalid.
-        FileNotFoundError: If the path does not exist.
-    """
-    absolute_path = os.path.abspath(path)
-
-    if allowed_dir:
-        allowed_dir_absolute = os.path.abspath(allowed_dir)
-        if not absolute_path.startswith(allowed_dir_absolute):
-            raise ValueError(
-                f"Path '{path}' is outside the allowed directory '{allowed_dir}'."
-            )
-
-    if is_input:
-        if not os.path.exists(absolute_path):
-            raise FileNotFoundError(f"The path '{absolute_path}' does not exist.")
-        if not (os.path.isfile(absolute_path) or os.path.isdir(absolute_path)):
-            raise ValueError(
-                f"The path '{absolute_path}' is neither a file nor a directory."
-            )
-    else:
-        output_dir = os.path.dirname(absolute_path)
-        if not os.path.exists(output_dir):
-            os.makedirs(output_dir)
-
-    return absolute_path
-
-
-def decompress_data(input_path, output_path, allowed_dir=None):
-    try:
-        abs_input_path = validate_file_path(input_path, allowed_dir=allowed_dir)
-        abs_output_path = validate_file_path(output_path, is_input=False, allowed_dir=allowed_dir)
-
-        with open(abs_input_path, 'rb') as f:
-            compressed_data = f.read()
-
-        decompressed_data = zstd.decompress(compressed_data)
-
-        try:
-            with tempfile.NamedTemporaryFile() as tmp_file:
-                tmp_file.write(decompressed_data)
-                tmp_file.seek(0)
-
-                with tarfile.open(fileobj=tmp_file, mode='r:') as tar:
-
-                    for member in tar.getmembers():
-                        member_path = os.path.join(abs_output_path, member.name)
-                        if not os.path.commonprefix([abs_output_path, os.path.abspath(member_path)]) == abs_output_path:
-                            raise Exception(f"Attempted Path Traversal in Tar File: {member.name}")
-                    tar.extractall(path=abs_output_path)
-        except tarfile.ReadError:
-
-            with open(abs_output_path, 'wb') as f:
-                f.write(decompressed_data)
-
-    except Exception as e:
-        logging.error("An error occurred while decompressing: %s", e)
-        print(f"[ERROR] An error occurred while decompressing: {e}")
+        print(f"[ERROR] {error_message}")
 
 
 def fpk_unbox(directory_name: str, session: httpx.Client, local: bool = False) -> bool:
@@ -1168,8 +1487,8 @@ def fpk_unbox(directory_name: str, session: httpx.Client, local: bool = False) -
     """
     if not fpk_valid_directory_name(directory_name):
         message = f"Invalid directory name: '{directory_name}'."
-        print(f"[ERROR] {message}")
         logger.error("Invalid directory name: '%s'", directory_name)
+        print(f"[ERROR] {message}")
         return False
 
     flatpack_dir = Path.cwd() / directory_name
@@ -1177,20 +1496,20 @@ def fpk_unbox(directory_name: str, session: httpx.Client, local: bool = False) -
     if local:
         if not flatpack_dir.exists():
             message = f"Local directory '{directory_name}' does not exist."
-            print(f"[ERROR] {message}")
             logger.error(message)
+            print(f"[ERROR] {message}")
             return False
         toml_path = flatpack_dir / 'flatpack.toml'
         if not toml_path.exists():
             message = f"flatpack.toml not found in the specified directory: '{directory_name}'."
-            print(f"[ERROR] {message}")
             logger.error("%s", message)
+            print(f"[ERROR] {message}")
             return False
     else:
         if flatpack_dir.exists():
             message = f"Directory '{directory_name}' already exists. Unboxing aborted to prevent conflicts."
-            print(f"[ERROR] {message}")
             logger.error(message)
+            print(f"[ERROR] {message}")
             return False
         flatpack_dir.mkdir(parents=True, exist_ok=True)
 
@@ -1204,18 +1523,18 @@ def fpk_unbox(directory_name: str, session: httpx.Client, local: bool = False) -
         try:
             response = session.head(fpk_url)
             if response.status_code != 200:
-                print(f"[ERROR] .fpk file does not exist at {fpk_url}")
                 logger.error(".fpk file does not exist at %s", fpk_url)
+                print(f"[ERROR] .fpk file does not exist at {fpk_url}")
                 return False
-            print(f"[INFO] .fpk file found at {fpk_url}")
             logger.info(".fpk file found at %s", fpk_url)
+            print(f"[INFO] .fpk file found at {fpk_url}")
         except httpx.RequestError as e:
-            print(f"[ERROR] Network error occurred while checking .fpk file: {e}")
             logger.error("Network error occurred while checking .fpk file: %s", e)
+            print(f"[ERROR] Network error occurred while checking .fpk file: {e}")
             return False
         except Exception as e:
-            print(f"[ERROR] An unexpected error occurred: {e}")
             logger.error("An unexpected error occurred: %s", e)
+            print(f"[ERROR] An unexpected error occurred: {e}")
             return False
 
         fpk_path = build_dir / f"{directory_name}.fpk"
@@ -1223,30 +1542,30 @@ def fpk_unbox(directory_name: str, session: httpx.Client, local: bool = False) -
             with open(fpk_path, "wb") as fpk_file:
                 download_response = session.get(fpk_url)
                 fpk_file.write(download_response.content)
-            print(f"[INFO] Downloaded .fpk file to {fpk_path}")
             logger.info("Downloaded .fpk file to %s", fpk_path)
+            print(f"[INFO] Downloaded .fpk file to {fpk_path}")
         except httpx.RequestError as e:
-            print(f"[ERROR] Failed to download the .fpk file: {e}")
             logger.error("Failed to download the .fpk file: %s", e)
+            print(f"[ERROR] Failed to download the .fpk file: {e}")
             return False
         except Exception as e:
-            print(f"[ERROR] An unexpected error occurred during the .fpk download: {e}")
             logger.error("An unexpected error occurred during the .fpk download: %s", e)
+            print(f"[ERROR] An unexpected error occurred during the .fpk download: {e}")
             return False
 
         try:
             decompress_data(fpk_path, build_dir)
-            print(f"[INFO] Decompressed .fpk file into {build_dir}")
             logger.info("Decompressed .fpk file into %s", build_dir)
+            print(f"[INFO] Decompressed .fpk file into {build_dir}")
         except Exception as e:
-            print(f"[ERROR] Failed to decompress .fpk file: {e}")
             logger.error("Failed to decompress .fpk file: %s", e)
+            print(f"[ERROR] Failed to decompress .fpk file: {e}")
             return False
 
         toml_path = build_dir / 'flatpack.toml'
         if not toml_path.exists():
-            print(f"[ERROR] flatpack.toml not found in {build_dir}.")
             logger.error("flatpack.toml not found in %s", build_dir)
+            print(f"[ERROR] flatpack.toml not found in {build_dir}.")
             return False
 
     toml_content = toml_path.read_text()
@@ -1259,16 +1578,16 @@ def fpk_unbox(directory_name: str, session: httpx.Client, local: bool = False) -
     temp_toml_path.unlink()
 
     message = f"Unboxing {directory_name}..."
-    print(f"[INFO] {message}")
     logger.info("%s", message)
+    print(f"[INFO] {message}")
 
     safe_script_path = shlex.quote(str(bash_script_path.resolve()))
 
     try:
         subprocess.run(['/bin/bash', safe_script_path], check=True)
 
-        print("[INFO] All done!")
         logger.info("All done!")
+        print("[INFO] All done!")
 
         initialize_database(str(db_path))
         print(f"[INFO] Database initialized at {db_path}")
@@ -1279,13 +1598,13 @@ def fpk_unbox(directory_name: str, session: httpx.Client, local: bool = False) -
 
     except subprocess.CalledProcessError as e:
         message = f"Failed to execute the bash script: {e}"
-        print(f"[ERROR] {message}")
         logger.error(message)
+        print(f"[ERROR] {message}")
         return False
     except Exception as e:
         message = f"An unexpected error occurred: {e}"
-        print(f"[ERROR] {message}")
         logger.error(message)
+        print(f"[ERROR] {message}")
         return False
     finally:
         bash_script_path.unlink()
@@ -1315,37 +1634,37 @@ def fpk_verify(directory: Union[str, None]):
         None
     """
     cache_file_path = HOME_DIR / ".fpk_unbox.cache"
-    print(f"[INFO] Looking for cached flatpack in {cache_file_path}.")
     logger.info("Looking for cached flatpack in %s", cache_file_path)
+    print(f"[INFO] Looking for cached flatpack in {cache_file_path}.")
 
     last_unboxed_flatpack = None
 
     if directory and fpk_valid_directory_name(directory):
-        print(f"[INFO] Using provided directory: {directory}")
         logger.info("Using provided directory: %s", directory)
+        print(f"[INFO] Using provided directory: {directory}")
         last_unboxed_flatpack = directory
     elif cache_file_path.exists():
-        print(f"[INFO] Found cached flatpack in {cache_file_path}.")
         logger.info("Found cached flatpack in %s", cache_file_path)
+        print(f"[INFO] Found cached flatpack in {cache_file_path}.")
         last_unboxed_flatpack = cache_file_path.read_text().strip()
     else:
         message = "No cached flatpack found, and no valid directory provided."
-        print(f"[ERROR] {message}")
         logger.error(message)
+        print(f"[ERROR] {message}")
         return
 
     if not last_unboxed_flatpack:
         message = "No valid flatpack directory found."
-        print(f"[ERROR] {message}")
         logger.error(message)
+        print(f"[ERROR] {message}")
         return
 
     verification_script_path = Path(last_unboxed_flatpack) / 'build' / 'build.sh'
 
     if not verification_script_path.exists() or not verification_script_path.is_file():
         message = f"Verification script not found in {last_unboxed_flatpack}."
-        print(f"[ERROR] {message}")
         logger.error(message)
+        print(f"[ERROR] {message}")
         return
 
     safe_script_path = shlex.quote(str(verification_script_path.resolve()))
@@ -1357,16 +1676,16 @@ def fpk_verify(directory: Union[str, None]):
             check=True,
             env={**env_vars, **os.environ}
         )
-        print("[INFO] Verification script executed successfully.")
         logger.info("Verification script executed successfully.")
+        print("[INFO] Verification script executed successfully.")
     except subprocess.CalledProcessError as e:
         message = f"An error occurred while executing the verification script: {e}"
-        print(f"[ERROR] {message}")
         logger.error(message)
+        print(f"[ERROR] {message}")
     except Exception as e:
         message = f"An unexpected error occurred: {e}"
-        print(f"[ERROR] {message}")
         logger.error(message)
+        print(f"[ERROR] {message}")
 
 
 def setup_arg_parser():
@@ -1769,17 +2088,17 @@ def fpk_cli_handle_add_pdf(pdf_path, vm):
         None
     """
     if not os.path.exists(pdf_path):
-        print(f"[ERROR] PDF file does not exist: '{pdf_path}'.")
         logger.error("PDF file does not exist: '%s'", pdf_path)
+        print(f"[ERROR] PDF file does not exist: '{pdf_path}'.")
         return
 
     try:
         vm.add_pdf(pdf_path, pdf_path)
-        print(f"[INFO] Added text from PDF: '{pdf_path}' to the vector database.")
         logger.info("Added text from PDF: '%s' to the vector database.", pdf_path)
+        print(f"[INFO] Added text from PDF: '{pdf_path}' to the vector database.")
     except Exception as e:
-        print(f"[ERROR] Failed to add PDF to the vector database: {e}")
         logger.error("Failed to add PDF to the vector database: %s", e)
+        print(f"[ERROR] Failed to add PDF to the vector database: {e}")
 
 
 def fpk_cli_handle_add_url(url, vm):
@@ -1797,14 +2116,14 @@ def fpk_cli_handle_add_url(url, vm):
         response = requests.head(url, allow_redirects=True, timeout=5)
         if 200 <= response.status_code < 400:
             vm.add_url(url)
-            print(f"[INFO] Added text from URL: '{url}' to the vector database.")
             logger.info("Added text from URL: '%s' to the vector database.", url)
+            print(f"[INFO] Added text from URL: '{url}' to the vector database.")
         else:
-            print(f"[ERROR] URL is not accessible: '{url}'. HTTP Status Code: {response.status_code}")
             logger.error("URL is not accessible: '%s'. HTTP Status Code: %d", url, response.status_code)
+            print(f"[ERROR] URL is not accessible: '{url}'. HTTP Status Code: {response.status_code}")
     except requests.RequestException as e:
-        print(f"[ERROR] Failed to access URL: '{url}'. Error: {e}")
         logger.error("Failed to access URL: '%s'. Error: %s", url, e)
+        print(f"[ERROR] Failed to access URL: '{url}'. Error: {e}")
 
 
 def fpk_cli_handle_build(args, session):
@@ -1821,8 +2140,8 @@ def fpk_cli_handle_build(args, session):
     directory_name = args.directory
 
     if directory_name is None:
-        print("[INFO] No directory name provided. Using cached directory if available.")
         logger.info("No directory name provided. Using cached directory if available.")
+        print("[INFO] No directory name provided. Using cached directory if available.")
 
     fpk_build(directory_name, use_euxo=args.use_euxo)
 
@@ -1839,50 +2158,23 @@ def fpk_cli_handle_create(args, session):
         None
     """
     if not args.input:
-        print("[ERROR] Please specify a name for the new flatpack.")
         logger.error("No flatpack name specified.")
+        print("[ERROR] Please specify a name for the new flatpack.")
         return
 
     flatpack_name = args.input
 
     if not fpk_valid_directory_name(flatpack_name):
-        print(f"[ERROR] Invalid flatpack name: '{flatpack_name}'.")
         logger.error("Invalid flatpack name: '%s'.", flatpack_name)
+        print(f"[ERROR] Invalid flatpack name: '{flatpack_name}'.")
         return
 
     try:
         fpk_create(flatpack_name)
         logger.info("Flatpack '%s' created successfully.", flatpack_name)
     except Exception as e:
-        print(f"[ERROR] Failed to create flatpack: {e}")
         logger.error("Failed to create flatpack: %s", e)
-
-
-def create_venv(venv_dir: str):
-    """
-    Create a virtual environment in the specified directory.
-
-    Args:
-        venv_dir (str): The directory where the virtual environment will be created.
-
-    Returns:
-        None
-    """
-    python_executable = sys.executable
-
-    try:
-        subprocess.run(
-            [python_executable, "-m", "venv", venv_dir],
-            check=True
-        )
-        print(f"[INFO] Virtual environment created successfully in '{venv_dir}'.")
-        logger.info("Virtual environment created successfully in '%s'.", venv_dir)
-    except subprocess.CalledProcessError as e:
-        print(f"[ERROR] Failed to create virtual environment: {e}")
-        logger.error("Failed to create virtual environment: %s", e)
-    except Exception as e:
-        print(f"[ERROR] An unexpected error occurred while creating virtual environment: {e}")
-        logger.error("An unexpected error occurred while creating virtual environment: %s", e)
+        print(f"[ERROR] Failed to create flatpack: {e}")
 
 
 def fpk_cli_handle_compress(args, session: httpx.Client):
@@ -1900,21 +2192,21 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
     token = args.token
 
     if not re.match(r'^[\w-]+/[\w.-]+$', model_id):
-        print("[ERROR] Please specify a valid Hugging Face repository in the format 'username/repo_name'.")
         logger.error("Invalid Hugging Face repository format specified.")
+        print("[ERROR] Please specify a valid Hugging Face repository in the format 'username/repo_name'.")
         return
 
     repo_name = model_id.split('/')[-1]
     local_dir = repo_name
 
     if os.path.exists(local_dir):
-        print(f"[INFO] The model '{model_id}' is already downloaded in the directory '{local_dir}'.")
         logger.info("The model '%s' is already downloaded in the directory '%s'.", model_id, local_dir)
+        print(f"[INFO] The model '{model_id}' is already downloaded in the directory '{local_dir}'.")
     else:
         try:
             if token:
-                print(f"[INFO] Downloading model '{model_id}' with provided token...")
                 logger.info("Downloading model '%s' with provided token...", model_id)
+                print(f"[INFO] Downloading model '{model_id}' with provided token...")
                 snapshot_download(
                     repo_id=model_id,
                     local_dir=local_dir,
@@ -1922,18 +2214,18 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
                     token=token
                 )
             else:
-                print(f"[INFO] Downloading model '{model_id}'...")
                 logger.info("Downloading model '%s'...", model_id)
+                print(f"[INFO] Downloading model '{model_id}'...")
                 snapshot_download(
                     repo_id=model_id,
                     local_dir=local_dir,
                     revision="main"
                 )
-            print(f"[INFO] Finished downloading {model_id} into the directory '{local_dir}'")
             logger.info("Finished downloading %s into the directory '%s'", model_id, local_dir)
+            print(f"[INFO] Finished downloading {model_id} into the directory '{local_dir}'")
         except Exception as e:
-            print(f"[ERROR] Failed to download the model. Error: {e}")
             logger.error("Failed to download the model. Error: %s", e)
+            print(f"[ERROR] Failed to download the model. Error: {e}")
             return
 
     llama_cpp_dir = "llama.cpp"
@@ -1950,13 +2242,13 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
         git_executable = shutil.which("git")
 
         if not git_executable:
-            print("[ERROR] The 'git' executable was not found in your PATH.")
             logger.error("The 'git' executable was not found in your PATH.")
+            print("[ERROR] The 'git' executable was not found in your PATH.")
             return
 
         try:
-            print("[INFO] Cloning llama.cpp repository...")
             logger.info("Cloning llama.cpp repository...")
+            print("[INFO] Cloning llama.cpp repository...")
 
             subprocess.run(
                 [
@@ -1970,24 +2262,24 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
                 check=True
             )
 
-            print(f"[INFO] Finished cloning llama.cpp repository into '{llama_cpp_dir}'")
             logger.info("Finished cloning llama.cpp repository into '%s'", llama_cpp_dir)
+            print(f"[INFO] Finished cloning llama.cpp repository into '{llama_cpp_dir}'")
 
         except subprocess.CalledProcessError as e:
-            print(f"[ERROR] Failed to clone the llama.cpp repository. Error: {e}")
             logger.error("Failed to clone the llama.cpp repository. Error: %s", e)
+            print(f"[ERROR] Failed to clone the llama.cpp repository. Error: {e}")
             return
 
     if not os.path.exists(ready_file):
         try:
-            print("[INFO] Running 'make' in the llama.cpp directory...")
             logger.info("Running 'make' in the llama.cpp directory...")
+            print("[INFO] Running 'make' in the llama.cpp directory...")
 
             make_executable = shutil.which("make")
 
             if not make_executable:
-                print("[ERROR] 'make' executable not found in PATH.")
                 logger.error("'make' executable not found in PATH.")
+                print("[ERROR] 'make' executable not found in PATH.")
                 return
 
             subprocess.run(
@@ -1996,21 +2288,21 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
                 check=True
             )
 
-            print("[INFO] Finished running 'make' in the llama.cpp directory")
             logger.info("Finished running 'make' in the llama.cpp directory")
+            print("[INFO] Finished running 'make' in the llama.cpp directory")
 
             if not os.path.exists(venv_dir):
-                print(f"[INFO] Creating virtual environment in '{venv_dir}'...")
                 logger.info("Creating virtual environment in '%s'...", venv_dir)
+                print(f"[INFO] Creating virtual environment in '{venv_dir}'...")
                 create_venv(venv_dir)
-                print("[INFO] Virtual environment created.")
                 logger.info("Virtual environment created.")
+                print("[INFO] Virtual environment created.")
             else:
-                print(f"[INFO] Virtual environment already exists in '{venv_dir}'")
                 logger.info("Virtual environment already exists in '%s'", venv_dir)
+                print(f"[INFO] Virtual environment already exists in '{venv_dir}'")
 
-            print("[INFO] Installing llama.cpp dependencies in virtual environment...")
             logger.info("Installing llama.cpp dependencies in virtual environment...")
+            print("[INFO] Installing llama.cpp dependencies in virtual environment...")
 
             pip_command = [
                 "/bin/bash", "-c",
@@ -2021,18 +2313,18 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
             ]
             subprocess.run(pip_command, check=True)
 
-            print("[INFO] Finished installing llama.cpp dependencies")
             logger.info("Finished installing llama.cpp dependencies")
+            print("[INFO] Finished installing llama.cpp dependencies")
 
             with open(ready_file, 'w') as f:
                 f.write("Ready")
         except subprocess.CalledProcessError as e:
-            print(f"[ERROR] Failed to build llama.cpp. Error: {e}")
             logger.error("Failed to build llama.cpp. Error: %s", e)
+            print(f"[ERROR] Failed to build llama.cpp. Error: {e}")
             return
         except Exception as e:
-            print(f"[ERROR] An error occurred during the setup of llama.cpp. Error: {e}")
             logger.error("An error occurred during the setup of llama.cpp. Error: %s", e)
+            print(f"[ERROR] An error occurred during the setup of llama.cpp. Error: {e}")
             return
 
     output_file = os.path.join(local_dir, f"{repo_name}-fp16.bin")
@@ -2040,14 +2332,14 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
     outtype = "f16"
 
     if not os.path.exists(convert_script):
-        print(f"[ERROR] The conversion script '{convert_script}' does not exist.")
         logger.error("The conversion script '%s' does not exist.", convert_script)
+        print(f"[ERROR] The conversion script '{convert_script}' does not exist.")
         return
 
     if not os.path.exists(output_file):
         try:
-            print("[INFO] Converting the model using llama.cpp...")
             logger.info("Converting the model using llama.cpp...")
+            print("[INFO] Converting the model using llama.cpp...")
 
             venv_activate = os.path.join(venv_dir, "bin", "activate")
 
@@ -2062,24 +2354,24 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
             print(f"[DEBUG] Running command: {convert_command}")
             subprocess.run(convert_command, check=True)
 
-            print(f"[INFO] Conversion complete. The model has been compressed and saved as '{output_file}'")
             logger.info("Conversion complete. The model has been compressed and saved as '%s'", output_file)
+            print(f"[INFO] Conversion complete. The model has been compressed and saved as '{output_file}'")
         except subprocess.CalledProcessError as e:
-            print(f"[ERROR] Conversion failed. Error: {e}")
             logger.error("Conversion failed. Error: %s", e)
+            print(f"[ERROR] Conversion failed. Error: {e}")
             return
         except Exception as e:
-            print(f"[ERROR] An error occurred during the model conversion. Error: {e}")
             logger.error("An error occurred during the model conversion. Error: %s", e)
+            print(f"[ERROR] An error occurred during the model conversion. Error: {e}")
             return
     else:
-        print(f"[INFO] The model has already been converted and saved as '{output_file}'.")
         logger.info("The model has already been converted and saved as '%s'.", output_file)
+        print(f"[INFO] The model has already been converted and saved as '{output_file}'.")
 
     if os.path.exists(output_file):
         try:
-            print("[INFO] Quantizing the model...")
             logger.info("Quantizing the model...")
+            print("[INFO] Quantizing the model...")
 
             quantize_command = [
                 os.path.join(llama_cpp_dir, 'llama-quantize'),
@@ -2089,28 +2381,28 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
             ]
             subprocess.run(quantize_command, check=True)
 
-            print(f"[INFO] Quantization complete. The quantized model has been saved as '{quantized_output_file}'.")
             logger.info("Quantization complete. The quantized model has been saved as '%s'.", quantized_output_file)
+            print(f"[INFO] Quantization complete. The quantized model has been saved as '{quantized_output_file}'.")
 
-            print(f"[INFO] Deleting the original .bin file '{output_file}'...")
             logger.info("Deleting the original .bin file '%s'...", output_file)
+            print(f"[INFO] Deleting the original .bin file '{output_file}'...")
 
             os.remove(output_file)
 
-            print(f"[INFO] Deleted the original .bin file '{output_file}'.")
             logger.info("Deleted the original .bin file '%s'.", output_file)
+            print(f"[INFO] Deleted the original .bin file '{output_file}'.")
 
         except subprocess.CalledProcessError as e:
-            print(f"[ERROR] Quantization failed. Error: {e}")
             logger.error("Quantization failed. Error: %s", e)
+            print(f"[ERROR] Quantization failed. Error: {e}")
             return
         except Exception as e:
-            print(f"[ERROR] An error occurred during the quantization process. Error: {e}")
             logger.error("An error occurred during the quantization process. Error: %s", e)
+            print(f"[ERROR] An error occurred during the quantization process. Error: {e}")
             return
     else:
-        print(f"[ERROR] The original model file '{output_file}' does not exist.")
         logger.error("The original model file '%s' does not exist.", output_file)
+        print(f"[ERROR] The original model file '{output_file}' does not exist.")
 
 
 def fpk_cli_handle_find(args, session):
@@ -2118,14 +2410,14 @@ def fpk_cli_handle_find(args, session):
     logger.info("Searching for files...")
     model_files = fpk_find_models()
     if model_files:
-        print("[INFO] Found the following files:")
         logger.info("Found the following files:")
+        print("[INFO] Found the following files:")
         for model_file in model_files:
-            print(f" - {model_file}")
             logger.info(" - %s", model_file)
+            print(f" - {model_file}")
     else:
-        print("[INFO] No files found.")
         logger.info("No files found.")
+        print("[INFO] No files found.")
 
 
 def fpk_cli_handle_get_api_key(args, session):
@@ -2133,11 +2425,11 @@ def fpk_cli_handle_get_api_key(args, session):
     logger.info("Retrieving API key...")
     api_key = fpk_get_api_key()
     if api_key:
-        print(f"API Key: {api_key}")
         logger.info("API Key: %s", api_key)
+        print(f"API Key: {api_key}")
     else:
-        print("[ERROR] No API key found.")
         logger.error("No API key found.")
+        print("[ERROR] No API key found.")
 
 
 def fpk_cli_handle_help(args, session):
@@ -2149,8 +2441,8 @@ def fpk_cli_handle_help(args, session):
             subparser.print_help()
             logger.info("Displayed help for command '%s'.", args.command)
         else:
-            print(f"[ERROR] Command '{args.command}' not found.")
             logger.error("Command '%s' not found.", args.command)
+            print(f"[ERROR] Command '{args.command}' not found.")
     else:
         parser.print_help()
         logger.info("Displayed general help.")
@@ -2171,8 +2463,8 @@ def fpk_cli_handle_list(args, session):
         print(table)
         logger.info("Directories found: %s", directories)
     else:
-        print("[ERROR] No directories found.")
         logger.error("No directories found.")
+        print("[ERROR] No directories found.")
 
 
 def fpk_cli_handle_list_agents(args, session):
@@ -2181,39 +2473,21 @@ def fpk_cli_handle_list_agents(args, session):
     agents = agent_manager.list_agents()
 
     if agents:
-        print("Active agents:")
         logger.info("Active agents:")
+        print("Active agents:")
         for agent in agents:
             agent_info = (f"PID: {agent['pid']}, Script: {agent['script']}, "
                           f"Start Time: {agent['start_time']}, Port: {agent['port']}")
-            print(agent_info)
             logger.info(agent_info)
+            print(agent_info)
     else:
-        print("[INFO] No active agents found.")
         logger.info("No active agents found.")
+        print("[INFO] No active agents found.")
 
 
 atexit.register(fpk_safe_cleanup)
 
 app = FastAPI()
-
-
-class Comment(BaseModel):
-    block_id: str
-    selected_text: str
-    comment: str
-
-
-class Hook(BaseModel):
-    hook_name: str
-    hook_script: str
-    hook_type: str
-
-
-class EndpointFilter(logging.Filter):
-    def filter(self, record):
-        return 'GET /api/heartbeat' not in record.getMessage()
-
 
 uvicorn_logger = logging.getLogger("uvicorn.access")
 uvicorn_logger.addFilter(EndpointFilter())
@@ -2231,160 +2505,13 @@ app.add_middleware(
 flatpack_directory = None
 
 
-def add_hook_to_database(hook: Hook):
-    global flatpack_directory
-
-    if not flatpack_directory:
-        raise HTTPException(status_code=500, detail="Flatpack directory is not set")
-
-    db_path = os.path.join(flatpack_directory, 'build', 'flatpack.db')
-
-    try:
-        ensure_database_initialized()
-        conn = sqlite3.connect(db_path)
-        cursor = conn.cursor()
-
-        cursor.execute("""
-            INSERT INTO flatpack_hooks (hook_name, hook_script, hook_type)
-            VALUES (?, ?, ?)
-        """, (hook.hook_name, hook.hook_script, hook.hook_type))
-
-        hook_id = cursor.lastrowid
-        conn.commit()
-        conn.close()
-
-        return {"message": "Hook added successfully.", "hook_id": hook_id}
-    except Error as e:
-        logger.error("An error occurred while adding the hook: %s", e)
-        print(f"[ERROR] An error occurred while adding the hook: {e}")
-        raise HTTPException(status_code=500, detail=f"An error occurred while adding the hook: {e}")
-
-
-def authenticate_token(request: Request):
-    """Authenticate the token."""
-    global VALIDATION_ATTEMPTS
-    token = request.headers.get('Authorization')
-    stored_token = get_token()
-
-    if not stored_token:
-        logger.error("Stored token is not set")
-        print("Stored token is not set")
-        return
-
-    if token is None or token != f"Bearer {stored_token}":
-        VALIDATION_ATTEMPTS += 1
-        logger.error(f"Invalid or missing token. Attempt {VALIDATION_ATTEMPTS}")
-        print(f"Invalid or missing token. Attempt {VALIDATION_ATTEMPTS}")
-        if VALIDATION_ATTEMPTS >= MAX_ATTEMPTS:
-            shutdown_server()
-        raise HTTPException(status_code=403, detail="Invalid or missing token")
-
-
-def ensure_database_initialized():
-    if flatpack_directory:
-        db_path = os.path.join(flatpack_directory, 'build', 'flatpack.db')
-        initialize_database(db_path)
-
-
-def escape_content_parts(content: str) -> str:
-    """Escape special characters within content parts."""
-    parts = content.split('part_')
-    escaped_content = parts[0]
-    for part in parts[1:]:
-        if part.startswith('bash """') or part.startswith('python """'):
-            type_and_content = part.split('"""', 1)
-            if len(type_and_content) > 1:
-                type_and_header, code = type_and_content
-                code, footer = code.rsplit('"""', 1)
-                escaped_content += f'part_{type_and_header}"""{escape_special_chars(code)}"""{footer}'
-            else:
-                escaped_content += f'part_{part}'
-        else:
-            escaped_content += f'part_{part}'
-    return escaped_content
-
-
-def escape_special_chars(content: str) -> str:
-    """Escape special characters in a given string."""
-    return content.replace('"', '\\"')
-
-
-def get_all_hooks_from_database():
-    global flatpack_directory
-
-    if not flatpack_directory:
-        raise HTTPException(status_code=500, detail="Flatpack directory is not set")
-
-    db_path = os.path.join(flatpack_directory, 'build', 'flatpack.db')
-
-    try:
-        ensure_database_initialized()
-        conn = sqlite3.connect(db_path)
-        cursor = conn.cursor()
-        cursor.execute("SELECT id, hook_name, hook_script, hook_type FROM flatpack_hooks")
-        hooks = cursor.fetchall()
-        conn.close()
-
-        hooks_list = [{"id": hook[0], "hook_name": hook[1], "hook_script": hook[2], "hook_type": hook[3]} for hook in
-                      hooks]
-        return hooks_list
-
-    except Error as e:
-        logger.error("An error occurred while fetching hooks: %s", e)
-        print(f"[ERROR] An error occurred while fetching hooks: {e}")
-        raise HTTPException(status_code=500, detail=f"An error occurred while fetching hooks: {e}")
-
-
-def get_token() -> Optional[str]:
-    """Retrieve the token from the configuration file."""
-    config = load_config()
-    return config.get('token')
-
-
-def set_token(token: str):
-    try:
-        config = load_config()
-        config['token'] = token
-        save_config(config)
-        print("[INFO] Token set successfully!")
-        logger.info("Token set successfully.")
-    except Exception as e:
-        print(f"[ERROR] Failed to set token: {str(e)}")
-        logger.error("Failed to set token: %s", str(e))
-
-
-def shutdown_server():
-    """Shutdown the FastAPI server."""
-    logging.getLogger("uvicorn.error").info("Shutting down the server after maximum validation attempts.")
-    os._exit(0)
-
-
-def unescape_content_parts(content: str) -> str:
-    """Unescape special characters within content parts."""
-    parts = content.split('part_')
-    unescaped_content = parts[0]
-    for part in parts[1:]:
-        if part.startswith('bash """') or part.startswith('python """'):
-            type_and_content = part.split('"""', 1)
-            if len(type_and_content) > 1:
-                type_and_header, code = type_and_content
-                code, footer = code.rsplit('"""', 1)
-                unescaped_content += f'part_{type_and_header}"""{unescape_special_chars(code)}"""{footer}'
-            else:
-                unescaped_content += f'part_{part}'
-        else:
-            unescaped_content += f'part_{part}'
-    return unescaped_content
-
-
-def unescape_special_chars(content: str) -> str:
-    """Unescape special characters in a given string."""
-    return content.replace('\\"', '"')
-
-
-def validate_api_token(api_token: str) -> bool:
-    """Validate the API token."""
-    return api_token == get_token()
+@app.on_event("startup")
+async def startup_event():
+    global SERVER_START_TIME
+    SERVER_START_TIME = datetime.now(timezone.utc)
+    logger.info("Server started at %s. Cooldown period: %s", SERVER_START_TIME, COOLDOWN_PERIOD)
+    print(f"[INFO] Server started at {SERVER_START_TIME}. Cooldown period: {COOLDOWN_PERIOD}")
+    asyncio.create_task(run_scheduler())
 
 
 @app.get("/favicon.ico", include_in_schema=False)
@@ -2575,8 +2702,8 @@ async def build_flatpack(
         raise HTTPException(status_code=500, detail="Flatpack directory is not set")
 
     try:
-        print(f"[INFO] Building flatpack located at {flatpack_directory}")
         logger.info("Building flatpack located at %s", flatpack_directory)
+        print(f"[INFO] Building flatpack located at {flatpack_directory}")
 
         fpk_build(flatpack_directory)
 
@@ -2809,6 +2936,9 @@ async def save_schedule(request: Request, token: str = Depends(authenticate_toke
         pattern = data.get('pattern')
         datetimes = data.get('datetimes', [])
 
+        if schedule_type == 'manual':
+            datetimes = [datetime.fromisoformat(dt).astimezone(timezone.utc).isoformat() for dt in datetimes]
+
         ensure_database_initialized()
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
@@ -2861,69 +2991,36 @@ async def verify_flatpack(
         return JSONResponse(content={"message": f"Verification process failed: {e}"}, status_code=500)
 
 
-def generate_secure_token(length=32):
-    """Generate a secure token of the specified length.
-
-    Args:
-        length (int): The length of the token to generate. Default is 32.
-
-    Returns:
-        str: A securely generated token.
-    """
-    alphabet = string.ascii_letters + string.digits + '-._~'
-    return ''.join(secrets.choice(alphabet) for _ in range(length))
-
-
-def setup_static_directory(fastapi_app: FastAPI, directory: str):
-    """Setup the static directory for serving static files."""
-    global flatpack_directory
-    flatpack_directory = os.path.abspath(directory)
-
-    if os.path.exists(flatpack_directory) and os.path.isdir(flatpack_directory):
-        static_dir = os.path.join(flatpack_directory, 'build')
-        fastapi_app.mount(
-            "/",
-            StaticFiles(directory=static_dir, html=True),
-            name="static"
-        )
-        print(f"[INFO] Static files will be served from: {static_dir}")
-        logger.info("Static files will be served from: %s", static_dir)
-    else:
-        print(f"[ERROR] The directory '{flatpack_directory}' does not exist or is not a directory.")
-        logger.error("The directory '%s' does not exist or is not a directory.", flatpack_directory)
-        raise ValueError(error_message)
-
-
 def fpk_cli_handle_run(args, session):
     """Handle the 'run' command to start the FastAPI server."""
     if not args.input:
-        print("[ERROR] Please specify a flatpack for the run command.")
         logger.error("Please specify a flatpack for the run command.")
+        print("[ERROR] Please specify a flatpack for the run command.")
         return
 
     directory = Path(args.input).resolve()
     allowed_directory = Path.cwd()  # Or another allowed base directory
 
     if not directory.is_dir() or not directory.exists():
-        print(f"[ERROR] The flatpack '{directory}' does not exist or is not a directory.")
         logger.error("The flatpack '%s' does not exist or is not a directory.", directory)
+        print(f"[ERROR] The flatpack '{directory}' does not exist or is not a directory.")
         return
 
     if not directory.is_relative_to(allowed_directory):
-        print("[ERROR] The specified directory is not within allowed paths.")
         logger.error("The specified directory is not within allowed paths.")
+        print("[ERROR] The specified directory is not within allowed paths.")
         return
 
     if args.share:
         if not os.environ.get('NGROK_AUTHTOKEN'):
-            print("[ERROR] NGROK_AUTHTOKEN environment variable is not set.")
             logger.error("NGROK_AUTHTOKEN environment variable is not set.")
+            print("[ERROR] NGROK_AUTHTOKEN environment variable is not set.")
             return
 
     token = generate_secure_token()
+    logger.info("API token generated and displayed to user.")
     print(f"[INFO] Generated API token: {token}")
     print("[INFO] Please save this API token securely. You will not be able to retrieve it again.")
-    logger.info("API token generated and displayed to user.")
 
     try:
         while True:
@@ -2945,8 +3042,8 @@ def fpk_cli_handle_run(args, session):
         if args.share:
             listener = ngrok.forward(f"{host}:{port}", authtoken_from_env=True)
             public_url = listener.url()
-            print(f"[INFO] Ingress established at {public_url}")
             logger.info("Ingress established at %s", public_url)
+            print(f"[INFO] Ingress established at {public_url}")
 
         config = uvicorn.Config(app, host=host, port=port)
         server = uvicorn.Server(config)
@@ -2957,44 +3054,44 @@ def fpk_cli_handle_run(args, session):
         server.run()
 
     except Exception as e:
-        print("[ERROR] An unexpected error occurred during server run.")
         logger.exception("An unexpected error occurred during server run: %s", str(e))
+        print("[ERROR] An unexpected error occurred during server run.")
 
     finally:
         if args.share:
             try:
                 ngrok.disconnect(public_url)
-                print("[INFO] Disconnected ngrok ingress.")
                 logger.info("Disconnected ngrok ingress.")
+                print("[INFO] Disconnected ngrok ingress.")
             except Exception as e:
-                print("[ERROR] Failed to disconnect ngrok ingress.")
                 logger.error("Failed to disconnect ngrok ingress: %s", str(e))
+                print("[ERROR] Failed to disconnect ngrok ingress.")
 
 
 def fpk_cli_handle_set_api_key(args, session):
     """Handle the 'set' command to set the API key."""
-    print(f"[INFO] Setting API key: {args.api_key}")
     logger.info("Setting API key: %s", args.api_key)
+    print(f"[INFO] Setting API key: {args.api_key}")
 
     api_key = args.api_key
     config = load_config()
     config['api_key'] = api_key
     save_config(config)
 
-    print("[INFO] API key set successfully!")
     logger.info("API key set successfully!")
+    print("[INFO] API key set successfully!")
 
     try:
         test_key = fpk_get_api_key()
         if test_key == api_key:
-            print("[INFO] Verification successful: API key matches.")
             logger.info("Verification successful: API key matches.")
+            print("[INFO] Verification successful: API key matches.")
         else:
-            print("[ERROR] Verification failed: API key does not match.")
             logger.error("Verification failed: API key does not match.")
+            print("[ERROR] Verification failed: API key does not match.")
     except Exception as e:
-        print(f"[ERROR] Error during API key verification: {e}")
         logger.error("Error during API key verification: %s", e)
+        print(f"[ERROR] Error during API key verification: {e}")
 
 
 def fpk_cli_handle_spawn_agent(args, session):
@@ -3008,11 +3105,11 @@ def fpk_cli_handle_spawn_agent(args, session):
 
     try:
         pid = agent_manager.spawn_agent(args.script_path)
-        print(f"[INFO] Agent spawned with PID: {pid}")
         logger.info("Agent spawned with PID: %s", pid)
+        print(f"[INFO] Agent spawned with PID: {pid}")
     except Exception as e:
-        print(f"[ERROR] Failed to spawn agent: {e}")
         logger.error("Failed to spawn agent: %s", e)
+        print(f"[ERROR] Failed to spawn agent: {e}")
 
 
 def fpk_cli_handle_terminate_agent(args, session):
@@ -3026,11 +3123,11 @@ def fpk_cli_handle_terminate_agent(args, session):
 
     try:
         agent_manager.terminate_agent(args.pid)
-        print(f"[INFO] Agent with PID {args.pid} terminated successfully.")
         logger.info("Agent with PID %s terminated successfully.", args.pid)
+        print(f"[INFO] Agent with PID {args.pid} terminated successfully.")
     except Exception as e:
-        print(f"[ERROR] Failed to terminate agent with PID {args.pid}: {e}")
         logger.error("Failed to terminate agent with PID %s: %s", args.pid, e)
+        print(f"[ERROR] Failed to terminate agent with PID {args.pid}: {e}")
 
 
 def fpk_cli_handle_unbox(args, session):
@@ -3041,16 +3138,16 @@ def fpk_cli_handle_unbox(args, session):
         session: The HTTP session.
     """
     if not args.input:
-        print("[ERROR] Please specify a flatpack for the unbox command.")
         logger.error("No flatpack specified for the unbox command.")
+        print("[ERROR] Please specify a flatpack for the unbox command.")
         return
 
     directory_name = args.input
     existing_dirs = fpk_fetch_github_dirs(session)
 
     if directory_name not in existing_dirs and not args.local:
-        print(f"[ERROR] The flatpack '{directory_name}' does not exist.")
         logger.error("The flatpack '%s' does not exist.", directory_name)
+        print(f"[ERROR] The flatpack '{directory_name}' does not exist.")
         return
 
     fpk_display_disclaimer(directory_name, local=args.local)
@@ -3060,38 +3157,83 @@ def fpk_cli_handle_unbox(args, session):
         if user_response == "YES":
             break
         if user_response == "NO":
-            print("[INFO] Installation aborted by user.")
             logger.info("Installation aborted by user.")
+            print("[INFO] Installation aborted by user.")
             return
-        print("[ERROR] Invalid input. Please type 'YES' to accept or 'NO' to decline.")
         logger.error("Invalid input from user. Expected 'YES' or 'NO'.")
+        print("[ERROR] Invalid input. Please type 'YES' to accept or 'NO' to decline.")
 
     if args.local:
         local_directory_path = Path(directory_name)
         if not local_directory_path.exists() or not local_directory_path.is_dir():
-            print(f"[ERROR] Local directory does not exist: '{directory_name}'.")
             logger.error("Local directory does not exist: '%s'.", directory_name)
+            print(f"[ERROR] Local directory does not exist: '{directory_name}'.")
             return
         toml_path = local_directory_path / 'flatpack.toml'
         if not toml_path.exists():
-            print(f"[ERROR] flatpack.toml not found in '{directory_name}'.")
             logger.error("flatpack.toml not found in the specified directory: '%s'.", directory_name)
+            print(f"[ERROR] flatpack.toml not found in '{directory_name}'.")
             return
 
-    print(f"[INFO] Directory name resolved to: '{directory_name}'")
     logger.info("Directory name resolved to: '%s'", directory_name)
+    print(f"[INFO] Directory name resolved to: '{directory_name}'")
 
     try:
         unbox_result = fpk_unbox(directory_name, session, local=args.local)
         if unbox_result:
-            print(f"[INFO] Unboxed flatpack '{directory_name}' successfully.")
             logger.info("Unboxed flatpack '%s' successfully.", directory_name)
+            print(f"[INFO] Unboxed flatpack '{directory_name}' successfully.")
         else:
-            print(f"[INFO] Unboxing of flatpack '{directory_name}' was aborted.")
             logger.info("Unboxing of flatpack '%s' was aborted.", directory_name)
+            print(f"[INFO] Unboxing of flatpack '{directory_name}' was aborted.")
     except Exception as e:
-        print(f"[ERROR] Failed to unbox flatpack '{directory_name}': {e}")
         logger.error("Failed to unbox flatpack '%s': %s", directory_name, e)
+        print(f"[ERROR] Failed to unbox flatpack '{directory_name}': {e}")
+
+
+def fpk_cli_handle_vector_commands(args, session, vm):
+    """Handle vector database commands.
+
+    Args:
+        args: The command-line arguments.
+        session: The HTTP session.
+        vm: The Vector Manager instance.
+    """
+    logger.info("Handling vector commands...")
+    print("[INFO] Handling vector commands...")
+
+    if args.vector_command == 'add-texts':
+        vm.add_texts(args.texts, "manual")
+        logger.info("Added %d texts to the database.", len(args.texts))
+        print(f"[INFO] Added {len(args.texts)} texts to the database.")
+    elif args.vector_command == 'search-text':
+        results = vm.search_vectors(args.query)
+        if results:
+            logger.info("Search results:")
+            print("[INFO] Search results:")
+            for result in results:
+                logger.info("%s: %s", result['id'], result['text'])
+                print(f"{result['id']}: {result['text']}\n")
+        else:
+            logger.info("No results found.")
+            print("[INFO] No results found.")
+    elif args.vector_command == 'add-pdf':
+        fpk_cli_handle_add_pdf(args.pdf_path, vm)
+    elif args.vector_command == 'add-url':
+        fpk_cli_handle_add_url(args.url, vm)
+    elif args.vector_command == 'add-wikipedia':
+        vm.add_wikipedia_page(args.page_title)
+        logger.info(
+            "Added text from Wikipedia page: '%s' to the vector database.",
+            args.page_title
+        )
+        print(
+            f"[INFO] Added text from Wikipedia page: '{args.page_title}' "
+            "to the vector database."
+        )
+    else:
+        logger.error("Unknown vector command.")
+        print("[ERROR] Unknown vector command.")
 
 
 def fpk_cli_handle_verify(args, session):
@@ -3103,20 +3245,20 @@ def fpk_cli_handle_verify(args, session):
     """
     directory_name = args.directory
     if not directory_name:
-        print("[ERROR] Please specify a directory for the verify command.")
         logger.error("No directory specified for the verify command.")
+        print("[ERROR] Please specify a directory for the verify command.")
         return
 
-    print(f"[INFO] Verifying flatpack in directory: {directory_name}")
     logger.info("Verifying flatpack in directory: %s", directory_name)
+    print(f"[INFO] Verifying flatpack in directory: {directory_name}")
 
     try:
         fpk_verify(directory_name)
-        print(f"[INFO] Verification successful for directory: {directory_name}")
         logger.info("Verification successful for directory: %s", directory_name)
+        print(f"[INFO] Verification successful for directory: {directory_name}")
     except Exception as e:
-        print(f"[ERROR] Verification failed for directory '{directory_name}': {e}")
         logger.error("Verification failed for directory '%s': %s", directory_name, e)
+        print(f"[ERROR] Verification failed for directory '{directory_name}': {e}")
 
 
 def fpk_cli_handle_version(args, session):
@@ -3126,71 +3268,8 @@ def fpk_cli_handle_version(args, session):
         args: The command-line arguments.
         session: The HTTP session.
     """
-    print(f"[INFO] Flatpack version: {VERSION}")
     logger.info("Flatpack version: %s", VERSION)
-
-
-def fpk_initialize_vector_manager(args):
-    """Initialize the Vector Manager.
-
-    Args:
-        args: The command-line arguments.
-
-    Returns:
-        VectorManager: An instance of VectorManager.
-    """
-    data_dir = getattr(args, 'data_dir', '.')
-    print(f"[INFO] Initializing Vector Manager and data directory: {data_dir}")
-    logger.info(
-        "Initializing Vector Manager and data directory: %s",
-        data_dir
-    )
-    return VectorManager(model_id='all-MiniLM-L6-v2', directory=data_dir)
-
-
-def fpk_cli_handle_vector_commands(args, session, vm):
-    """Handle vector database commands.
-
-    Args:
-        args: The command-line arguments.
-        session: The HTTP session.
-        vm: The Vector Manager instance.
-    """
-    print("[INFO] Handling vector commands...")
-    logger.info("Handling vector commands...")
-
-    if args.vector_command == 'add-texts':
-        vm.add_texts(args.texts, "manual")
-        print(f"[INFO] Added {len(args.texts)} texts to the database.")
-        logger.info("Added %d texts to the database.", len(args.texts))
-    elif args.vector_command == 'search-text':
-        results = vm.search_vectors(args.query)
-        if results:
-            print("[INFO] Search results:")
-            logger.info("Search results:")
-            for result in results:
-                print(f"{result['id']}: {result['text']}\n")
-                logger.info("%s: %s", result['id'], result['text'])
-        else:
-            print("[INFO] No results found.")
-            logger.info("No results found.")
-    elif args.vector_command == 'add-pdf':
-        fpk_cli_handle_add_pdf(args.pdf_path, vm)
-    elif args.vector_command == 'add-url':
-        fpk_cli_handle_add_url(args.url, vm)
-    elif args.vector_command == 'add-wikipedia':
-        vm.add_wikipedia_page(args.page_title)
-        print(
-            f"[INFO] Added text from Wikipedia page: '{args.page_title}' "
-            "to the vector database."
-        )
-        logger.info(
-            "Added text from Wikipedia page: '%s' to the vector database.",
-            args.page_title
-        )
-    else:
-        print("[ERROR] Unknown vector command.")
-        logger.error("Unknown vector command.")
+    print(f"[INFO] Flatpack version: {VERSION}")
 
 
 def main():
@@ -3216,8 +3295,8 @@ def main():
         print("\nProcess interrupted by user. Exiting gracefully...")
         sys.exit(1)
     except Exception as e:
-        print(f"[ERROR] An unexpected error occurred: {str(e)}")
         logger.error("An unexpected error occurred: %s", str(e))
+        print(f"[ERROR] An unexpected error occurred: {str(e)}")
         sys.exit(1)
 
 
