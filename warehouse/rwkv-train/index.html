@@ -1110,6 +1110,7 @@
     const saveScheduleBtn = document.getElementById('save-schedule');
     const scheduleTypeInputs = cronWidget.querySelectorAll('input[name="schedule-type"]');
 
+    const CHECK_INTERVAL = 5000;
     const MAX_CONSECUTIVE_ERRORS = 3;
 
     const getBaseUrl = () => window.location.origin;
@@ -1288,59 +1289,25 @@
     async function buildProject(apiToken) {
         showLoadingOverlay('Starting build...');
         disableInteractions();
-        stopBuildStatusCheck();
 
         try {
             await saveFile(false, apiToken);
-            await callAPI('build', apiToken);
-            startBuildStatusCheck();
+            const buildResponse = await callAPI('build', apiToken);
+            console.log('Build API response:', buildResponse);
 
-            await fetchLogFiles(apiToken);
-
-            const data = await getEvalJSON(apiToken);
-
-            const evalPart = data.eval;
-            const isSuccess = data.curr === data.last || evalPart === null;
-
-            showStatus(JSON.stringify(data), isSuccess);
-
-            const allParts = document.querySelectorAll('.color-label.eval-label');
-            allParts.forEach(label => {
-                label.classList.remove('eval-label');
-            });
-
-            if (data.last === 0) {
-                showStatus("Build completed successfully (no active parts)", true);
-            } else if (evalPart !== null) {
-                const partDiv = document.getElementById('part-' + evalPart);
-                if (partDiv) {
-                    const colorLabelDiv = partDiv.querySelector('.color-label');
-                    if (colorLabelDiv) {
-                        if (isSuccess) {
-                            colorLabelDiv.classList.remove('eval-label');
-                        } else {
-                            colorLabelDiv.classList.add('eval-label');
-                        }
-                    }
-                }
+            if (buildResponse && (buildResponse.status === 'started' || buildResponse.message === 'Build process started in background.')) {
+                startBuildStatusCheck();
+            } else if (buildResponse && buildResponse.message) {
+                showStatus(buildResponse.message, false);
+            } else {
+                throw new Error('Unexpected response from build API');
             }
-
-            fetchEvalData();
 
         } catch (error) {
             console.error('Failed to build project:', error);
             showStatus(`Error: ${error.message}`, false);
-
-            const allParts = document.querySelectorAll('.color-label.eval-label');
-            allParts.forEach(label => {
-                label.classList.remove('eval-label');
-            });
-
-            fetchEvalData();
-        } finally {
             hideLoadingOverlay();
             enableInteractions();
-            stopBuildStatusCheck();
         }
     }
 
@@ -1862,39 +1829,47 @@
     }
 
     function handleBuildStatus(status) {
-        switch (status) {
-            case 'in_progress':
-                console.log('Build in progress...');
-                showLoadingOverlay('Build in progress...');
-                disableInteractions();
-                break;
-            case 'completed':
-                hideLoadingOverlay();
-                enableInteractions();
-                fetchEvalData();
-                fetchLatestLogs(sessionStorage.getItem('apiToken'));
-                console.log('Build completed successfully.');
-                showStatus('Build completed successfully.', true);
-                stopBuildStatusCheck();
-                break;
-            case 'failed':
-                hideLoadingOverlay();
-                enableInteractions();
-                console.log('Build failed. Check logs for details.');
-                showStatus('Build failed. Check logs for details.', false);
-                fetchLatestLogs(sessionStorage.getItem('apiToken'));
-                stopBuildStatusCheck();
-                break;
-            case 'no_builds':
-            case 'unknown':
-                hideLoadingOverlay();
-                enableInteractions();
-                break;
+        // console.log('Current build status:', status);
+
+        if (status.startsWith('in_progress')) {
+            const step = status.split(': ')[1] || 'Unknown step';
+            console.log(`Build in progress: ${step}`);
+            showLoadingOverlay(`Build in progress: ${step}`);
+            disableInteractions();
+        } else {
+            switch (status) {
+                case 'completed':
+                    hideLoadingOverlay();
+                    enableInteractions();
+                    fetchEvalData();
+                    fetchLatestLogs(sessionStorage.getItem('apiToken'));
+                    console.log('Build completed successfully.');
+                    showStatus('Build completed successfully.', true);
+                    break;
+                case 'failed':
+                    hideLoadingOverlay();
+                    enableInteractions();
+                    console.log('Build failed. Check logs for details.');
+                    showStatus('Build failed. Check logs for details.', false);
+                    fetchLatestLogs(sessionStorage.getItem('apiToken'));
+                    break;
+                case 'no_builds':
+                    // console.log('No active builds.');
+                    hideLoadingOverlay();
+                    enableInteractions();
+                    break;
+                case 'unknown':
+                    console.log('Build status unknown.');
+                    showLoadingOverlay('Checking build status...');
+                    break;
+                default:
+                    console.log(`Unexpected build status: ${status}`);
+                    showLoadingOverlay(`Build status: ${status}`);
+            }
         }
     }
 
     function handleBuildStatusError() {
-        stopBuildStatusCheck();
         hideLoadingOverlay();
         enableInteractions();
         showStatus('Unable to check build status. The server may be unavailable.', false);
@@ -2483,12 +2458,16 @@
     }
 
     function startBuildStatusCheck() {
+        if (!buildStatusInterval) {
+            buildStatusInterval = setInterval(checkBuildStatus, CHECK_INTERVAL);
+        }
         checkBuildStatus();
-        buildStatusInterval = setInterval(checkBuildStatus, 5000);
     }
 
     function stopBuildStatusCheck() {
         clearInterval(buildStatusInterval);
+        buildStatusInterval = null;
+        console.log('Stopped build status check');
     }
 
     function stripFormatting(e) {
