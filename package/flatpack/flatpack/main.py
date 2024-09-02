@@ -1,5 +1,6 @@
 import argparse
 import ast
+import asyncio
 import atexit
 import json
 import logging
@@ -35,11 +36,12 @@ import uvicorn
 import zstandard as zstd
 
 from bs4 import BeautifulSoup, MarkupResemblesLocatorWarning
+from croniter import croniter
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import padding
-from fastapi import Depends, FastAPI, Form, HTTPException, Request
+from fastapi import BackgroundTasks, Depends, FastAPI, Form, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
@@ -2948,6 +2950,10 @@ def fpk_cli_handle_run(args, session):
 
         config = uvicorn.Config(app, host=host, port=port)
         server = uvicorn.Server(config)
+
+        background_tasks = BackgroundTasks()
+        background_tasks.add_task(run_scheduler)
+
         server.run()
 
     except Exception as e:
