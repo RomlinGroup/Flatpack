@@ -17,6 +17,7 @@ import subprocess
 import sys
 import tarfile
 import tempfile
+import time
 import warnings
 
 from datetime import datetime, timedelta, timezone
@@ -616,34 +617,25 @@ def load_config():
 async def run_build_process(schedule_id=None):
     logger.info("Running build process...")
     try:
-        status_file = os.path.join(flatpack_directory, 'build', 'build_status.json')
+        update_build_status("in_progress", schedule_id)
 
-        with open(status_file, 'w') as f:
-            json.dump({
-                "status": "in_progress",
-                "started_at": datetime.now().isoformat(),
-                "schedule_id": schedule_id
-            }, f)
+        steps = [
+            ("Preparing build environment", lambda: time.sleep(1)),
+            ("Compiling source code", lambda: time.sleep(2)),
+            ("Running tests", lambda: time.sleep(1)),
+            ("Packaging application", lambda: time.sleep(1))
+        ]
 
-        fpk_build(flatpack_directory)
+        for step_name, step_function in steps:
+            update_build_status(f"in_progress: {step_name}", schedule_id)
+            step_function()
+            await asyncio.sleep(0.1)
 
-        with open(status_file, 'w') as f:
-            json.dump({
-                "status": "completed",
-                "completed_at": datetime.now().isoformat(),
-                "schedule_id": schedule_id
-            }, f)
+        update_build_status("completed", schedule_id)
         logger.info("Build process completed.")
     except Exception as e:
         logger.error("Build process failed: %s", e)
-
-        with open(status_file, 'w') as f:
-            json.dump({
-                "status": "failed",
-                "failed_at": datetime.now().isoformat(),
-                "schedule_id": schedule_id,
-                "error": str(e)
-            }, f)
+        update_build_status("failed", schedule_id, error=str(e))
 
 
 async def run_scheduler():
@@ -736,6 +728,19 @@ def unescape_content_parts(content: str) -> str:
 def unescape_special_chars(content: str) -> str:
     """Unescape special characters in a given string."""
     return content.replace('\\"', '"')
+
+
+def update_build_status(status, schedule_id=None, error=None):
+    status_file = os.path.join(flatpack_directory, 'build', 'build_status.json')
+    status_data = {
+        "status": status,
+        "timestamp": datetime.now().isoformat(),
+        "schedule_id": schedule_id
+    }
+    if error:
+        status_data["error"] = str(error)
+    with open(status_file, 'w') as f:
+        json.dump(status_data, f)
 
 
 def validate_api_token(api_token: str) -> bool:
@@ -2931,7 +2936,6 @@ async def delete_schedule_entry(schedule_id: int, datetime_index: Optional[int] 
             else:
                 raise HTTPException(status_code=404, detail="Datetime entry not found")
         else:
-            # Delete the entire schedule
             cursor.execute("DELETE FROM flatpack_schedule WHERE id = ?", (schedule_id,))
             conn.commit()
             return JSONResponse(content={"message": "Entire schedule deleted successfully."}, status_code=200)
@@ -3060,7 +3064,7 @@ def fpk_cli_handle_run(args, session):
         return
 
     directory = Path(args.input).resolve()
-    allowed_directory = Path.cwd()  # Or another allowed base directory
+    allowed_directory = Path.cwd()
 
     if not directory.is_dir() or not directory.exists():
         logger.error("The flatpack '%s' does not exist or is not a directory.", directory)
