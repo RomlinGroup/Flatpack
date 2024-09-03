@@ -621,22 +621,19 @@ async def run_build_process(schedule_id=None):
         update_build_status("in_progress", schedule_id)
 
         steps = [
-            ("Preparing build environment", lambda: time.sleep(0.25)),
-            ("Compiling source code", lambda: time.sleep(0.25)),
-            ("Running tests", lambda: time.sleep(0.25)),
-            ("Packaging application", lambda: time.sleep(0.25))
+            ("Preparing build environment", 1),
+            ("Compiling source code", 1),
+            ("Running tests", 1),
+            ("Packaging application", 1)
         ]
 
-        for step_name, step_function in steps:
+        for step_name, duration in steps:
             update_build_status(f"in_progress: {step_name}", schedule_id)
-            step_function()
-            await asyncio.sleep(0.1)
-
-        directory = flatpack_directory if flatpack_directory else None
+            await asyncio.sleep(duration)
 
         loop = asyncio.get_event_loop()
         update_build_status("in_progress: Running build script", schedule_id)
-        await loop.run_in_executor(None, partial(fpk_build, directory))
+        await loop.run_in_executor(None, partial(fpk_build, flatpack_directory))
 
         update_build_status("completed", schedule_id)
         logger.info("Build process completed.")
