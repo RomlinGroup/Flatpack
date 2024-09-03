@@ -21,6 +21,7 @@ import time
 import warnings
 
 from datetime import datetime, timedelta, timezone
+from functools import partial
 from importlib.metadata import version
 from io import BytesIO
 from logging.handlers import RotatingFileHandler
@@ -630,6 +631,12 @@ async def run_build_process(schedule_id=None):
             update_build_status(f"in_progress: {step_name}", schedule_id)
             step_function()
             await asyncio.sleep(0.1)
+
+        directory = flatpack_directory if flatpack_directory else None
+
+        loop = asyncio.get_event_loop()
+        update_build_status("in_progress: Running build script", schedule_id)
+        await loop.run_in_executor(None, partial(fpk_build, directory))
 
         update_build_status("completed", schedule_id)
         logger.info("Build process completed.")
