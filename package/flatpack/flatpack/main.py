@@ -621,10 +621,10 @@ async def run_build_process(schedule_id=None):
         update_build_status("in_progress", schedule_id)
 
         steps = [
-            ("Preparing build environment", lambda: time.sleep(1)),
-            ("Compiling source code", lambda: time.sleep(2)),
-            ("Running tests", lambda: time.sleep(1)),
-            ("Packaging application", lambda: time.sleep(1))
+            ("Preparing build environment", lambda: time.sleep(0.25)),
+            ("Compiling source code", lambda: time.sleep(0.25)),
+            ("Running tests", lambda: time.sleep(0.25)),
+            ("Packaging application", lambda: time.sleep(0.25))
         ]
 
         for step_name, step_function in steps:
