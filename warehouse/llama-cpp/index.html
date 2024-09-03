@@ -1117,7 +1117,7 @@
         'Packaging application',
         'Running build script'
     ];
-    const CHECK_INTERVAL = 100;
+    const CHECK_INTERVAL = 1000;
     const MAX_CONSECUTIVE_ERRORS = 3;
 
     const getBaseUrl = () => window.location.origin;
@@ -1418,7 +1418,6 @@
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
         } catch (error) {
-            console.error('Error checking build status:', error);
 
             if (error.name === 'AbortError') {
                 console.warn('Build status check timed out');
@@ -1481,12 +1480,8 @@
             heartbeatTime.textContent = 'Disconnected';
             heartbeatDot.classList.remove('connected');
             heartbeatDot.classList.add('disconnected');
-
-            if (!isBuilding) {
-                isBuilding = true;
-                showLoadingOverlay();
-                disableInteractions();
-            }
+            hideLoadingOverlay();
+            resetAppState();
         }
     }
 
@@ -2309,6 +2304,55 @@
     function renderLogContent(content) {
         const logContentElement = document.getElementById('log-output');
         logContentElement.innerText = typeof content === 'string' ? content : JSON.stringify(content, null, 2);
+    }
+
+    function resetAppState() {
+        hideLoadingOverlay();
+
+        sessionStorage.removeItem('activeTab');
+        sessionStorage.removeItem('apiToken');
+
+        comments.length = 0;
+        consecutiveErrors = 0;
+        currentPart = 1;
+        currentStepIndex = -1;
+        isBuilding = false;
+        lastStatus = '';
+        lastStep = '';
+        manualDatetimes.length = 0;
+        originalContent = '';
+
+        clearInterval(buildStatusInterval);
+        buildStatusInterval = null;
+
+        document.getElementById('comment-list').innerHTML = '';
+        document.getElementById('cron-pattern').value = '';
+        document.getElementById('datetime-list').innerHTML = '';
+        document.getElementById('file-content').innerHTML = '';
+        document.getElementById('hooks-list').innerHTML = '';
+        document.getElementById('log-output').innerText = '[PLACEHOLDER]';
+        document.getElementById('manual-datetime').value = '';
+        document.getElementById('schedules-container').innerHTML = '';
+
+        document.getElementById('api-key-input').value = '';
+
+        const statusBar = document.getElementById('status-bar');
+        statusBar.textContent = '';
+        statusBar.style.display = 'none';
+        statusBar.classList.remove('success', 'error');
+
+        const tabsContainer = document.querySelector('.tabs-container');
+        if (tabsContainer) {
+            tabsContainer.style.marginTop = '';
+        }
+
+        if (statusBar.hideTimeout) {
+            clearTimeout(statusBar.hideTimeout);
+            statusBar.hideTimeout = null;
+        }
+
+        enableInteractions();
+        document.getElementById('api-key-modal').style.display = 'flex';
     }
 
     function resizeAllTextareas() {
