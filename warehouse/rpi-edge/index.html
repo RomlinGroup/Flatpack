@@ -2307,52 +2307,8 @@
     }
 
     function resetAppState() {
-        hideLoadingOverlay();
-
-        sessionStorage.removeItem('activeTab');
-        sessionStorage.removeItem('apiToken');
-
-        comments.length = 0;
-        consecutiveErrors = 0;
-        currentPart = 1;
-        currentStepIndex = -1;
-        isBuilding = false;
-        lastStatus = '';
-        lastStep = '';
-        manualDatetimes.length = 0;
-        originalContent = '';
-
-        clearInterval(buildStatusInterval);
-        buildStatusInterval = null;
-
-        document.getElementById('comment-list').innerHTML = '';
-        document.getElementById('cron-pattern').value = '';
-        document.getElementById('datetime-list').innerHTML = '';
-        document.getElementById('file-content').innerHTML = '';
-        document.getElementById('hooks-list').innerHTML = '';
-        document.getElementById('log-output').innerText = '[PLACEHOLDER]';
-        document.getElementById('manual-datetime').value = '';
-        document.getElementById('schedules-container').innerHTML = '';
-
-        document.getElementById('api-key-input').value = '';
-
-        const statusBar = document.getElementById('status-bar');
-        statusBar.textContent = '';
-        statusBar.style.display = 'none';
-        statusBar.classList.remove('success', 'error');
-
-        const tabsContainer = document.querySelector('.tabs-container');
-        if (tabsContainer) {
-            tabsContainer.style.marginTop = '';
-        }
-
-        if (statusBar.hideTimeout) {
-            clearTimeout(statusBar.hideTimeout);
-            statusBar.hideTimeout = null;
-        }
-
-        enableInteractions();
-        document.getElementById('api-key-modal').style.display = 'flex';
+        sessionStorage.clear();
+        window.location.reload();
     }
 
     function resizeAllTextareas() {
