@@ -1092,7 +1092,7 @@
 
 <div id="loading-overlay" style="display: none;">
     <div class="spinner"></div>
-    <p>Please wait...</p>
+    <p id="loading-message">Please wait</p>
 </div> <!-- END #loading-overlay -->
 
 <script>
@@ -1110,7 +1110,7 @@
     const saveScheduleBtn = document.getElementById('save-schedule');
     const scheduleTypeInputs = cronWidget.querySelectorAll('input[name="schedule-type"]');
 
-    const CHECK_INTERVAL = 5000;
+    const CHECK_INTERVAL = 100;
     const MAX_CONSECUTIVE_ERRORS = 3;
 
     const getBaseUrl = () => window.location.origin;
@@ -1835,13 +1835,12 @@
             const step = status.split(': ')[1] || 'Unknown step';
             if (status !== lastStatus || step !== lastStep) {
                 console.log(`Build in progress: ${step}`);
-                showLoadingOverlay(`Build in progress: ${step}`);
+                showLoadingOverlay(`${step}`);
                 disableInteractions();
                 lastStatus = status;
                 lastStep = step;
             }
         } else if (status !== lastStatus) {
-            console.log(`Build status: ${status}`);
             switch (status) {
                 case 'completed':
                     hideLoadingOverlay();
@@ -2423,8 +2422,12 @@
         }
     }
 
-    function showLoadingOverlay() {
-        document.getElementById('loading-overlay').style.display = 'flex';
+    function showLoadingOverlay(message = 'Please wait') {
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const loadingMessage = document.getElementById('loading-message');
+
+        loadingMessage.textContent = message;
+        loadingOverlay.style.display = 'flex';
     }
 
     function showStatus(message, isSuccess = true) {
