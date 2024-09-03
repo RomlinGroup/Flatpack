@@ -1165,6 +1165,7 @@
     let currentPart = 1;
     let highlightTimeout;
     let isBuilding = false;
+    let lastStatus = '';
     let manualDatetimes = [];
     let originalContent = '';
 
@@ -1829,7 +1830,10 @@
     }
 
     function handleBuildStatus(status) {
-        // console.log('Current build status:', status);
+        if (status === lastStatus) {
+            return;
+        }
+        lastStatus = status;
 
         if (status.startsWith('in_progress')) {
             const step = status.split(': ')[1] || 'Unknown step';
