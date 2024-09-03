@@ -1166,6 +1166,7 @@
     let highlightTimeout;
     let isBuilding = false;
     let lastStatus = '';
+    let lastStep = '';
     let manualDatetimes = [];
     let originalContent = '';
 
@@ -1830,46 +1831,43 @@
     }
 
     function handleBuildStatus(status) {
-        if (status === lastStatus) {
-            return;
-        }
-        lastStatus = status;
-
         if (status.startsWith('in_progress')) {
             const step = status.split(': ')[1] || 'Unknown step';
-            console.log(`Build in progress: ${step}`);
-            showLoadingOverlay(`Build in progress: ${step}`);
-            disableInteractions();
-        } else {
+            if (status !== lastStatus || step !== lastStep) {
+                console.log(`Build in progress: ${step}`);
+                showLoadingOverlay(`Build in progress: ${step}`);
+                disableInteractions();
+                lastStatus = status;
+                lastStep = step;
+            }
+        } else if (status !== lastStatus) {
+            console.log(`Build status: ${status}`);
             switch (status) {
                 case 'completed':
                     hideLoadingOverlay();
                     enableInteractions();
                     fetchEvalData();
                     fetchLatestLogs(sessionStorage.getItem('apiToken'));
-                    console.log('Build completed successfully.');
                     showStatus('Build completed successfully.', true);
                     break;
                 case 'failed':
                     hideLoadingOverlay();
                     enableInteractions();
-                    console.log('Build failed. Check logs for details.');
                     showStatus('Build failed. Check logs for details.', false);
                     fetchLatestLogs(sessionStorage.getItem('apiToken'));
                     break;
                 case 'no_builds':
-                    // console.log('No active builds.');
                     hideLoadingOverlay();
                     enableInteractions();
                     break;
                 case 'unknown':
-                    console.log('Build status unknown.');
                     showLoadingOverlay('Checking build status...');
                     break;
                 default:
-                    console.log(`Unexpected build status: ${status}`);
                     showLoadingOverlay(`Build status: ${status}`);
             }
+            lastStatus = status;
+            lastStep = '';
         }
     }
 
