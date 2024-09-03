@@ -1110,6 +1110,13 @@
     const saveScheduleBtn = document.getElementById('save-schedule');
     const scheduleTypeInputs = cronWidget.querySelectorAll('input[name="schedule-type"]');
 
+    const BUILD_STEPS = [
+        'Preparing build environment',
+        'Compiling source code',
+        'Running tests',
+        'Packaging application',
+        'Running build script'
+    ];
     const CHECK_INTERVAL = 100;
     const MAX_CONSECUTIVE_ERRORS = 3;
 
@@ -1163,6 +1170,7 @@
     let buildStatusInterval;
     let consecutiveErrors = 0;
     let currentPart = 1;
+    let currentStepIndex = -1;
     let highlightTimeout;
     let isBuilding = false;
     let lastStatus = '';
@@ -1833,10 +1841,13 @@
     function handleBuildStatus(status) {
         if (status.startsWith('in_progress')) {
             const step = status.split(': ')[1] || 'Unknown step';
-            if (status !== lastStatus || step !== lastStep) {
+            const stepIndex = BUILD_STEPS.indexOf(step);
+
+            if (stepIndex > currentStepIndex) {
                 console.log(`Build in progress: ${step}`);
                 showLoadingOverlay(`${step}`);
                 disableInteractions();
+                currentStepIndex = stepIndex;
                 lastStatus = status;
                 lastStep = step;
             }
@@ -1867,6 +1878,7 @@
             }
             lastStatus = status;
             lastStep = '';
+            currentStepIndex = -1;
         }
     }
 
@@ -2467,6 +2479,7 @@
             buildStatusInterval = setInterval(checkBuildStatus, CHECK_INTERVAL);
         }
         checkBuildStatus();
+        currentStepIndex = -1;
     }
 
     function stopBuildStatusCheck() {
