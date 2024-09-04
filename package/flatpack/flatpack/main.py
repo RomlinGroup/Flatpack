@@ -127,6 +127,9 @@ global_log_file_path = HOME_DIR / ".fpk_logger.log"
 logger = setup_logging(global_log_file_path)
 os.chmod(global_log_file_path, 0o600)
 
+logger = logging.getLogger("schedule_logger")
+schedule_lock = asyncio.Lock()
+
 uvicorn_server = None
 
 
@@ -191,12 +194,15 @@ def authenticate_token(request: Request):
 
 async def check_and_run_schedules():
     global SERVER_START_TIME
+
     if not flatpack_directory:
         logger.error("Flatpack directory is not set.")
         print("[ERROR] Flatpack directory is not set.")
         return
 
     now = datetime.now(timezone.utc)
+    logger.debug(f"[DEBUG] Current time: {now}")
+    print(f"[DEBUG] Current time: {now}")
 
     if SERVER_START_TIME and (now - SERVER_START_TIME) < COOLDOWN_PERIOD:
         logger.info("In cooldown period. Skipping schedule check.")
@@ -205,43 +211,92 @@ async def check_and_run_schedules():
 
     db_path = os.path.join(flatpack_directory, 'build', 'flatpack.db')
 
-    try:
-        conn = sqlite3.connect(db_path)
-        cursor = conn.cursor()
+    async with schedule_lock:
+        try:
+            logger.debug(f"[DEBUG] Opening database connection to {db_path}")
+            print(f"[DEBUG] Opening database connection to {db_path}")
+            conn = sqlite3.connect(db_path)
+            cursor = conn.cursor()
 
-        cursor.execute("SELECT id, type, pattern, datetimes FROM flatpack_schedule")
-        schedules = cursor.fetchall()
+            cursor.execute("SELECT id, type, pattern, datetimes, last_run FROM flatpack_schedule")
+            schedules = cursor.fetchall()
+            logger.debug(f"[DEBUG] Fetched schedules: {schedules}")
+            print(f"[DEBUG] Fetched schedules: {schedules}")
 
-        for schedule_id, schedule_type, pattern, datetimes in schedules:
-            if schedule_type == 'recurring':
-                if pattern:
-                    cron = croniter(pattern, now)
-                    prev_run = cron.get_prev(datetime)
-                    next_run = cron.get_next(datetime)
-                    if prev_run <= now < next_run:
-                        await run_build_process(schedule_id)
-                        logger.info("Executed recurring build for schedule %s", schedule_id)
-                        print(f"[INFO] Executed recurring build for schedule {schedule_id}")
+            for schedule_id, schedule_type, pattern, datetimes, last_run in schedules:
+                logger.debug(
+                    f"[DEBUG] Processing schedule ID: {schedule_id}, Type: {schedule_type}, Pattern: {pattern}, Datetimes: {datetimes}, Last Run: {last_run}")
 
-            elif schedule_type == 'manual':
-                if datetimes:
-                    datetimes_list = json.loads(datetimes)
-                    for dt in datetimes_list:
-                        scheduled_time = datetime.fromisoformat(dt).replace(tzinfo=timezone.utc)
-                        if scheduled_time <= now:
-                            await run_build_process(schedule_id)
-                            logger.info("Executed manual build for schedule %s", schedule_id)
-                            print(f"[INFO] Executed manual build for schedule {schedule_id}")
+                if schedule_type == 'recurring':
+                    if pattern:
+                        cron = croniter(pattern, now)
+                        prev_run = cron.get_prev(datetime)
+                        next_run = cron.get_next(datetime)
+                        logger.debug(f"[DEBUG] Cron pattern: {pattern}, Previous run: {prev_run}, Next run: {next_run}")
 
-    except sqlite3.Error as e:
-        logger.error("Database error: %s", e)
-        print(f"[ERROR] Database error: {e}")
-    except Exception as e:
-        logger.error("An error occurred: %s", e)
-        print(f"[ERROR] An error occurred: {e}")
-    finally:
-        if conn:
-            conn.close()
+                        if last_run:
+                            last_run_dt = datetime.fromisoformat(last_run)
+                        else:
+                            last_run_dt = None
+
+                        if prev_run <= now < next_run:
+                            if last_run_dt is None or last_run_dt < prev_run:
+                                logger.debug(f"[DEBUG] Running build for schedule {schedule_id} at {now}")
+
+                                await run_build_process(schedule_id)
+
+                                cursor.execute("UPDATE flatpack_schedule SET last_run = ? WHERE id = ?",
+                                               (now.isoformat(), schedule_id))
+                                conn.commit()
+
+                                logger.info(f"Executed recurring build for schedule {schedule_id}")
+                                print(f"[INFO] Executed recurring build for schedule {schedule_id}")
+                            else:
+                                logger.debug(
+                                    f"[DEBUG] Skipped recurring build for schedule {schedule_id}. Already run in this window.")
+                                print(
+                                    f"[DEBUG] Skipped recurring build for schedule {schedule_id}. Already run in this window.")
+                        else:
+                            logger.debug(
+                                f"[DEBUG] Skipped recurring build for schedule {schedule_id}. Not within run window.")
+                            print(f"[DEBUG] Skipped recurring build for schedule {schedule_id}. Not within run window.")
+
+                elif schedule_type == 'manual':
+                    if datetimes:
+                        datetimes_list = json.loads(datetimes)
+                        logger.debug(f"[DEBUG] Manual schedule with datetimes: {datetimes_list}")
+
+                        for dt in datetimes_list:
+                            scheduled_time = datetime.fromisoformat(dt).replace(tzinfo=timezone.utc)
+                            logger.debug(f"[DEBUG] Checking manual schedule ID {schedule_id} for time {scheduled_time}")
+
+                            if scheduled_time <= now:
+                                logger.debug(f"[DEBUG] Running manual build for schedule {schedule_id} at {now}")
+
+                                await run_build_process(schedule_id)
+                                cursor.execute("UPDATE flatpack_schedule SET last_run = ? WHERE id = ?",
+                                               (now.isoformat(), schedule_id))
+                                conn.commit()
+
+                                logger.info(f"Executed manual build for schedule {schedule_id}")
+                                print(f"[INFO] Executed manual build for schedule {schedule_id}")
+                            else:
+                                logger.debug(
+                                    f"[DEBUG] Skipped manual build for schedule {schedule_id}. Scheduled time {scheduled_time} is in the future.")
+                                print(
+                                    f"[DEBUG] Skipped manual build for schedule {schedule_id}. Scheduled time {scheduled_time} is in the future.")
+
+        except sqlite3.Error as e:
+            logger.error("Database error: %s", e)
+            print(f"[ERROR] Database error: {e}")
+        except Exception as e:
+            logger.error("An error occurred: %s", e)
+            print(f"[ERROR] An error occurred: {e}")
+        finally:
+            if conn:
+                conn.close()
+                logger.debug(f"[DEBUG] Closing database connection to {db_path}")
+                print(f"[DEBUG] Closing database connection to {db_path}")
 
 
 def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path, use_euxo: bool = False):
@@ -582,7 +637,8 @@ def initialize_database(db_path: str):
                 type TEXT NOT NULL,
                 pattern TEXT,
                 datetimes TEXT,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                last_run TIMESTAMP
             )
         """)
 
