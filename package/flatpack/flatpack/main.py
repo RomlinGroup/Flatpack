@@ -10,6 +10,7 @@ import secrets
 import shlex
 import shutil
 import signal
+import socket
 import sqlite3
 import stat
 import string
@@ -3105,8 +3106,15 @@ def fpk_cli_handle_run(args, session):
     setup_static_directory(app, str(directory))
 
     try:
-        port = 8000
         host = "127.0.0.1"
+
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.bind((host, 0))
+        port = sock.getsockname()[1]
+        sock.close()
+
+        logger.info("Selected available port: %d", port)
+        print(f"[INFO] Selected available port: {port}")
 
         if args.share:
             listener = ngrok.forward(f"{host}:{port}", authtoken_from_env=True)
