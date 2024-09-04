@@ -60,11 +60,12 @@ from .vector_manager import VectorManager
 HOME_DIR = Path.home() / ".fpk"
 HOME_DIR.mkdir(exist_ok=True)
 
-BASE_URL = "https://raw.githubusercontent.com/romlingroup/flatpack/main/warehouse"
+BASE_URL = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse"
 CONFIG_FILE_PATH = HOME_DIR / ".fpk_config.toml"
 GITHUB_CACHE = HOME_DIR / ".fpk_github.cache"
 GITHUB_CACHE_EXPIRY = timedelta(hours=1)
-GITHUB_REPO_URL = "https://api.github.com/repos/romlingroup/flatpack"
+GITHUB_REPO_URL = "https://api.github.com/repos/RomlinGroup/Flatpack"
+TEMPLATE_REPO_URL = "https://api.github.com/repos/RomlinGroup/template"
 VERSION = version("flatpack")
 
 MAX_ATTEMPTS = 5
@@ -1003,12 +1004,12 @@ def fpk_colorize(text, color):
     return colors[color] + text + colors["default"]
 
 
-def fpk_create(flatpack_name, repo_url="https://github.com/RomlinGroup/template"):
+def fpk_create(flatpack_name, repo_url=TEMPLATE_REPO_URL):
     """Create a new flatpack from a template repository.
 
     Args:
         flatpack_name (str): The name of the flatpack to create.
-        repo_url (str, optional): The URL of the template repository. Defaults to "https://github.com/RomlinGroup/template".
+        repo_url (str, optional): The URL of the template repository. Defaults to TEMPLATE_REPO_URL.
 
     Raises:
         ValueError: If the flatpack name format is invalid or if the directory already exists.
@@ -1664,6 +1665,67 @@ def fpk_valid_directory_name(name: str) -> bool:
     return is_valid
 
 
+def fpk_update(flatpack_name: str, session: requests.Session, branch: str = "main"):
+    """
+    Update index.html and device.sh of the specified flatpack with the latest versions from the template.
+    Files are placed in the /build directory, overwriting existing ones.
+
+    Args:
+        flatpack_name (str): The name of the flatpack to update.
+        session (requests.Session): The HTTP session for making requests.
+        branch (str): The branch to fetch files from. Defaults to "main".
+
+    Returns:
+        None
+    """
+    files_to_update = ['index.html', 'device.sh']
+
+    flatpack_dir = Path.cwd() / flatpack_name
+    if not flatpack_dir.exists() or not flatpack_dir.is_dir():
+        logger.error(f"The flatpack '{flatpack_name}' does not exist or is not a directory.")
+        print(f"[ERROR] The flatpack '{flatpack_name}' does not exist or is not a directory.")
+        return
+
+    build_dir = flatpack_dir / 'build'
+    if not build_dir.exists():
+        build_dir.mkdir(parents=True)
+        logger.info(f"Created build directory for flatpack '{flatpack_name}'")
+        print(f"[INFO] Created build directory for flatpack '{flatpack_name}'")
+
+    for file in files_to_update:
+        file_url = f"{TEMPLATE_REPO_URL}/contents/{file}?ref={branch}"
+        local_file_path = build_dir / file
+
+        try:
+            response = session.get(file_url)
+            response.raise_for_status()
+            file_data = response.json()
+
+            if 'content' in file_data:
+                import base64
+                content = base64.b64decode(file_data['content']).decode('utf-8')
+
+                with open(local_file_path, 'w') as local_file:
+                    local_file.write(content)
+
+                if local_file_path.exists():
+                    logger.info(f"Replaced existing {file} in flatpack '{flatpack_name}/build'")
+                    print(f"[INFO] Replaced existing {file} in flatpack '{flatpack_name}/build'")
+                else:
+                    logger.info(f"Added new {file} to flatpack '{flatpack_name}/build'")
+                    print(f"[INFO] Added new {file} to flatpack '{flatpack_name}/build'")
+            else:
+                logger.error(f"Failed to retrieve content for {file}")
+                print(f"[ERROR] Failed to retrieve content for {file}")
+
+        except requests.RequestException as e:
+            logger.error(f"Failed to update {file}: {e}")
+            print(f"[ERROR] Failed to update {file}: {e}")
+
+    logger.info(f"Flatpack '{flatpack_name}' update completed.")
+    print(f"[INFO] Flatpack '{flatpack_name}' update completed.")
+
+
 def fpk_verify(directory: Union[str, None]):
     """Verify a flatpack.
 
@@ -1746,18 +1808,9 @@ def setup_arg_parser():
     )
 
     # General commands
-    parser_list = subparsers.add_parser(
-        'list',
-        help='List available flatpack directories.'
-    )
-
-    parser_list.set_defaults(
-        func=fpk_cli_handle_list
-    )
-
     parser_find = subparsers.add_parser(
         'find',
-        help='Find model files in the current directory.'
+        help='Find model files in the current directory'
     )
 
     parser_find.set_defaults(
@@ -1766,278 +1819,32 @@ def setup_arg_parser():
 
     parser_help = subparsers.add_parser(
         'help',
-        help='Display help for commands.'
+        help='Display help for commands'
     )
 
     parser_help.set_defaults(
         func=fpk_cli_handle_help
     )
 
+    parser_list = subparsers.add_parser(
+        'list',
+        help='List available flatpack directories'
+    )
+
+    parser_list.set_defaults(
+        func=fpk_cli_handle_list
+    )
+
     parser_version = subparsers.add_parser(
         'version',
-        help='Display the version of flatpack.'
+        help='Display the version of flatpack'
     )
 
     parser_version.set_defaults(
         func=fpk_cli_handle_version
     )
 
-    # API Key management
-    parser_api_key = subparsers.add_parser(
-        'api-key',
-        help='API key management commands'
-    )
-
-    api_key_subparsers = parser_api_key.add_subparsers(
-        dest='api_key_command'
-    )
-
-    # Set API key
-    parser_set_api = api_key_subparsers.add_parser(
-        'set',
-        help='Set the API key'
-    )
-
-    parser_set_api.add_argument(
-        'api_key',
-        type=str,
-        help='API key to set'
-    )
-
-    parser_set_api.set_defaults(
-        func=fpk_cli_handle_set_api_key
-    )
-
-    # Get API key
-    parser_get_api = api_key_subparsers.add_parser(
-        'get',
-        help='Get the current API key'
-    )
-
-    parser_get_api.set_defaults(
-        func=fpk_cli_handle_get_api_key
-    )
-
-    # Create flatpack
-    parser_create = subparsers.add_parser(
-        'create',
-        help='Create a new flatpack.'
-    )
-
-    parser_create.add_argument(
-        'input',
-        nargs='?',
-        default=None,
-        help='The name of the flatpack to create.'
-    )
-
-    parser_create.set_defaults(
-        func=fpk_cli_handle_create
-    )
-
-    # Unbox commands
-    parser_unbox = subparsers.add_parser(
-        'unbox',
-        help='Unbox a flatpack from GitHub or a local directory.'
-    )
-
-    parser_unbox.add_argument(
-        'input',
-        nargs='?',
-        default=None,
-        help='The name of the flatpack to unbox.'
-    )
-
-    parser_unbox.add_argument(
-        '--local',
-        action='store_true',
-        help='Unbox from a local directory instead of GitHub.'
-    )
-
-    parser_unbox.set_defaults(
-        func=fpk_cli_handle_unbox
-    )
-
-    # Build commands
-    parser_build = subparsers.add_parser(
-        'build',
-        help='Build a flatpack.'
-    )
-
-    parser_build.add_argument(
-        'directory',
-        nargs='?',
-        default=None,
-        help='The directory of the flatpack to build.'
-    )
-
-    parser_build.add_argument(
-        '--use-euxo',
-        action='store_true',
-        help="Use 'set -euxo pipefail' in the shell script (default is 'set -euo pipefail')."
-    )
-
-    parser_build.set_defaults(
-        func=fpk_cli_handle_build
-    )
-
-    # Verify commands
-    parser_verify = subparsers.add_parser(
-        'verify',
-        help='Verify a flatpack.'
-    )
-
-    parser_verify.add_argument(
-        'directory',
-        nargs='?',
-        default=None,
-        help='The directory of the flatpack to verify.'
-    )
-
-    parser_verify.set_defaults(
-        func=fpk_cli_handle_verify
-    )
-
-    # Run server
-    parser_run = subparsers.add_parser(
-        'run',
-        help='Run the FastAPI server.'
-    )
-
-    parser_run.add_argument(
-        'input',
-        nargs='?',
-        default=None,
-        help='The name of the flatpack to run.'
-    )
-
-    parser_run.add_argument(
-        '--share',
-        action='store_true',
-        help='Share using ngrok.'
-    )
-
-    parser_run.set_defaults(
-        func=fpk_cli_handle_run
-    )
-
-    # Vector database management
-    parser_vector = subparsers.add_parser(
-        'vector',
-        help='Vector database management'
-    )
-
-    vector_subparsers = parser_vector.add_subparsers(
-        dest='vector_command'
-    )
-
-    parser_add_text = vector_subparsers.add_parser(
-        'add-texts',
-        help='Add new texts to generate embeddings and store them.'
-    )
-
-    parser_add_text.add_argument(
-        'texts',
-        nargs='+',
-        help='Texts to add.'
-    )
-
-    parser_add_text.add_argument(
-        '--data-dir',
-        type=str,
-        default='.',
-        help='Directory path for storing the vector database and metadata files.'
-    )
-
-    parser_add_text.set_defaults(
-        func=fpk_cli_handle_vector_commands
-    )
-
-    parser_search_text = vector_subparsers.add_parser(
-        'search-text',
-        help='Search for texts similar to the given query.'
-    )
-
-    parser_search_text.add_argument(
-        'query',
-        help='Text query to search for.'
-    )
-
-    parser_search_text.add_argument(
-        '--data-dir',
-        type=str,
-        default='.',
-        help='Directory path for storing the vector database and metadata files.'
-    )
-
-    parser_search_text.set_defaults(
-        func=fpk_cli_handle_vector_commands
-    )
-
-    parser_add_pdf = vector_subparsers.add_parser(
-        'add-pdf',
-        help='Add text from a PDF file to the vector database.'
-    )
-
-    parser_add_pdf.add_argument(
-        'pdf_path',
-        help='Path to the PDF file to add.'
-    )
-
-    parser_add_pdf.add_argument(
-        '--data-dir',
-        type=str,
-        default='.',
-        help='Directory path for storing the vector database and metadata files.'
-    )
-
-    parser_add_pdf.set_defaults(
-        func=fpk_cli_handle_vector_commands
-    )
-
-    parser_add_url = vector_subparsers.add_parser(
-        'add-url',
-        help='Add text from a URL to the vector database.'
-    )
-
-    parser_add_url.add_argument(
-        'url',
-        help='URL to add.'
-    )
-
-    parser_add_url.add_argument(
-        '--data-dir',
-        type=str,
-        default='.',
-        help='Directory path for storing the vector database and metadata files.'
-    )
-
-    parser_add_url.set_defaults(
-        func=fpk_cli_handle_vector_commands
-    )
-
-    parser_add_wikipedia_page = vector_subparsers.add_parser(
-        'add-wikipedia',
-        help='Add text from a Wikipedia page to the vector database.'
-    )
-
-    parser_add_wikipedia_page.add_argument(
-        'page_title',
-        help='The title of the Wikipedia page to add.'
-    )
-
-    parser_add_wikipedia_page.add_argument(
-        '--data-dir',
-        type=str,
-        default='.',
-        help='Directory path for storing the vector database and metadata files.'
-    )
-
-    parser_add_wikipedia_page.set_defaults(
-        func=fpk_cli_handle_vector_commands
-    )
-
-    # Add commands for agents
+    # Agents
     parser_agents = subparsers.add_parser(
         'agents',
         help='Manage agents'
@@ -2048,7 +1855,17 @@ def setup_arg_parser():
         help='Available agent commands'
     )
 
-    # Add command to spawn an agent
+    ## Add command to list active agents
+    parser_list_agents = agent_subparsers.add_parser(
+        'list',
+        help='List active agents'
+    )
+
+    parser_list_agents.set_defaults(
+        func=fpk_cli_handle_list_agents
+    )
+
+    ## Add command to spawn an agent
     parser_spawn = agent_subparsers.add_parser(
         'spawn',
         help='Spawn a new agent with a script'
@@ -2064,17 +1881,7 @@ def setup_arg_parser():
         func=fpk_cli_handle_spawn_agent
     )
 
-    # Add command to list active agents
-    parser_list_agents = agent_subparsers.add_parser(
-        'list',
-        help='List active agents'
-    )
-
-    parser_list_agents.set_defaults(
-        func=fpk_cli_handle_list_agents
-    )
-
-    # Add command to terminate an agent
+    ## Add command to terminate an agent
     parser_terminate = agent_subparsers.add_parser(
         'terminate',
         help='Terminate an active agent'
@@ -2090,27 +1897,302 @@ def setup_arg_parser():
         func=fpk_cli_handle_terminate_agent
     )
 
+    # API Key management
+    parser_api_key = subparsers.add_parser(
+        'api-key',
+        help='API key management commands'
+    )
+
+    api_key_subparsers = parser_api_key.add_subparsers(
+        dest='api_key_command'
+    )
+
+    ## Get API key
+    parser_get_api = api_key_subparsers.add_parser(
+        'get',
+        help='Get the current API key'
+    )
+
+    parser_get_api.set_defaults(
+        func=fpk_cli_handle_get_api_key
+    )
+
+    ## Set API key
+    parser_set_api = api_key_subparsers.add_parser(
+        'set',
+        help='Set the API key'
+    )
+
+    parser_set_api.add_argument(
+        'api_key',
+        type=str,
+        help='API key to set'
+    )
+
+    parser_set_api.set_defaults(
+        func=fpk_cli_handle_set_api_key
+    )
+
+    # Build commands
+    parser_build = subparsers.add_parser(
+        'build',
+        help='Build a flatpack'
+    )
+
+    parser_build.add_argument(
+        'directory',
+        nargs='?',
+        default=None,
+        help='The directory of the flatpack to build'
+    )
+
+    parser_build.add_argument(
+        '--use-euxo',
+        action='store_true',
+        help="Use 'set -euxo pipefail' in the shell script (default is 'set -euo pipefail')"
+    )
+
+    parser_build.set_defaults(
+        func=fpk_cli_handle_build
+    )
+
+    # Create flatpack
+    parser_create = subparsers.add_parser(
+        'create',
+        help='Create a new flatpack'
+    )
+
+    parser_create.add_argument(
+        'input',
+        nargs='?',
+        default=None,
+        help='The name of the flatpack to create'
+    )
+
+    parser_create.set_defaults(
+        func=fpk_cli_handle_create
+    )
+
     # Model compression
     parser_compress = subparsers.add_parser(
         'compress',
-        help='Compress a model for deployment.'
+        help='Compress a model for deployment'
     )
 
     parser_compress.add_argument(
         'model_id',
         type=str,
-        help='The name of the Hugging Face repository (format: username/repo_name).'
+        help='The name of the Hugging Face repository (format: username/repo_name)'
     )
 
     parser_compress.add_argument(
         '--token',
         type=str,
         default=None,
-        help='Hugging Face token for private repositories.'
+        help='Hugging Face token for private repositories'
     )
 
     parser_compress.set_defaults(
         func=fpk_cli_handle_compress
+    )
+
+    # Run server
+    parser_run = subparsers.add_parser(
+        'run',
+        help='Run the FastAPI server'
+    )
+
+    parser_run.add_argument(
+        'input',
+        nargs='?',
+        default=None,
+        help='The name of the flatpack to run'
+    )
+
+    parser_run.add_argument(
+        '--share',
+        action='store_true',
+        help='Share using ngrok'
+    )
+
+    parser_run.set_defaults(
+        func=fpk_cli_handle_run
+    )
+
+    # Unbox commands
+    parser_unbox = subparsers.add_parser(
+        'unbox',
+        help='Unbox a flatpack from GitHub or a local directory'
+    )
+
+    parser_unbox.add_argument(
+        'input',
+        nargs='?',
+        default=None,
+        help='The name of the flatpack to unbox'
+    )
+
+    parser_unbox.add_argument(
+        '--local',
+        action='store_true',
+        help='Unbox from a local directory instead of GitHub'
+    )
+
+    parser_unbox.set_defaults(
+        func=fpk_cli_handle_unbox
+    )
+
+    # Update flatpack
+    parser_update = subparsers.add_parser(
+        'update',
+        help='Update index.html and device.sh of a flatpack from the template'
+    )
+
+    parser_update.add_argument(
+        'flatpack_name',
+        help='The name of the flatpack to update'
+    )
+
+    parser_update.set_defaults(
+        func=fpk_cli_handle_update
+    )
+
+    # Vector database management
+    parser_vector = subparsers.add_parser(
+        'vector',
+        help='Vector database management'
+    )
+
+    vector_subparsers = parser_vector.add_subparsers(
+        dest='vector_command'
+    )
+
+    ## Add PDF
+    parser_add_pdf = vector_subparsers.add_parser(
+        'add-pdf',
+        help='Add text from a PDF file to the vector database'
+    )
+
+    parser_add_pdf.add_argument(
+        'pdf_path',
+        help='Path to the PDF file to add'
+    )
+
+    parser_add_pdf.add_argument(
+        '--data-dir',
+        type=str,
+        default='.',
+        help='Directory path for storing the vector database and metadata files'
+    )
+
+    parser_add_pdf.set_defaults(
+        func=fpk_cli_handle_vector_commands
+    )
+
+    ## Add texts
+    parser_add_text = vector_subparsers.add_parser(
+        'add-texts',
+        help='Add new texts to generate embeddings and store them'
+    )
+
+    parser_add_text.add_argument(
+        'texts',
+        nargs='+',
+        help='Texts to add'
+    )
+
+    parser_add_text.add_argument(
+        '--data-dir',
+        type=str,
+        default='.',
+        help='Directory path for storing the vector database and metadata files'
+    )
+
+    parser_add_text.set_defaults(
+        func=fpk_cli_handle_vector_commands
+    )
+
+    ## Add URL
+    parser_add_url = vector_subparsers.add_parser(
+        'add-url',
+        help='Add text from a URL to the vector database'
+    )
+
+    parser_add_url.add_argument(
+        'url',
+        help='URL to add'
+    )
+
+    parser_add_url.add_argument(
+        '--data-dir',
+        type=str,
+        default='.',
+        help='Directory path for storing the vector database and metadata files'
+    )
+
+    parser_add_url.set_defaults(
+        func=fpk_cli_handle_vector_commands
+    )
+
+    ## Add Wikipedia
+    parser_add_wikipedia_page = vector_subparsers.add_parser(
+        'add-wikipedia',
+        help='Add text from a Wikipedia page to the vector database'
+    )
+
+    parser_add_wikipedia_page.add_argument(
+        'page_title',
+        help='The title of the Wikipedia page to add'
+    )
+
+    parser_add_wikipedia_page.add_argument(
+        '--data-dir',
+        type=str,
+        default='.',
+        help='Directory path for storing the vector database and metadata files'
+    )
+
+    parser_add_wikipedia_page.set_defaults(
+        func=fpk_cli_handle_vector_commands
+    )
+
+    ## Search text
+    parser_search_text = vector_subparsers.add_parser(
+        'search-text',
+        help='Search for texts similar to the given query'
+    )
+
+    parser_search_text.add_argument(
+        'query',
+        help='Text query to search for'
+    )
+
+    parser_search_text.add_argument(
+        '--data-dir',
+        type=str,
+        default='.',
+        help='Directory path for storing the vector database and metadata files'
+    )
+
+    parser_search_text.set_defaults(
+        func=fpk_cli_handle_vector_commands
+    )
+
+    # Verify commands
+    parser_verify = subparsers.add_parser(
+        'verify',
+        help='Verify a flatpack'
+    )
+
+    parser_verify.add_argument(
+        'directory',
+        nargs='?',
+        default=None,
+        help='The directory of the flatpack to verify'
+    )
+
+    parser_verify.set_defaults(
+        func=fpk_cli_handle_verify
     )
 
     return parser
@@ -3266,6 +3348,21 @@ def fpk_cli_handle_unbox(args, session):
     except Exception as e:
         logger.error("Failed to unbox flatpack '%s': %s", directory_name, e)
         print(f"[ERROR] Failed to unbox flatpack '{directory_name}': {e}")
+
+
+def fpk_cli_handle_update(args, session):
+    """Handle the 'update' command to update a flatpack's files from the template.
+
+    Args:
+        args: The command-line arguments.
+        session: The HTTP session.
+    """
+    if not args.flatpack_name:
+        logger.error("No flatpack specified for the update command.")
+        print("[ERROR] Please specify a flatpack for the update command.")
+        return
+
+    fpk_update(args.flatpack_name, session)
 
 
 def fpk_cli_handle_vector_commands(args, session, vm):
