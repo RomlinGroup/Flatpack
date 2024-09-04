@@ -1766,7 +1766,7 @@ def fpk_update(flatpack_name: str, session: requests.Session, branch: str = "mai
     Returns:
         None
     """
-    files_to_update = ['device.sh']
+    files_to_update = ['device.sh', 'index.html']
 
     flatpack_dir = Path.cwd() / flatpack_name
     if not flatpack_dir.exists() or not flatpack_dir.is_dir():
