@@ -1755,7 +1755,7 @@ def fpk_valid_directory_name(name: str) -> bool:
 
 def fpk_update(flatpack_name: str, session: requests.Session, branch: str = "main"):
     """
-    Update index.html and device.sh of the specified flatpack with the latest versions from the template.
+    Update files of the specified flatpack with the latest versions from the template.
     Files are placed in the /build directory, overwriting existing ones.
 
     Args:
@@ -1766,7 +1766,7 @@ def fpk_update(flatpack_name: str, session: requests.Session, branch: str = "mai
     Returns:
         None
     """
-    files_to_update = ['index.html', 'device.sh']
+    files_to_update = ['device.sh']
 
     flatpack_dir = Path.cwd() / flatpack_name
     if not flatpack_dir.exists() or not flatpack_dir.is_dir():
@@ -1790,7 +1790,6 @@ def fpk_update(flatpack_name: str, session: requests.Session, branch: str = "mai
             file_data = response.json()
 
             if 'content' in file_data:
-                import base64
                 content = base64.b64decode(file_data['content']).decode('utf-8')
 
                 with open(local_file_path, 'w') as local_file:
