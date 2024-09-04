@@ -42,10 +42,6 @@ branch = "main"
 # ]
 
 [[file]]
-from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/moondream/index.html"
-to_destination = "index.html"
-
-[[file]]
 from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/moondream/build.sh"
 to_destination = "build.sh"
 

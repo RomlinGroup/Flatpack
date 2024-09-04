@@ -44,10 +44,6 @@ branch = "master"
 # ]
 
 [[file]]
-from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/mediapipe/index.html"
-to_destination = "index.html"
-
-[[file]]
 from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/mediapipe/build.sh"
 to_destination = "build.sh"
 

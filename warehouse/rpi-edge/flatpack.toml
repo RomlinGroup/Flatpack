@@ -43,10 +43,6 @@ tqdm = "4.66.5"
 # ]
 
 [[file]]
-from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/rpi-edge/index.html"
-to_destination = "index.html"
-
-[[file]]
 from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/rpi-edge/build.sh"
 to_destination = "build.sh"
 
