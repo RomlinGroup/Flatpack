@@ -180,13 +180,13 @@ def authenticate_token(request: Request):
 
     if not stored_token:
         logger.error("Stored token is not set")
-        print("Stored token is not set")
+        print("[ERROR] Stored token is not set")
         return
 
     if token is None or token != f"Bearer {stored_token}":
         VALIDATION_ATTEMPTS += 1
         logger.error(f"Invalid or missing token. Attempt {VALIDATION_ATTEMPTS}")
-        print(f"Invalid or missing token. Attempt {VALIDATION_ATTEMPTS}")
+        print(f"[ERROR] Invalid or missing token. Attempt {VALIDATION_ATTEMPTS}")
         if VALIDATION_ATTEMPTS >= MAX_ATTEMPTS:
             shutdown_server()
         raise HTTPException(status_code=403, detail="Invalid or missing token")
@@ -3110,18 +3110,19 @@ async def get_schedule(token: str = Depends(authenticate_token)):
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
 
-        cursor.execute("SELECT id, type, pattern, datetimes FROM flatpack_schedule ORDER BY created_at DESC")
+        cursor.execute("SELECT id, type, pattern, datetimes, last_run FROM flatpack_schedule ORDER BY created_at DESC")
         results = cursor.fetchall()
         conn.close()
 
         if results:
             schedules = []
-            for schedule_id, schedule_type, pattern, datetimes in results:
+            for schedule_id, schedule_type, pattern, datetimes, last_run in results:
                 schedules.append({
                     "id": schedule_id,
                     "type": schedule_type,
                     "pattern": pattern,
-                    "datetimes": json.loads(datetimes)
+                    "datetimes": json.loads(datetimes),
+                    "last_run": last_run
                 })
             return JSONResponse(content={"schedules": schedules}, status_code=200)
         else:

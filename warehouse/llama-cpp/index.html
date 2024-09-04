@@ -1853,6 +1853,7 @@
                     enableInteractions();
                     fetchEvalData();
                     fetchLatestLogs(sessionStorage.getItem('apiToken'));
+                    fetchSchedule();
                     showStatus('Build completed successfully.', true);
                     break;
                 case 'failed':
@@ -1860,6 +1861,7 @@
                     enableInteractions();
                     showStatus('Build failed. Check logs for details.', false);
                     fetchLatestLogs(sessionStorage.getItem('apiToken'));
+                    fetchSchedule();
                     break;
                 case 'no_builds':
                     hideLoadingOverlay();
@@ -2111,6 +2113,11 @@
                 scheduleType.textContent = `Type: ${schedule.type === 'recurring' ? 'Recurring' : 'Manual'}`;
                 scheduleContainer.appendChild(scheduleType);
 
+                const lastRun = document.createElement('div');
+                lastRun.className = 'last-run';
+                lastRun.textContent = `Last Run: ${schedule.last_run || 'Never'}`;
+                scheduleContainer.appendChild(lastRun);
+
                 if (schedule.type === 'recurring') {
                     const cronPattern = document.createElement('div');
                     cronPattern.className = 'cron-pattern';
@@ -2124,7 +2131,7 @@
                         schedule.datetimes.forEach((dt, datetimeIndex) => {
                             const datetimeItem = document.createElement('div');
                             datetimeItem.className = 'datetime-item';
-                            datetimeItem.textContent = `${datetimeIndex + 1}. ${new Date(dt).toLocaleString()}`;
+                            datetimeItem.textContent = `${datetimeIndex + 1}. ${dt}`;
 
                             const deleteDatetimeButton = document.createElement('span');
                             deleteDatetimeButton.className = 'delete-datetime-button';
