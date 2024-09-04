@@ -44,23 +44,23 @@ branch = "master"
 # ]
 
 [[file]]
-from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/mediapipe/index.html"
+from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/mediapipe/index.html"
 to_destination = "index.html"
 
 [[file]]
-from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/mediapipe/build.sh"
+from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/mediapipe/build.sh"
 to_destination = "build.sh"
 
 [[file]]
-from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/mediapipe/custom.sh"
+from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/mediapipe/custom.sh"
 to_destination = "custom.sh"
 
 [[file]]
-from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/mediapipe/device.sh"
+from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/mediapipe/device.sh"
 to_destination = "device.sh"
 
 [[file]]
-from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/mediapipe/cat_and_dog.png"
+from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/mediapipe/cat_and_dog.png"
 to_destination = "cat_and_dog.png"
 
 [[run]]

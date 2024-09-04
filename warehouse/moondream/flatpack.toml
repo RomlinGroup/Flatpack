@@ -42,23 +42,23 @@ branch = "main"
 # ]
 
 [[file]]
-from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/moondream/index.html"
+from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/moondream/index.html"
 to_destination = "index.html"
 
 [[file]]
-from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/moondream/build.sh"
+from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/moondream/build.sh"
 to_destination = "build.sh"
 
 [[file]]
-from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/moondream/custom.sh"
+from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/moondream/custom.sh"
 to_destination = "custom.sh"
 
 [[file]]
-from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/moondream/device.sh"
+from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/moondream/device.sh"
 to_destination = "device.sh"
 
 [[file]]
-from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/moondream/tiger.png"
+from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/moondream/tiger.png"
 to_destination = "tiger.png"
 
 [[run]]

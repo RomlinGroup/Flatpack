@@ -1610,8 +1610,21 @@ def fpk_unbox(directory_name: str, session: httpx.Client, local: bool = False) -
             return False
         flatpack_dir.mkdir(parents=True, exist_ok=True)
 
+    web_dir = flatpack_dir / "web"
+
+    try:
+        web_dir.mkdir(parents=True, exist_ok=True)
+        logger.info(f"Created /web directory: {web_dir}")
+        print(f"[INFO] Created /web directory: {web_dir}")
+    except Exception as e:
+        message = f"Failed to create /web directory: {e}"
+        logger.error(message)
+        print(f"[ERROR] {message}")
+        return False
+
     build_dir = flatpack_dir / "build"
     build_dir.mkdir(parents=True, exist_ok=True)
+
     db_path = build_dir / 'flatpack.db'
     temp_toml_path = build_dir / 'temp_flatpack.toml'
 
@@ -1635,6 +1648,7 @@ def fpk_unbox(directory_name: str, session: httpx.Client, local: bool = False) -
             return False
 
         fpk_path = build_dir / f"{directory_name}.fpk"
+
         try:
             with open(fpk_path, "wb") as fpk_file:
                 download_response = session.get(fpk_url)

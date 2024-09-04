@@ -43,23 +43,23 @@ tqdm = "4.66.5"
 # ]
 
 [[file]]
-from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/rpi-edge/index.html"
+from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/rpi-edge/index.html"
 to_destination = "index.html"
 
 [[file]]
-from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/rpi-edge/build.sh"
+from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/rpi-edge/build.sh"
 to_destination = "build.sh"
 
 [[file]]
-from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/rpi-edge/custom.sh"
+from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/rpi-edge/custom.sh"
 to_destination = "custom.sh"
 
 [[file]]
-from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/rpi-edge/device.sh"
+from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/rpi-edge/device.sh"
 to_destination = "device.sh"
 
 [[file]]
-from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/rpi-edge/rwkv_cpp.py"
+from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/rpi-edge/rwkv_cpp.py"
 to_destination = "rwkv_cpp.py"
 
 [[run]]
