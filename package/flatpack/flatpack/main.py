@@ -346,7 +346,7 @@ def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path, use_euxo: bool = Fa
                 outfile.write("set -euo pipefail\n")
 
             outfile.write(f"CONTEXT_PYTHON_SCRIPT=\"{context_python_script_path}\"\n")
-            outfile.write("EVAL_BUILD=\"$SCRIPT_DIR/eval_build.json\"\n")
+            outfile.write("EVAL_BUILD=\"$(dirname \"$SCRIPT_DIR\")/web/eval_build.json\"\n")
             outfile.write(f"EXEC_PYTHON_SCRIPT=\"{exec_python_script_path}\"\n")
             outfile.write("CURR=0\n")
 
@@ -356,7 +356,7 @@ def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path, use_euxo: bool = Fa
 
             outfile.write("datetime=$(date -u +\"%Y-%m-%d %H:%M:%S\")\n")
 
-            outfile.write("DATA_FILE=\"$SCRIPT_DIR/eval_data.json\"\n")
+            outfile.write("DATA_FILE=\"$(dirname \"$SCRIPT_DIR\")/web/eval_data.json\"\n")
             outfile.write("echo '[]' > \"$DATA_FILE\"\n")
             outfile.write("\n")
             outfile.write("function log_data() {\n")
