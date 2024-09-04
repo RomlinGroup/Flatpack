@@ -1,7 +1,10 @@
 part_bash """
 wget -q -O efficientdet.tflite -q https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/int8/1/efficientdet_lite0.tflite
-
-wget -q -O image.jpg https://storage.googleapis.com/mediapipe-tasks/object_detector/cat_and_dog.jpg
+"""
+part_bash """
+if [ -f ../cat_and_dog.png ]; then
+    cp -f ../cat_and_dog.png cat_and_dog.png
+fi
 """
 part_python """
 import cv2
