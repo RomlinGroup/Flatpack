@@ -15,6 +15,9 @@ electronic components, and robots.
 *Aglaonice, an ancient Greek astronomer from the 2nd or 1st century BC, was celebrated for her precise lunar eclipse
 predictions. Her mastery inspired the Greek proverb: "As the moon obeys Aglaonice," signifying unwavering certainty.*
 
+`3.7.0` (2024-09-04)\
+*Added cron and manual scheduling for builds.*
+
 `3.6.0` (2024-07-28)\
 *Introduced SQLite database support for each flatpack.*
 
@@ -120,4 +123,4 @@ Check out the [JLA - Compatibility Checker](https://joinup.ec.europa.eu/collecti
 - **[zstandard](https://pypi.org/project/zstandard/)**\
   BSD License (BSD) ([LICENSE](https://github.com/indygreg/python-zstandard/blob/main/LICENSE))
 
-Last updated: 2024-07-28
+Last updated: 2024-09-04
