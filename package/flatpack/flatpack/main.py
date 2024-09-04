@@ -2,6 +2,7 @@ import argparse
 import ast
 import asyncio
 import atexit
+import base64
 import json
 import logging
 import os
@@ -744,7 +745,7 @@ def setup_static_directory(fastapi_app: FastAPI, directory: str):
     flatpack_directory = os.path.abspath(directory)
 
     if os.path.exists(flatpack_directory) and os.path.isdir(flatpack_directory):
-        static_dir = os.path.join(flatpack_directory, 'build')
+        static_dir = os.path.join(flatpack_directory, 'web')
         fastapi_app.mount(
             "/",
             StaticFiles(directory=static_dir, html=True),
@@ -1616,6 +1617,23 @@ def fpk_unbox(directory_name: str, session: httpx.Client, local: bool = False) -
         web_dir.mkdir(parents=True, exist_ok=True)
         logger.info(f"Created /web directory: {web_dir}")
         print(f"[INFO] Created /web directory: {web_dir}")
+
+        index_html_url = f"{TEMPLATE_REPO_URL}/contents/index.html"
+
+        try:
+            response = session.get(index_html_url)
+            response.raise_for_status()
+            index_html_content = response.json()['content']
+            index_html_decoded = base64.b64decode(index_html_content).decode('utf-8')
+
+            index_html_path = web_dir / "index.html"
+            with open(index_html_path, 'w') as f:
+                f.write(index_html_decoded)
+            logger.info(f"Copied index.html to {index_html_path}")
+            print(f"[INFO] Copied index.html to {index_html_path}")
+        except Exception as e:
+            logger.error(f"Failed to fetch or save index.html: {e}")
+            print(f"[ERROR] Failed to fetch or save index.html: {e}")
     except Exception as e:
         message = f"Failed to create /web directory: {e}"
         logger.error(message)

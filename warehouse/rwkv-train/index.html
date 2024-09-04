@@ -1014,7 +1014,7 @@
         </div> <!-- END .widget -->
 
         <div id="eval-widget" class="widget">
-            <p>Loading eval_data.json...</p>
+            <p>No data available.</p>
         </div> <!-- END .widget -->
 
     </div> <!-- END #wrapper -->
@@ -1072,7 +1072,7 @@
             <option value="">Select a log file</option>
         </select>
         <div id="log-output">
-            [PLACEHOLDER]
+            No logs available.
         </div>
     </div> <!-- END #log -->
 </div> <!-- END #log-content -->
@@ -1200,7 +1200,7 @@
         const editor = document.createElement('div');
         editor.className = 'editor';
         editor.contentEditable = true;
-        editor.setAttribute('data-placeholder', `Enter your ${type} code here...`);
+        editor.setAttribute('data-placeholder', `Enter your ${type} code here`);
 
         addEventListenersToEditor(editor);
 
@@ -1297,7 +1297,6 @@
     }
 
     async function buildProject(apiToken) {
-        showLoadingOverlay('Starting build...');
         disableInteractions();
 
         try {
@@ -1868,7 +1867,7 @@
                     enableInteractions();
                     break;
                 case 'unknown':
-                    showLoadingOverlay('Checking build status...');
+                    showLoadingOverlay('Checking build status');
                     break;
                 default:
                     showLoadingOverlay(`Build status: ${status}`);
@@ -2719,9 +2718,6 @@
         document.getElementById('hello-widget').addEventListener('click', function () {
             this.querySelector('p').textContent = 'You clicked the widget!';
         });
-
-        // eval_data.json
-        fetchEvalData();
 
         // Schedule
         setScheduleType('manual');
