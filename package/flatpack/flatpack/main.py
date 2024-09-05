@@ -880,18 +880,21 @@ def fpk_build(directory: Union[str, None], use_euxo: bool = False):
         return
 
     flatpack_dir = Path(last_unboxed_flatpack)
+
     if not flatpack_dir.exists():
         logger.error("The flatpack directory '%s' does not exist.", flatpack_dir)
         print(f"[ERROR] The flatpack directory '{flatpack_dir}' does not exist.")
         return
 
     build_dir = flatpack_dir / 'build'
+
     if not build_dir.exists():
         logger.error("The build directory '%s' does not exist.", build_dir)
         print(f"[ERROR] The build directory '{build_dir}' does not exist.")
         return
 
     custom_sh_path = build_dir / 'custom.sh'
+
     if not custom_sh_path.exists() or not custom_sh_path.is_file():
         logger.error("custom.sh not found in %s. Build process canceled.", build_dir)
         print(f"[ERROR] custom.sh not found in {build_dir}. Build process canceled.")
@@ -901,6 +904,7 @@ def fpk_build(directory: Union[str, None], use_euxo: bool = False):
     create_temp_sh(custom_sh_path, temp_sh_path, use_euxo=use_euxo)
 
     building_script_path = build_dir / 'build.sh'
+
     if not building_script_path.exists() or not building_script_path.is_file():
         logger.error("Building script not found in %s", build_dir)
         print(f"[ERROR] Building script not found in {build_dir}.")
@@ -929,6 +933,51 @@ def fpk_build(directory: Union[str, None], use_euxo: bool = False):
                 print(line, end='')
 
             process.wait()
+
+            web_dir = flatpack_dir / 'web'
+
+            if not web_dir.exists():
+                logger.error("The web directory '%s' does not exist.", web_dir)
+                print(f"[ERROR] The web directory '{web_dir}' does not exist.")
+                return
+
+            eval_data_path = web_dir / "eval_data.json"
+
+            if not eval_data_path.exists():
+                logger.error("The 'eval_data.json' file does not exist in '%s'.", web_dir)
+                print(f"[ERROR] The 'eval_data.json' file does not exist in '{web_dir}'.")
+                return
+            else:
+                output_dir = web_dir / "output"
+
+                if output_dir.exists():
+                    shutil.rmtree(output_dir)
+
+                output_dir.mkdir(parents=True)
+
+                with eval_data_path.open('r') as file:
+                    eval_data = json.load(file)
+
+                    for item in eval_data:
+                        original_path = Path(item['file'])
+
+                        relative_path = None
+                        for parent in original_path.parents:
+                            if parent.parts[-1] == 'build':
+                                relative_path = original_path.relative_to(parent)
+                                break
+
+                        if relative_path:
+                            source_file = build_dir / relative_path
+
+                            if source_file.exists():
+                                dest_path = output_dir / source_file.name
+                                shutil.copy2(source_file, dest_path)
+                                print(f"[INFO] Copied {source_file} to {dest_path}")
+                            else:
+                                print(f"[ERROR] File {source_file} not found.")
+                        else:
+                            print(f"[ERROR] Could not determine relative path for {original_path}")
 
             db_path = build_dir / 'flatpack.db'
             initialize_database(str(db_path))
