@@ -359,6 +359,7 @@ def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path, use_euxo: bool = Fa
             outfile.write("DATA_FILE=\"$(dirname \"$SCRIPT_DIR\")/web/eval_data.json\"\n")
             outfile.write("echo '[]' > \"$DATA_FILE\"\n")
             outfile.write("\n")
+
             outfile.write("function log_data() {\n")
             outfile.write("    local part_number=\"$1\"\n")
             outfile.write("    local new_files=$(find \"$SCRIPT_DIR\" -type f -newer \"$DATA_FILE\")\n")
@@ -368,14 +369,16 @@ def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path, use_euxo: bool = Fa
             outfile.write(
                 "            if [[ \"$file\" == *\"eval_data.json\" || \"$file\" == *\"eval_build.json\" ]]; then continue; fi\n")
             outfile.write("            local mime_type=$(file --mime-type -b \"$file\")\n")
+            outfile.write("            local web=$(basename \"$file\")\n")
             outfile.write(
-                "            local json_entry=\"{\\\"part\\\": $part_number, \\\"file\\\": \\\"$file\\\", \\\"mime_type\\\": \\\"$mime_type\\\"}\"\n")
+                "            local json_entry=\"{\\\"part\\\": $part_number, \\\"file\\\": \\\"$file\\\", \\\"web\\\": \\\"/output/$web\\\", \\\"mime_type\\\": \\\"$mime_type\\\"}\"\n")
             outfile.write(
                 "            jq \". + [$json_entry]\" \"$DATA_FILE\" > \"$temp_file\" && mv \"$temp_file\" \"$DATA_FILE\"\n")
             outfile.write("        done\n")
             outfile.write("    fi\n")
             outfile.write("    touch \"$DATA_FILE\"\n")
             outfile.write("}\n")
+
             outfile.write("\n")
 
             outfile.write(
