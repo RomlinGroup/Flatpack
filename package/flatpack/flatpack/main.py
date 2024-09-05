@@ -371,7 +371,7 @@ def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path, use_euxo: bool = Fa
             outfile.write("            local mime_type=$(file --mime-type -b \"$file\")\n")
             outfile.write("            local web=$(basename \"$file\")\n")
             outfile.write(
-                "            local json_entry=\"{\\\"part\\\": $part_number, \\\"file\\\": \\\"$file\\\", \\\"web\\\": \\\"/output/$web\\\", \\\"mime_type\\\": \\\"$mime_type\\\"}\"\n")
+                "            local json_entry=\"{\\\"part\\\": $part_number, \\\"file\\\": \\\"$file\\\", \\\"public\\\": \\\"/output/$web\\\", \\\"mime_type\\\": \\\"$mime_type\\\"}\"\n")
             outfile.write(
                 "            jq \". + [$json_entry]\" \"$DATA_FILE\" > \"$temp_file\" && mv \"$temp_file\" \"$DATA_FILE\"\n")
             outfile.write("        done\n")
