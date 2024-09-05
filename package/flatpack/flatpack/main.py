@@ -1228,10 +1228,11 @@ https://fpk.ai/w/{directory_name}
 
 
 def fpk_download_and_extract_template(repo_url, dest_dir):
-    """Download and extract a template repository.
+    """
+    Download and extract a template repository using GitHub API.
 
     Args:
-        repo_url (str): The URL of the template repository.
+        repo_url (str): The GitHub API URL of the template repository.
         dest_dir (str): The destination directory to extract the template into.
 
     Returns:
@@ -1240,34 +1241,44 @@ def fpk_download_and_extract_template(repo_url, dest_dir):
     Raises:
         RuntimeError: If downloading or extracting the template fails.
     """
-    template_dir = os.path.join(dest_dir, "template-main")
+    template_dir = os.path.join(dest_dir, "template")
     try:
-        response = requests.get(f"{repo_url}/archive/refs/heads/main.zip")
-        response.raise_for_status()
-        with ZipFile(BytesIO(response.content)) as zip_ref:
+        repo_info_response = requests.get(repo_url)
+        repo_info_response.raise_for_status()
+        repo_info = repo_info_response.json()
+
+        default_branch = repo_info['default_branch']
+
+        zip_url = f"{repo_url}/zipball/{default_branch}"
+
+        zip_response = requests.get(zip_url)
+        zip_response.raise_for_status()
+
+        with ZipFile(BytesIO(zip_response.content)) as zip_ref:
+            top_level_dir = zip_ref.namelist()[0].split('/')[0]
             zip_ref.extractall(dest_dir)
 
+        extracted_dir = os.path.join(dest_dir, top_level_dir)
+        os.rename(extracted_dir, template_dir)
+
+        index_html_path = os.path.join(template_dir, "index.html")
+        if os.path.exists(index_html_path):
+            os.remove(index_html_path)
+
         logger.info(
-            "Downloaded and extracted template from %s to %s",
-            repo_url,
-            dest_dir
+            "Downloaded and extracted template from %s to %s", repo_url, dest_dir
         )
         print(f"[INFO] Downloaded and extracted template from {repo_url} to {dest_dir}")
-
         return template_dir
     except requests.RequestException as e:
         error_message = f"Failed to download template from {repo_url}: {e}"
-
         logger.error("%s", error_message)
         print(f"[ERROR] {error_message}")
-
         raise RuntimeError(error_message)
     except (OSError, IOError) as e:
-        error_message = f"Failed to extract template to {dest_dir}: {e}"
-
+        error_message = f"Failed to extract template or remove index.html in {dest_dir}: {e}"
         logger.error("%s", error_message)
         print(f"[ERROR] {error_message}")
-
         raise RuntimeError(error_message)
 
 
