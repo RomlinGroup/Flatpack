@@ -32,8 +32,8 @@ wget = "*"
 datasets = "2.21.0"
 numpy = "2.0.1"
 tiktoken = "0.7.0"
-transformers = "4.44.2"
 tqdm = "4.66.5"
+transformers = "4.44.2"
 wandb = "0.17.9"
 
 [[git]]
