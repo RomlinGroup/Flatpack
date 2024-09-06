@@ -4,7 +4,7 @@
 version = "0.0.1"
 
 [environment]
-model_name = "minicpm3-4b"
+model_name = "minicpm-s-1b"
 
 [[port]]
 external = 8080
@@ -34,13 +34,14 @@ tiktoken = "0.7.0"
 tqdm = "4.66.5"
 transformers = "4.44.2"
 
-# [[git]]
-# from_source = "{{git_source_url}}"
-# to_destination = "{{git_destination_dir}}"
-# branch = "{{branch_name}}"
-# setup_commands = [
-#   "{{setup_command}}"
-# ]
+[[git]]
+from_source = "https://github.com/SJTU-IPADS/PowerInfer"
+to_destination = "PowerInfer"
+branch = "main"
+setup_commands = [
+    "cmake -S . -B build",
+    "cmake --build build --config Release"
+]
 
 [[file]]
 from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/minicpm3-4b/build.sh"
