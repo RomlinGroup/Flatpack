@@ -32,7 +32,6 @@ wget = "*"
 numpy = "2.0.1"
 tiktoken = "0.7.0"
 tqdm = "4.66.5"
-transformers = "4.44.2"
 
 [[git]]
 from_source = "https://github.com/SJTU-IPADS/PowerInfer"

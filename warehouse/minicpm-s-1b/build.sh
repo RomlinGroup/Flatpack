@@ -5,7 +5,7 @@ export SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 echo -e "[DEBUG] $(TZ=GMT date +"%Y-%m-%d %H:%M:%S")"
 echo -e "build.sh is running in: $SCRIPT_DIR"
 
-export DEFAULT_REPO_NAME=minicpm-s-1b
+export DEFAULT_REPO_NAME=PowerInfer
 export FLATPACK_NAME=minicpm-s-1b
 
 source "$SCRIPT_DIR/device.sh" || {
