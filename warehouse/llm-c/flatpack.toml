@@ -33,10 +33,10 @@ numpy = "2.0.1"
 tiktoken = "0.7.0"
 tqdm = "4.66.5"
 
-# [[git]]
-# from_source = "{{git_source_url}}"
-# to_destination = "{{git_destination_dir}}"
-# branch = "{{branch_name}}"
+[[git]]
+from_source = "https://github.com/karpathy/llm.c"
+to_destination = "llm.c"
+branch = "master"
 # setup_commands = [
 #   "{{setup_command}}"
 # ]
