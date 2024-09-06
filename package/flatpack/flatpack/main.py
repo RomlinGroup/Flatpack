@@ -306,11 +306,10 @@ def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path, use_euxo: bool = Fa
             script = infile.read()
 
         script = strip_html(script)
-        lines = script.splitlines()
+
         parts = []
-
+        lines = script.splitlines()
         i = 0
-
         while i < len(lines):
             line = lines[i].strip()
             if line.startswith('part_bash """') or line.startswith('part_python """') or line.startswith(
@@ -412,12 +411,20 @@ def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path, use_euxo: bool = Fa
                     outfile.write("((CURR++))\n")
 
                 elif language == 'python':
-                    escaped_code = code.replace('"', '\\"')
+                    context_code = "\n".join(
+                        line for line in code_lines if not line.strip().startswith(('print(', 'subprocess.run')))
+                    execution_code = "\n".join(
+                        line for line in code_lines if line.strip().startswith(('print(', 'subprocess.run')))
 
-                    outfile.write(f"echo \"\"\"{escaped_code}\"\"\" >> \"$CONTEXT_PYTHON_SCRIPT\"\n")
+                    if context_code:
+                        outfile.write(f"echo \"\"\"{context_code}\"\"\" >> \"$CONTEXT_PYTHON_SCRIPT\"\n")
 
                     outfile.write("echo \"try:\" > \"$EXEC_PYTHON_SCRIPT\"\n")
-                    outfile.write("cat \"$CONTEXT_PYTHON_SCRIPT\" | sed 's/^/    /' >> \"$EXEC_PYTHON_SCRIPT\"\n")
+                    outfile.write("sed 's/^/    /' \"$CONTEXT_PYTHON_SCRIPT\" >> \"$EXEC_PYTHON_SCRIPT\"\n")
+
+                    if execution_code:
+                        outfile.write(f"echo \"{execution_code}\" | sed 's/^/    /' >> \"$EXEC_PYTHON_SCRIPT\"\n")
+
                     outfile.write("echo \"except Exception as e:\" >> \"$EXEC_PYTHON_SCRIPT\"\n")
                     outfile.write("echo \"    print(e)\" >> \"$EXEC_PYTHON_SCRIPT\"\n")
                     outfile.write("echo \"    import sys; sys.exit(1)\" >> \"$EXEC_PYTHON_SCRIPT\"\n")
@@ -428,8 +435,6 @@ def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path, use_euxo: bool = Fa
                 else:
                     print(f"Skipping part with unsupported language: {language}")
                     continue
-
-                outfile.write("log_data \"$CURR\"\n")
 
                 outfile.write(
                     f"if [ \"$CURR\" -eq \"{last_count}\" ]; then\n"
@@ -451,12 +456,12 @@ def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path, use_euxo: bool = Fa
         context_python_script_path.unlink()
         exec_python_script_path.unlink()
 
-        logger.info("Temp script generated successfully at %s", temp_sh_path)
         print(f"[INFO] Temp script generated successfully at {temp_sh_path}")
+        logger.info("Temp script generated successfully at %s", temp_sh_path)
 
     except Exception as e:
-        logger.error("An error occurred while creating temp script: %s", e)
         print(f"[ERROR] An error occurred while creating temp script: {e}")
+        logger.error("An error occurred while creating temp script: %s", e)
 
 
 def create_venv(venv_dir: str):
