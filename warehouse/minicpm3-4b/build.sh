@@ -5,8 +5,8 @@ export SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 echo -e "[DEBUG] $(TZ=GMT date +"%Y-%m-%d %H:%M:%S")"
 echo -e "build.sh is running in: $SCRIPT_DIR"
 
-export DEFAULT_REPO_NAME=minicpm-llama3
-export FLATPACK_NAME=minicpm-llama3
+export DEFAULT_REPO_NAME=minicpm3-4b
+export FLATPACK_NAME=minicpm3-4b
 
 source "$SCRIPT_DIR/device.sh" || {
   echo "Error: Failed to source device.sh" >&2
