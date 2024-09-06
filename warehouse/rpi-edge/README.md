@@ -6,6 +6,6 @@
 
 `rpi-edge` offers a Flatpack adaptation of [rwkv.cpp](https://github.com/RWKV/rwkv.cpp) by RWKV, licensed under the [MIT License](https://github.com/RWKV/rwkv.cpp/blob/master/LICENSE).
 
-We have no official affiliation or association with RWKV, nor are we endorsed or authorised by them. For the official GitHub profile of RWKV, please visit [https://github.com/RWKV](https://github.com/RWKV).
+We have no official affiliation or association with RWKV, nor are we authorised or endorsed by them. For the official GitHub profile of RWKV, please visit [https://github.com/RWKV](https://github.com/RWKV).
 
 Flatpack is currently experimental. Please refrain from using it in production environments.
