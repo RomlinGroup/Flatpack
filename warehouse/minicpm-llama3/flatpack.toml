@@ -33,13 +33,13 @@ numpy = "2.0.1"
 tiktoken = "0.7.0"
 tqdm = "4.66.5"
 
-# [[git]]
-# from_source = "{{git_source_url}}"
-# to_destination = "{{git_destination_dir}}"
-# branch = "{{branch_name}}"
-# setup_commands = [
-#   "{{setup_command}}"
-# ]
+[[git]]
+from_source = "https://github.com/ggerganov/llama.cpp"
+to_destination = "llama.cpp"
+branch = "master"
+setup_commands = [
+    "make"
+]
 
 [[file]]
 from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/minicpm-llama3/build.sh"
