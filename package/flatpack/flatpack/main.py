@@ -3314,6 +3314,14 @@ def fpk_cli_handle_run(args, session):
         print("[ERROR] The specified directory is not within allowed paths.")
         return
 
+    build_dir = directory / 'build'
+    web_dir = directory / 'web'
+
+    if not build_dir.exists() or not web_dir.exists():
+        logger.warning("The 'build' or 'web' directory is missing in the flatpack.")
+        print("[WARNING] The 'build' or 'web' directory is missing in the flatpack.")
+        return
+
     if args.share:
         if not os.environ.get('NGROK_AUTHTOKEN'):
             logger.error("NGROK_AUTHTOKEN environment variable is not set.")
