@@ -83,10 +83,18 @@ class AgentManager:
         pid = str(pid)
         if pid in self.processes:
             try:
-                os.kill(int(pid), signal.SIGTERM)
-                print(f"Terminated agent {pid}")
-                del self.processes[pid]
-                self.save_processes()
+                process = psutil.Process(int(pid))
+
+                if process.is_running():
+                    os.kill(int(pid), signal.SIGTERM)
+                    print(f"Terminated agent {pid}")
+                    del self.processes[pid]
+                    self.save_processes()
+                else:
+                    print(f"Agent {pid} is not running.")
+
+            except psutil.NoSuchProcess:
+                print(f"No such process with PID {pid}. It may have already terminated.")
             except OSError as e:
                 print(f"Failed to terminate agent {pid}: {e}")
         else:
