@@ -1,6 +1,6 @@
 part_bash """
 if [ ! -f models/MiniCPM-S-1B-sft.gguf ]; then
-    wget -q -O models/MiniCPM-S-1B-sft.gguf \"https://huggingface.co/openbmb/MiniCPM-S-1B-sft-gguf/resolve/main/MiniCPM-S-1B-sft.gguf\"
+    wget -q -nc -O models/MiniCPM-S-1B-sft.gguf \"https://huggingface.co/openbmb/MiniCPM-S-1B-sft-gguf/resolve/main/MiniCPM-S-1B-sft.gguf\"
 else
     echo \"Model already exist.\"
 fi

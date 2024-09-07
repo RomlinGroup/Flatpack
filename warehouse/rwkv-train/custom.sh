@@ -9,7 +9,7 @@ cd RWKV-LM/RWKV-v5
 mkdir -p data
 """
 part_bash """
-wget -q https://developer.download.nvidia.com/compute/cuda/repos/wsl-ubuntu/x86_64/cuda-keyring_1.1-1_all.deb
+wget -q -nc https://developer.download.nvidia.com/compute/cuda/repos/wsl-ubuntu/x86_64/cuda-keyring_1.1-1_all.deb
 
 sudo dpkg -i cuda-keyring_1.1-1_all.deb
 
@@ -18,9 +18,9 @@ sudo apt-get -y install cuda-toolkit-12-6
 sudo apt-get -y install nvidia-cuda-toolkit
 sudo apt-get -y install ninja-build
 
-wget -q --continue -O data/minipile.idx https://huggingface.co/datasets/BlinkDL/minipile-tokenized/resolve/main/rwkv_vocab_v20230424/minipile.idx
+wget -q -nc --continue -O data/minipile.idx https://huggingface.co/datasets/BlinkDL/minipile-tokenized/resolve/main/rwkv_vocab_v20230424/minipile.idx
 
-wget -q --continue -O data/minipile.bin https://huggingface.co/datasets/BlinkDL/minipile-tokenized/resolve/main/rwkv_vocab_v20230424/minipile.bin
+wget -q -nc --continue -O data/minipile.bin https://huggingface.co/datasets/BlinkDL/minipile-tokenized/resolve/main/rwkv_vocab_v20230424/minipile.bin
 
 ../../../bin/pip install torch --upgrade --extra-index-url https://download.pytorch.org/whl/cu121
 ../../../bin/pip install deepspeed wandb ninja --upgrade
