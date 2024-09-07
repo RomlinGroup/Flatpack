@@ -5,6 +5,7 @@ import atexit
 import base64
 import json
 import logging
+import mimetypes
 import os
 import re
 import secrets
@@ -325,7 +326,7 @@ def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path, use_euxo: bool = Fa
             outfile.write("CURR=0\n")
 
             outfile.write("trap 'rm -f \"$CONTEXT_PYTHON_SCRIPT\" \"$EXEC_PYTHON_SCRIPT\"' EXIT\n")
-            outfile.write("rm -f \"$CONTEXT_PYTHON_SCRIPT\" c\"$EXEC_PYTHON_SCRIPT\"\n")
+            outfile.write("rm -f \"$CONTEXT_PYTHON_SCRIPT\" \"$EXEC_PYTHON_SCRIPT\"\n")
             outfile.write("touch \"$CONTEXT_PYTHON_SCRIPT\" \"$EXEC_PYTHON_SCRIPT\"\n")
 
             outfile.write("datetime=$(date -u +\"%Y-%m-%d %H:%M:%S\")\n")
@@ -334,21 +335,26 @@ def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path, use_euxo: bool = Fa
             outfile.write("echo '[]' > \"$DATA_FILE\"\n")
             outfile.write("\n")
 
+            # Optimized log_data function with in-memory batch logging
             outfile.write("function log_data() {\n")
             outfile.write("    local part_number=\"$1\"\n")
-            outfile.write("    local new_files=$(find \"$SCRIPT_DIR\" -type f -newer \"$DATA_FILE\")\n")
+
+            outfile.write(
+                "    local new_files=$(find \"$SCRIPT_DIR\" -type f -newer \"$DATA_FILE\" \\( -name '*.jpg' -o -name '*.jpeg' -o -name '*.png' -o -name '*.txt' \\) ! -path '*/bin/*' ! -path '*/lib/*')\n"
+            )
             outfile.write("    if [ -n \"$new_files\" ]; then\n")
+            outfile.write("        local log_entries=\"[]\"\n")
             outfile.write("        local temp_file=$(mktemp)\n")
             outfile.write("        for file in $new_files; do\n")
-            outfile.write(
-                "            if [[ \"$file\" == *\"eval_data.json\" || \"$file\" == *\"eval_build.json\" ]]; then continue; fi\n")
             outfile.write("            local mime_type=$(file --mime-type -b \"$file\")\n")
             outfile.write("            local web=$(basename \"$file\")\n")
             outfile.write(
-                "            local json_entry=\"{\\\"eval\\\": $part_number, \\\"file\\\": \\\"$file\\\", \\\"public\\\": \\\"/output/$web\\\", \\\"type\\\": \\\"$mime_type\\\"}\"\n")
-            outfile.write(
-                "            jq \". + [$json_entry]\" \"$DATA_FILE\" > \"$temp_file\" && mv \"$temp_file\" \"$DATA_FILE\"\n")
+                "            local json_entry=\"{\\\"eval\\\": $part_number, \\\"file\\\": \\\"$file\\\", \\\"public\\\": \\\"/output/$web\\\", \\\"type\\\": \\\"$mime_type\\\"}\"\n"
+            )
+            outfile.write("            log_entries=$(echo \"$log_entries\" | jq \". + [$json_entry]\")\n")
             outfile.write("        done\n")
+            outfile.write(
+                "        jq \". + $log_entries\" \"$DATA_FILE\" > \"$temp_file\" && mv \"$temp_file\" \"$DATA_FILE\"\n")
             outfile.write("    fi\n")
             outfile.write("    touch \"$DATA_FILE\"\n")
             outfile.write("}\n")
@@ -964,9 +970,19 @@ def fpk_build(directory: Union[str, None], use_euxo: bool = False):
                             source_file = build_dir / relative_path
 
                             if source_file.exists():
-                                dest_path = output_dir / source_file.name
-                                shutil.copy2(source_file, dest_path)
-                                print(f"[INFO] Copied {source_file} to {dest_path}")
+
+                                allowed_mimetypes = [
+                                    'image/jpeg',
+                                    'image/png',
+                                    'text/plain'
+                                ]
+
+                                mime_type, _ = mimetypes.guess_type(source_file)
+
+                                if mime_type in allowed_mimetypes:
+                                    dest_path = output_dir / source_file.name
+                                    shutil.copy2(source_file, dest_path)
+                                    print(f"[INFO] Copied {source_file} to {dest_path}")
                             else:
                                 print(f"[ERROR] File {source_file} not found.")
                         else:
