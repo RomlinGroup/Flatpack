@@ -335,7 +335,6 @@ def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path, use_euxo: bool = Fa
             outfile.write("echo '[]' > \"$DATA_FILE\"\n")
             outfile.write("\n")
 
-            # Optimized log_data function with in-memory batch logging
             outfile.write("function log_data() {\n")
             outfile.write("    local part_number=\"$1\"\n")
 
