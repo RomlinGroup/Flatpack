@@ -411,6 +411,8 @@ def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path, use_euxo: bool = Fa
                     print(f"Skipping part with unsupported language: {language}")
                     continue
 
+                outfile.write("log_data \"$CURR\"\n")
+
                 outfile.write(
                     f"if [ \"$CURR\" -eq \"{last_count}\" ]; then\n"
                     "    EVAL=\"null\"\n"
