@@ -34,10 +34,9 @@ class AgentManager:
         if self.filepath.exists():
             with open(self.filepath, 'r') as f:
                 self.processes = json.load(f)
-
-                for pid in list(self.processes.keys()):
-                    if not psutil.pid_exists(int(pid)):
-                        del self.processes[pid]
+            for pid in list(self.processes.keys()):
+                if not psutil.pid_exists(int(pid)):
+                    del self.processes[pid]
         else:
             self.processes = {}
 
@@ -45,18 +44,14 @@ class AgentManager:
         free_port = find_free_port()
         env = os.environ.copy()
         env['AGENT_PORT'] = str(free_port)
-
         python_executable = sys.executable
-
         process = subprocess.Popen(
             [python_executable, script_path],
             env=env,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE
         )
-
         pid = process.pid
-
         self.processes[str(pid)] = {
             'process': process.pid,
             'start_time': datetime.now(),
@@ -65,7 +60,7 @@ class AgentManager:
         }
         self.save_processes()
         print(f"Spawned agent {pid} running on port {free_port} with '{script_path}'")
-        return pid
+        return pid, free_port
 
     def list_agents(self):
         agents = []
@@ -84,7 +79,6 @@ class AgentManager:
         if pid in self.processes:
             try:
                 process = psutil.Process(int(pid))
-
                 if process.is_running():
                     os.kill(int(pid), signal.SIGTERM)
                     print(f"Terminated agent {pid}")
@@ -92,7 +86,6 @@ class AgentManager:
                     self.save_processes()
                 else:
                     print(f"Agent {pid} is not running.")
-
             except psutil.NoSuchProcess:
                 print(f"No such process with PID {pid}. It may have already terminated.")
             except OSError as e:

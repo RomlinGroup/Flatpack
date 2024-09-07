@@ -3431,12 +3431,14 @@ def fpk_cli_handle_spawn_agent(args, session):
     agent_manager = AgentManager()
 
     try:
-        pid = agent_manager.spawn_agent(args.script_path)
-        logger.info("Agent spawned with PID: %s", pid)
-        print(f"[INFO] Agent spawned with PID: {pid}")
+        pid, port = agent_manager.spawn_agent(args.script_path)
+        logger.info("Agent spawned with PID: %s, Port: %s", pid, port)
+        print(f"[INFO] Agent spawned with PID: {pid}, Port: {port}")
+        return port
     except Exception as e:
         logger.error("Failed to spawn agent: %s", e)
         print(f"[ERROR] Failed to spawn agent: {e}")
+        return None
 
 
 def fpk_cli_handle_terminate_agent(args, session):
