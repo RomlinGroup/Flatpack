@@ -399,7 +399,11 @@ def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path, use_euxo: bool = Fa
                     if context_code:
                         outfile.write(f"echo \"\"\"{context_code}\"\"\" >> \"$CONTEXT_PYTHON_SCRIPT\"\n")
 
-                    outfile.write("echo \"try:\" > \"$EXEC_PYTHON_SCRIPT\"\n")
+                    outfile.write("echo \"import os, sys\" > \"$EXEC_PYTHON_SCRIPT\"\n")
+                    outfile.write("echo \"script_dir = os.environ.get('SCRIPT_DIR', '')\" >> \"$EXEC_PYTHON_SCRIPT\"\n")
+                    outfile.write("echo \"os.chdir(script_dir)\" >> \"$EXEC_PYTHON_SCRIPT\"\n")
+                    outfile.write("echo \"sys.path.insert(0, script_dir)\" >> \"$EXEC_PYTHON_SCRIPT\"\n")
+                    outfile.write("echo \"try:\" >> \"$EXEC_PYTHON_SCRIPT\"\n")
                     outfile.write("sed 's/^/    /' \"$CONTEXT_PYTHON_SCRIPT\" >> \"$EXEC_PYTHON_SCRIPT\"\n")
 
                     if execution_code:
@@ -408,7 +412,7 @@ def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path, use_euxo: bool = Fa
                     outfile.write("echo \"except Exception as e:\" >> \"$EXEC_PYTHON_SCRIPT\"\n")
                     outfile.write("echo \"    print(e)\" >> \"$EXEC_PYTHON_SCRIPT\"\n")
                     outfile.write("echo \"    import sys; sys.exit(1)\" >> \"$EXEC_PYTHON_SCRIPT\"\n")
-                    outfile.write("$VENV_PYTHON \"$EXEC_PYTHON_SCRIPT\"\n")
+                    outfile.write("SCRIPT_DIR=\"$SCRIPT_DIR\" $VENV_PYTHON \"$EXEC_PYTHON_SCRIPT\"\n")
 
                     outfile.write("((CURR++))\n")
 
