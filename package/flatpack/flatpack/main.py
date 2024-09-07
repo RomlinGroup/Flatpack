@@ -3450,8 +3450,6 @@ def fpk_cli_handle_terminate_agent(args, session):
 
     try:
         agent_manager.terminate_agent(args.pid)
-        logger.info("Agent with PID %s terminated successfully.", args.pid)
-        print(f"[INFO] Agent with PID {args.pid} terminated successfully.")
     except Exception as e:
         logger.error("Failed to terminate agent with PID %s: %s", args.pid, e)
         print(f"[ERROR] Failed to terminate agent with PID {args.pid}: {e}")
