@@ -689,6 +689,25 @@ async def run_scheduler():
         await asyncio.sleep(60)
 
 
+async def run_subprocess(command, log_file):
+    """Run a subprocess and capture its output in real time."""
+    process = await asyncio.create_subprocess_exec(
+        *command,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.STDOUT
+    )
+
+    while True:
+        line = await process.stdout.readline()
+        if not line:
+            break
+        line = line.decode('utf-8').strip()
+        log_file.write(line + "\n")
+        print(line)
+
+    await process.wait()
+
+
 def save_config(config):
     """Save the configuration to the file, sorting keys alphabetically.
 
@@ -833,16 +852,8 @@ def validate_file_path(path, is_input=True, allowed_dir=None):
     return absolute_path
 
 
-def fpk_build(directory: Union[str, None], use_euxo: bool = False):
-    """Build a flatpack.
-
-    Args:
-        directory (Union[str, None]): The directory to use for building the flatpack. If None, a cached directory will be used if available.
-        use_euxo (bool): Whether to use 'set -euxo pipefail' in the shell script. Defaults to False.
-
-    Returns:
-        None
-    """
+async def fpk_build(directory: Union[str, None], use_euxo: bool = False):
+    """Asynchronous function to build a flatpack."""
     cache_file_path = HOME_DIR / ".fpk_unbox.cache"
 
     if directory:
@@ -902,19 +913,7 @@ def fpk_build(directory: Union[str, None], use_euxo: bool = False):
 
     try:
         with open(build_log_file_path, 'w') as log_file:
-            process = subprocess.Popen(
-                ['/bin/bash', '-u', safe_script_path],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-                text=True
-            )
-
-            for line in process.stdout:
-                logger.info(line.strip())
-                log_file.write(line)
-                print(line, end='')
-
-            process.wait()
+            await run_subprocess(['/bin/bash', '-u', safe_script_path], log_file)
 
             web_dir = flatpack_dir / 'web'
 
@@ -953,13 +952,7 @@ def fpk_build(directory: Union[str, None], use_euxo: bool = False):
                             source_file = build_dir / relative_path
 
                             if source_file.exists():
-
-                                allowed_mimetypes = [
-                                    'image/jpeg',
-                                    'image/png',
-                                    'text/plain'
-                                ]
-
+                                allowed_mimetypes = ['image/jpeg', 'image/png', 'text/plain']
                                 mime_type, _ = mimetypes.guess_type(source_file)
 
                                 if mime_type in allowed_mimetypes:
@@ -987,19 +980,7 @@ def fpk_build(directory: Union[str, None], use_euxo: bool = False):
 
                     if hook_type == "bash":
                         hook_command = shlex.split(hook_script)
-                        hook_process = subprocess.Popen(
-                            hook_command,
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.STDOUT,
-                            text=True
-                        )
-
-                        for line in hook_process.stdout:
-                            logger.info(line.strip())
-                            log_file.write(line)
-                            print(line, end='')
-
-                        hook_process.wait()
+                        await run_subprocess(hook_command, log_file)
 
                     elif hook_type == "python":
                         try:
@@ -1015,9 +996,6 @@ def fpk_build(directory: Union[str, None], use_euxo: bool = False):
                 logger.error("An error occurred while retrieving or executing hooks: %s", e)
                 print(f"[ERROR] An error occurred while retrieving or executing hooks: {e}")
 
-    except subprocess.CalledProcessError as e:
-        logger.error("An error occurred while executing the build script: %s", e)
-        print(f"[ERROR] An error occurred while executing the build script: {e}")
     except Exception as e:
         logger.error("An unexpected error occurred: %s", e)
         print(f"[ERROR] An unexpected error occurred: {e}")
@@ -2404,7 +2382,7 @@ def fpk_cli_handle_build(args, session):
         logger.info("No directory name provided. Using cached directory if available.")
         print("[INFO] No directory name provided. Using cached directory if available.")
 
-    fpk_build(directory_name, use_euxo=args.use_euxo)
+    asyncio.run(fpk_build(directory_name, use_euxo=args.use_euxo))
 
 
 def fpk_cli_handle_create(args, session):
