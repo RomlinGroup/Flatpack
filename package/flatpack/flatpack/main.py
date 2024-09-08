@@ -312,8 +312,14 @@ def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path, use_euxo: bool = Fa
             outfile.write("#!/bin/bash\n")
             outfile.write(f"set -{'eux' if use_euxo else 'eu'}o pipefail\n")
 
+            outfile.write('export SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"\n')
+
+            outfile.write("VENV_PYTHON=${VENV_PYTHON:-python}\n")
+
             outfile.write(f"CONTEXT_PYTHON_SCRIPT=\"{context_python_script_path}\"\n")
+
             outfile.write("EVAL_BUILD=\"$(dirname \"$SCRIPT_DIR\")/web/eval_build.json\"\n")
+
             outfile.write(f"EXEC_PYTHON_SCRIPT=\"{exec_python_script_path}\"\n")
             outfile.write("CURR=0\n")
             outfile.write(f"last_count={last_count}\n")
@@ -323,7 +329,9 @@ def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path, use_euxo: bool = Fa
             outfile.write("touch \"$CONTEXT_PYTHON_SCRIPT\" \"$EXEC_PYTHON_SCRIPT\"\n")
 
             outfile.write("datetime=$(date -u +\"%Y-%m-%d %H:%M:%S\")\n")
+
             outfile.write("DATA_FILE=\"$(dirname \"$SCRIPT_DIR\")/web/eval_data.json\"\n")
+
             outfile.write("echo '[]' > \"$DATA_FILE\"\n\n")
 
             outfile.write("function log_data() {\n")
@@ -365,21 +373,19 @@ def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path, use_euxo: bool = Fa
             for part in parts:
                 part_lines = part.splitlines()
                 if len(part_lines) < 2:
-                    logger.warning(f"Skipping part with insufficient lines: {part}")
                     continue
 
                 header = part_lines[0].strip()
                 code_lines = part_lines[1:-1]
 
                 if header.startswith('disabled'):
-                    logger.info(f"Skipping disabled part: {header}")
                     continue
 
                 language = 'bash' if 'part_bash' in header else 'python' if 'part_python' in header else None
                 code = '\n'.join(code_lines).strip().replace('\\"', '"')
 
                 if language == 'bash':
-                    code = code.replace('$', '\$').replace('\\$\\$', '$$')
+                    code = code.replace('$$', r'$$$$')
                     outfile.write(f"{code}\n")
                     outfile.write("((CURR++))\n")
 
@@ -405,7 +411,6 @@ def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path, use_euxo: bool = Fa
                     outfile.write("((CURR++))\n")
 
                 else:
-                    logger.warning(f"Skipping part with unsupported language: {language}")
                     continue
 
                 outfile.write("log_data \"$CURR\"\n")

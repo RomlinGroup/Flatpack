@@ -14,6 +14,10 @@ __pycache__/
 /package/flatpack/metadata.json
 /package/flatpack/vector.index
 
+/test/myenv
+/test/eval_build.json
+/test/eval_data.json
+
 /utilities/compress_and_sign_fpk/compressed_file.fpk
 /utilities/compress_and_sign_fpk/debug.log
 /utilities/compress_and_sign_fpk/decompressed_output
