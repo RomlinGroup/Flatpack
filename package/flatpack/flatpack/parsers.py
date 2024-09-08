@@ -56,12 +56,8 @@ def load_toml_config(file_path):
 def generate_venv_setup_script(env_name, build_prefix):
     """Generate the script to set up the virtual environment."""
     return f"""
-handle_error() {{
-    echo "Oops! Something went wrong."
-    exit 1
-}}
-
 echo "Checking for Python"
+
 if [[ -x "$(command -v python3.12)" ]]; then
     PYTHON_CMD=python3.12
 elif [[ -x "$(command -v python3.11)" ]]; then
@@ -76,34 +72,37 @@ fi
 
 echo "Python command to be used: $PYTHON_CMD"
 
+umask 022
+
 VENV_PATH="{env_name}/{build_prefix}"
+
 echo "Creating the virtual environment at $VENV_PATH"
 
-if ! $PYTHON_CMD -m venv --copies "$VENV_PATH"; then
+if ! $PYTHON_CMD -m venv --copies --without-pip "$VENV_PATH"; then
     echo "Failed to create the virtual environment using $PYTHON_CMD"
-    handle_error
+    exit 1
 else
     echo "Successfully created the virtual environment"
+    chmod -R go-w "$VENV_PATH"
 fi
 
-# Ensuring the VENV_PYTHON path does not begin with a dot and is correctly formed
 export VENV_PYTHON="$VENV_PATH/bin/python"
+
 if [[ -f "$VENV_PYTHON" ]]; then
     echo "VENV_PYTHON is set correctly to $VENV_PYTHON"
     echo "Checking Python version in the virtual environment..."
     $VENV_PYTHON --version
 else
     echo "VENV_PYTHON is set to $VENV_PYTHON, but this file does not exist"
-    handle_error
+    exit 1
 fi
 
-# Ensure pip is installed within the virtual environment
-if [ ! -x "$VENV_PYTHON -m pip" ]; then
-    echo "Installing pip within the virtual environment..."
-    $VENV_PYTHON -m ensurepip
-fi
+echo "Installing pip within the virtual environment..."
 
-# Set VENV_PIP variable to the path of pip within the virtual environment
+curl -sSL https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+$VENV_PYTHON get-pip.py
+rm get-pip.py
+
 export VENV_PIP="$VENV_PYTHON -m pip"
     """.strip()
 
