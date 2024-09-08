@@ -12,10 +12,6 @@
 
 ## Ready-to-assemble AI
 
-Welcome, brave explorer! We are still in stealth mode (of sorts), but we are glad you found us.
-
-Is not the whole purpose of computers to make life easier by doing things automatically and faster? But doest that require us to trust them first?
-
 At Flatpack, our mission is clear: we are committed to building trust in AI.
 
 Flatpack democratises AI and ML through micro language models and model compression. Our platform enables users to train custom models with 100M to 10B parameters. We introduce flatpacks (FPKs) to integrate AI and ML into edge computing, electronic components, and robots.
