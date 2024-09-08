@@ -14,6 +14,10 @@
 
 Welcome, brave explorer! We are still in stealth mode (of sorts), but we are glad you found us.
 
+Is not the whole purpose of computers to make life easier by doing things automatically and faster? But doest that require us to trust them first?
+
+At Flatpack, our mission is clear: we are committed to building trust in AI.
+
 Flatpack democratises AI and ML through micro language models and model compression. Our platform enables users to train custom models with 100M to 10B parameters. We introduce flatpacks (FPKs) to integrate AI and ML into edge computing, electronic components, and robots.
 
 > **Flatpack:** "Picture merging the Swedish ingenuity of flatpacks (hence our name) and ready-to-assemble furniture with the imaginative appeal of certain Danish snap-together toy bricks. Our method of developing micro language models is designed to be intelligently integrated into the physical world."
@@ -232,9 +236,7 @@ curl -o verify_fpk.sh -H 'Cache-Control: no-cache' https://raw.githubusercontent
 
 ## Micro language models 🤏
 
-[Micro language models](http://microlanguagemodels.com) with around 100M to 10B parameters, offer a compelling alternative to the deployment and scalability challenges associated with traditional large language models (LLMs). Their smaller size allows for rapid pre-training and fine-tuning, enabling organisations to adapt quickly to market changes or specific requirements. Micro language models can be deployed in edge-adjacent environments like laptops, microprocessors, or smartphones.
-
-Overall, micro language models represent a logical step in the evolution of language models, effectively merging the capabilities of LLMs with the practical needs of real-world applications.
+[Micro language models](http://microlanguagemodels.com) provide an efficient alternative to large language models, addressing deployment and scalability challenges. Their compact size enables rapid pre-training and fine-tuning, allowing organizations to adapt swiftly to market shifts and specific needs. These models can be readily deployed in edge-adjacent environments such as laptops, microprocessors, and smartphones, offering accessibility and versatility.
 
 ## Inspiration (no affiliation) ⭐
 
