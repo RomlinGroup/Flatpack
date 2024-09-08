@@ -14,7 +14,7 @@
 
 At Flatpack, our mission is clear: we are committed to building trust in AI.
 
-Flatpack democratises AI and ML through micro language models and model compression. Our platform enables users to train custom models with 100M to 10B parameters. We introduce flatpacks (FPKs) to integrate AI and ML into edge computing, electronic components, and robots.
+Flatpack democratises AI and ML through micro language models and model compression. Our platform enables users to train custom language models with 100M to 10B parameters. We introduce flatpacks (FPKs) to integrate AI and ML into edge computing, electronic components, and robots.
 
 > **Flatpack:** "Picture merging the Swedish ingenuity of flatpacks (hence our name) and ready-to-assemble furniture with the imaginative appeal of certain Danish snap-together toy bricks. Our method of developing micro language models is designed to be intelligently integrated into the physical world."
 
