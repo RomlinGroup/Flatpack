@@ -2,7 +2,7 @@
 
 [![PyPI - Version](https://img.shields.io/pypi/v/flatpack)](https://pypi.org/project/flatpack/)
 
-> :warning: **DISCLAIMER:** This repository contains our research. Verify the information and do your own research (DYOR). We assume no responsibility for accuracy or completeness.
+> **DISCLAIMER:** This repository contains our research. Verify the information and do your own research (DYOR). We assume no responsibility for accuracy or completeness.
 
 `mini-omni` offers a Flatpack adaptation of [Mini-Omni](https://github.com/gpt-omni/mini-omni) by Changqiao Wu, licensed under the [MIT License](https://github.com/gpt-omni/mini-omni/blob/main/LICENSE).
 

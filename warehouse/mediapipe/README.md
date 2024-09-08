@@ -2,7 +2,7 @@
 
 [![PyPI - Version](https://img.shields.io/pypi/v/flatpack)](https://pypi.org/project/flatpack/)
 
-> :warning: **DISCLAIMER:** This repository contains our research. Verify the information and do your own research (DYOR). We assume no responsibility for accuracy or completeness.
+> **DISCLAIMER:** This repository contains our research. Verify the information and do your own research (DYOR). We assume no responsibility for accuracy or completeness.
 
 `mediapipe` offers a Flatpack adaptation of [MediaPipe](https://github.com/google-ai-edge/mediapipe) by Google, licensed under the [Apache License 2.0](https://github.com/google-ai-edge/mediapipe/blob/master/LICENSE).
 

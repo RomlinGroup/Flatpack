@@ -2,7 +2,7 @@
 
 [![PyPI - Version](https://img.shields.io/pypi/v/flatpack)](https://pypi.org/project/flatpack/)
 
-> :warning: **DISCLAIMER:** This repository contains our research. Verify the information and do your own research (DYOR). We assume no responsibility for accuracy or completeness.
+> **DISCLAIMER:** This repository contains our research. Verify the information and do your own research (DYOR). We assume no responsibility for accuracy or completeness.
 
 `rwkv-train` offers a Flatpack adaptation of [RWKV-LM](https://github.com/BlinkDL/RWKV-LM) by Bo Peng, licensed under the [Apache License 2.0](https://github.com/BlinkDL/RWKV-LM/blob/main/LICENSE).
 

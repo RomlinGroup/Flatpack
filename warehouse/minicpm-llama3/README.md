@@ -2,7 +2,7 @@
 
 [![PyPI - Version](https://img.shields.io/pypi/v/flatpack)](https://pypi.org/project/flatpack/)
 
-> :warning: **DISCLAIMER:** This repository contains our research. Verify the information and do your own research (DYOR). We assume no responsibility for accuracy or completeness.
+> **DISCLAIMER:** This repository contains our research. Verify the information and do your own research (DYOR). We assume no responsibility for accuracy or completeness.
 
 `minicpm-llama3` offers a Flatpack adaptation of [MiniCPM](https://github.com/OpenBMB/MiniCPM) by OpenBMB, licensed under the [Apache License 2.0](https://github.com/OpenBMB/MiniCPM/blob/main/LICENSE).
 

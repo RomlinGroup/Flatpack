@@ -2,7 +2,7 @@
 
 [![PyPI - Version](https://img.shields.io/pypi/v/flatpack)](https://pypi.org/project/flatpack/)
 
-> :warning: **DISCLAIMER:** This repository contains our research. Verify the information and do your own research (DYOR). We assume no responsibility for accuracy or completeness.
+> **DISCLAIMER:** This repository contains our research. Verify the information and do your own research (DYOR). We assume no responsibility for accuracy or completeness.
 
 `llama-cpp` offers a Flatpack adaptation of [llama.cpp](https://github.com/ggerganov/llama.cpp) by Georgi Gerganov, licensed under the [MIT License](https://github.com/ggerganov/llama.cpp/blob/master/LICENSE).
 

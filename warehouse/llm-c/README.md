@@ -2,7 +2,7 @@
 
 [![PyPI - Version](https://img.shields.io/pypi/v/flatpack)](https://pypi.org/project/flatpack/)
 
-> :warning: **DISCLAIMER:** This repository contains our research. Verify the information and do your own research (DYOR). We assume no responsibility for accuracy or completeness.
+> **DISCLAIMER:** This repository contains our research. Verify the information and do your own research (DYOR). We assume no responsibility for accuracy or completeness.
 
 `llm-c` offers a Flatpack adaptation of [llm.c](https://github.com/karpathy/llm.c) by Andrej Karpathy, licensed under the [MIT License](https://github.com/karpathy/llm.c/blob/master/LICENSE).
 

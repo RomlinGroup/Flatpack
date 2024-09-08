@@ -2,7 +2,7 @@
 
 [![PyPI - Version](https://img.shields.io/pypi/v/flatpack)](https://pypi.org/project/flatpack/)
 
-> :warning: **DISCLAIMER:** This repository contains our research. Verify the information and do your own research (DYOR). We assume no responsibility for accuracy or completeness.
+> **DISCLAIMER:** This repository contains our research. Verify the information and do your own research (DYOR). We assume no responsibility for accuracy or completeness.
 
 `nanogpt` offers a Flatpack adaptation of [nanoGPT](https://github.com/karpathy/nanoGPT) by Andrej Karpathy, licensed under the [MIT License](https://github.com/karpathy/nanoGPT/blob/master/LICENSE).
 

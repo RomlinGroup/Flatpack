@@ -2,7 +2,7 @@
 
 [![PyPI - Version](https://img.shields.io/pypi/v/flatpack)](https://pypi.org/project/flatpack/)
 
-> :warning: **DISCLAIMER:** This repository contains our research. Verify the information and do your own research (DYOR). We assume no responsibility for accuracy or completeness.
+> **DISCLAIMER:** This repository contains our research. Verify the information and do your own research (DYOR). We assume no responsibility for accuracy or completeness.
 
 `rpi-edge` offers a Flatpack adaptation of [rwkv.cpp](https://github.com/RWKV/rwkv.cpp) by RWKV, licensed under the [MIT License](https://github.com/RWKV/rwkv.cpp/blob/master/LICENSE).
 

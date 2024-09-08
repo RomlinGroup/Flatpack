@@ -2,7 +2,7 @@
 
 [![PyPI - Version](https://img.shields.io/pypi/v/flatpack)](https://pypi.org/project/flatpack/)
 
-> :warning: **DISCLAIMER:** This repository contains our research. Verify the information and do your own research (DYOR). We assume no responsibility for accuracy or completeness.
+> **DISCLAIMER:** This repository contains our research. Verify the information and do your own research (DYOR). We assume no responsibility for accuracy or completeness.
 
 `moondream` offers a Flatpack adaptation of [moondream](https://github.com/vikhyat/moondream) by vik, licensed under the [Apache License 2.0](https://github.com/vikhyat/moondream/blob/main/LICENSE).
 
