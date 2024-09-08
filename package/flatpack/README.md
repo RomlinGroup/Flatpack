@@ -4,11 +4,11 @@
 
 ## Ready-to-assemble AI
 
-Welcome, brave explorer! We are still in stealth mode (of sorts), but we are glad you found us.
+At Flatpack, our mission is clear: we are committed to building trust in AI.
 
 Flatpack democratises AI and ML through micro language models and model compression. Our platform enables users to train
-customised models with 10M to 10B parameters. We introduce flatpacks (FPKs) to integrate AI and ML into edge computing,
-electronic components, and robots.
+custom language models with 100M to 10B parameters. We introduce flatpacks (FPKs) to integrate AI and ML into edge
+computing, electronic components, and robots.
 
 ## Flatpack 3.X.X (Aglaonice)
 
@@ -123,4 +123,4 @@ Check out the [JLA - Compatibility Checker](https://joinup.ec.europa.eu/collecti
 - **[zstandard](https://pypi.org/project/zstandard/)**\
   BSD License (BSD) ([LICENSE](https://github.com/indygreg/python-zstandard/blob/main/LICENSE))
 
-Last updated: 2024-09-04
+Last updated: 2024-09-08
