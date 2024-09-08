@@ -232,7 +232,7 @@ curl -o verify_fpk.sh -H 'Cache-Control: no-cache' https://raw.githubusercontent
 
 ## Micro language models 🤏
 
-[Micro language models](http://microlanguagemodels.com) provide an efficient alternative to large language models, addressing deployment and scalability challenges. Their compact size enables rapid pre-training and fine-tuning, allowing organizations to adapt swiftly to market shifts and specific needs. These models can be readily deployed in edge-adjacent environments such as laptops, microprocessors, and smartphones, offering accessibility and versatility.
+[Micro language models](http://microlanguagemodels.com) (100M to 10B parameters) provide an efficient alternative to large language models, addressing deployment and scalability challenges. Their compact size enables rapid pre-training and fine-tuning, allowing organizations to adapt swiftly to market shifts and specific needs. These models can be readily deployed in edge-adjacent environments such as laptops, microprocessors, and smartphones, offering accessibility and versatility.
 
 ## Inspiration (no affiliation) ⭐
 
