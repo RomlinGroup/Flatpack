@@ -288,15 +288,13 @@ def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path, use_euxo: bool = Fa
         i = 0
         while i < len(lines):
             line = lines[i].strip()
-            if line.startswith('part_bash """') or line.startswith('part_python """') or line.startswith(
-                    'disabled part_bash """') or line.startswith('disabled part_python """'):
+            if line.startswith(
+                    ('part_bash """', 'part_python """', 'disabled part_bash """', 'disabled part_python """')):
                 start_line = i
                 i += 1
                 while i < len(lines) and not lines[i].strip().endswith('"""'):
                     i += 1
-                end_line = i
-                if i < len(lines):
-                    end_line += 1
+                end_line = i + 1 if i < len(lines) else i
                 parts.append('\n'.join(lines[start_line:end_line]).strip())
             i += 1
 
@@ -306,34 +304,26 @@ def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path, use_euxo: bool = Fa
 
         with tempfile.NamedTemporaryFile(mode='w', delete=False) as context_python_script:
             context_python_script_path = Path(context_python_script.name)
-            context_python_script.write('')
 
         with tempfile.NamedTemporaryFile(mode='w', delete=False) as exec_python_script:
             exec_python_script_path = Path(exec_python_script.name)
-            exec_python_script.write('')
 
         with temp_sh_path.open('w') as outfile:
             outfile.write("#!/bin/bash\n")
-
-            if use_euxo:
-                outfile.write("set -euxo pipefail\n")
-            else:
-                outfile.write("set -euo pipefail\n")
+            outfile.write(f"set -{'eux' if use_euxo else 'eu'}o pipefail\n")
 
             outfile.write(f"CONTEXT_PYTHON_SCRIPT=\"{context_python_script_path}\"\n")
             outfile.write("EVAL_BUILD=\"$(dirname \"$SCRIPT_DIR\")/web/eval_build.json\"\n")
             outfile.write(f"EXEC_PYTHON_SCRIPT=\"{exec_python_script_path}\"\n")
             outfile.write("CURR=0\n")
 
-            outfile.write("trap 'rm -f \"$CONTEXT_PYTHON_SCRIPT\" \"$EXEC_PYTHON_SCRIPT\"' EXIT\n")
+            outfile.write("trap 'rm -f \"$CONTEXT_PYTHON_SCRIPT\" \"$EXEC_PYTHON_SCRIPT\"; exit' EXIT INT TERM\n")
             outfile.write("rm -f \"$CONTEXT_PYTHON_SCRIPT\" \"$EXEC_PYTHON_SCRIPT\"\n")
             outfile.write("touch \"$CONTEXT_PYTHON_SCRIPT\" \"$EXEC_PYTHON_SCRIPT\"\n")
 
             outfile.write("datetime=$(date -u +\"%Y-%m-%d %H:%M:%S\")\n")
-
             outfile.write("DATA_FILE=\"$(dirname \"$SCRIPT_DIR\")/web/eval_data.json\"\n")
-            outfile.write("echo '[]' > \"$DATA_FILE\"\n")
-            outfile.write("\n")
+            outfile.write("echo '[]' > \"$DATA_FILE\"\n\n")
 
             outfile.write("function log_data() {\n")
             outfile.write("    local part_number=\"$1\"\n")
@@ -356,30 +346,32 @@ def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path, use_euxo: bool = Fa
                 "        jq \". + $log_entries\" \"$DATA_FILE\" > \"$temp_file\" && mv \"$temp_file\" \"$DATA_FILE\"\n")
             outfile.write("    fi\n")
             outfile.write("    touch \"$DATA_FILE\"\n")
-            outfile.write("}\n")
+            outfile.write("}\n\n")
 
-            outfile.write("\n")
+            outfile.write("function update_eval_build() {\n")
+            outfile.write("    local curr=\"$1\"\n")
+            outfile.write("    local eval=\"$2\"\n")
+            outfile.write("    echo \"{\n")
+            outfile.write("        \\\"curr\\\": $curr,\n")
+            outfile.write(f"        \\\"last\\\": {last_count},\n")
+            outfile.write("        \\\"eval\\\": $eval,\n")
+            outfile.write("        \\\"datetime\\\": \\\"$datetime\\\"\n")
+            outfile.write("    }\" > \"$EVAL_BUILD\"\n")
+            outfile.write("}\n\n")
 
-            outfile.write(
-                "echo \"{"
-                "\\\"curr\\\": $CURR, "
-                f"\\\"last\\\": {last_count}, "
-                "\\\"eval\\\": 1, "
-                "\\\"datetime\\\": \\\"$datetime\\\""
-                "}\" > \"$EVAL_BUILD\"\n"
-            )
+            outfile.write("update_eval_build \"$CURR\" 1\n\n")
 
             for part in parts:
                 part_lines = part.splitlines()
                 if len(part_lines) < 2:
-                    print(f"Skipping part with insufficient lines: {part}")
+                    logger.warning(f"Skipping part with insufficient lines: {part}")
                     continue
 
                 header = part_lines[0].strip()
                 code_lines = part_lines[1:-1]
 
                 if header.startswith('disabled'):
-                    print(f"Skipping disabled part: {header}")
+                    logger.info(f"Skipping disabled part: {header}")
                     continue
 
                 language = 'bash' if 'part_bash' in header else 'python' if 'part_python' in header else None
@@ -397,57 +389,45 @@ def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path, use_euxo: bool = Fa
                         line for line in code_lines if line.strip().startswith(('print(', 'subprocess.run')))
 
                     if context_code:
-                        outfile.write(f"echo \"\"\"{context_code}\"\"\" >> \"$CONTEXT_PYTHON_SCRIPT\"\n")
+                        outfile.write(f"cat << EOF >> \"$CONTEXT_PYTHON_SCRIPT\"\n{context_code}\nEOF\n")
 
-                    outfile.write("echo \"import os, sys\" > \"$EXEC_PYTHON_SCRIPT\"\n")
-                    outfile.write("echo \"script_dir = os.environ.get('SCRIPT_DIR', '')\" >> \"$EXEC_PYTHON_SCRIPT\"\n")
-                    outfile.write("echo \"os.chdir(script_dir)\" >> \"$EXEC_PYTHON_SCRIPT\"\n")
-                    outfile.write("echo \"sys.path.insert(0, script_dir)\" >> \"$EXEC_PYTHON_SCRIPT\"\n")
-                    outfile.write("echo \"try:\" >> \"$EXEC_PYTHON_SCRIPT\"\n")
-                    outfile.write("sed 's/^/    /' \"$CONTEXT_PYTHON_SCRIPT\" >> \"$EXEC_PYTHON_SCRIPT\"\n")
-
+                    outfile.write("cat << EOF > \"$EXEC_PYTHON_SCRIPT\"\n")
+                    outfile.write("import os, sys\n")
+                    outfile.write("script_dir = os.environ.get('SCRIPT_DIR', '')\n")
+                    outfile.write("os.chdir(script_dir)\n")
+                    outfile.write("sys.path.insert(0, script_dir)\n")
+                    outfile.write("try:\n")
+                    outfile.write("    with open(os.environ['CONTEXT_PYTHON_SCRIPT'], 'r') as f:\n")
+                    outfile.write("        exec(f.read())\n")
                     if execution_code:
-                        outfile.write(f"echo \"{execution_code}\" | sed 's/^/    /' >> \"$EXEC_PYTHON_SCRIPT\"\n")
+                        outfile.write(f"{execution_code}\n")
+                    outfile.write("except Exception as e:\n")
+                    outfile.write("    print(f'Error: {e}')\n")
+                    outfile.write("    sys.exit(1)\n")
+                    outfile.write("EOF\n")
 
-                    outfile.write("echo \"except Exception as e:\" >> \"$EXEC_PYTHON_SCRIPT\"\n")
-                    outfile.write("echo \"    print(e)\" >> \"$EXEC_PYTHON_SCRIPT\"\n")
-                    outfile.write("echo \"    import sys; sys.exit(1)\" >> \"$EXEC_PYTHON_SCRIPT\"\n")
                     outfile.write("SCRIPT_DIR=\"$SCRIPT_DIR\" $VENV_PYTHON \"$EXEC_PYTHON_SCRIPT\"\n")
-
                     outfile.write("((CURR++))\n")
 
                 else:
-                    print(f"Skipping part with unsupported language: {language}")
+                    logger.warning(f"Skipping part with unsupported language: {language}")
                     continue
 
                 outfile.write("log_data \"$CURR\"\n")
 
-                outfile.write(
-                    f"if [ \"$CURR\" -eq \"{last_count}\" ]; then\n"
-                    "    EVAL=\"null\"\n"
-                    "else\n"
-                    "    EVAL=$((CURR + 1))\n"
-                    "fi\n"
-                )
+                outfile.write("if [ \"$CURR\" -eq \"$((last_count))\" ]; then\n")
+                outfile.write("    EVAL=\"null\"\n")
+                outfile.write("else\n")
+                outfile.write("    EVAL=$((CURR + 1))\n")
+                outfile.write("fi\n")
 
-                outfile.write(
-                    "echo \"{"
-                    "\\\"curr\\\": $CURR, "
-                    f"\\\"last\\\": {last_count}, "
-                    "\\\"eval\\\": $EVAL, "
-                    "\\\"datetime\\\": \\\"$datetime\\\""
-                    "}\" > \"$EVAL_BUILD\"\n"
-                )
+                outfile.write("update_eval_build \"$CURR\" \"$EVAL\"\n\n")
 
-        context_python_script_path.unlink()
-        exec_python_script_path.unlink()
-
-        print(f"[INFO] Temp script generated successfully at {temp_sh_path}")
         logger.info("Temp script generated successfully at %s", temp_sh_path)
 
     except Exception as e:
-        print(f"[ERROR] An error occurred while creating temp script: {e}")
-        logger.error("An error occurred while creating temp script: %s", e)
+        logger.error("An error occurred while creating temp script: %s", e, exc_info=True)
+        raise
 
 
 def create_venv(venv_dir: str):
