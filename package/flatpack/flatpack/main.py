@@ -316,6 +316,7 @@ def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path, use_euxo: bool = Fa
             outfile.write("EVAL_BUILD=\"$(dirname \"$SCRIPT_DIR\")/web/eval_build.json\"\n")
             outfile.write(f"EXEC_PYTHON_SCRIPT=\"{exec_python_script_path}\"\n")
             outfile.write("CURR=0\n")
+            outfile.write(f"last_count={last_count}\n")
 
             outfile.write("trap 'rm -f \"$CONTEXT_PYTHON_SCRIPT\" \"$EXEC_PYTHON_SCRIPT\"; exit' EXIT INT TERM\n")
             outfile.write("rm -f \"$CONTEXT_PYTHON_SCRIPT\" \"$EXEC_PYTHON_SCRIPT\"\n")
@@ -353,7 +354,7 @@ def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path, use_euxo: bool = Fa
             outfile.write("    local eval=\"$2\"\n")
             outfile.write("    echo \"{\n")
             outfile.write("        \\\"curr\\\": $curr,\n")
-            outfile.write(f"        \\\"last\\\": {last_count},\n")
+            outfile.write("        \\\"last\\\": $last_count,\n")
             outfile.write("        \\\"eval\\\": $eval,\n")
             outfile.write("        \\\"datetime\\\": \\\"$datetime\\\"\n")
             outfile.write("    }\" > \"$EVAL_BUILD\"\n")
@@ -383,30 +384,22 @@ def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path, use_euxo: bool = Fa
                     outfile.write("((CURR++))\n")
 
                 elif language == 'python':
-                    context_code = "\n".join(
-                        line for line in code_lines if not line.strip().startswith(('print(', 'subprocess.run')))
-                    execution_code = "\n".join(
-                        line for line in code_lines if line.strip().startswith(('print(', 'subprocess.run')))
+                    context_code = "\n".join(line for line in code_lines if not line.strip().startswith(('print(', 'subprocess.run')))
+                    execution_code = "\n".join(line for line in code_lines if line.strip().startswith(('print(', 'subprocess.run')))
 
                     if context_code:
-                        outfile.write(f"cat << EOF >> \"$CONTEXT_PYTHON_SCRIPT\"\n{context_code}\nEOF\n")
+                        outfile.write(f"echo \"{context_code}\" >> \"$CONTEXT_PYTHON_SCRIPT\"\n")
 
-                    outfile.write("cat << EOF > \"$EXEC_PYTHON_SCRIPT\"\n")
-                    outfile.write("import os, sys\n")
-                    outfile.write("script_dir = os.environ.get('SCRIPT_DIR', '')\n")
-                    outfile.write("os.chdir(script_dir)\n")
-                    outfile.write("sys.path.insert(0, script_dir)\n")
-                    outfile.write("try:\n")
-                    outfile.write("    with open(os.environ['CONTEXT_PYTHON_SCRIPT'], 'r') as f:\n")
-                    outfile.write("        exec(f.read())\n")
+                    outfile.write("echo \"try:\" > \"$EXEC_PYTHON_SCRIPT\"\n")
+                    outfile.write("sed 's/^/    /' \"$CONTEXT_PYTHON_SCRIPT\" >> \"$EXEC_PYTHON_SCRIPT\"\n")
+
                     if execution_code:
-                        outfile.write(f"{execution_code}\n")
-                    outfile.write("except Exception as e:\n")
-                    outfile.write("    print(f'Error: {e}')\n")
-                    outfile.write("    sys.exit(1)\n")
-                    outfile.write("EOF\n")
+                        outfile.write(f"echo \"{execution_code}\" | sed 's/^/    /' >> \"$EXEC_PYTHON_SCRIPT\"\n")
 
-                    outfile.write("SCRIPT_DIR=\"$SCRIPT_DIR\" $VENV_PYTHON \"$EXEC_PYTHON_SCRIPT\"\n")
+                    outfile.write("echo \"except Exception as e:\" >> \"$EXEC_PYTHON_SCRIPT\"\n")
+                    outfile.write("echo \"    print(e)\" >> \"$EXEC_PYTHON_SCRIPT\"\n")
+                    outfile.write("echo \"    import sys; sys.exit(1)\" >> \"$EXEC_PYTHON_SCRIPT\"\n")
+                    outfile.write("$VENV_PYTHON \"$EXEC_PYTHON_SCRIPT\"\n")
                     outfile.write("((CURR++))\n")
 
                 else:
@@ -415,7 +408,7 @@ def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path, use_euxo: bool = Fa
 
                 outfile.write("log_data \"$CURR\"\n")
 
-                outfile.write("if [ \"$CURR\" -eq \"$((last_count))\" ]; then\n")
+                outfile.write("if [ \"$CURR\" -eq \"$last_count\" ]; then\n")
                 outfile.write("    EVAL=\"null\"\n")
                 outfile.write("else\n")
                 outfile.write("    EVAL=$((CURR + 1))\n")
