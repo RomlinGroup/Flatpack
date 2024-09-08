@@ -42,15 +42,15 @@ branch = "main"
 # ]
 
 [[file]]
-from_source = "build.sh"
+from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/mini-omni/build.sh"
 to_destination = "build.sh"
 
 [[file]]
-from_source = "custom.sh"
+from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/mini-omni/custom.sh"
 to_destination = "custom.sh"
 
 [[file]]
-from_source = "device.sh"
+from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/mini-omni/device.sh"
 to_destination = "device.sh"
 
 [[run]]
