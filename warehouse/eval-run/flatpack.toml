@@ -4,7 +4,7 @@
 version = "0.0.1"
 
 [environment]
-model_name = "agent-rag"
+model_name = "eval-run"
 
 [[port]]
 external = 8080
@@ -29,29 +29,28 @@ sox = "*"
 wget = "*"
 
 [packages.python]
-flatpack = "3.7.16"
 numpy = "2.0.1"
 tiktoken = "0.7.0"
 tqdm = "4.66.5"
 
-[[git]]
-from_source = "https://github.com/ggerganov/llama.cpp"
-to_destination = "llama.cpp"
-branch = "master"
-setup_commands = [
-    "make"
-]
+# [[git]]
+# from_source = "{{git_source_url}}"
+# to_destination = "{{git_destination_dir}}"
+# branch = "{{branch_name}}"
+# setup_commands = [
+#   "{{setup_command}}"
+# ]
 
 [[file]]
-from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/agent-rag/build.sh"
+from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/eval-run/build.sh"
 to_destination = "build.sh"
 
 [[file]]
-from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/agent-rag/custom.sh"
+from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/eval-run/custom.sh"
 to_destination = "custom.sh"
 
 [[file]]
-from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/agent-rag/device.sh"
+from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/eval-run/device.sh"
 to_destination = "device.sh"
 
 [[run]]
