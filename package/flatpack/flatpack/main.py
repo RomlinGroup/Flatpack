@@ -384,8 +384,10 @@ def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path, use_euxo: bool = Fa
                     outfile.write("((CURR++))\n")
 
                 elif language == 'python':
-                    context_code = "\n".join(line for line in code_lines if not line.strip().startswith(('print(', 'subprocess.run')))
-                    execution_code = "\n".join(line for line in code_lines if line.strip().startswith(('print(', 'subprocess.run')))
+                    context_code = "\n".join(
+                        line for line in code_lines if not line.strip().startswith(('print(', 'subprocess.run')))
+                    execution_code = "\n".join(
+                        line for line in code_lines if line.strip().startswith(('print(', 'subprocess.run')))
 
                     if context_code:
                         outfile.write(f"echo \"{context_code}\" >> \"$CONTEXT_PYTHON_SCRIPT\"\n")
