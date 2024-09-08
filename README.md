@@ -38,7 +38,7 @@ https://pypi.org/project/flatpack
 
 **NOTE:** Flatpack is currently experimental. Please refrain from using it in production environments.
 
-### Install from PyPI (recommended)
+### Install using pipx (recommended)
 
 Use this method if you prefer to install flatpack using [pipx](https://pipx.pypa.io).
 
