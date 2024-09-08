@@ -18,6 +18,10 @@ Flatpack democratises AI and ML through micro language models and model compress
 
 > **Flatpack:** "Picture merging the Swedish ingenuity of flatpacks (hence our name) and ready-to-assemble furniture with the imaginative appeal of certain Danish snap-together toy bricks. Our method of developing micro language models is designed to be intelligently integrated into the physical world."
 
+## Micro language models 🤏
+
+[Micro language models](http://microlanguagemodels.com) (100M to 10B parameters) provide an efficient alternative to large language models, addressing deployment, reliability, and scalability challenges. Their compact size enables rapid pre-training and fine-tuning, allowing organizations to adapt swiftly to market shifts and specific needs. These models can be readily deployed in edge-adjacent environments such as laptops, microprocessors, and smartphones, offering accessibility and versatility.
+
 ## Edge artificial intelligence
 
 Edge artificial intelligence uses local devices to enhance decision-making near data sources, improving privacy, response times,  and security while reducing reliance on cloud connectivity. Benefits include decreased latency, improved scalability, and reduced energy usage.
@@ -229,10 +233,6 @@ python bulk_verify_signed_data_with_cli.py --public_key public_key.pem
 ```bash
 curl -o verify_fpk.sh -H 'Cache-Control: no-cache' https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/utilities/compress_and_sign_fpk/verify_fpk.sh && chmod +x verify_fpk.sh && ./verify_fpk.sh <fpk_path>
 ```
-
-## Micro language models 🤏
-
-[Micro language models](http://microlanguagemodels.com) (100M to 10B parameters) provide an efficient alternative to large language models, addressing deployment, reliability, and scalability challenges. Their compact size enables rapid pre-training and fine-tuning, allowing organizations to adapt swiftly to market shifts and specific needs. These models can be readily deployed in edge-adjacent environments such as laptops, microprocessors, and smartphones, offering accessibility and versatility.
 
 ## Inspiration (no affiliation) ⭐
 
