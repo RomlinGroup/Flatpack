@@ -2,7 +2,7 @@ part_bash """
 ../bin/pip install --pre torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/nightly/cpu
 """
 part_python """
-from transformers import AutoTokenizer, AutoModelForCausalLM
+from transformers import AutoModelForCausalLM, AutoTokenizer
 
 device = \"mps\"
 model_path = \"01-ai/Yi-Coder-9B-Chat\"
