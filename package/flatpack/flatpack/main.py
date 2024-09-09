@@ -695,7 +695,7 @@ async def run_build_process(schedule_id=None):
     logger.info("Running build process...")
 
     try:
-        update_build_status("in_progress", schedule_id)
+        await update_build_status("in_progress", schedule_id)
 
         steps = [
             ("Preparing build environment", 1),
@@ -705,17 +705,17 @@ async def run_build_process(schedule_id=None):
         ]
 
         for step_name, duration in steps:
-            update_build_status(f"in_progress: {step_name}", schedule_id)
+            await update_build_status(f"in_progress: {step_name}", schedule_id)
             await asyncio.sleep(duration)
 
-        update_build_status("in_progress: Running build script", schedule_id)
+        await update_build_status("in_progress: Running build script", schedule_id)
         await fpk_build(flatpack_directory)
 
-        update_build_status("completed", schedule_id)
+        await update_build_status("completed", schedule_id)
         logger.info("Build process completed.")
     except Exception as e:
         logger.error("Build process failed: %s", e)
-        update_build_status("failed", schedule_id, error=str(e))
+        await update_build_status("failed", schedule_id, error=str(e))
     finally:
         build_in_progress = False
 
@@ -862,7 +862,7 @@ def unescape_special_chars(content: str) -> str:
     return content.replace('\\"', '"')
 
 
-def update_build_status(status, schedule_id=None, error=None):
+async def update_build_status(status, schedule_id=None, error=None):
     status_file = os.path.join(flatpack_directory, 'build', 'build_status.json')
     status_data = {
         "status": status,
@@ -871,8 +871,8 @@ def update_build_status(status, schedule_id=None, error=None):
     }
     if error:
         status_data["error"] = str(error)
-    with open(status_file, 'w') as f:
-        json.dump(status_data, f)
+
+    await asyncio.to_thread(write_status_to_file, status_file, status_data)
 
 
 def validate_api_token(api_token: str) -> bool:
@@ -918,6 +918,11 @@ def validate_file_path(path, is_input=True, allowed_dir=None):
             os.makedirs(output_dir)
 
     return absolute_path
+
+
+def write_status_to_file(status_file, status_data):
+    with open(status_file, 'w') as f:
+        json.dump(status_data, f)
 
 
 async def fpk_build(directory: Union[str, None], use_euxo: bool = False):
