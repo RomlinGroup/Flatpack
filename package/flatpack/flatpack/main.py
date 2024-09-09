@@ -2449,7 +2449,11 @@ def fpk_cli_handle_build(args, session):
         logger.info("No directory name provided. Using cached directory if available.")
         print("[INFO] No directory name provided. Using cached directory if available.")
 
-    asyncio.run(fpk_build(directory_name, use_euxo=args.use_euxo))
+    try:
+        asyncio.get_running_loop()
+        asyncio.ensure_future(fpk_build(directory_name, use_euxo=args.use_euxo))
+    except RuntimeError:
+        asyncio.run(fpk_build(directory_name, use_euxo=args.use_euxo))
 
 
 def fpk_cli_handle_create(args, session):
