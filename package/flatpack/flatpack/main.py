@@ -106,36 +106,33 @@ class Hook(BaseModel):
     hook_type: str
 
 
+# Based on https://tbrink.science/blog/2017/04/30/processing-the-output-of-a-subprocess-with-python-in-realtime/ (CC0)
 class OutStream:
-    # https://tbrink.science/blog/2017/04/30/processing-the-output-of-a-subprocess-with-python-in-realtime/ (CC0 1.0)
-
     def __init__(self, fileno):
         self._fileno = fileno
         self._buffer = b""
+        self._last_line = ""
 
     def read_lines(self):
         try:
             output = os.read(self._fileno, 1000)
         except OSError as e:
-            if e.errno != errno.EIO: raise
+            if e.errno != errno.EIO:
+                raise
             output = b""
-        lines = output.split(b"\n")
-        lines[0] = self._buffer + lines[0]
 
-        if output:
-            self._buffer = lines[-1]
-            finished_lines = lines[:-1]
-            readable = True
-        else:
-            self._buffer = b""
-            if len(lines) == 1 and not lines[0]:
-                lines = []
-            finished_lines = lines
-            readable = False
-            os.close(self._fileno)
-        finished_lines = [line.rstrip(b"\r").decode()
-                          for line in finished_lines]
-        return finished_lines, readable
+        self._buffer += output
+        lines = self._buffer.split(b"\r")
+        self._buffer = lines.pop()
+
+        processed_lines = []
+        for line in lines:
+            decoded_line = line.decode(errors='replace').strip()
+            if decoded_line:
+                self._last_line = decoded_line
+                processed_lines.append(decoded_line)
+
+        return processed_lines, bool(output)
 
     def fileno(self):
         return self._fileno
@@ -558,6 +555,23 @@ def escape_special_chars(content: str) -> str:
     return content.replace('"', '\\"')
 
 
+def filter_log_line(line):
+    exclude_patterns = [
+        '\r',
+        '%',
+        '===',
+        '...'
+    ]
+
+    if any(pattern in line for pattern in exclude_patterns):
+        return None
+
+    ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
+    line = ansi_escape.sub('', line)
+
+    return line.strip() if line.strip() else None
+
+
 def generate_secure_token(length=32):
     """Generate a secure token of the specified length.
 
@@ -733,7 +747,6 @@ async def run_scheduler():
 async def run_subprocess(command, log_file, timeout=3600):
     out_r, out_w = pty.openpty()
     err_r, err_w = pty.openpty()
-
     process = subprocess.Popen(
         command,
         stdout=out_w,
@@ -746,6 +759,7 @@ async def run_subprocess(command, log_file, timeout=3600):
 
     fds = {OutStream(out_r), OutStream(err_r)}
     start_time = time.time()
+    last_printed_line = ""
 
     while fds:
         if time.time() - start_time > timeout:
@@ -761,12 +775,16 @@ async def run_subprocess(command, log_file, timeout=3600):
         for f in rlist:
             lines, readable = f.read_lines()
             for line in lines:
-                log_file.write(line + '\n')
-                log_file.flush()
-                print(line)
-                if "SCRIPT_EXECUTION_COMPLETED" in line:
-                    print("Script execution completed successfully.")
-                    return process.returncode
+                print(line, end='\r')
+
+                filtered_line = filter_log_line(line)
+                if filtered_line:
+                    log_file.write(filtered_line + '\n')
+                    log_file.flush()
+                    if "SCRIPT_EXECUTION_COMPLETED" in filtered_line:
+                        print("\nScript execution completed successfully.")
+                        return process.returncode
+
             if not readable:
                 fds.remove(f)
 
