@@ -7,6 +7,7 @@ import json
 import logging
 import mimetypes
 import os
+import pty
 import re
 import secrets
 import shlex
@@ -690,22 +691,31 @@ async def run_scheduler():
 
 
 async def run_subprocess(command, log_file):
-    """Run a subprocess and capture its output in real time."""
+    """Run a subprocess using a pseudo-terminal to capture real-time output."""
+    master_fd, slave_fd = pty.openpty()
+
     process = await asyncio.create_subprocess_exec(
         *command,
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.STDOUT
+        stdout=slave_fd,
+        stderr=slave_fd,
+        stdin=asyncio.subprocess.PIPE
     )
 
+    os.close(slave_fd)
+
     while True:
-        line = await process.stdout.readline()
-        if not line:
+        output = os.read(master_fd, 1024).decode('utf-8')
+
+        if not output and process.poll() is not None:
             break
-        line = line.decode('utf-8').strip()
-        log_file.write(line + "\n")
-        print(line)
+
+        if output:
+            log_file.write(output)
+            log_file.flush()
+            print(output.strip())
 
     await process.wait()
+    os.close(master_fd)
 
 
 def save_config(config):
