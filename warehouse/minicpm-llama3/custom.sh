@@ -1,13 +1,13 @@
 part_bash """
 if [ ! -f mmproj-model-f16.gguf ]; then
-    wget -nc -O models/MiniCPM-S-1B-sft.gguf \"https://huggingface.co/openbmb/MiniCPM-Llama3-V-2_5-gguf/resolve/main/mmproj-model-f16.gguf\"
+    wget -nc -O mmproj-model-f16.gguf \"https://huggingface.co/openbmb/MiniCPM-Llama3-V-2_5-gguf/resolve/main/mmproj-model-f16.gguf\"
 else
     echo \"Model already exist.\"
 fi
 """
 part_bash """
 if [ ! -f ggml-model-Q4_K_M.gguf ]; then
-    wget -nc -O models/MiniCPM-S-1B-sft.gguf \"https://huggingface.co/openbmb/MiniCPM-Llama3-V-2_5-gguf/resolve/main/ggml-model-Q4_K_M.gguf\"
+    wget -nc -O ggml-model-Q4_K_M.gguf \"https://huggingface.co/openbmb/MiniCPM-Llama3-V-2_5-gguf/resolve/main/ggml-model-Q4_K_M.gguf\"
 else
     echo \"Model already exist.\"
 fi
