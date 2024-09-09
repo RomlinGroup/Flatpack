@@ -29,7 +29,7 @@ sox = "*"
 wget = "*"
 
 [packages.python]
-numpy = "2.0.1"
+numpy = "1.24.4"
 setuptools = "74.1.2"
 tiktoken = "0.7.0"
 tqdm = "4.66.5"
