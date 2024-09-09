@@ -3,6 +3,7 @@ import ast
 import asyncio
 import atexit
 import base64
+import errno
 import json
 import logging
 import mimetypes
@@ -10,6 +11,7 @@ import os
 import pty
 import re
 import secrets
+import select
 import shlex
 import shutil
 import signal
@@ -80,6 +82,7 @@ COOLDOWN_PERIOD = timedelta(minutes=1)
 build_in_progress = False
 
 warnings.filterwarnings("ignore", category=MarkupResemblesLocatorWarning)
+signal.signal(signal.SIGINT, lambda s, f: print("received SIGINT"))
 
 
 class Comment(BaseModel):
@@ -100,6 +103,43 @@ class Hook(BaseModel):
     hook_name: str
     hook_script: str
     hook_type: str
+
+
+class OutStream:
+    # https://tbrink.science/blog/2017/04/30/processing-the-output-of-a-subprocess-with-python-in-realtime/ (CC0 1.0)
+    # http://creativecommons.org/publicdomain/zero/1.0/
+    # Written 2017, 2019, 2023 by Tobias Brink
+
+    def __init__(self, fileno):
+        self._fileno = fileno
+        self._buffer = b""
+
+    def read_lines(self):
+        try:
+            output = os.read(self._fileno, 1000)
+        except OSError as e:
+            if e.errno != errno.EIO: raise
+            output = b""
+        lines = output.split(b"\n")
+        lines[0] = self._buffer + lines[0]
+
+        if output:
+            self._buffer = lines[-1]
+            finished_lines = lines[:-1]
+            readable = True
+        else:
+            self._buffer = b""
+            if len(lines) == 1 and not lines[0]:
+                lines = []
+            finished_lines = lines
+            readable = False
+            os.close(self._fileno)
+        finished_lines = [line.rstrip(b"\r").decode()
+                          for line in finished_lines]
+        return finished_lines, readable
+
+    def fileno(self):
+        return self._fileno
 
 
 def setup_logging(log_path: Path):
@@ -690,32 +730,50 @@ async def run_scheduler():
         await asyncio.sleep(60)
 
 
-async def run_subprocess(command, log_file):
-    """Run a subprocess using a pseudo-terminal to capture real-time output."""
-    master_fd, slave_fd = pty.openpty()
+async def run_subprocess(command, log_file, timeout=3600):
+    out_r, out_w = pty.openpty()
+    err_r, err_w = pty.openpty()
 
-    process = await asyncio.create_subprocess_exec(
-        *command,
-        stdout=slave_fd,
-        stderr=slave_fd,
-        stdin=asyncio.subprocess.PIPE
+    process = subprocess.Popen(
+        command,
+        stdout=out_w,
+        stderr=err_w,
+        stdin=subprocess.PIPE,
+        preexec_fn=os.setsid
     )
+    os.close(out_w)
+    os.close(err_w)
 
-    os.close(slave_fd)
+    fds = {OutStream(out_r), OutStream(err_r)}
+    start_time = time.time()
 
-    while True:
-        output = os.read(master_fd, 1024).decode('utf-8')
-
-        if not output and process.returncode is not None:
+    while fds:
+        if time.time() - start_time > timeout:
+            print(f"Timeout after {timeout} seconds. Terminating the process.")
+            os.killpg(os.getpgid(process.pid), signal.SIGTERM)
             break
 
-        if output:
-            log_file.write(output)
-            log_file.flush()
-            print(output.strip())
+        try:
+            rlist, _, _ = select.select(fds, [], [], 1.0)
+        except InterruptedError:
+            continue
 
-    await process.wait()
-    os.close(master_fd)
+        for f in rlist:
+            lines, readable = f.read_lines()
+            for line in lines:
+                log_file.write(line + '\n')
+                log_file.flush()
+                print(line)
+                if "SCRIPT_EXECUTION_COMPLETED" in line:
+                    print("Script execution completed successfully.")
+                    return process.returncode
+            if not readable:
+                fds.remove(f)
+
+        await asyncio.sleep(0)
+
+    process.wait()
+    return process.returncode
 
 
 def save_config(config):
