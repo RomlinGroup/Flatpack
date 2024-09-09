@@ -1,0 +1,6 @@
+accelerate
+beautifulsoup4
+safetensors
+torch
+transformers
+vllm

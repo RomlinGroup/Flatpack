@@ -85,6 +85,7 @@ warnings.filterwarnings("ignore", category=MarkupResemblesLocatorWarning)
 signal.signal(signal.SIGINT, lambda s, f: print("received SIGINT"))
 
 
+# Classes
 class Comment(BaseModel):
     block_id: str
     selected_text: str
