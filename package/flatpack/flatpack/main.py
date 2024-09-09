@@ -107,8 +107,6 @@ class Hook(BaseModel):
 
 class OutStream:
     # https://tbrink.science/blog/2017/04/30/processing-the-output-of-a-subprocess-with-python-in-realtime/ (CC0 1.0)
-    # http://creativecommons.org/publicdomain/zero/1.0/
-    # Written 2017, 2019, 2023 by Tobias Brink
 
     def __init__(self, fileno):
         self._fileno = fileno
