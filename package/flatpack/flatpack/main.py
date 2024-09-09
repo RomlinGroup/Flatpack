@@ -706,7 +706,7 @@ async def run_subprocess(command, log_file):
     while True:
         output = os.read(master_fd, 1024).decode('utf-8')
 
-        if not output and process.poll() is not None:
+        if not output and process.returncode is not None:
             break
 
         if output:
