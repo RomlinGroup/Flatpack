@@ -1,8 +1,16 @@
 part_bash """
-wget -nc https://huggingface.co/openbmb/MiniCPM-Llama3-V-2_5-gguf/resolve/main/mmproj-model-f16.gguf
+if [ ! -f mmproj-model-f16.gguf ]; then
+    wget -nc -O models/MiniCPM-S-1B-sft.gguf \"https://huggingface.co/openbmb/MiniCPM-Llama3-V-2_5-gguf/resolve/main/mmproj-model-f16.gguf\"
+else
+    echo \"Model already exist.\"
+fi
 """
 part_bash """
-wget -nc https://huggingface.co/openbmb/MiniCPM-Llama3-V-2_5-gguf/resolve/main/ggml-model-Q4_K_M.gguf
+if [ ! -f ggml-model-Q4_K_M.gguf ]; then
+    wget -nc -O models/MiniCPM-S-1B-sft.gguf \"https://huggingface.co/openbmb/MiniCPM-Llama3-V-2_5-gguf/resolve/main/ggml-model-Q4_K_M.gguf\"
+else
+    echo \"Model already exist.\"
+fi
 """
 part_bash """
 if [ -f ../tiger.png ]; then
