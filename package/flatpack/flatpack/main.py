@@ -690,8 +690,10 @@ def load_config():
 
 async def run_build_process(schedule_id=None):
     global build_in_progress
+
     build_in_progress = True
     logger.info("Running build process...")
+
     try:
         update_build_status("in_progress", schedule_id)
 
@@ -706,9 +708,8 @@ async def run_build_process(schedule_id=None):
             update_build_status(f"in_progress: {step_name}", schedule_id)
             await asyncio.sleep(duration)
 
-        loop = asyncio.get_event_loop()
         update_build_status("in_progress: Running build script", schedule_id)
-        await loop.run_in_executor(None, partial(fpk_build, flatpack_directory))
+        await fpk_build(flatpack_directory)
 
         update_build_status("completed", schedule_id)
         logger.info("Build process completed.")
