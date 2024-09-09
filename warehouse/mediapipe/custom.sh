@@ -1,5 +1,5 @@
 part_bash """
-wget -nc -q -O efficientdet.tflite -q https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/int8/1/efficientdet_lite0.tflite
+wget -nc -O efficientdet.tflite -q https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/int8/1/efficientdet_lite0.tflite
 """
 part_bash """
 if [ -f ../cat_and_dog.png ]; then
