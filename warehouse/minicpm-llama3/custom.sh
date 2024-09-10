@@ -18,7 +18,7 @@ if [ -f ../tiger.png ]; then
 fi
 """
 part_bash """
-./llama-minicpmv-cli \
+./minicpmv-cli \
 --image tiger.png \
 --mmproj mmproj-model-f16.gguf \
 --repeat-penalty 1.05 \
