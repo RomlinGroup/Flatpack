@@ -106,38 +106,6 @@ class Hook(BaseModel):
     hook_type: str
 
 
-# Based on https://tbrink.science/blog/2017/04/30/processing-the-output-of-a-subprocess-with-python-in-realtime/ (CC0)
-class OutStream:
-    def __init__(self, fileno):
-        self._fileno = fileno
-        self._buffer = b""
-        self._last_line = ""
-
-    def read_lines(self):
-        try:
-            output = os.read(self._fileno, 1000)
-        except OSError as e:
-            if e.errno != errno.EIO:
-                raise
-            output = b""
-
-        self._buffer += output
-        lines = self._buffer.split(b"\r")
-        self._buffer = lines.pop()
-
-        processed_lines = []
-        for line in lines:
-            decoded_line = line.decode(errors='replace').strip()
-            if decoded_line:
-                self._last_line = decoded_line
-                processed_lines.append(decoded_line)
-
-        return processed_lines, bool(output)
-
-    def fileno(self):
-        return self._fileno
-
-
 def setup_logging(log_path: Path):
     """Set up logging configuration."""
     new_logger = logging.getLogger(__name__)
@@ -555,23 +523,6 @@ def escape_special_chars(content: str) -> str:
     return content.replace('"', '\\"')
 
 
-def filter_log_line(line):
-    exclude_patterns = [
-        '\r',
-        '%',
-        '===',
-        '...'
-    ]
-
-    if any(pattern in line for pattern in exclude_patterns):
-        return None
-
-    ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
-    line = ansi_escape.sub('', line)
-
-    return line.strip() if line.strip() else None
-
-
 def generate_secure_token(length=32):
     """Generate a secure token of the specified length.
 
@@ -744,9 +695,52 @@ async def run_scheduler():
         await asyncio.sleep(60)
 
 
+# Based on https://tbrink.science/blog/2017/04/30/processing-the-output-of-a-subprocess-with-python-in-realtime/ (CC0)
+class OutStream:
+    def __init__(self, fileno):
+        self._fileno = fileno
+        self._buffer = b""
+
+    def read_lines(self):
+        try:
+            output = os.read(self._fileno, 4096)
+        except OSError as e:
+            if e.errno != errno.EIO:
+                raise
+            output = b""
+
+        self._buffer += output
+        lines = self._buffer.split(b"\n")
+        self._buffer = lines.pop()
+
+        processed_lines = [line.decode(errors='replace').rstrip() for line in lines if line]
+        return processed_lines, bool(output)
+
+    def fileno(self):
+        return self._fileno
+
+
+def filter_log_line(line):
+    exclude_patterns = [
+        '\r',
+        '%',
+        '===',
+        '...'
+    ]
+
+    if any(pattern in line for pattern in exclude_patterns):
+        return None
+
+    ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
+    line = ansi_escape.sub('', line)
+
+    return line.strip() if line.strip() else None
+
+
 async def run_subprocess(command, log_file, timeout=3600):
     out_r, out_w = pty.openpty()
     err_r, err_w = pty.openpty()
+
     process = subprocess.Popen(
         command,
         stdout=out_w,
@@ -754,43 +748,47 @@ async def run_subprocess(command, log_file, timeout=3600):
         stdin=subprocess.PIPE,
         preexec_fn=os.setsid
     )
+
     os.close(out_w)
     os.close(err_w)
 
-    fds = {OutStream(out_r), OutStream(err_r)}
+    streams = [OutStream(out_r), OutStream(err_r)]
     start_time = time.time()
-    last_printed_line = ""
 
-    while fds:
-        if time.time() - start_time > timeout:
-            print(f"Timeout after {timeout} seconds. Terminating the process.")
-            os.killpg(os.getpgid(process.pid), signal.SIGTERM)
-            break
+    try:
+        while True:
+            if time.time() - start_time > timeout:
+                print(f"Timeout after {timeout} seconds. Terminating the process.")
+                os.killpg(os.getpgid(process.pid), signal.SIGTERM)
+                break
 
-        try:
-            rlist, _, _ = select.select(fds, [], [], 1.0)
-        except InterruptedError:
-            continue
+            rlist, _, _ = select.select(streams, [], [], 1.0)
 
-        for f in rlist:
-            lines, readable = f.read_lines()
-            for line in lines:
-                print(line, end='\r')
+            for stream in rlist:
+                lines, readable = stream.read_lines()
+                for line in lines:
+                    print(line)
+                    filtered_line = filter_log_line(line)
 
-                filtered_line = filter_log_line(line)
-                if filtered_line:
-                    log_file.write(filtered_line + '\n')
-                    log_file.flush()
-                    if "SCRIPT_EXECUTION_COMPLETED" in filtered_line:
+                    if filtered_line:
+                        log_file.write(filtered_line + '\n')
+                        log_file.flush()
+
+                    if "SCRIPT_EXECUTION_COMPLETED" in line:
                         print("\nScript execution completed successfully.")
                         return process.returncode
 
-            if not readable:
-                fds.remove(f)
+                if not readable:
+                    streams.remove(stream)
 
-        await asyncio.sleep(0)
+            if not streams:
+                break
 
-    process.wait()
+            await asyncio.sleep(0)
+
+    finally:
+        process.wait()
+
     return process.returncode
 
 
