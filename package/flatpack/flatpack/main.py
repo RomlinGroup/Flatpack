@@ -175,8 +175,11 @@ uvicorn_server = None
 
 
 def handle_termination_signal(signal_number, frame):
-    """Handle termination signals for graceful shutdown."""
-    logger.info("Received termination signal (%s), shutting down...", signal_number)
+    print(f"Received termination signal {signal_number}. Shutting down gracefully...")
+    try:
+        asyncio.get_event_loop().stop()
+    except asyncio.CancelledError:
+        print("Tasks were cancelled during shutdown.")
     sys.exit(0)
 
 
@@ -704,27 +707,12 @@ def load_config():
 
 async def run_build_process(schedule_id=None):
     global build_in_progress
-
     build_in_progress = True
     logger.info("Running build process...")
-
     try:
         await update_build_status("in_progress", schedule_id)
-
-        steps = [
-            ("Preparing build environment", 1),
-            ("Compiling source code", 1),
-            ("Running tests", 1),
-            ("Packaging application", 1)
-        ]
-
-        for step_name, duration in steps:
-            await update_build_status(f"in_progress: {step_name}", schedule_id)
-            await asyncio.sleep(duration)
-
         await update_build_status("in_progress: Running build script", schedule_id)
         await fpk_build(flatpack_directory)
-
         await update_build_status("completed", schedule_id)
         logger.info("Build process completed.")
     except Exception as e:
@@ -792,6 +780,15 @@ async def run_subprocess(command, log_file, timeout=3600):
 
     process.wait()
     return process.returncode
+
+
+def safely_write_status_to_file(status_file, status_data):
+    with tempfile.NamedTemporaryFile('w', delete=False) as tmp_file:
+        json.dump(status_data, tmp_file)
+        tmp_file.flush()
+        os.fsync(tmp_file.fileno())
+
+    shutil.move(tmp_file.name, status_file)
 
 
 def save_config(config):
@@ -890,7 +887,10 @@ async def update_build_status(status, schedule_id=None, error=None):
     if error:
         status_data["error"] = str(error)
 
-    await asyncio.to_thread(write_status_to_file, status_file, status_data)
+    try:
+        await asyncio.to_thread(safely_write_status_to_file, status_file, status_data)
+    except Exception as e:
+        logger.error(f"Error updating build status: {e}")
 
 
 def validate_api_token(api_token: str) -> bool:
@@ -936,11 +936,6 @@ def validate_file_path(path, is_input=True, allowed_dir=None):
             os.makedirs(output_dir)
 
     return absolute_path
-
-
-def write_status_to_file(status_file, status_data):
-    with open(status_file, 'w') as f:
-        json.dump(status_data, f)
 
 
 async def fpk_build(directory: Union[str, None], use_euxo: bool = False):
@@ -2949,9 +2944,13 @@ async def get_build_status(token: str = Depends(authenticate_token)):
     status_file = os.path.join(flatpack_directory, 'build', 'build_status.json')
 
     if os.path.exists(status_file):
-        with open(status_file, 'r') as f:
-            status_data = json.load(f)
-        return JSONResponse(content=status_data)
+        try:
+            with open(status_file, 'r') as f:
+                status_data = json.load(f)
+            return JSONResponse(content=status_data)
+        except (json.JSONDecodeError, ValueError) as e:
+            logger.error(f"Error decoding JSON from {status_file}: {e}")
+            return JSONResponse(content={"status": "invalid_json"})
     else:
         return JSONResponse(content={"status": "no_builds"})
 
