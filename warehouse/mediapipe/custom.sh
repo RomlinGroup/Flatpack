@@ -1,5 +1,9 @@
 part_bash """
-wget -nc -O efficientdet.tflite -q https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/int8/1/efficientdet_lite0.tflite
+if [ ! -f efficientdet.tflite ]; then
+    wget -nc -O efficientdet.tflite \"https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/int8/1/efficientdet_lite0.tflite\"
+else
+    echo \"Model already exist.\"
+fi
 """
 part_bash """
 if [ -f ../cat_and_dog.png ]; then
