@@ -33,6 +33,7 @@ numpy = "2.0.1"
 setuptools = "74.1.2"
 tiktoken = "0.7.0"
 tqdm = "4.66.5"
+wheel = "0.44.0"
 
 [[git]]
 from_source = "https://github.com/OpenBMB/llama.cpp.git"
