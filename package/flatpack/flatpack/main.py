@@ -210,8 +210,6 @@ async def check_and_run_schedules():
         return
 
     now = datetime.now(timezone.utc)
-    logger.debug(f"[DEBUG] Current time: {now}")
-    print(f"[DEBUG] Current time: {now}")
 
     if SERVER_START_TIME and (now - SERVER_START_TIME) < COOLDOWN_PERIOD:
         logger.info("In cooldown period. Skipping schedule check.")
@@ -879,7 +877,6 @@ def unescape_special_chars(content: str) -> str:
 
 
 async def update_build_status(status, schedule_id=None, error=None):
-    status_file = os.path.join(flatpack_directory, 'build', 'build_status.json')
     status_data = {
         "status": status,
         "timestamp": datetime.now().isoformat(),
@@ -888,7 +885,7 @@ async def update_build_status(status, schedule_id=None, error=None):
     if error:
         status_data["error"] = str(error)
 
-    await asyncio.to_thread(write_status_to_file, status_file, status_data)
+    await asyncio.to_thread(write_status_to_file, status_data)
 
 
 def validate_api_token(api_token: str) -> bool:
@@ -936,7 +933,9 @@ def validate_file_path(path, is_input=True, allowed_dir=None):
     return absolute_path
 
 
-def write_status_to_file(status_file, status_data):
+def write_status_to_file(status_data):
+    status_file = os.path.join(flatpack_directory, 'build', 'build_status.json')
+
     with open(status_file, 'w') as f:
         json.dump(status_data, f)
 
