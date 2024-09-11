@@ -38,6 +38,7 @@ from_source = "https://github.com/OpenBMB/llama.cpp.git"
 to_destination = "llama.cpp"
 branch = "minicpm-v2.5"
 setup_commands = [
+    "../bin/pip install setuptools[distutils]",
     "make",
     "make minicpmv-cli"
 ]
