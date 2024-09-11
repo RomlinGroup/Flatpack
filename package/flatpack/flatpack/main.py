@@ -733,6 +733,9 @@ class OutStream:
 def filter_log_line(line):
     line = line.strip().replace('\r', '')
 
+    if any(tag in line for tag in ('[DEBUG]', '[ERROR]', '[INFO]')):
+        return line
+
     exclude_patterns = [
         '^$',
         '^\s*$',
