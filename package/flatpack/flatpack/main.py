@@ -707,32 +707,57 @@ class OutStream:
                 raise
             output = b""
 
-        self._buffer += output
-        lines = self._buffer.split(b"\n")
-        self._buffer = lines.pop()
+        lines = output.split(b"\n")
+        if self._buffer:
+            lines[0] = self._buffer + lines[0]
 
-        processed_lines = [line.decode(errors='replace').rstrip() for line in lines if line]
-        return processed_lines, bool(output)
+        if output:
+            self._buffer = lines[-1]
+            finished_lines = lines[:-1]
+            readable = True
+        else:
+            self._buffer = b""
+            if len(lines) == 1 and not lines[0]:
+                lines = []
+            finished_lines = lines
+            readable = False
+            os.close(self._fileno)
+
+        finished_lines = [line.decode(errors='replace') for line in finished_lines]
+        return finished_lines, readable, output
 
     def fileno(self):
         return self._fileno
 
 
 def filter_log_line(line):
+    line = line.strip().replace('\r', '')
+
     exclude_patterns = [
-        '\r',
-        '%',
-        '===',
-        '...'
+        '^$',
+        '^\s*$',
+        '^\.{3,}$',
+        '^={3,}$',
+        r'^\s*\d+%\[=*>?\s*\]\s*\d+(\.\d+)?[KMGT]?\s+\d+(\.\d+)?[KMGT]?B/s(\s+eta\s+\d+[smh])?\s+\S+(\s+\d+%)?$',
+        r'^\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}\s+\(\d+(\.\d+)?\s+[KMGT]B/s\)\s+-\s+\S+\s+saved\s+\[\d+/\d+\]$',
+        r'^.*\d+%.*$'
     ]
 
-    if any(pattern in line for pattern in exclude_patterns):
+    if any(re.match(pattern, line) for pattern in exclude_patterns):
         return None
 
     ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
-    line = ansi_escape.sub('', line)
+    cleaned_line = ansi_escape.sub('', line)
 
-    return line.strip() if line.strip() else None
+    if cleaned_line.startswith('%'):
+        return None
+
+    stripped_line = cleaned_line.strip()
+
+    if not stripped_line:
+        return None
+
+    return stripped_line
 
 
 async def run_subprocess(command, log_file, timeout=3600):
@@ -753,39 +778,69 @@ async def run_subprocess(command, log_file, timeout=3600):
     streams = [OutStream(out_r), OutStream(err_r)]
     start_time = time.time()
 
+    def handle_termination_signal(signum, frame):
+        print(f"\nReceived signal {signum}. Terminating subprocess...")
+        try:
+            os.killpg(os.getpgid(process.pid), signal.SIGTERM)
+        except ProcessLookupError:
+            pass
+        raise SystemExit(0)
+
+    signal.signal(signal.SIGINT, handle_termination_signal)
+    signal.signal(signal.SIGTERM, handle_termination_signal)
+
     try:
-        while True:
+        while streams:
             if time.time() - start_time > timeout:
-                print(f"Timeout after {timeout} seconds. Terminating the process.")
+                print(f"\nTimeout after {timeout} seconds. Terminating the process.")
                 os.killpg(os.getpgid(process.pid), signal.SIGTERM)
                 break
 
-            rlist, _, _ = select.select(streams, [], [], 1.0)
+            try:
+                rlist, _, _ = select.select(streams, [], [], 1.0)
+            except select.error as e:
+                if e.args[0] != errno.EINTR:
+                    raise
+                continue
 
             for stream in rlist:
-                lines, readable = stream.read_lines()
-                for line in lines:
-                    print(line)
-                    filtered_line = filter_log_line(line)
+                try:
+                    lines, readable, raw_output = stream.read_lines()
+                    if raw_output:
+                        sys.stdout.buffer.write(raw_output)
+                        sys.stdout.buffer.flush()
 
-                    if filtered_line:
-                        log_file.write(filtered_line + '\n')
-                        log_file.flush()
+                    for line in lines:
+                        filtered_line = filter_log_line(line)
+                        if filtered_line is not None:
+                            log_file.write(filtered_line + '\n')
+                            log_file.flush()
 
-                    if "SCRIPT_EXECUTION_COMPLETED" in line:
-                        print("\nScript execution completed successfully.")
-                        return process.returncode
-
-                if not readable:
+                    if not readable:
+                        streams.remove(stream)
+                except Exception as e:
+                    print(f"Error processing stream: {e}")
+                    print(traceback.format_exc())
                     streams.remove(stream)
-
-            if not streams:
-                break
 
             await asyncio.sleep(0)
 
+    except SystemExit as e:
+        print("\nCaught SystemExit. Cleaning up...")
+        return e.code
+    except Exception as e:
+        print(f"\nAn error occurred: {e}")
+        print(traceback.format_exc())
+        return 1
     finally:
-        process.wait()
+        try:
+            process.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            print("\nProcess did not terminate in time. Forcing termination.")
+            os.killpg(os.getpgid(process.pid), signal.SIGKILL)
+
+        signal.signal(signal.SIGINT, signal.SIG_DFL)
+        signal.signal(signal.SIGTERM, signal.SIG_DFL)
 
     return process.returncode
 
