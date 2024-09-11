@@ -1,4 +1,7 @@
 part_bash """
+../bin/pip install setuptools[distutils]
+"""
+part_bash """
 if [ ! -f mmproj-model-f16.gguf ]; then
     wget -nc -O mmproj-model-f16.gguf \"https://huggingface.co/openbmb/MiniCPM-Llama3-V-2_5-gguf/resolve/main/mmproj-model-f16.gguf\"
 else
