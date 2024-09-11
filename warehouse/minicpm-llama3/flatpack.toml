@@ -30,6 +30,7 @@ wget = "*"
 
 [packages.python]
 numpy = "2.0.1"
+setuptools = "74.1.2"
 tiktoken = "0.7.0"
 tqdm = "4.66.5"
 
@@ -38,7 +39,6 @@ from_source = "https://github.com/OpenBMB/llama.cpp.git"
 to_destination = "llama.cpp"
 branch = "minicpm-v2.5"
 setup_commands = [
-    "../bin/pip install setuptools[distutils]",
     "make",
     "make minicpmv-cli"
 ]
