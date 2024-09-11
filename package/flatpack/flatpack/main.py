@@ -738,9 +738,10 @@ def filter_log_line(line):
         '^\s*$',
         '^\.{3,}$',
         '^={3,}$',
+        r'^.*\d+%.*$',
         r'^\s*\d+%\[=*>?\s*\]\s*\d+(\.\d+)?[KMGT]?\s+\d+(\.\d+)?[KMGT]?B/s(\s+eta\s+\d+[smh])?\s+\S+(\s+\d+%)?$',
-        r'^\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}\s+\(\d+(\.\d+)?\s+[KMGT]B/s\)\s+-\s+\S+\s+saved\s+\[\d+/\d+\]$',
-        r'^.*\d+%.*$'
+        r'━+\s*\d+(\.\d+)?/\d+(\.\d+)?\s+[KMGT]?B\s+\d+(\.\d+)?\s+[KMGT]?B/s(\s+eta\s+\d+:\d+:\d+)?',
+        r'^\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}\s+\(\d+(\.\d+)?\s+[KMGT]B/s\)\s+-\s+\S+\s+saved\s+\[\d+/\d+\]$'
     ]
 
     if any(re.match(pattern, line) for pattern in exclude_patterns):
