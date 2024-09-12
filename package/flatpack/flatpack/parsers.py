@@ -216,8 +216,7 @@ def parse_toml_to_venv_script(file_path: str, env_name="myenv") -> str:
     config, model_name = load_toml_config(file_path)
     build_prefix = "build"
 
-    script = ["#!/bin/bash"]
-    script.append(f"mkdir -p {model_name}/{build_prefix}")
+    script = ["#!/bin/bash", f"mkdir -p {model_name}/{build_prefix}"]
     script.extend(check_command_availability(["curl", "wget", "git"]))
 
     unix_packages = config.get("packages", {}).get("unix", {})
