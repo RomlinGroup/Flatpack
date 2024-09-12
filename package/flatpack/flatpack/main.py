@@ -3283,10 +3283,9 @@ async def delete_schedule_entry(schedule_id: int, datetime_index: Optional[int] 
                 return JSONResponse(content={"message": "Schedule datetime entry deleted successfully."},
                                     status_code=200)
             raise HTTPException(status_code=404, detail="Datetime entry not found")
-        else:
-            cursor.execute("DELETE FROM flatpack_schedule WHERE id = ?", (schedule_id,))
-            conn.commit()
-            return JSONResponse(content={"message": "Entire schedule deleted successfully."}, status_code=200)
+        cursor.execute("DELETE FROM flatpack_schedule WHERE id = ?", (schedule_id,))
+        conn.commit()
+        return JSONResponse(content={"message": "Entire schedule deleted successfully."}, status_code=200)
 
     except sqlite3.Error as e:
         logger.error("A database error occurred while deleting the schedule entry: %s", e)
