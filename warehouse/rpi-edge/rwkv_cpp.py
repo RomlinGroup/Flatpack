@@ -138,8 +138,7 @@ while True:
         if temperature <= 0.2:
             temperature = 0.2
 
-        if temperature >= 5:
-            temperature = 5
+        temperature = min(temperature, 5)
 
     if '-top_p=' in msg:
         top_p = float(msg.split('-top_p=')[1].split(' ')[0])
