@@ -23,7 +23,6 @@ import sys
 import tarfile
 import tempfile
 import time
-import warnings
 
 from datetime import datetime, timedelta, timezone
 from importlib.metadata import version
@@ -35,26 +34,48 @@ from typing import List, Optional, Union
 from zipfile import ZipFile
 
 import httpx
-import ngrok
 import requests
 import toml
 import uvicorn
-import zstandard as zstd
 
-from bs4 import BeautifulSoup, MarkupResemblesLocatorWarning
-from croniter import croniter
-from fastapi import BackgroundTasks, Depends, FastAPI, Form, HTTPException, Request
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Response
-from fastapi.staticfiles import StaticFiles
-from huggingface_hub import snapshot_download
-from prettytable import PrettyTable
 from pydantic import BaseModel
 
 from .agent_manager import AgentManager
 from .parsers import parse_toml_to_venv_script
 from .session_manager import SessionManager
 from .vector_manager import VectorManager
+
+
+def lazy_import(module_name, package=None, callable_name=None):
+    import importlib
+    try:
+        module = importlib.import_module(module_name, package)
+        if callable_name:
+            return getattr(module, callable_name)
+        return module
+    except ImportError:
+        return None
+
+
+BackgroundTasks = lazy_import('fastapi', callable_name='BackgroundTasks')
+BeautifulSoup = lazy_import('bs4', callable_name='BeautifulSoup')
+CORSMiddleware = lazy_import('fastapi.middleware.cors', callable_name='CORSMiddleware')
+croniter = lazy_import('croniter', callable_name='croniter')
+Depends = lazy_import('fastapi', callable_name='Depends')
+FastAPI = lazy_import('fastapi', callable_name='FastAPI')
+FileResponse = lazy_import('fastapi.responses', callable_name='FileResponse')
+Form = lazy_import('fastapi', callable_name='Form')
+HTMLResponse = lazy_import('fastapi.responses', callable_name='HTMLResponse')
+HTTPException = lazy_import('fastapi', callable_name='HTTPException')
+JSONResponse = lazy_import('fastapi.responses', callable_name='JSONResponse')
+ngrok = lazy_import('ngrok')
+PrettyTable = lazy_import('prettytable', callable_name='PrettyTable')
+Request = lazy_import('fastapi', callable_name='Request')
+Response = lazy_import('fastapi.responses', callable_name='Response')
+snapshot_download = lazy_import('huggingface_hub', callable_name='snapshot_download')
+StaticFiles = lazy_import('fastapi.staticfiles', callable_name='StaticFiles')
+warnings = lazy_import('warnings')
+zstd = lazy_import('zstandard')
 
 HOME_DIR = Path.home() / ".fpk"
 HOME_DIR.mkdir(exist_ok=True)
@@ -77,30 +98,18 @@ VALIDATION_ATTEMPTS = 0
 
 build_in_progress = False
 
-warnings.filterwarnings("ignore", category=MarkupResemblesLocatorWarning)
 signal.signal(signal.SIGINT, lambda s, f: print("received SIGINT"))
 
 SECURITY_NOTICE = """
-SECURITY NOTICE
-
-This environment allows execution of code on your local machine. Be aware:
-
-1. Code runs with your user permissions
-2. Data is stored locally
-3. Installing packages has security implications
-4. It can access files within its directory
-5. Network requests are possible
-6. Resource-intensive operations may impact your system
-
-You are responsible for the code you run. Use caution with untrusted sources.
-
-By using this environment, you acknowledge these risks and agree to use it responsibly.
-
-Stay safe!
+SECURITY NOTICE 
+This environment runs code with your permissions:
+1. Code can access local data and files
+2. Installing packages may pose risks
+3. Network requests are allowed
+4. Resource-heavy tasks may impact your system
 """
 
 
-# Classes
 class Comment(BaseModel):
     block_id: str
     selected_text: str
@@ -244,7 +253,7 @@ async def check_and_run_schedules():
             for schedule_id, schedule_type, pattern, datetimes, last_run in schedules:
                 if schedule_type == 'recurring':
                     if pattern:
-                        cron = croniter(pattern, now)
+                        cron = lazy_import('croniter').croniter(pattern, now)
                         prev_run = cron.get_prev(datetime)
                         next_run = cron.get_next(datetime)
 
@@ -254,9 +263,9 @@ async def check_and_run_schedules():
                             last_run_dt = None
 
                         if (
-                            prev_run <= now < next_run
-                            and last_run_dt is None
-                            or last_run_dt < prev_run
+                                prev_run <= now < next_run
+                                and last_run_dt is None
+                                or last_run_dt < prev_run
                         ):
                             await run_build_process(schedule_id)
                             cursor.execute("UPDATE flatpack_schedule SET last_run = ? WHERE id = ?",
@@ -296,6 +305,46 @@ async def check_and_run_schedules():
         except Exception as e:
             logger.error("An error occurred: %s", e)
             print(f"[ERROR] An error occurred: {e}")
+
+
+def cleanup_and_shutdown(loop=None):
+    """Perform cleanup operations and graceful shutdown."""
+    logger.info("Starting cleanup and shutdown process...")
+
+    try:
+        files_to_delete = ["flatpack.sh"]
+        current_directory = Path.cwd()
+
+        for filename in files_to_delete:
+            file_path = current_directory / filename
+            if file_path.exists():
+                file_path.unlink()
+                logger.info(f"Deleted {filename}.")
+                print(f"Deleted {filename}.")
+    except Exception as e:
+        logger.error(f"Exception during file cleanup: {e}")
+        print(f"Exception during file cleanup: {e}")
+
+    if loop is None:
+        try:
+            loop = asyncio.get_event_loop()
+        except RuntimeError:
+            logger.info("No asyncio event loop found. Skipping asyncio cleanup.")
+            return
+
+    logger.info("Cancelling pending tasks...")
+    tasks = asyncio.all_tasks(loop)
+    for task in tasks:
+        task.cancel()
+
+    logger.info("Shutting down asyncio event loop...")
+    try:
+        loop.run_until_complete(asyncio.gather(*tasks, return_exceptions=True))
+        loop.run_until_complete(loop.shutdown_asyncgens())
+    finally:
+        loop.close()
+
+    logger.info("Cleanup and shutdown complete.")
 
 
 def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path, use_euxo: bool = False):
@@ -487,7 +536,7 @@ def decompress_data(input_path, output_path, allowed_dir=None):
         with open(abs_input_path, 'rb') as f:
             compressed_data = f.read()
 
-        decompressed_data = zstd.decompress(compressed_data)
+        decompressed_data = lazy_import('zstandard').decompress(compressed_data)
 
         try:
             with tempfile.NamedTemporaryFile() as tmp_file:
@@ -646,6 +695,27 @@ def initialize_database(db_path: str):
     except Error as e:
         logger.error("An error occurred while initializing the database: %s", e)
         print(f"[ERROR] An error occurred while initializing the database: {e}")
+
+
+def initialize_fastapi_app():
+    app = FastAPI()
+
+    uvicorn_logger = logging.getLogger("uvicorn.access")
+    uvicorn_logger.addFilter(EndpointFilter())
+
+    origins = ["*"]
+
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=origins,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"]
+    )
+
+    app = setup_routes(app)
+
+    return app
 
 
 def load_config():
@@ -900,6 +970,12 @@ def set_token(token: str):
         print(f"[ERROR] Failed to set token: {str(e)}")
 
 
+def setup_graceful_shutdown():
+    atexit.register(cleanup_and_shutdown)
+    for sig in (signal.SIGINT, signal.SIGTERM):
+        signal.signal(sig, lambda s, f: cleanup_and_shutdown())
+
+
 def setup_static_directory(fastapi_app: FastAPI, directory: str):
     """Setup the static directory for serving static files."""
     global flatpack_directory
@@ -920,14 +996,22 @@ def setup_static_directory(fastapi_app: FastAPI, directory: str):
         raise ValueError(error_message)
 
 
+async def shutdown(sig, loop):
+    print(f"Received exit signal {sig.name}...")
+    await asyncio.sleep(0.1)
+    graceful_shutdown(loop)
+
+
 def shutdown_server():
     """Shutdown the FastAPI server."""
     logging.getLogger("uvicorn.error").info("Shutting down the server after maximum validation attempts.")
     os._exit(0)
 
 
-def strip_html(content: str) -> str:
-    soup = BeautifulSoup(content, 'html.parser')
+def strip_html(script):
+    MarkupResemblesLocatorWarning = lazy_import('bs4', callable_name='MarkupResemblesLocatorWarning')
+    warnings.filterwarnings("ignore", category=MarkupResemblesLocatorWarning)
+    soup = BeautifulSoup(script, "html.parser")
     return soup.get_text()
 
 
@@ -1732,22 +1816,6 @@ def fpk_list_directories(session: httpx.Client) -> str:
         logger.error(error_message)
         print("[ERROR] %s", error_message)
         return ""
-
-
-def fpk_safe_cleanup():
-    """Safely clean up temporary files."""
-    try:
-        files_to_delete = ["flatpack.sh"]
-        current_directory = Path.cwd()
-
-        for filename in files_to_delete:
-            file_path = current_directory / filename
-
-            if file_path.exists():
-                file_path.unlink()
-                print(f"Deleted {filename}.")
-    except Exception as e:
-        print(f"Exception during safe_cleanup: {e}")
 
 
 def fpk_set_secure_file_permissions(file_path):
@@ -2614,7 +2682,7 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
             if token:
                 logger.info("Downloading model '%s' with provided token...", model_id)
                 print(f"[INFO] Downloading model '{model_id}' with provided token...")
-                snapshot_download(
+                lazy_import('huggingface_hub').snapshot_download(
                     repo_id=model_id,
                     local_dir=local_dir,
                     revision="main",
@@ -2623,7 +2691,7 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
             else:
                 logger.info("Downloading model '%s'...", model_id)
                 print(f"[INFO] Downloading model '{model_id}'...")
-                snapshot_download(
+                lazy_import('huggingface_hub').snapshot_download(
                     repo_id=model_id,
                     local_dir=local_dir,
                     revision="main"
@@ -2856,10 +2924,9 @@ def fpk_cli_handle_help(args, session):
 
 
 def fpk_cli_handle_list(args, session):
-    """Handle the 'list' command to fetch and print the list of directories."""
     directories = fpk_list_directories(session)
     if directories:
-        table = PrettyTable()
+        table = lazy_import('prettytable').PrettyTable()
         table.field_names = ["Index", "Directory Name"]
         table.align["Index"] = "r"
         table.align["Directory Name"] = "l"
@@ -2892,536 +2959,505 @@ def fpk_cli_handle_list_agents(args, session):
         print("[INFO] No active agents found.")
 
 
-atexit.register(fpk_safe_cleanup)
-
-app = FastAPI()
-
-uvicorn_logger = logging.getLogger("uvicorn.access")
-uvicorn_logger.addFilter(EndpointFilter())
-
-origins = ["*"]
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"]
-)
-
 flatpack_directory = None
 
 
-@app.on_event("startup")
-async def startup_event():
-    global SERVER_START_TIME
-    SERVER_START_TIME = datetime.now(timezone.utc)
-    logger.info("Server started at %s. Cooldown period: %s", SERVER_START_TIME, COOLDOWN_PERIOD)
-    print(f"[INFO] Server started at {SERVER_START_TIME}. Cooldown period: {COOLDOWN_PERIOD}")
-    asyncio.create_task(run_scheduler())
+def setup_routes(app):
+    @app.on_event("startup")
+    async def startup_event():
+        global SERVER_START_TIME
+        SERVER_START_TIME = datetime.now(timezone.utc)
+        logger.info("Server started at %s. Cooldown period: %s", SERVER_START_TIME, COOLDOWN_PERIOD)
+        print(f"[INFO] Server started at {SERVER_START_TIME}. Cooldown period: {COOLDOWN_PERIOD}")
+        asyncio.create_task(run_scheduler())
 
+    @app.get("/favicon.ico", include_in_schema=False)
+    async def favicon():
+        favicon_path = Path(flatpack_directory) / "build" / "favicon.ico"
+        if favicon_path.exists():
+            return FileResponse(favicon_path)
+        return Response(status_code=204)
 
-@app.get("/favicon.ico", include_in_schema=False)
-async def favicon():
-    favicon_path = Path(flatpack_directory) / "build" / "favicon.ico"
-    if favicon_path.exists():
-        return FileResponse(favicon_path)
-    return Response(status_code=204)
+    @app.get("/load_file")
+    async def load_file(
+            request: Request,
+            filename: str,
+            token: str = Depends(authenticate_token)
+    ):
+        """Load and return the contents of a specified file from the flatpack directory."""
+        if not flatpack_directory:
+            raise HTTPException(status_code=500, detail="Flatpack directory is not set")
 
+        file_path = os.path.join(flatpack_directory, 'build', filename)
 
-@app.get("/load_file")
-async def load_file(
-        request: Request,
-        filename: str,
-        token: str = Depends(authenticate_token)
-):
-    """Load and return the contents of a specified file from the flatpack directory."""
-    if not flatpack_directory:
-        raise HTTPException(status_code=500, detail="Flatpack directory is not set")
+        if not os.path.commonpath([flatpack_directory, os.path.realpath(file_path)]).startswith(
+                os.path.realpath(flatpack_directory)):
+            raise HTTPException(status_code=403, detail="Access to the requested file is forbidden")
 
-    file_path = os.path.join(flatpack_directory, 'build', filename)
+        if os.path.exists(file_path):
+            try:
+                with open(file_path, 'r') as file:
+                    content = file.read()
+                    unescaped_content = unescape_content_parts(content)
+                    return JSONResponse(content={"content": unescaped_content})
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=f"Error reading file: {e}")
+        else:
+            raise HTTPException(status_code=404, detail="File not found")
 
-    if not os.path.commonpath([flatpack_directory, os.path.realpath(file_path)]).startswith(
-            os.path.realpath(flatpack_directory)):
-        raise HTTPException(status_code=403, detail="Access to the requested file is forbidden")
+    @app.post("/save_file")
+    async def save_file(
+            request: Request,
+            filename: str = Form(...),
+            content: str = Form(...),
+            token: str = Depends(authenticate_token)
+    ):
+        """Save the provided content to the specified file within the flatpack directory."""
+        if not flatpack_directory:
+            raise HTTPException(status_code=500, detail="Flatpack directory is not set")
 
-    if os.path.exists(file_path):
+        file_path = os.path.join(flatpack_directory, 'build', filename)
+
+        if not os.path.commonpath([flatpack_directory, os.path.realpath(file_path)]).startswith(
+                os.path.realpath(flatpack_directory)):
+            raise HTTPException(status_code=403, detail="Access to the requested file is forbidden")
+
         try:
-            with open(file_path, 'r') as file:
-                content = file.read()
-                unescaped_content = unescape_content_parts(content)
-                return JSONResponse(content={"content": unescaped_content})
+            normalized_content = content.replace('\r\n', '\n').replace('\r', '\n')
+            escaped_content = escape_content_parts(normalized_content)
+            with open(file_path, 'w', newline='\n') as file:
+                file.write(escaped_content)
+            return JSONResponse(content={"message": "File saved successfully!"})
         except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Error reading file: {e}")
-    else:
-        raise HTTPException(status_code=404, detail="File not found")
+            raise HTTPException(status_code=500, detail=f"Failed to save file: {e}")
 
+    @app.get("/test", response_class=HTMLResponse)
+    async def test():
+        return """
+        <html>
+            <head>
+                <title>Hello, World!</title>
+            </head>
+            <body>
+                <h1>Hello, World!</h1>
+            </body>
+        </html>
+        """
 
-@app.post("/save_file")
-async def save_file(
-        request: Request,
-        filename: str = Form(...),
-        content: str = Form(...),
-        token: str = Depends(authenticate_token)
-):
-    """Save the provided content to the specified file within the flatpack directory."""
-    if not flatpack_directory:
-        raise HTTPException(status_code=500, detail="Flatpack directory is not set")
+    @app.get("/test_db")
+    async def test_db():
+        db_path = os.path.join(flatpack_directory, 'build', 'flatpack.db')
+        try:
+            conn = sqlite3.connect(db_path)
+            cursor = conn.cursor()
+            cursor.execute("SELECT 1")
+            conn.close()
+            return {"message": "Database connection successful"}
+        except Error as e:
+            logger.error("Database connection failed: %s", e)
+            return {"message": f"Database connection failed: {e}"}
 
-    file_path = os.path.join(flatpack_directory, 'build', filename)
+    @app.get("/api/build-status")
+    async def get_build_status(token: str = Depends(authenticate_token)):
+        """Get the current build status."""
+        if not flatpack_directory:
+            raise HTTPException(status_code=500, detail="Flatpack directory is not set")
 
-    if not os.path.commonpath([flatpack_directory, os.path.realpath(file_path)]).startswith(
-            os.path.realpath(flatpack_directory)):
-        raise HTTPException(status_code=403, detail="Access to the requested file is forbidden")
+        status_file = os.path.join(flatpack_directory, 'build', 'build_status.json')
 
-    try:
-        normalized_content = content.replace('\r\n', '\n').replace('\r', '\n')
-        escaped_content = escape_content_parts(normalized_content)
-        with open(file_path, 'w', newline='\n') as file:
-            file.write(escaped_content)
-        return JSONResponse(content={"message": "File saved successfully!"})
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to save file: {e}")
-
-
-@app.get("/test", response_class=HTMLResponse)
-async def test():
-    return """
-    <html>
-        <head>
-            <title>Hello, World!</title>
-        </head>
-        <body>
-            <h1>Hello, World!</h1>
-        </body>
-    </html>
-    """
-
-
-@app.get("/test_db")
-async def test_db():
-    db_path = os.path.join(flatpack_directory, 'build', 'flatpack.db')
-    try:
-        conn = sqlite3.connect(db_path)
-        cursor = conn.cursor()
-        cursor.execute("SELECT 1")
-        conn.close()
-        return {"message": "Database connection successful"}
-    except Error as e:
-        logger.error("Database connection failed: %s", e)
-        return {"message": f"Database connection failed: {e}"}
-
-
-@app.get("/api/build-status")
-async def get_build_status(token: str = Depends(authenticate_token)):
-    """Get the current build status."""
-    if not flatpack_directory:
-        raise HTTPException(status_code=500, detail="Flatpack directory is not set")
-
-    status_file = os.path.join(flatpack_directory, 'build', 'build_status.json')
-
-    if os.path.exists(status_file):
-        with open(status_file, 'r') as f:
-            status_data = json.load(f)
-        return JSONResponse(content=status_data)
-    return JSONResponse(content={"status": "no_builds"})
-
-
-@app.post("/api/clear-build-status")
-async def clear_build_status(token: str = Depends(authenticate_token)):
-    """Clear the current build status."""
-    if not flatpack_directory:
-        raise HTTPException(status_code=500, detail="Flatpack directory is not set")
-
-    status_file = os.path.join(flatpack_directory, 'build', 'build_status.json')
-
-    try:
         if os.path.exists(status_file):
-            os.remove(status_file)
-        return JSONResponse(content={"message": "Build status cleared successfully."})
-    except Exception as e:
-        logger.error("Error clearing build status: %s", e)
-        raise HTTPException(status_code=500, detail=f"Error clearing build status: {e}")
+            with open(status_file, 'r') as f:
+                status_data = json.load(f)
+            return JSONResponse(content=status_data)
+        return JSONResponse(content={"status": "no_builds"})
 
+    @app.post("/api/clear-build-status")
+    async def clear_build_status(token: str = Depends(authenticate_token)):
+        """Clear the current build status."""
+        if not flatpack_directory:
+            raise HTTPException(status_code=500, detail="Flatpack directory is not set")
 
-@app.post("/api/comments")
-async def add_comment(comment: Comment, token: str = Depends(authenticate_token)):
-    """Add a new comment to the database."""
-    if not flatpack_directory:
-        raise HTTPException(status_code=500, detail="Flatpack directory is not set")
+        status_file = os.path.join(flatpack_directory, 'build', 'build_status.json')
 
-    db_path = os.path.join(flatpack_directory, 'build', 'flatpack.db')
-
-    try:
-        ensure_database_initialized()
-        conn = sqlite3.connect(db_path)
-        cursor = conn.cursor()
-
-        cursor.execute("""
-            INSERT INTO flatpack_comments (block_id, selected_text, comment)
-            VALUES (?, ?, ?)
-        """, (comment.block_id, comment.selected_text, comment.comment))
-
-        comment_id = cursor.lastrowid
-
-        conn.commit()
-        conn.close()
-
-        return JSONResponse(content={
-            "message": "Comment added successfully.",
-            "comment_id": comment_id,
-            "created_at": datetime.utcnow().isoformat()
-        }, status_code=201)
-
-    except sqlite3.Error as e:
-        logger.error("An error occurred while adding the comment: %s", e)
-        raise HTTPException(status_code=500, detail=f"An error occurred while adding the comment: {e}")
-
-
-@app.delete("/api/comments/{comment_id}")
-async def delete_comment(comment_id: int, token: str = Depends(authenticate_token)):
-    """Delete a comment from the database by its ID."""
-    if not flatpack_directory:
-        raise HTTPException(status_code=500, detail="Flatpack directory is not set")
-
-    db_path = os.path.join(flatpack_directory, 'build', 'flatpack.db')
-
-    try:
-        ensure_database_initialized()
-        conn = sqlite3.connect(db_path)
-        cursor = conn.cursor()
-
-        cursor.execute("DELETE FROM flatpack_comments WHERE id = ?", (comment_id,))
-        if cursor.rowcount == 0:
-            raise HTTPException(status_code=404, detail="Comment not found")
-        conn.commit()
-        conn.close()
-
-        return JSONResponse(content={"message": "Comment deleted successfully."}, status_code=200)
-    except Error as e:
-        logger.error("An error occurred while deleting the comment: %s", e)
-        raise HTTPException(status_code=500, detail=f"An error occurred while deleting the comment: {e}")
-
-
-@app.get("/api/comments")
-async def get_all_comments(token: str = Depends(authenticate_token)):
-    """Retrieve all comments from the database."""
-    if not flatpack_directory:
-        raise HTTPException(status_code=500, detail="Flatpack directory is not set")
-
-    db_path = os.path.join(flatpack_directory, 'build', 'flatpack.db')
-
-    try:
-        ensure_database_initialized()
-        conn = sqlite3.connect(db_path)
-        cursor = conn.cursor()
-        cursor.execute("""
-            SELECT id, block_id, selected_text, comment, created_at
-            FROM flatpack_comments
-            ORDER BY created_at DESC
-        """)
-        comments = cursor.fetchall()
-        conn.close()
-
-        return [{"id": row[0], "block_id": row[1], "selected_text": row[2], "comment": row[3], "created_at": row[4]} for
-                row in comments]
-    except Error as e:
-        logger.error("An error occurred while retrieving comments: %s", e)
-        raise HTTPException(status_code=500, detail=f"An error occurred while retrieving comments: {e}")
-
-
-@app.post("/api/build")
-async def build_flatpack(
-        request: Request,
-        background_tasks: BackgroundTasks,
-        token: str = Depends(authenticate_token)
-):
-    """Trigger the build process for the flatpack."""
-    if not flatpack_directory:
-        raise HTTPException(status_code=500, detail="Flatpack directory is not set")
-
-    try:
-        background_tasks.add_task(run_build_process, schedule_id=None)
-        logger.info("Started build process for flatpack located at %s", flatpack_directory)
-        return JSONResponse(
-            content={"flatpack": flatpack_directory, "message": "Build process started in background."},
-            status_code=200)
-    except Exception as e:
-        logger.error("Failed to start build process: %s", e)
-        return JSONResponse(content={"flatpack": flatpack_directory, "message": f"Failed to start build process: {e}"},
-                            status_code=500)
-
-
-@app.get("/api/heartbeat")
-async def heartbeat():
-    """Endpoint to check the server heartbeat."""
-    current_time = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
-    return JSONResponse(content={"server_time": current_time}, status_code=200)
-
-
-@app.post("/api/hooks")
-async def add_hook(hook: Hook, token: str = Depends(authenticate_token)):
-    try:
-        response = add_hook_to_database(hook)
-        return JSONResponse(content=response, status_code=201)
-    except HTTPException as e:
-        raise e
-    except Exception as e:
-        logger.error("Failed to add hook: %s", e)
-        raise HTTPException(status_code=500, detail="Failed to add hook.")
-
-
-@app.delete("/api/hooks/{hook_id}")
-async def delete_hook(hook_id: int, token: str = Depends(authenticate_token)):
-    """Delete a hook from the database by its ID."""
-    if not flatpack_directory:
-        raise HTTPException(status_code=500, detail="Flatpack directory is not set")
-
-    db_path = os.path.join(flatpack_directory, 'build', 'flatpack.db')
-
-    try:
-        ensure_database_initialized()
-        conn = sqlite3.connect(db_path)
-        cursor = conn.cursor()
-
-        cursor.execute("DELETE FROM flatpack_hooks WHERE id = ?", (hook_id,))
-        if cursor.rowcount == 0:
-            raise HTTPException(status_code=404, detail="Hook not found")
-        conn.commit()
-        conn.close()
-
-        return JSONResponse(content={"message": "Hook deleted successfully."}, status_code=200)
-    except Error as e:
-        logger.error("An error occurred while deleting the hook: %s", e)
-        raise HTTPException(status_code=500, detail=f"An error occurred while deleting the hook: {e}")
-
-
-@app.get("/api/hooks", response_model=List[Hook])
-async def get_hooks(token: str = Depends(authenticate_token)):
-    try:
-        hooks = get_all_hooks_from_database()
-        return JSONResponse(content={"hooks": hooks}, status_code=200)
-    except HTTPException as e:
-        raise e
-    except Exception as e:
-        logger.error("Failed to retrieve hooks: %s", e)
-        raise HTTPException(status_code=500, detail="Failed to retrieve hooks.")
-
-
-@app.get("/api/logs")
-async def get_all_logs(request: Request, token: str = Depends(authenticate_token)):
-    """Get a list of all available logs ordered by date."""
-    global flatpack_directory
-
-    if flatpack_directory:
-        logs_directory = Path(flatpack_directory) / 'build' / 'logs'
-    else:
-        cache_file_path = HOME_DIR / ".fpk_unbox.cache"
-        if cache_file_path.exists():
-            last_unboxed_flatpack = cache_file_path.read_text().strip()
-            logs_directory = Path(last_unboxed_flatpack) / 'build' / 'logs'
-        else:
-            raise HTTPException(status_code=500, detail="No cached flatpack directory found")
-
-    try:
-        if not logs_directory.exists():
-            logs_directory.mkdir(parents=True, exist_ok=True)
-            if not logs_directory.exists():
-                raise HTTPException(status_code=500, detail="Failed to create logs directory")
-
-        log_files = sorted(
-            [f for f in os.listdir(logs_directory) if f.startswith("build_") and f.endswith(".log")],
-            key=lambda x: datetime.strptime(x, "build_%Y_%m_%d_%H_%M_%S.log"),
-            reverse=True
-        )
-
-        return JSONResponse(content={"logs": log_files}, status_code=200)
-
-    except HTTPException:
-        raise
-
-    except Exception as e:
-        logger.error("Failed to list log files: %s", e)
-        raise HTTPException(status_code=500, detail=f"Failed to list log files: {e}")
-
-
-@app.get("/api/logs/{log_filename}")
-async def get_log_file(request: Request, log_filename: str, token: str = Depends(authenticate_token)):
-    """Get the content of a specific log file."""
-    global flatpack_directory
-
-    if flatpack_directory:
-        logs_directory = Path(flatpack_directory) / 'build' / 'logs'
-    else:
-        cache_file_path = HOME_DIR / ".fpk_unbox.cache"
-        if cache_file_path.exists():
-            last_unboxed_flatpack = cache_file_path.read_text().strip()
-            logs_directory = Path(last_unboxed_flatpack) / 'build' / 'logs'
-        else:
-            raise HTTPException(status_code=500, detail="No cached flatpack directory found")
-
-    log_path = logs_directory / log_filename
-    if log_path.exists() and log_path.is_file():
         try:
-            with open(log_path, 'r') as file:
-                content = file.read()
-            return JSONResponse(content={"log": content}, status_code=200)
+            if os.path.exists(status_file):
+                os.remove(status_file)
+            return JSONResponse(content={"message": "Build status cleared successfully."})
         except Exception as e:
-            logger.error("Error reading log file '%s': %s", log_filename, e)
-            raise HTTPException(status_code=500, detail=f"Error reading log file: {e}")
-    else:
-        raise HTTPException(status_code=404, detail="Log file not found")
+            logger.error("Error clearing build status: %s", e)
+            raise HTTPException(status_code=500, detail=f"Error clearing build status: {e}")
 
+    @app.post("/api/comments")
+    async def add_comment(comment: Comment, token: str = Depends(authenticate_token)):
+        """Add a new comment to the database."""
+        if not flatpack_directory:
+            raise HTTPException(status_code=500, detail="Flatpack directory is not set")
 
-@app.delete("/api/schedule/{schedule_id}")
-async def delete_schedule_entry(schedule_id: int, datetime_index: Optional[int] = None,
-                                token: str = Depends(authenticate_token)):
-    if not flatpack_directory:
-        raise HTTPException(status_code=500, detail="Flatpack directory is not set")
+        db_path = os.path.join(flatpack_directory, 'build', 'flatpack.db')
 
-    db_path = os.path.join(flatpack_directory, 'build', 'flatpack.db')
+        try:
+            ensure_database_initialized()
+            conn = sqlite3.connect(db_path)
+            cursor = conn.cursor()
 
-    try:
-        ensure_database_initialized()
-        conn = sqlite3.connect(db_path)
-        cursor = conn.cursor()
+            cursor.execute("""
+                INSERT INTO flatpack_comments (block_id, selected_text, comment)
+                VALUES (?, ?, ?)
+            """, (comment.block_id, comment.selected_text, comment.comment))
 
-        cursor.execute("SELECT id, type, datetimes FROM flatpack_schedule WHERE id = ?", (schedule_id,))
-        schedule = cursor.fetchone()
+            comment_id = cursor.lastrowid
 
-        if not schedule:
-            raise HTTPException(status_code=404, detail="Schedule not found")
-
-        schedule_id, schedule_type, datetimes_json = schedule
-
-        if datetime_index is not None and schedule_type == 'manual':
-            datetimes = json.loads(datetimes_json)
-            if 0 <= datetime_index < len(datetimes):
-                del datetimes[datetime_index]
-                cursor.execute("UPDATE flatpack_schedule SET datetimes = ? WHERE id = ?",
-                               (json.dumps(datetimes), schedule_id))
-                conn.commit()
-                return JSONResponse(content={"message": "Schedule datetime entry deleted successfully."},
-                                    status_code=200)
-            raise HTTPException(status_code=404, detail="Datetime entry not found")
-        cursor.execute("DELETE FROM flatpack_schedule WHERE id = ?", (schedule_id,))
-        conn.commit()
-        return JSONResponse(content={"message": "Entire schedule deleted successfully."}, status_code=200)
-
-    except sqlite3.Error as e:
-        logger.error("A database error occurred while deleting the schedule entry: %s", e)
-        raise HTTPException(status_code=500, detail=f"A database error occurred while deleting the schedule entry: {e}")
-    except json.JSONDecodeError as e:
-        logger.error("A JSON decoding error occurred: %s", e)
-        raise HTTPException(status_code=500, detail=f"An error occurred while processing schedule data: {e}")
-    except Exception as e:
-        logger.error("An unexpected error occurred while deleting the schedule entry: %s", e)
-        raise HTTPException(status_code=500,
-                            detail=f"An unexpected error occurred while deleting the schedule entry: {e}")
-    finally:
-        if 'conn' in locals():
+            conn.commit()
             conn.close()
 
+            return JSONResponse(content={
+                "message": "Comment added successfully.",
+                "comment_id": comment_id,
+                "created_at": datetime.utcnow().isoformat()
+            }, status_code=201)
 
-@app.get("/api/schedule")
-async def get_schedule(token: str = Depends(authenticate_token)):
-    if not flatpack_directory:
-        raise HTTPException(status_code=500, detail="Flatpack directory is not set")
+        except sqlite3.Error as e:
+            logger.error("An error occurred while adding the comment: %s", e)
+            raise HTTPException(status_code=500, detail=f"An error occurred while adding the comment: {e}")
 
-    db_path = os.path.join(flatpack_directory, 'build', 'flatpack.db')
+    @app.delete("/api/comments/{comment_id}")
+    async def delete_comment(comment_id: int, token: str = Depends(authenticate_token)):
+        """Delete a comment from the database by its ID."""
+        if not flatpack_directory:
+            raise HTTPException(status_code=500, detail="Flatpack directory is not set")
 
-    try:
-        ensure_database_initialized()
-        conn = sqlite3.connect(db_path)
-        cursor = conn.cursor()
+        db_path = os.path.join(flatpack_directory, 'build', 'flatpack.db')
 
-        cursor.execute("SELECT id, type, pattern, datetimes, last_run FROM flatpack_schedule ORDER BY created_at DESC")
-        results = cursor.fetchall()
-        conn.close()
+        try:
+            ensure_database_initialized()
+            conn = sqlite3.connect(db_path)
+            cursor = conn.cursor()
 
-        if results:
-            schedules = []
-            for schedule_id, schedule_type, pattern, datetimes, last_run in results:
-                schedules.append({
-                    "id": schedule_id,
-                    "type": schedule_type,
-                    "pattern": pattern,
-                    "datetimes": json.loads(datetimes),
-                    "last_run": last_run
-                })
-            return JSONResponse(content={"schedules": schedules}, status_code=200)
-        return JSONResponse(content={"schedules": []}, status_code=200)
-    except Exception as e:
-        logger.error("An error occurred while retrieving the schedules: %s", e)
-        raise HTTPException(status_code=500, detail=f"An error occurred while retrieving the schedules: {e}")
+            cursor.execute("DELETE FROM flatpack_comments WHERE id = ?", (comment_id,))
+            if cursor.rowcount == 0:
+                raise HTTPException(status_code=404, detail="Comment not found")
+            conn.commit()
+            conn.close()
 
+            return JSONResponse(content={"message": "Comment deleted successfully."}, status_code=200)
+        except Error as e:
+            logger.error("An error occurred while deleting the comment: %s", e)
+            raise HTTPException(status_code=500, detail=f"An error occurred while deleting the comment: {e}")
 
-@app.post("/api/schedule")
-async def save_schedule(request: Request, token: str = Depends(authenticate_token)):
-    if not flatpack_directory:
-        raise HTTPException(status_code=500, detail="Flatpack directory is not set")
+    @app.get("/api/comments")
+    async def get_all_comments(token: str = Depends(authenticate_token)):
+        """Retrieve all comments from the database."""
+        if not flatpack_directory:
+            raise HTTPException(status_code=500, detail="Flatpack directory is not set")
 
-    db_path = os.path.join(flatpack_directory, 'build', 'flatpack.db')
+        db_path = os.path.join(flatpack_directory, 'build', 'flatpack.db')
 
-    try:
-        data = await request.json()
-        schedule_type = data.get('type')
-        pattern = data.get('pattern')
-        datetimes = data.get('datetimes', [])
+        try:
+            ensure_database_initialized()
+            conn = sqlite3.connect(db_path)
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT id, block_id, selected_text, comment, created_at
+                FROM flatpack_comments
+                ORDER BY created_at DESC
+            """)
+            comments = cursor.fetchall()
+            conn.close()
 
-        if schedule_type == 'manual':
-            datetimes = [datetime.fromisoformat(dt).astimezone(timezone.utc).isoformat() for dt in datetimes]
+            return [{"id": row[0], "block_id": row[1], "selected_text": row[2], "comment": row[3], "created_at": row[4]}
+                    for
+                    row in comments]
+        except Error as e:
+            logger.error("An error occurred while retrieving comments: %s", e)
+            raise HTTPException(status_code=500, detail=f"An error occurred while retrieving comments: {e}")
 
-        ensure_database_initialized()
-        conn = sqlite3.connect(db_path)
-        cursor = conn.cursor()
+    @app.post("/api/build")
+    async def build_flatpack(
+            request: Request,
+            background_tasks: BackgroundTasks,
+            token: str = Depends(authenticate_token)
+    ):
+        """Trigger the build process for the flatpack."""
+        if not flatpack_directory:
+            raise HTTPException(status_code=500, detail="Flatpack directory is not set")
 
-        cursor.execute("""
-            INSERT INTO flatpack_schedule (type, pattern, datetimes)
-            VALUES (?, ?, ?)
-        """, (schedule_type, pattern, json.dumps(datetimes)))
+        try:
+            background_tasks.add_task(run_build_process, schedule_id=None)
+            logger.info("Started build process for flatpack located at %s", flatpack_directory)
+            return JSONResponse(
+                content={"flatpack": flatpack_directory, "message": "Build process started in background."},
+                status_code=200)
+        except Exception as e:
+            logger.error("Failed to start build process: %s", e)
+            return JSONResponse(
+                content={"flatpack": flatpack_directory, "message": f"Failed to start build process: {e}"},
+                status_code=500)
 
-        new_schedule_id = cursor.lastrowid
+    @app.get("/api/heartbeat")
+    async def heartbeat():
+        """Endpoint to check the server heartbeat."""
+        current_time = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
+        return JSONResponse(content={"server_time": current_time}, status_code=200)
 
-        conn.commit()
-        conn.close()
+    @app.post("/api/hooks")
+    async def add_hook(hook: Hook, token: str = Depends(authenticate_token)):
+        try:
+            response = add_hook_to_database(hook)
+            return JSONResponse(content=response, status_code=201)
+        except HTTPException as e:
+            raise e
+        except Exception as e:
+            logger.error("Failed to add hook: %s", e)
+            raise HTTPException(status_code=500, detail="Failed to add hook.")
 
-        return JSONResponse(content={"message": "Schedule saved successfully.", "id": new_schedule_id}, status_code=200)
-    except Exception as e:
-        logger.error("An error occurred while saving the schedule: %s", e)
-        raise HTTPException(status_code=500, detail=f"An error occurred while saving the schedule: {e}")
+    @app.delete("/api/hooks/{hook_id}")
+    async def delete_hook(hook_id: int, token: str = Depends(authenticate_token)):
+        """Delete a hook from the database by its ID."""
+        if not flatpack_directory:
+            raise HTTPException(status_code=500, detail="Flatpack directory is not set")
 
+        db_path = os.path.join(flatpack_directory, 'build', 'flatpack.db')
 
-@app.post("/api/validate_token")
-async def validate_token(request: Request, api_token: str = Form(...)):
-    """Validate the provided API token."""
-    global VALIDATION_ATTEMPTS
-    stored_token = get_token()
-    if not stored_token:
-        return JSONResponse(content={"message": "API token is not set."}, status_code=200)
-    if validate_api_token(api_token):
-        return JSONResponse(content={"message": "API token is valid."}, status_code=200)
-    VALIDATION_ATTEMPTS += 1
-    if VALIDATION_ATTEMPTS >= MAX_ATTEMPTS:
-        shutdown_server()
-    return JSONResponse(content={"message": "Invalid API token."}, status_code=401)
+        try:
+            ensure_database_initialized()
+            conn = sqlite3.connect(db_path)
+            cursor = conn.cursor()
 
+            cursor.execute("DELETE FROM flatpack_hooks WHERE id = ?", (hook_id,))
+            if cursor.rowcount == 0:
+                raise HTTPException(status_code=404, detail="Hook not found")
+            conn.commit()
+            conn.close()
 
-@app.post("/api/verify")
-async def verify_flatpack(
-        request: Request,
-        token: str = Depends(authenticate_token)
-):
-    """Trigger the verification process for the flatpack."""
-    if not flatpack_directory:
-        raise HTTPException(status_code=500, detail="Flatpack directory is not set")
+            return JSONResponse(content={"message": "Hook deleted successfully."}, status_code=200)
+        except Error as e:
+            logger.error("An error occurred while deleting the hook: %s", e)
+            raise HTTPException(status_code=500, detail=f"An error occurred while deleting the hook: {e}")
 
-    try:
-        fpk_verify(flatpack_directory)
-        return JSONResponse(content={"message": "Verification process completed successfully."}, status_code=200)
-    except Exception as e:
-        logger.error("Verification process failed: %s", e)
-        return JSONResponse(content={"message": f"Verification process failed: {e}"}, status_code=500)
+    @app.get("/api/hooks", response_model=List[Hook])
+    async def get_hooks(token: str = Depends(authenticate_token)):
+        try:
+            hooks = get_all_hooks_from_database()
+            return JSONResponse(content={"hooks": hooks}, status_code=200)
+        except HTTPException as e:
+            raise e
+        except Exception as e:
+            logger.error("Failed to retrieve hooks: %s", e)
+            raise HTTPException(status_code=500, detail="Failed to retrieve hooks.")
+
+    @app.get("/api/logs")
+    async def get_all_logs(request: Request, token: str = Depends(authenticate_token)):
+        """Get a list of all available logs ordered by date."""
+        global flatpack_directory
+
+        if flatpack_directory:
+            logs_directory = Path(flatpack_directory) / 'build' / 'logs'
+        else:
+            cache_file_path = HOME_DIR / ".fpk_unbox.cache"
+            if cache_file_path.exists():
+                last_unboxed_flatpack = cache_file_path.read_text().strip()
+                logs_directory = Path(last_unboxed_flatpack) / 'build' / 'logs'
+            else:
+                raise HTTPException(status_code=500, detail="No cached flatpack directory found")
+
+        try:
+            if not logs_directory.exists():
+                logs_directory.mkdir(parents=True, exist_ok=True)
+                if not logs_directory.exists():
+                    raise HTTPException(status_code=500, detail="Failed to create logs directory")
+
+            log_files = sorted(
+                [f for f in os.listdir(logs_directory) if f.startswith("build_") and f.endswith(".log")],
+                key=lambda x: datetime.strptime(x, "build_%Y_%m_%d_%H_%M_%S.log"),
+                reverse=True
+            )
+
+            return JSONResponse(content={"logs": log_files}, status_code=200)
+
+        except HTTPException:
+            raise
+
+        except Exception as e:
+            logger.error("Failed to list log files: %s", e)
+            raise HTTPException(status_code=500, detail=f"Failed to list log files: {e}")
+
+    @app.get("/api/logs/{log_filename}")
+    async def get_log_file(request: Request, log_filename: str, token: str = Depends(authenticate_token)):
+        """Get the content of a specific log file."""
+        global flatpack_directory
+
+        if flatpack_directory:
+            logs_directory = Path(flatpack_directory) / 'build' / 'logs'
+        else:
+            cache_file_path = HOME_DIR / ".fpk_unbox.cache"
+            if cache_file_path.exists():
+                last_unboxed_flatpack = cache_file_path.read_text().strip()
+                logs_directory = Path(last_unboxed_flatpack) / 'build' / 'logs'
+            else:
+                raise HTTPException(status_code=500, detail="No cached flatpack directory found")
+
+        log_path = logs_directory / log_filename
+        if log_path.exists() and log_path.is_file():
+            try:
+                with open(log_path, 'r') as file:
+                    content = file.read()
+                return JSONResponse(content={"log": content}, status_code=200)
+            except Exception as e:
+                logger.error("Error reading log file '%s': %s", log_filename, e)
+                raise HTTPException(status_code=500, detail=f"Error reading log file: {e}")
+        else:
+            raise HTTPException(status_code=404, detail="Log file not found")
+
+    @app.delete("/api/schedule/{schedule_id}")
+    async def delete_schedule_entry(schedule_id: int, datetime_index: Optional[int] = None,
+                                    token: str = Depends(authenticate_token)):
+        if not flatpack_directory:
+            raise HTTPException(status_code=500, detail="Flatpack directory is not set")
+
+        db_path = os.path.join(flatpack_directory, 'build', 'flatpack.db')
+
+        try:
+            ensure_database_initialized()
+            conn = sqlite3.connect(db_path)
+            cursor = conn.cursor()
+
+            cursor.execute("SELECT id, type, datetimes FROM flatpack_schedule WHERE id = ?", (schedule_id,))
+            schedule = cursor.fetchone()
+
+            if not schedule:
+                raise HTTPException(status_code=404, detail="Schedule not found")
+
+            schedule_id, schedule_type, datetimes_json = schedule
+
+            if datetime_index is not None and schedule_type == 'manual':
+                datetimes = json.loads(datetimes_json)
+                if 0 <= datetime_index < len(datetimes):
+                    del datetimes[datetime_index]
+                    cursor.execute("UPDATE flatpack_schedule SET datetimes = ? WHERE id = ?",
+                                   (json.dumps(datetimes), schedule_id))
+                    conn.commit()
+                    return JSONResponse(content={"message": "Schedule datetime entry deleted successfully."},
+                                        status_code=200)
+                raise HTTPException(status_code=404, detail="Datetime entry not found")
+            cursor.execute("DELETE FROM flatpack_schedule WHERE id = ?", (schedule_id,))
+            conn.commit()
+            return JSONResponse(content={"message": "Entire schedule deleted successfully."}, status_code=200)
+
+        except sqlite3.Error as e:
+            logger.error("A database error occurred while deleting the schedule entry: %s", e)
+            raise HTTPException(status_code=500,
+                                detail=f"A database error occurred while deleting the schedule entry: {e}")
+        except json.JSONDecodeError as e:
+            logger.error("A JSON decoding error occurred: %s", e)
+            raise HTTPException(status_code=500, detail=f"An error occurred while processing schedule data: {e}")
+        except Exception as e:
+            logger.error("An unexpected error occurred while deleting the schedule entry: %s", e)
+            raise HTTPException(status_code=500,
+                                detail=f"An unexpected error occurred while deleting the schedule entry: {e}")
+        finally:
+            if 'conn' in locals():
+                conn.close()
+
+    @app.get("/api/schedule")
+    async def get_schedule(token: str = Depends(authenticate_token)):
+        if not flatpack_directory:
+            raise HTTPException(status_code=500, detail="Flatpack directory is not set")
+
+        db_path = os.path.join(flatpack_directory, 'build', 'flatpack.db')
+
+        try:
+            ensure_database_initialized()
+            conn = sqlite3.connect(db_path)
+            cursor = conn.cursor()
+
+            cursor.execute(
+                "SELECT id, type, pattern, datetimes, last_run FROM flatpack_schedule ORDER BY created_at DESC")
+            results = cursor.fetchall()
+            conn.close()
+
+            if results:
+                schedules = []
+                for schedule_id, schedule_type, pattern, datetimes, last_run in results:
+                    schedules.append({
+                        "id": schedule_id,
+                        "type": schedule_type,
+                        "pattern": pattern,
+                        "datetimes": json.loads(datetimes),
+                        "last_run": last_run
+                    })
+                return JSONResponse(content={"schedules": schedules}, status_code=200)
+            return JSONResponse(content={"schedules": []}, status_code=200)
+        except Exception as e:
+            logger.error("An error occurred while retrieving the schedules: %s", e)
+            raise HTTPException(status_code=500, detail=f"An error occurred while retrieving the schedules: {e}")
+
+    @app.post("/api/schedule")
+    async def save_schedule(request: Request, token: str = Depends(authenticate_token)):
+        if not flatpack_directory:
+            raise HTTPException(status_code=500, detail="Flatpack directory is not set")
+
+        db_path = os.path.join(flatpack_directory, 'build', 'flatpack.db')
+
+        try:
+            data = await request.json()
+            schedule_type = data.get('type')
+            pattern = data.get('pattern')
+            datetimes = data.get('datetimes', [])
+
+            if schedule_type == 'manual':
+                datetimes = [datetime.fromisoformat(dt).astimezone(timezone.utc).isoformat() for dt in datetimes]
+
+            ensure_database_initialized()
+            conn = sqlite3.connect(db_path)
+            cursor = conn.cursor()
+
+            cursor.execute("""
+                INSERT INTO flatpack_schedule (type, pattern, datetimes)
+                VALUES (?, ?, ?)
+            """, (schedule_type, pattern, json.dumps(datetimes)))
+
+            new_schedule_id = cursor.lastrowid
+
+            conn.commit()
+            conn.close()
+
+            return JSONResponse(content={"message": "Schedule saved successfully.", "id": new_schedule_id},
+                                status_code=200)
+        except Exception as e:
+            logger.error("An error occurred while saving the schedule: %s", e)
+            raise HTTPException(status_code=500, detail=f"An error occurred while saving the schedule: {e}")
+
+    @app.post("/api/validate_token")
+    async def validate_token(request: Request, api_token: str = Form(...)):
+        """Validate the provided API token."""
+        global VALIDATION_ATTEMPTS
+        stored_token = get_token()
+        if not stored_token:
+            return JSONResponse(content={"message": "API token is not set."}, status_code=200)
+        if validate_api_token(api_token):
+            return JSONResponse(content={"message": "API token is valid."}, status_code=200)
+        VALIDATION_ATTEMPTS += 1
+        if VALIDATION_ATTEMPTS >= MAX_ATTEMPTS:
+            shutdown_server()
+        return JSONResponse(content={"message": "Invalid API token."}, status_code=401)
+
+    @app.post("/api/verify")
+    async def verify_flatpack(
+            request: Request,
+            token: str = Depends(authenticate_token)
+    ):
+        """Trigger the verification process for the flatpack."""
+        if not flatpack_directory:
+            raise HTTPException(status_code=500, detail="Flatpack directory is not set")
+
+        try:
+            fpk_verify(flatpack_directory)
+            return JSONResponse(content={"message": "Verification process completed successfully."}, status_code=200)
+        except Exception as e:
+            logger.error("Verification process failed: %s", e)
+            return JSONResponse(content={"message": f"Verification process failed: {e}"}, status_code=500)
+
+    return app
 
 
 def fpk_cli_handle_run(args, session):
@@ -3432,13 +3468,14 @@ def fpk_cli_handle_run(args, session):
         return
 
     print(SECURITY_NOTICE)
+
     while True:
         acknowledgment = input(
-            "Do you acknowledge these risks and agree to use this environment responsibly? (YES/NO): ").strip().upper()
+            "Do you agree to proceed? (YES/NO): ").strip().upper()
         if acknowledgment == "YES":
             break
         elif acknowledgment == "NO":
-            print("You must acknowledge the risks to proceed. Exiting.")
+            print("You must agree to proceed. Exiting.")
             return
         else:
             print("Please answer YES or NO.")
@@ -3485,6 +3522,8 @@ def fpk_cli_handle_run(args, session):
         return
 
     set_token(token)
+
+    app = initialize_fastapi_app()
     setup_static_directory(app, str(directory))
 
     try:
@@ -3498,7 +3537,8 @@ def fpk_cli_handle_run(args, session):
         print(f"[INFO] Selected available port: {port}")
 
         if args.share:
-            listener = ngrok.forward(f"{host}:{port}", authtoken_from_env=True)
+            ngrok_module = lazy_import('ngrok')
+            listener = ngrok_module.forward(f"{host}:{port}", authtoken_from_env=True)
             public_url = listener.url()
             logger.info("Ingress established at %s", public_url)
             print(f"[INFO] Ingress established at {public_url}")
@@ -3518,7 +3558,8 @@ def fpk_cli_handle_run(args, session):
     finally:
         if args.share:
             try:
-                ngrok.disconnect(public_url)
+                ngrok_module = lazy_import('ngrok')
+                ngrok_module.disconnect(public_url)
                 logger.info("Disconnected ngrok ingress.")
                 print("[INFO] Disconnected ngrok ingress.")
             except Exception as e:
@@ -3746,7 +3787,8 @@ def fpk_cli_handle_version(args, session):
 
 
 def main():
-    """Main entry point for the flatpack command line interface."""
+    setup_graceful_shutdown()
+
     try:
         with SessionManager() as session:
             parser = setup_arg_parser()
@@ -3766,11 +3808,9 @@ def main():
 
     except KeyboardInterrupt:
         print("\nProcess interrupted by user. Exiting gracefully...")
-        sys.exit(1)
     except Exception as e:
         logger.error("An unexpected error occurred: %s", str(e))
         print(f"[ERROR] An unexpected error occurred: {str(e)}")
-        sys.exit(1)
 
 
 if __name__ == "__main__":
