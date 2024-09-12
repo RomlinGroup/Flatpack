@@ -135,8 +135,7 @@ while True:
         temperature = float(msg.split('-temp=')[1].split(' ')[0])
         msg = msg.replace('-temp=' + f'{temperature:g}', '')
 
-        if temperature <= 0.2:
-            temperature = 0.2
+        temperature = max(temperature, 0.2)
 
         temperature = min(temperature, 5)
 
