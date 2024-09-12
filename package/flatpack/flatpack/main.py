@@ -59,24 +59,45 @@ from .vector_manager import VectorManager
 HOME_DIR = Path.home() / ".fpk"
 HOME_DIR.mkdir(exist_ok=True)
 
-BASE_URL = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse"
 CONFIG_FILE_PATH = HOME_DIR / ".fpk_config.toml"
 GITHUB_CACHE = HOME_DIR / ".fpk_github.cache"
-GITHUB_CACHE_EXPIRY = timedelta(hours=1)
+
+BASE_URL = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse"
 GITHUB_REPO_URL = "https://api.github.com/repos/RomlinGroup/Flatpack"
 TEMPLATE_REPO_URL = "https://api.github.com/repos/RomlinGroup/template"
+
 VERSION = version("flatpack")
+
+COOLDOWN_PERIOD = timedelta(minutes=1)
+GITHUB_CACHE_EXPIRY = timedelta(hours=1)
+SERVER_START_TIME = None
 
 MAX_ATTEMPTS = 5
 VALIDATION_ATTEMPTS = 0
-
-SERVER_START_TIME = None
-COOLDOWN_PERIOD = timedelta(minutes=1)
 
 build_in_progress = False
 
 warnings.filterwarnings("ignore", category=MarkupResemblesLocatorWarning)
 signal.signal(signal.SIGINT, lambda s, f: print("received SIGINT"))
+
+SECURITY_NOTICE = """
+SECURITY NOTICE
+
+This environment allows execution of code on your local machine. Be aware:
+
+1. Code runs with your user permissions
+2. Data is stored locally
+3. Installing packages has security implications
+4. It can access files within its directory
+5. Network requests are possible
+6. Resource-intensive operations may impact your system
+
+You are responsible for the code you run. Use caution with untrusted sources.
+
+By using this environment, you acknowledge these risks and agree to use it responsibly.
+
+Stay safe!
+"""
 
 
 # Classes
@@ -3413,6 +3434,18 @@ def fpk_cli_handle_run(args, session):
         print("[ERROR] Please specify a flatpack for the run command.")
         return
 
+    print(SECURITY_NOTICE)
+    while True:
+        acknowledgment = input(
+            "Do you acknowledge these risks and agree to use this environment responsibly? (YES/NO): ").strip().upper()
+        if acknowledgment == "YES":
+            break
+        elif acknowledgment == "NO":
+            print("You must acknowledge the risks to proceed. Exiting.")
+            return
+        else:
+            print("Please answer YES or NO.")
+
     directory = Path(args.input).resolve()
     allowed_directory = Path.cwd()
 
@@ -3460,7 +3493,6 @@ def fpk_cli_handle_run(args, session):
 
     try:
         host = "127.0.0.1"
-
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.bind((host, 0))
         port = sock.getsockname()[1]
