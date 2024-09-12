@@ -188,7 +188,7 @@ def authenticate_token(request: Request):
 
     if token is None or token != f"Bearer {stored_token}":
         VALIDATION_ATTEMPTS += 1
-        logger.error(f"Invalid or missing token. Attempt {VALIDATION_ATTEMPTS}")
+        logger.error("Invalid or missing token. Attempt %s", VALIDATION_ATTEMPTS)
         print(f"[ERROR] Invalid or missing token. Attempt {VALIDATION_ATTEMPTS}")
         if VALIDATION_ATTEMPTS >= MAX_ATTEMPTS:
             shutdown_server()
@@ -1941,7 +1941,7 @@ def fpk_update(flatpack_name: str, session: requests.Session, branch: str = "mai
 
     flatpack_dir = Path.cwd() / flatpack_name
     if not flatpack_dir.exists() or not flatpack_dir.is_dir():
-        logger.error(f"The flatpack '{flatpack_name}' does not exist or is not a directory.")
+        logger.error("The flatpack '%s' does not exist or is not a directory.", flatpack_name)
         print(f"[ERROR] The flatpack '{flatpack_name}' does not exist or is not a directory.")
         return
 
