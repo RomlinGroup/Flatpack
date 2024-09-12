@@ -5,14 +5,15 @@ part_python """
 import scipy
 from transformers import AutoProcessor, BarkModel
 
-processor = AutoProcessor.from_pretrained(\"suno/bark\")
-model = BarkModel.from_pretrained(\"suno/bark\")
+processor = AutoProcessor.from_pretrained(\\"suno/bark\\")
 
-inputs = processor(\"\"\" What is the meaning of life? \"\"\")
+model = BarkModel.from_pretrained(\\"suno/bark\\")
+
+inputs = processor(\\"\\"\\" What is the meaning of life? \\"\\"\\")
 
 audio_array = model.generate(**inputs)
 audio_array = audio_array.cpu().numpy().squeeze()
 
 sample_rate = model.generation_config.sample_rate
-scipy.io.wavfile.write(\"output.wav\",rate=sample_rate, data=audio_array)
+scipy.io.wavfile.write(\\"output.wav\\",rate=sample_rate, data=audio_array)
 """
