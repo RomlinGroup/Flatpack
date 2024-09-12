@@ -1044,12 +1044,14 @@ def validate_file_path(path, is_input=True, allowed_dir=None):
 
 def validate_hook_code(code):
     """Validate the hook code against allowed operations."""
+    allowed_functions = set(['log_error', 'log_info', 'log_warning', 'read_file', 'write_file'])
+
     try:
         tree = ast.parse(code)
         for node in ast.walk(tree):
             if isinstance(node, ast.Call):
                 if isinstance(node.func, ast.Name):
-                    if node.func.id not in get_allowed_hook_functions():
+                    if node.func.id not in allowed_functions:
                         raise ValueError(f"Function '{node.func.id}' is not allowed in hooks")
             elif isinstance(node, (ast.Import, ast.ImportFrom)):
                 raise ValueError("Import statements are not allowed in hooks")
