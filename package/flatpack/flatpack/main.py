@@ -522,7 +522,8 @@ def execute_python_hook(hook_script: str, hook_name: str, context: dict):
     try:
         validate_hook_code(hook_script)
 
-        allowed_functions = get_allowed_hook_functions()
+        base_dir = Path(context['build_dir']).resolve()
+        allowed_functions = get_allowed_hook_functions(str(base_dir))
         exec_globals = {**allowed_functions, **context}
 
         exec(hook_script, exec_globals)
@@ -570,8 +571,8 @@ def get_all_hooks_from_database():
         raise HTTPException(status_code=500, detail=f"An error occurred while fetching hooks: {e}")
 
 
-def get_allowed_hook_functions():
-    """Return a dictionary of allowed functions for hooks."""
+def get_allowed_hook_functions(base_dir):
+    """Return a dictionary of allowed functions for hooks with path validation."""
 
     def log_info(message):
         logger.info(message)
@@ -585,12 +586,19 @@ def get_allowed_hook_functions():
         logger.error(message)
         print(f"[ERROR] {message}")
 
+    def safe_path(file_path):
+        """Ensure the file_path is within the allowed directory."""
+        full_path = os.path.normpath(os.path.join(base_dir, file_path))
+        if not full_path.startswith(base_dir):
+            raise ValueError("Access to file outside of allowed directory is forbidden")
+        return full_path
+
     def read_file(file_path):
-        with open(file_path, 'r') as f:
+        with open(safe_path(file_path), 'r') as f:
             return f.read()
 
     def write_file(file_path, content):
-        with open(file_path, 'w') as f:
+        with open(safe_path(file_path), 'w') as f:
             f.write(content)
 
     return {
