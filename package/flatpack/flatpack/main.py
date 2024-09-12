@@ -238,7 +238,8 @@ async def check_and_run_schedules():
                                 cursor.execute("UPDATE flatpack_schedule SET last_run = ? WHERE id = ?",
                                                (now.isoformat(), schedule_id))
                                 conn.commit()
-                                logger.info(f"Executed recurring build for schedule {schedule_id}")
+
+                                logger.info("Executed recurring build for schedule %s", schedule_id)
                                 print(f"[INFO] Executed recurring build for schedule {schedule_id}")
 
                 elif schedule_type == 'manual':
@@ -250,7 +251,7 @@ async def check_and_run_schedules():
                             scheduled_time = datetime.fromisoformat(dt).replace(tzinfo=timezone.utc)
                             if scheduled_time <= now:
                                 await run_build_process(schedule_id)
-                                logger.info(f"Executed manual build for schedule {schedule_id}")
+                                logger.info("Executed manual build for schedule %s", schedule_id)
                                 print(f"[INFO] Executed manual build for schedule {schedule_id}")
                                 executed_datetimes.append(dt)
 
@@ -1785,7 +1786,7 @@ def fpk_unbox(directory_name: str, session: httpx.Client, local: bool = False) -
 
     try:
         web_dir.mkdir(parents=True, exist_ok=True)
-        logger.info(f"Created /web directory: {web_dir}")
+        logger.info("Created /web directory: %s", web_dir)
         print(f"[INFO] Created /web directory: {web_dir}")
 
         index_html_url = f"{TEMPLATE_REPO_URL}/contents/index.html"
@@ -1799,10 +1800,10 @@ def fpk_unbox(directory_name: str, session: httpx.Client, local: bool = False) -
             index_html_path = web_dir / "index.html"
             with open(index_html_path, 'w') as f:
                 f.write(index_html_decoded)
-            logger.info(f"Copied index.html to {index_html_path}")
+            logger.info("Copied index.html to %s", index_html_path)
             print(f"[INFO] Copied index.html to {index_html_path}")
         except Exception as e:
-            logger.error(f"Failed to fetch or save index.html: {e}")
+            logger.error("Failed to fetch or save index.html: %s", e)
             print(f"[ERROR] Failed to fetch or save index.html: {e}")
     except Exception as e:
         message = f"Failed to create /web directory: {e}"
@@ -1976,10 +1977,10 @@ def fpk_update(flatpack_name: str, session: requests.Session, branch: str = "mai
                 print(f"[ERROR] Failed to retrieve content for {file}")
 
         except requests.RequestException as e:
-            logger.error(f"Failed to update {file}: {e}")
+            logger.error("Failed to update %s: %s", file, e)
             print(f"[ERROR] Failed to update {file}: {e}")
 
-    logger.info(f"Flatpack '{flatpack_name}' update completed.")
+    logger.info("Flatpack '%s' update completed.", flatpack_name)
     print(f"[INFO] Flatpack '{flatpack_name}' update completed.")
 
 
