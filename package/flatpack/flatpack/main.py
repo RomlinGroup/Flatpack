@@ -3,6 +3,7 @@ import asyncio
 import atexit
 import base64
 import errno
+import importlib.util
 import json
 import logging
 import mimetypes
@@ -513,6 +514,23 @@ def escape_content_parts(content: str) -> str:
 def escape_special_chars(content: str) -> str:
     """Escape special characters in a given string."""
     return content.replace('"', '\\"')
+
+
+def execute_python_hook(hook_script: str, hook_name: str, context: dict):
+    """Execute a Python hook script securely with provided context."""
+    module_name = f"hook_{hook_name}"
+    spec = importlib.util.spec_from_loader(module_name, loader=None)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[module_name] = module
+
+    try:
+        module.__dict__.update(context)
+        exec(hook_script, module.__dict__)
+    except Exception as e:
+        logger.error(f"An error occurred while executing Python hook {hook_name}: {e}")
+        print(f"[ERROR] An error occurred while executing Python hook {hook_name}: {e}")
+    finally:
+        del sys.modules[module_name]
 
 
 def generate_secure_token(length=32):
@@ -1122,13 +1140,12 @@ async def fpk_build(directory: Union[str, None], use_euxo: bool = False):
                     if hook_type == "bash":
                         hook_command = shlex.split(hook_script)
                         await run_subprocess(hook_command, log_file)
-
                     elif hook_type == "python":
-                        try:
-                            exec(hook_script)
-                        except Exception as e:
-                            logger.error("An error occurred while executing Python hook %s: %s", hook_name, e)
-                            print(f"[ERROR] An error occurred while executing Python hook {hook_name}: {e}")
+                        context = {
+                            "build_dir": build_dir,
+                            "logger": logger
+                        }
+                        execute_python_hook(hook_script, hook_name, context)
                     else:
                         logger.warning("Unsupported hook type for %s. Skipping.", hook_name)
                         print(f"[WARNING] Unsupported hook type for {hook_name}. Skipping.")
