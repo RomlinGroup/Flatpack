@@ -1,11 +1,8 @@
 import argparse
-import ast
 import asyncio
 import atexit
 import base64
 import errno
-import imghdr
-import importlib.util
 import json
 import logging
 import mimetypes
@@ -518,21 +515,6 @@ def escape_special_chars(content: str) -> str:
     return content.replace('"', '\\"')
 
 
-def execute_python_hook(hook_script: str, hook_name: str, context: dict):
-    """Execute a Python hook script securely with provided context."""
-    try:
-        validate_hook_code(hook_script)
-
-        base_dir = Path(context['build_dir']).resolve()
-        allowed_functions = get_allowed_hook_functions(str(base_dir))
-        exec_globals = {**allowed_functions, **context}
-
-        exec(hook_script, exec_globals)
-    except Exception as e:
-        logger.error(f"An error occurred while executing Python hook {hook_name}: {e}")
-        print(f"[ERROR] An error occurred while executing Python hook {hook_name}: {e}")
-
-
 def generate_secure_token(length=32):
     """Generate a secure token of the specified length.
 
@@ -570,70 +552,6 @@ def get_all_hooks_from_database():
         logger.error("An error occurred while fetching hooks: %s", e)
         print(f"[ERROR] An error occurred while fetching hooks: {e}")
         raise HTTPException(status_code=500, detail=f"An error occurred while fetching hooks: {e}")
-
-
-def get_allowed_hook_functions(base_dir):
-    """Return a dictionary of allowed functions for hooks with strict security measures."""
-
-    ALLOWED_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.txt'}
-    MAX_FILE_SIZE = 5 * 1024 * 1024
-
-    def safe_path(file_path):
-        """Ensure the file_path is safe and allowed."""
-        full_path = os.path.normpath(os.path.join(base_dir, file_path))
-        if not full_path.startswith(base_dir):
-            raise ValueError("Access to file outside of allowed directory is forbidden")
-
-        _, ext = os.path.splitext(full_path)
-        if ext.lower() not in ALLOWED_EXTENSIONS:
-            raise ValueError(f"File extension not allowed: {ext}")
-
-        return full_path
-
-    def validate_file_content(file_path):
-        """Validate the content of the file."""
-        file_size = os.path.getsize(file_path)
-        if file_size > MAX_FILE_SIZE:
-            raise ValueError(f"File size exceeds maximum allowed size of {MAX_FILE_SIZE} bytes")
-
-        _, ext = os.path.splitext(file_path)
-        if ext.lower() in {'.jpg', '.jpeg', '.png'}:
-            img_type = imghdr.what(file_path)
-            if img_type not in ['jpeg', 'png']:
-                raise ValueError(f"Invalid image file: {file_path}")
-        elif ext.lower() == '.txt':
-            try:
-                with open(file_path, 'r', encoding='utf-8') as f:
-                    f.read()
-            except UnicodeDecodeError:
-                raise ValueError(f"Invalid text file: {file_path}")
-        else:
-            raise ValueError(f"Unsupported file type: {ext}")
-
-    def log_info(message):
-        logger.info(message)
-        print(f"[INFO] {message}")
-
-    def log_warning(message):
-        logger.warning(message)
-        print(f"[WARNING] {message}")
-
-    def log_error(message):
-        logger.error(message)
-        print(f"[ERROR] {message}")
-
-    def read_file(file_path):
-        full_path = safe_path(file_path)
-        validate_file_content(full_path)
-        with open(full_path, 'r') as f:
-            return f.read()
-
-    return {
-        'log_info': log_info,
-        'log_warning': log_warning,
-        'log_error': log_error,
-        'read_file': read_file,
-    }
 
 
 def get_token() -> Optional[str]:
@@ -1068,23 +986,6 @@ def validate_file_path(path, is_input=True, allowed_dir=None):
     return absolute_path
 
 
-def validate_hook_code(code):
-    """Validate the hook code against allowed operations."""
-    allowed_functions = set(['log_error', 'log_info', 'log_warning', 'read_file'])
-
-    try:
-        tree = ast.parse(code)
-        for node in ast.walk(tree):
-            if isinstance(node, ast.Call):
-                if isinstance(node.func, ast.Name):
-                    if node.func.id not in allowed_functions:
-                        raise ValueError(f"Function '{node.func.id}' is not allowed in hooks")
-            elif isinstance(node, (ast.Import, ast.ImportFrom)):
-                raise ValueError("Import statements are not allowed in hooks")
-    except SyntaxError as e:
-        raise ValueError(f"Invalid Python syntax in hook: {e}")
-
-
 def write_status_to_file(status_data):
     status_file = os.path.join(flatpack_directory, 'build', 'build_status.json')
 
@@ -1215,18 +1116,18 @@ async def fpk_build(directory: Union[str, None], use_euxo: bool = False):
                 conn.close()
 
                 for hook_name, hook_script, hook_type in hooks:
-                    logger.info("Executing hook: %s", hook_name)
-                    print(f"[INFO] Executing hook: {hook_name}")
+                    logger.info("Dry run - Preparing to execute hook: %s", hook_name)
+                    print(f"[INFO] Dry run - Preparing to execute hook: {hook_name}")
 
                     if hook_type == "bash":
                         hook_command = shlex.split(hook_script)
-                        await run_subprocess(hook_command, log_file)
+                        logger.info("Dry run - Bash command: %s", ' '.join(hook_command))
+                        print(f"[DRY RUN] Bash command: {' '.join(hook_command)}")
+
                     elif hook_type == "python":
-                        context = {
-                            "build_dir": build_dir,
-                            "logger": logger
-                        }
-                        execute_python_hook(hook_script, hook_name, context)
+                        logger.info("Dry run - Python script:\n%s", hook_script)
+                        print(f"[DRY RUN] Python script:\n{hook_script}")
+
                     else:
                         logger.warning("Unsupported hook type for %s. Skipping.", hook_name)
                         print(f"[WARNING] Unsupported hook type for {hook_name}. Skipping.")
