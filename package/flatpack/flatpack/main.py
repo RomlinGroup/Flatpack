@@ -1,4 +1,5 @@
 import argparse
+import ast
 import asyncio
 import atexit
 import base64
@@ -518,19 +519,16 @@ def escape_special_chars(content: str) -> str:
 
 def execute_python_hook(hook_script: str, hook_name: str, context: dict):
     """Execute a Python hook script securely with provided context."""
-    module_name = f"hook_{hook_name}"
-    spec = importlib.util.spec_from_loader(module_name, loader=None)
-    module = importlib.util.module_from_spec(spec)
-    sys.modules[module_name] = module
-
     try:
-        module.__dict__.update(context)
-        exec(hook_script, module.__dict__)
+        validate_hook_code(hook_script)
+
+        allowed_functions = get_allowed_hook_functions()
+        exec_globals = {**allowed_functions, **context}
+
+        exec(hook_script, exec_globals)
     except Exception as e:
         logger.error(f"An error occurred while executing Python hook {hook_name}: {e}")
         print(f"[ERROR] An error occurred while executing Python hook {hook_name}: {e}")
-    finally:
-        del sys.modules[module_name]
 
 
 def generate_secure_token(length=32):
@@ -570,6 +568,38 @@ def get_all_hooks_from_database():
         logger.error("An error occurred while fetching hooks: %s", e)
         print(f"[ERROR] An error occurred while fetching hooks: {e}")
         raise HTTPException(status_code=500, detail=f"An error occurred while fetching hooks: {e}")
+
+
+def get_allowed_hook_functions():
+    """Return a dictionary of allowed functions for hooks."""
+
+    def log_info(message):
+        logger.info(message)
+        print(f"[INFO] {message}")
+
+    def log_warning(message):
+        logger.warning(message)
+        print(f"[WARNING] {message}")
+
+    def log_error(message):
+        logger.error(message)
+        print(f"[ERROR] {message}")
+
+    def read_file(file_path):
+        with open(file_path, 'r') as f:
+            return f.read()
+
+    def write_file(file_path, content):
+        with open(file_path, 'w') as f:
+            f.write(content)
+
+    return {
+        'log_info': log_info,
+        'log_warning': log_warning,
+        'log_error': log_error,
+        'read_file': read_file,
+        'write_file': write_file
+    }
 
 
 def get_token() -> Optional[str]:
@@ -1002,6 +1032,21 @@ def validate_file_path(path, is_input=True, allowed_dir=None):
             os.makedirs(output_dir)
 
     return absolute_path
+
+
+def validate_hook_code(code):
+    """Validate the hook code against allowed operations."""
+    try:
+        tree = ast.parse(code)
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Call):
+                if isinstance(node.func, ast.Name):
+                    if node.func.id not in get_allowed_hook_functions():
+                        raise ValueError(f"Function '{node.func.id}' is not allowed in hooks")
+            elif isinstance(node, (ast.Import, ast.ImportFrom)):
+                raise ValueError("Import statements are not allowed in hooks")
+    except SyntaxError as e:
+        raise ValueError(f"Invalid Python syntax in hook: {e}")
 
 
 def write_status_to_file(status_data):
