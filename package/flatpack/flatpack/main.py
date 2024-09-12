@@ -1,5 +1,4 @@
 import argparse
-import ast
 import asyncio
 import atexit
 import base64
@@ -27,7 +26,6 @@ import time
 import warnings
 
 from datetime import datetime, timedelta, timezone
-from functools import partial
 from importlib.metadata import version
 from io import BytesIO
 from logging.handlers import RotatingFileHandler
@@ -45,10 +43,6 @@ import zstandard as zstd
 
 from bs4 import BeautifulSoup, MarkupResemblesLocatorWarning
 from croniter import croniter
-from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.primitives.asymmetric import padding
 from fastapi import BackgroundTasks, Depends, FastAPI, Form, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Response
@@ -737,10 +731,10 @@ def filter_log_line(line):
         return line
 
     exclude_patterns = [
-        '^$',
-        '^\s*$',
-        '^\.{3,}$',
-        '^={3,}$',
+        r'^$',
+        r'^\s*$',
+        r'^\.{3,}$',
+        r'^={3,}$',
         r'^.*\d+%.*$',
         r'^\s*\d+%\[=*>?\s*\]\s*\d+(\.\d+)?[KMGT]?\s+\d+(\.\d+)?[KMGT]?B/s(\s+eta\s+\d+[smh])?\s+\S+(\s+\d+%)?$',
         r'━+\s*\d+(\.\d+)?/\d+(\.\d+)?\s+[KMGT]?B\s+\d+(\.\d+)?\s+[KMGT]?B/s(\s+eta\s+\d+:\d+:\d+)?',
