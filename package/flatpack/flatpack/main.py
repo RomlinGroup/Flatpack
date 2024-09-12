@@ -4,6 +4,7 @@ import asyncio
 import atexit
 import base64
 import errno
+import imghdr
 import importlib.util
 import json
 import logging
@@ -572,7 +573,42 @@ def get_all_hooks_from_database():
 
 
 def get_allowed_hook_functions(base_dir):
-    """Return a dictionary of allowed functions for hooks with path validation."""
+    """Return a dictionary of allowed functions for hooks with strict security measures."""
+
+    ALLOWED_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.txt'}
+    MAX_FILE_SIZE = 5 * 1024 * 1024
+
+    def safe_path(file_path):
+        """Ensure the file_path is safe and allowed."""
+        full_path = os.path.normpath(os.path.join(base_dir, file_path))
+        if not full_path.startswith(base_dir):
+            raise ValueError("Access to file outside of allowed directory is forbidden")
+
+        _, ext = os.path.splitext(full_path)
+        if ext.lower() not in ALLOWED_EXTENSIONS:
+            raise ValueError(f"File extension not allowed: {ext}")
+
+        return full_path
+
+    def validate_file_content(file_path):
+        """Validate the content of the file."""
+        file_size = os.path.getsize(file_path)
+        if file_size > MAX_FILE_SIZE:
+            raise ValueError(f"File size exceeds maximum allowed size of {MAX_FILE_SIZE} bytes")
+
+        _, ext = os.path.splitext(file_path)
+        if ext.lower() in {'.jpg', '.jpeg', '.png'}:
+            img_type = imghdr.what(file_path)
+            if img_type not in ['jpeg', 'png']:
+                raise ValueError(f"Invalid image file: {file_path}")
+        elif ext.lower() == '.txt':
+            try:
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    f.read()
+            except UnicodeDecodeError:
+                raise ValueError(f"Invalid text file: {file_path}")
+        else:
+            raise ValueError(f"Unsupported file type: {ext}")
 
     def log_info(message):
         logger.info(message)
@@ -586,27 +622,17 @@ def get_allowed_hook_functions(base_dir):
         logger.error(message)
         print(f"[ERROR] {message}")
 
-    def safe_path(file_path):
-        """Ensure the file_path is within the allowed directory."""
-        full_path = os.path.normpath(os.path.join(base_dir, file_path))
-        if not full_path.startswith(base_dir):
-            raise ValueError("Access to file outside of allowed directory is forbidden")
-        return full_path
-
     def read_file(file_path):
-        with open(safe_path(file_path), 'r') as f:
+        full_path = safe_path(file_path)
+        validate_file_content(full_path)
+        with open(full_path, 'r') as f:
             return f.read()
-
-    def write_file(file_path, content):
-        with open(safe_path(file_path), 'w') as f:
-            f.write(content)
 
     return {
         'log_info': log_info,
         'log_warning': log_warning,
         'log_error': log_error,
         'read_file': read_file,
-        'write_file': write_file
     }
 
 
@@ -1044,7 +1070,7 @@ def validate_file_path(path, is_input=True, allowed_dir=None):
 
 def validate_hook_code(code):
     """Validate the hook code against allowed operations."""
-    allowed_functions = set(['log_error', 'log_info', 'log_warning', 'read_file', 'write_file'])
+    allowed_functions = set(['log_error', 'log_info', 'log_warning', 'read_file'])
 
     try:
         tree = ast.parse(code)
