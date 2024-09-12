@@ -1948,7 +1948,7 @@ def fpk_update(flatpack_name: str, session: requests.Session, branch: str = "mai
     build_dir = flatpack_dir / 'build'
     if not build_dir.exists():
         build_dir.mkdir(parents=True)
-        logger.info(f"Created build directory for flatpack '{flatpack_name}'")
+        logger.info("Created build directory for flatpack '%s'", flatpack_name)
         print(f"[INFO] Created build directory for flatpack '{flatpack_name}'")
 
     for file in files_to_update:
@@ -1967,13 +1967,13 @@ def fpk_update(flatpack_name: str, session: requests.Session, branch: str = "mai
                     local_file.write(content)
 
                 if local_file_path.exists():
-                    logger.info(f"Replaced existing {file} in flatpack '{flatpack_name}/build'")
+                    logger.info("Replaced existing %s in flatpack '%s/build'", file, flatpack_name)
                     print(f"[INFO] Replaced existing {file} in flatpack '{flatpack_name}/build'")
                 else:
-                    logger.info(f"Added new {file} to flatpack '{flatpack_name}/build'")
+                    logger.info("Added new %s to flatpack '%s/build'", file, flatpack_name)
                     print(f"[INFO] Added new {file} to flatpack '{flatpack_name}/build'")
             else:
-                logger.error(f"Failed to retrieve content for {file}")
+                logger.error("Failed to retrieve content for %s", file)
                 print(f"[ERROR] Failed to retrieve content for {file}")
 
         except requests.RequestException as e:
