@@ -232,15 +232,18 @@ async def check_and_run_schedules():
                         else:
                             last_run_dt = None
 
-                        if prev_run <= now < next_run:
-                            if last_run_dt is None or last_run_dt < prev_run:
-                                await run_build_process(schedule_id)
-                                cursor.execute("UPDATE flatpack_schedule SET last_run = ? WHERE id = ?",
-                                               (now.isoformat(), schedule_id))
-                                conn.commit()
+                        if (
+                            prev_run <= now < next_run
+                            and last_run_dt is None
+                            or last_run_dt < prev_run
+                        ):
+                            await run_build_process(schedule_id)
+                            cursor.execute("UPDATE flatpack_schedule SET last_run = ? WHERE id = ?",
+                                           (now.isoformat(), schedule_id))
+                            conn.commit()
 
-                                logger.info("Executed recurring build for schedule %s", schedule_id)
-                                print(f"[INFO] Executed recurring build for schedule {schedule_id}")
+                            logger.info("Executed recurring build for schedule %s", schedule_id)
+                            print(f"[INFO] Executed recurring build for schedule {schedule_id}")
 
                 elif schedule_type == 'manual':
                     if datetimes:
@@ -3434,11 +3437,10 @@ def fpk_cli_handle_run(args, session):
         print("[WARNING] The 'build' or 'web' directory is missing in the flatpack.")
         return
 
-    if args.share:
-        if not os.environ.get('NGROK_AUTHTOKEN'):
-            logger.error("NGROK_AUTHTOKEN environment variable is not set.")
-            print("[ERROR] NGROK_AUTHTOKEN environment variable is not set.")
-            return
+    if args.share and not os.environ.get('NGROK_AUTHTOKEN'):
+        logger.error("NGROK_AUTHTOKEN environment variable is not set.")
+        print("[ERROR] NGROK_AUTHTOKEN environment variable is not set.")
+        return
 
     token = generate_secure_token()
     logger.info("API token generated and displayed to user.")
