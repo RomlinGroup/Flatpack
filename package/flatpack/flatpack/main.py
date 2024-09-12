@@ -773,7 +773,7 @@ async def run_subprocess(command, log_file, timeout=3600):
         stdout=out_w,
         stderr=err_w,
         stdin=subprocess.PIPE,
-        preexec_fn=os.setsid
+        start_new_session=True
     )
 
     os.close(out_w)
