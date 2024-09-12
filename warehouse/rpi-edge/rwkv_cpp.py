@@ -135,11 +135,9 @@ while True:
         temperature = float(msg.split('-temp=')[1].split(' ')[0])
         msg = msg.replace('-temp=' + f'{temperature:g}', '')
 
-        if temperature <= 0.2:
-            temperature = 0.2
+        temperature = max(temperature, 0.2)
 
-        if temperature >= 5:
-            temperature = 5
+        temperature = min(temperature, 5)
 
     if '-top_p=' in msg:
         top_p = float(msg.split('-top_p=')[1].split(' ')[0])
@@ -196,9 +194,11 @@ while True:
         if f'{user}{separator}' in decoded:
             decoded = decoded.split(f'{user}{separator}')[0].strip()
 
-        if thread == 'chat':
-            if '\n\n' in tokenizer_decode(processed_tokens[start_index:]):
-                break
+        if (
+            thread == 'chat'
+            and '\n\n' in tokenizer_decode(processed_tokens[start_index:])
+        ):
+            break
 
         if i == MAX_GENERATION_LENGTH - 1:
             print()

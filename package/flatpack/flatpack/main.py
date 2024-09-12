@@ -253,15 +253,18 @@ async def check_and_run_schedules():
                         else:
                             last_run_dt = None
 
-                        if prev_run <= now < next_run:
-                            if last_run_dt is None or last_run_dt < prev_run:
-                                await run_build_process(schedule_id)
-                                cursor.execute("UPDATE flatpack_schedule SET last_run = ? WHERE id = ?",
-                                               (now.isoformat(), schedule_id))
-                                conn.commit()
+                        if (
+                            prev_run <= now < next_run
+                            and last_run_dt is None
+                            or last_run_dt < prev_run
+                        ):
+                            await run_build_process(schedule_id)
+                            cursor.execute("UPDATE flatpack_schedule SET last_run = ? WHERE id = ?",
+                                           (now.isoformat(), schedule_id))
+                            conn.commit()
 
-                                logger.info("Executed recurring build for schedule %s", schedule_id)
-                                print(f"[INFO] Executed recurring build for schedule {schedule_id}")
+                            logger.info("Executed recurring build for schedule %s", schedule_id)
+                            print(f"[INFO] Executed recurring build for schedule {schedule_id}")
 
                 elif schedule_type == 'manual':
                     if datetimes:
@@ -1091,41 +1094,40 @@ async def fpk_build(directory: Union[str, None], use_euxo: bool = False):
                 logger.error("The 'eval_data.json' file does not exist in '%s'.", web_dir)
                 print(f"[ERROR] The 'eval_data.json' file does not exist in '{web_dir}'.")
                 return
-            else:
-                output_dir = web_dir / "output"
+            output_dir = web_dir / "output"
 
-                if output_dir.exists():
-                    shutil.rmtree(output_dir)
+            if output_dir.exists():
+                shutil.rmtree(output_dir)
 
-                output_dir.mkdir(parents=True)
+            output_dir.mkdir(parents=True)
 
-                with eval_data_path.open('r') as file:
-                    eval_data = json.load(file)
+            with eval_data_path.open('r') as file:
+                eval_data = json.load(file)
 
-                    for item in eval_data:
-                        original_path = Path(item['file'])
+                for item in eval_data:
+                    original_path = Path(item['file'])
 
-                        relative_path = None
-                        for parent in original_path.parents:
-                            if parent.parts[-1] == 'build':
-                                relative_path = original_path.relative_to(parent)
-                                break
+                    relative_path = None
+                    for parent in original_path.parents:
+                        if parent.parts[-1] == 'build':
+                            relative_path = original_path.relative_to(parent)
+                            break
 
-                        if relative_path:
-                            source_file = build_dir / relative_path
+                    if relative_path:
+                        source_file = build_dir / relative_path
 
-                            if source_file.exists():
-                                allowed_mimetypes = ['image/jpeg', 'image/png', 'text/plain']
-                                mime_type, _ = mimetypes.guess_type(source_file)
+                        if source_file.exists():
+                            allowed_mimetypes = ['image/jpeg', 'image/png', 'text/plain']
+                            mime_type, _ = mimetypes.guess_type(source_file)
 
-                                if mime_type in allowed_mimetypes:
-                                    dest_path = output_dir / source_file.name
-                                    shutil.copy2(source_file, dest_path)
-                                    print(f"[INFO] Copied {source_file} to {dest_path}")
-                            else:
-                                print(f"[ERROR] File {source_file} not found.")
+                            if mime_type in allowed_mimetypes:
+                                dest_path = output_dir / source_file.name
+                                shutil.copy2(source_file, dest_path)
+                                print(f"[INFO] Copied {source_file} to {dest_path}")
                         else:
-                            print(f"[ERROR] Could not determine relative path for {original_path}")
+                            print(f"[ERROR] File {source_file} not found.")
+                    else:
+                        print(f"[ERROR] Could not determine relative path for {original_path}")
 
             db_path = build_dir / 'flatpack.db'
             initialize_database(str(db_path))
@@ -2924,8 +2926,7 @@ async def favicon():
     favicon_path = Path(flatpack_directory) / "build" / "favicon.ico"
     if favicon_path.exists():
         return FileResponse(favicon_path)
-    else:
-        return Response(status_code=204)
+    return Response(status_code=204)
 
 
 @app.get("/load_file")
@@ -3023,8 +3024,7 @@ async def get_build_status(token: str = Depends(authenticate_token)):
         with open(status_file, 'r') as f:
             status_data = json.load(f)
         return JSONResponse(content=status_data)
-    else:
-        return JSONResponse(content={"status": "no_builds"})
+    return JSONResponse(content={"status": "no_builds"})
 
 
 @app.post("/api/clear-build-status")
@@ -3303,12 +3303,10 @@ async def delete_schedule_entry(schedule_id: int, datetime_index: Optional[int] 
                 conn.commit()
                 return JSONResponse(content={"message": "Schedule datetime entry deleted successfully."},
                                     status_code=200)
-            else:
-                raise HTTPException(status_code=404, detail="Datetime entry not found")
-        else:
-            cursor.execute("DELETE FROM flatpack_schedule WHERE id = ?", (schedule_id,))
-            conn.commit()
-            return JSONResponse(content={"message": "Entire schedule deleted successfully."}, status_code=200)
+            raise HTTPException(status_code=404, detail="Datetime entry not found")
+        cursor.execute("DELETE FROM flatpack_schedule WHERE id = ?", (schedule_id,))
+        conn.commit()
+        return JSONResponse(content={"message": "Entire schedule deleted successfully."}, status_code=200)
 
     except sqlite3.Error as e:
         logger.error("A database error occurred while deleting the schedule entry: %s", e)
@@ -3352,8 +3350,7 @@ async def get_schedule(token: str = Depends(authenticate_token)):
                     "last_run": last_run
                 })
             return JSONResponse(content={"schedules": schedules}, status_code=200)
-        else:
-            return JSONResponse(content={"schedules": []}, status_code=200)
+        return JSONResponse(content={"schedules": []}, status_code=200)
     except Exception as e:
         logger.error("An error occurred while retrieving the schedules: %s", e)
         raise HTTPException(status_code=500, detail=f"An error occurred while retrieving the schedules: {e}")
@@ -3467,11 +3464,10 @@ def fpk_cli_handle_run(args, session):
         print("[WARNING] The 'build' or 'web' directory is missing in the flatpack.")
         return
 
-    if args.share:
-        if not os.environ.get('NGROK_AUTHTOKEN'):
-            logger.error("NGROK_AUTHTOKEN environment variable is not set.")
-            print("[ERROR] NGROK_AUTHTOKEN environment variable is not set.")
-            return
+    if args.share and not os.environ.get('NGROK_AUTHTOKEN'):
+        logger.error("NGROK_AUTHTOKEN environment variable is not set.")
+        print("[ERROR] NGROK_AUTHTOKEN environment variable is not set.")
+        return
 
     token = generate_secure_token()
     logger.info("API token generated and displayed to user.")
