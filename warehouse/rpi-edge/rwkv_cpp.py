@@ -196,9 +196,11 @@ while True:
         if f'{user}{separator}' in decoded:
             decoded = decoded.split(f'{user}{separator}')[0].strip()
 
-        if thread == 'chat':
-            if '\n\n' in tokenizer_decode(processed_tokens[start_index:]):
-                break
+        if (
+            thread == 'chat'
+            and '\n\n' in tokenizer_decode(processed_tokens[start_index:])
+        ):
+            break
 
         if i == MAX_GENERATION_LENGTH - 1:
             print()
