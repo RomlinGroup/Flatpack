@@ -385,7 +385,7 @@ def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path, use_euxo: bool = Fa
             outfile.write("    local part_number=\"$1\"\n")
 
             outfile.write(
-                "    local new_files=$(find \"$SCRIPT_DIR\" -type f -newer \"$DATA_FILE\" \\( -name '*.jpg' -o -name '*.jpeg' -o -name '*.png' -o -name '*.txt' \\) ! -path '*/bin/*' ! -path '*/lib/*')\n"
+                "    local new_files=$(find \"$SCRIPT_DIR\" -type f -newer \"$DATA_FILE\" \\( -name '*.jpg' -o -name '*.jpeg' -o -name '*.png' -o -name '*.txt' -o -name '*.wav' \\) ! -path '*/bin/*' ! -path '*/lib/*')\n"
             )
             outfile.write("    if [ -n \"$new_files\" ]; then\n")
             outfile.write("        local log_entries=\"[]\"\n")
@@ -1173,7 +1173,7 @@ async def fpk_build(directory: Union[str, None], use_euxo: bool = False):
                         source_file = build_dir / relative_path
 
                         if source_file.exists():
-                            allowed_mimetypes = ['image/jpeg', 'image/png', 'text/plain']
+                            allowed_mimetypes = ['audio/wav', 'audio/x-wav', 'image/jpeg', 'image/png', 'text/plain']
                             mime_type, _ = mimetypes.guess_type(source_file)
 
                             if mime_type in allowed_mimetypes:
