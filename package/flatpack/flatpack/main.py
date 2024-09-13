@@ -1,6 +1,5 @@
 import argparse
 import asyncio
-import atexit
 import base64
 import errno
 import json
@@ -23,6 +22,7 @@ import sys
 import tarfile
 import tempfile
 import time
+import traceback
 
 from datetime import datetime, timedelta, timezone
 from importlib.metadata import version
@@ -97,15 +97,14 @@ MAX_ATTEMPTS = 5
 VALIDATION_ATTEMPTS = 0
 
 build_in_progress = False
-
-signal.signal(signal.SIGINT, lambda s, f: print("received SIGINT"))
+shutdown_requested = False
 
 SECURITY_NOTICE = """
 SECURITY NOTICE 
 This environment runs code with your permissions:
-1. Code can access local data and files
+1. Network requests are allowed
 2. Installing packages may pose risks
-3. Network requests are allowed
+3. Code can access local data and files
 4. Resource-heavy tasks may impact your system
 """
 
@@ -164,16 +163,6 @@ logger = logging.getLogger("schedule_logger")
 schedule_lock = asyncio.Lock()
 
 uvicorn_server = None
-
-
-def handle_termination_signal(signal_number, frame):
-    """Handle termination signals for graceful shutdown."""
-    logger.info("Received termination signal (%s), shutting down...", signal_number)
-    sys.exit(0)
-
-
-signal.signal(signal.SIGINT, handle_termination_signal)
-signal.signal(signal.SIGTERM, handle_termination_signal)
 
 
 def add_hook_to_database(hook: Hook):
@@ -307,9 +296,9 @@ async def check_and_run_schedules():
             print(f"[ERROR] An error occurred: {e}")
 
 
-def cleanup_and_shutdown(loop=None):
-    """Perform cleanup operations and graceful shutdown."""
-    logger.info("Starting cleanup and shutdown process...")
+def cleanup_and_shutdown():
+    """Perform cleanup operations."""
+    logger.info("Starting cleanup process...")
 
     try:
         files_to_delete = ["flatpack.sh"]
@@ -325,26 +314,7 @@ def cleanup_and_shutdown(loop=None):
         logger.error(f"Exception during file cleanup: {e}")
         print(f"Exception during file cleanup: {e}")
 
-    if loop is None:
-        try:
-            loop = asyncio.get_event_loop()
-        except RuntimeError:
-            logger.info("No asyncio event loop found. Skipping asyncio cleanup.")
-            return
-
-    logger.info("Cancelling pending tasks...")
-    tasks = asyncio.all_tasks(loop)
-    for task in tasks:
-        task.cancel()
-
-    logger.info("Shutting down asyncio event loop...")
-    try:
-        loop.run_until_complete(asyncio.gather(*tasks, return_exceptions=True))
-        loop.run_until_complete(loop.shutdown_asyncgens())
-    finally:
-        loop.close()
-
-    logger.info("Cleanup and shutdown complete.")
+    logger.info("Cleanup complete.")
 
 
 def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path, use_euxo: bool = False):
@@ -854,9 +824,9 @@ def filter_log_line(line):
 
 
 async def run_subprocess(command, log_file, timeout=3600):
+    global shutdown_requested
     out_r, out_w = pty.openpty()
     err_r, err_w = pty.openpty()
-
     process = subprocess.Popen(
         command,
         stdout=out_w,
@@ -864,29 +834,15 @@ async def run_subprocess(command, log_file, timeout=3600):
         stdin=subprocess.PIPE,
         start_new_session=True
     )
-
     os.close(out_w)
     os.close(err_w)
-
     streams = [OutStream(out_r), OutStream(err_r)]
     start_time = time.time()
 
-    def handle_termination_signal(signum, frame):
-        print(f"\nReceived signal {signum}. Terminating subprocess...")
-        try:
-            os.killpg(os.getpgid(process.pid), signal.SIGTERM)
-        except ProcessLookupError:
-            pass
-        raise SystemExit(0)
-
-    signal.signal(signal.SIGINT, handle_termination_signal)
-    signal.signal(signal.SIGTERM, handle_termination_signal)
-
     try:
-        while streams:
+        while streams and not shutdown_requested:
             if time.time() - start_time > timeout:
                 print(f"\nTimeout after {timeout} seconds. Terminating the process.")
-                os.killpg(os.getpgid(process.pid), signal.SIGTERM)
                 break
 
             try:
@@ -918,22 +874,21 @@ async def run_subprocess(command, log_file, timeout=3600):
 
             await asyncio.sleep(0)
 
-    except SystemExit as e:
-        print("\nCaught SystemExit. Cleaning up...")
-        return e.code
+    except asyncio.CancelledError:
+        print("\nTask cancelled. Cleaning up...")
     except Exception as e:
         print(f"\nAn error occurred: {e}")
         print(traceback.format_exc())
         return 1
     finally:
-        try:
-            process.wait(timeout=5)
-        except subprocess.TimeoutExpired:
-            print("\nProcess did not terminate in time. Forcing termination.")
-            os.killpg(os.getpgid(process.pid), signal.SIGKILL)
-
-        signal.signal(signal.SIGINT, signal.SIG_DFL)
-        signal.signal(signal.SIGTERM, signal.SIG_DFL)
+        if process.poll() is None:
+            print("\nTerminating subprocess...")
+            os.killpg(os.getpgid(process.pid), signal.SIGTERM)
+            try:
+                process.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                print("\nProcess did not terminate in time. Forcing termination.")
+                os.killpg(os.getpgid(process.pid), signal.SIGKILL)
 
     return process.returncode
 
@@ -970,10 +925,21 @@ def set_token(token: str):
         print(f"[ERROR] Failed to set token: {str(e)}")
 
 
-def setup_graceful_shutdown():
-    atexit.register(cleanup_and_shutdown)
-    for sig in (signal.SIGINT, signal.SIGTERM):
-        signal.signal(sig, lambda s, f: cleanup_and_shutdown())
+def setup_signal_handlers(process=None):
+    def signal_handler(signum, frame):
+        global shutdown_requested
+        signame = signal.Signals(signum).name
+
+        if process:
+            try:
+                os.killpg(os.getpgid(process.pid), signal.SIGTERM)
+            except ProcessLookupError:
+                pass
+
+        shutdown_requested = True
+
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
 
 
 def setup_static_directory(fastapi_app: FastAPI, directory: str):
@@ -2615,10 +2581,14 @@ def fpk_cli_handle_build(args, session):
         print("[INFO] No directory name provided. Using cached directory if available.")
 
     try:
-        asyncio.get_running_loop()
-        asyncio.ensure_future(fpk_build(directory_name, use_euxo=args.use_euxo))
-    except RuntimeError:
         asyncio.run(fpk_build(directory_name, use_euxo=args.use_euxo))
+    except asyncio.CancelledError:
+        print("\nBuild process was cancelled.")
+    except Exception as e:
+        logger.error(f"An error occurred during the build process: {e}")
+        print(f"[ERROR] An error occurred during the build process: {e}")
+    finally:
+        cleanup_and_shutdown()
 
 
 def fpk_cli_handle_create(args, session):
@@ -3787,7 +3757,7 @@ def fpk_cli_handle_version(args, session):
 
 
 def main():
-    setup_graceful_shutdown()
+    setup_signal_handlers()
 
     try:
         with SessionManager() as session:
