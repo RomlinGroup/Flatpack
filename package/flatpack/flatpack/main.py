@@ -39,6 +39,8 @@ import toml
 import uvicorn
 
 from pydantic import BaseModel
+from rich.console import Console
+from rich.spinner import Spinner
 
 from .agent_manager import AgentManager
 from .parsers import parse_toml_to_venv_script
@@ -100,13 +102,17 @@ build_in_progress = False
 shutdown_requested = False
 
 SECURITY_NOTICE = """
-SECURITY NOTICE 
+SECURITY NOTICE
+
 This environment runs code with your permissions:
+
 1. Network requests are allowed
 2. Installing packages may pose risks
 3. Code can access local data and files
 4. Resource-heavy tasks may impact your system
 """
+
+console = Console()
 
 
 class Comment(BaseModel):
@@ -308,10 +314,10 @@ def cleanup_and_shutdown():
             file_path = current_directory / filename
             if file_path.exists():
                 file_path.unlink()
-                logger.info(f"Deleted {filename}.")
+                logger.info("Deleted %s.", filename)
                 print(f"Deleted {filename}.")
     except Exception as e:
-        logger.error(f"Exception during file cleanup: {e}")
+        logger.error("Exception during file cleanup: %s", e)
         print(f"Exception during file cleanup: {e}")
 
     logger.info("Cleanup complete.")
@@ -2578,17 +2584,20 @@ def fpk_cli_handle_build(args, session):
 
     if directory_name is None:
         logger.info("No directory name provided. Using cached directory if available.")
-        print("[INFO] No directory name provided. Using cached directory if available.")
+        console.print("[INFO] No directory name provided. Using cached directory if available.", style="bold yellow")
+
+    console.print("[INFO] Running build process...", style="bold green")
 
     try:
         asyncio.run(fpk_build(directory_name, use_euxo=args.use_euxo))
     except asyncio.CancelledError:
-        print("\nBuild process was cancelled.")
+        console.print("\n[INFO] Build process was cancelled.", style="bold yellow")
     except Exception as e:
-        logger.error(f"An error occurred during the build process: {e}")
-        print(f"[ERROR] An error occurred during the build process: {e}")
+        logger.error("An error occurred during the build process: %s", e)
+        console.print(f"[ERROR] An error occurred during the build process: {e}", style="bold red")
     finally:
         cleanup_and_shutdown()
+        console.print("[INFO] Cleanup completed and system shutdown initiated.", style="bold green")
 
 
 def fpk_cli_handle_create(args, session):
@@ -3432,109 +3441,110 @@ def setup_routes(app):
 
 def fpk_cli_handle_run(args, session):
     """Handle the 'run' command to start the FastAPI server."""
-    if not args.input:
-        logger.error("Please specify a flatpack for the run command.")
-        print("[ERROR] Please specify a flatpack for the run command.")
-        return
-
-    print(SECURITY_NOTICE)
-
-    while True:
-        acknowledgment = input(
-            "Do you agree to proceed? (YES/NO): ").strip().upper()
-        if acknowledgment == "YES":
-            break
-        elif acknowledgment == "NO":
-            print("You must agree to proceed. Exiting.")
+    try:
+        if not args.input:
+            logger.error("Please specify a flatpack for the run command.")
+            console.print("[ERROR] Please specify a flatpack for the run command.", style="bold red")
             return
-        else:
-            print("Please answer YES or NO.")
 
-    directory = Path(args.input).resolve()
-    allowed_directory = Path.cwd()
+        console.print(SECURITY_NOTICE, style="bold yellow")
 
-    if not directory.is_dir() or not directory.exists():
-        logger.error("The flatpack '%s' does not exist or is not a directory.", directory)
-        print(f"[ERROR] The flatpack '{directory}' does not exist or is not a directory.")
-        return
-
-    if not directory.is_relative_to(allowed_directory):
-        logger.error("The specified directory is not within allowed paths.")
-        print("[ERROR] The specified directory is not within allowed paths.")
-        return
-
-    build_dir = directory / 'build'
-    web_dir = directory / 'web'
-
-    if not build_dir.exists() or not web_dir.exists():
-        logger.warning("The 'build' or 'web' directory is missing in the flatpack.")
-        print("[WARNING] The 'build' or 'web' directory is missing in the flatpack.")
-        return
-
-    if args.share and not os.environ.get('NGROK_AUTHTOKEN'):
-        logger.error("NGROK_AUTHTOKEN environment variable is not set.")
-        print("[ERROR] NGROK_AUTHTOKEN environment variable is not set.")
-        return
-
-    token = generate_secure_token()
-    logger.info("API token generated and displayed to user.")
-    print(f"[INFO] Generated API token: {token}")
-    print("[INFO] Please save this API token securely. You will not be able to retrieve it again.")
-
-    try:
         while True:
-            confirmation = input("Have you saved the API token? Type 'YES' to continue: ").strip().upper()
-            if confirmation == 'YES':
+            acknowledgment = input("Do you agree to proceed? (YES/NO): ").strip().upper()
+            if acknowledgment == "YES":
                 break
-            print("[INFO] Please save the API token before continuing.")
-    except KeyboardInterrupt:
-        print("\n[INFO] Process interrupted. Exiting.")
-        return
+            elif acknowledgment == "NO":
+                console.print("You must agree to proceed. Exiting.", style="bold red")
+                return
+            else:
+                console.print("Please answer YES or NO.", style="bold yellow")
 
-    set_token(token)
+        directory = Path(args.input).resolve()
+        allowed_directory = Path.cwd()
 
-    app = initialize_fastapi_app()
-    setup_static_directory(app, str(directory))
+        if not directory.is_dir() or not directory.exists():
+            logger.error("The flatpack '%s' does not exist or is not a directory.", directory)
+            console.print(f"[ERROR] The flatpack '{directory}' does not exist or is not a directory.", style="bold red")
+            return
 
-    try:
-        host = "127.0.0.1"
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.bind((host, 0))
-        port = sock.getsockname()[1]
-        sock.close()
+        if not directory.is_relative_to(allowed_directory):
+            logger.error("The specified directory is not within allowed paths.")
+            console.print("[ERROR] The specified directory is not within allowed paths.", style="bold red")
+            return
 
-        logger.info("Selected available port: %d", port)
-        print(f"[INFO] Selected available port: {port}")
+        build_dir = directory / 'build'
+        web_dir = directory / 'web'
 
-        if args.share:
-            ngrok_module = lazy_import('ngrok')
-            listener = ngrok_module.forward(f"{host}:{port}", authtoken_from_env=True)
-            public_url = listener.url()
-            logger.info("Ingress established at %s", public_url)
-            print(f"[INFO] Ingress established at {public_url}")
+        if not build_dir.exists() or not web_dir.exists():
+            logger.warning("The 'build' or 'web' directory is missing in the flatpack.")
+            console.print("[WARNING] The 'build' or 'web' directory is missing in the flatpack.", style="bold yellow")
+            return
 
-        config = uvicorn.Config(app, host=host, port=port)
-        server = uvicorn.Server(config)
+        if args.share and not os.environ.get('NGROK_AUTHTOKEN'):
+            logger.error("NGROK_AUTHTOKEN environment variable is not set.")
+            console.print("[ERROR] NGROK_AUTHTOKEN environment variable is not set.", style="bold red")
+            return
 
-        background_tasks = BackgroundTasks()
-        background_tasks.add_task(run_scheduler)
+        token = generate_secure_token()
+        logger.info("API token generated and displayed to user.")
+        console.print(f"[INFO] Generated API token: {token}", style="bold green")
+        set_token(token)
 
-        server.run()
+        with console.status("[bold green]Initializing FastAPI server...", spinner="dots") as status:
+            app = initialize_fastapi_app()
+            setup_static_directory(app, str(directory))
+
+        try:
+            host = "127.0.0.1"
+
+            with console.status("[bold green]Finding available port...", spinner="dots"):
+                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                sock.bind((host, 0))
+                port = sock.getsockname()[1]
+                sock.close()
+
+            logger.info("Selected available port: %d", port)
+            console.print(f"[INFO] Selected available port: {port}", style="bold green")
+
+            public_url = None
+
+            if args.share:
+                with console.status("[bold green]Establishing ngrok ingress...", spinner="dots"):
+                    ngrok_module = lazy_import('ngrok')
+                    listener = ngrok_module.forward(f"{host}:{port}", authtoken_from_env=True)
+                    public_url = listener.url()
+                    logger.info("Ingress established at %s", public_url)
+                    console.print(f"[INFO] Ingress established at {public_url}", style="bold green")
+
+            config = uvicorn.Config(app, host=host, port=port)
+            server = uvicorn.Server(config)
+
+            background_tasks = BackgroundTasks()
+            background_tasks.add_task(run_scheduler)
+            server.run()
+
+        except KeyboardInterrupt:
+            logger.warning("Process interrupted by user (KeyboardInterrupt).")
+            console.print("[INFO] Process interrupted by user. Exiting.", style="bold yellow")
+
+        except Exception as e:
+            logger.exception("An unexpected error occurred during server run: %s", str(e))
+            console.print(f"[ERROR] An unexpected error occurred during server run: {e}", style="bold red")
+
+        finally:
+            if args.share and public_url:
+                try:
+                    ngrok_module = lazy_import('ngrok')
+                    ngrok_module.disconnect(public_url)
+                    logger.info("Disconnected ngrok ingress.")
+                    console.print("[INFO] Disconnected ngrok ingress.", style="bold green")
+                except Exception as e:
+                    logger.error("Failed to disconnect ngrok ingress: %s", str(e))
+                    console.print(f"[ERROR] Failed to disconnect ngrok ingress: {e}", style="bold red")
 
     except Exception as e:
-        logger.exception("An unexpected error occurred during server run: %s", str(e))
-        print("[ERROR] An unexpected error occurred during server run.")
-
-    finally:
-        if args.share:
-            try:
-                ngrok_module = lazy_import('ngrok')
-                ngrok_module.disconnect(public_url)
-                logger.info("Disconnected ngrok ingress.")
-                print("[INFO] Disconnected ngrok ingress.")
-            except Exception as e:
-                logger.error("Failed to disconnect ngrok ingress: %s", str(e))
-                print("[ERROR] Failed to disconnect ngrok ingress.")
+        logger.error("An unexpected error occurred in the run command: %s", str(e))
+        console.print(f"[ERROR] An unexpected error occurred in the run command: {e}", style="bold red")
 
 
 def fpk_cli_handle_set_api_key(args, session):

@@ -5,7 +5,7 @@ with open("README.md", "r") as f:
 
 setup(
     name="flatpack",
-    version="3.7.47",
+    version="3.7.48",
     license="Apache Software License (Apache-2.0)",
     packages=find_packages(),
     install_requires=[
@@ -24,6 +24,7 @@ setup(
         "pypdf==4.3.1",
         "python-multipart==0.0.9",
         "requests==2.32.3",
+        "rich==13.8.1",
         "sentence-transformers==3.0.1",
         "toml==0.10.2",
         "torch==2.4.1",
@@ -38,6 +39,6 @@ setup(
     entry_points={
         "console_scripts": [
             "flatpack=flatpack.main:main"
-        ],
+        ]
     }
 )

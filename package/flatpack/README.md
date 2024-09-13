@@ -108,6 +108,9 @@ Check out the [JLA - Compatibility Checker](https://joinup.ec.europa.eu/collecti
 - **[requests](https://pypi.org/project/requests/)**\
   Apache Software License (Apache 2.0) ([LICENSE](https://github.com/psf/requests/blob/main/LICENSE))
 
+- **[rich](https://pypi.org/project/rich/)**\
+  MIT License (MIT) ([LICENSE](https://github.com/Textualize/rich/blob/master/LICENSE))
+
 - **[sentence-transformers](https://pypi.org/project/sentence-transformers/)**\
   Apache Software License (Apache License 2.0) ([LICENSE](https://github.com/UKPLab/sentence-transformers/blob/master/LICENSE))
 
@@ -123,4 +126,4 @@ Check out the [JLA - Compatibility Checker](https://joinup.ec.europa.eu/collecti
 - **[zstandard](https://pypi.org/project/zstandard/)**\
   BSD License (BSD) ([LICENSE](https://github.com/indygreg/python-zstandard/blob/main/LICENSE))
 
-Last updated: 2024-09-08
+Last updated: 2024-09-13
