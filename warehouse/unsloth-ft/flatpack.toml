@@ -4,7 +4,7 @@
 version = "0.0.1"
 
 [environment]
-model_name = "test-cuda"
+model_name = "unsloth-ft"
 
 [[port]]
 external = 8080
@@ -42,19 +42,15 @@ tqdm = "4.66.5"
 # ]
 
 [[file]]
-from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/test-cuda/index.html"
-to_destination = "index.html"
-
-[[file]]
-from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/test-cuda/build.sh"
+from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/unsloth-ft/build.sh"
 to_destination = "build.sh"
 
 [[file]]
-from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/test-cuda/custom.sh"
+from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/unsloth-ft/custom.sh"
 to_destination = "custom.sh"
 
 [[file]]
-from_source = "https://raw.githubusercontent.com/romlingroup/flatpack-ai/main/warehouse/test-cuda/device.sh"
+from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/unsloth-ft/device.sh"
 to_destination = "device.sh"
 
 [[run]]
