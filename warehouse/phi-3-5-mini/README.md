@@ -1,10 +1,10 @@
-# phi-3-5-min
+# phi-3-5-mini
 
 [![PyPI - Version](https://img.shields.io/pypi/v/flatpack)](https://pypi.org/project/flatpack/)
 
 > **DISCLAIMER:** This repository contains our research. Verify the information and do your own research (DYOR). We assume no responsibility for accuracy or completeness.
 
-`phi-3-5-min` offers a Flatpack adaptation of [Phi-3.5-mini-instruct](https://huggingface.co/microsoft/Phi-3.5-mini-instruct) by Microsoft Research, licensed under the [MIT License](https://huggingface.co/microsoft/Phi-3.5-mini-instruct/blob/main/LICENSE).
+`phi-3-5-mini` offers a Flatpack adaptation of [Phi-3.5-mini-instruct](https://huggingface.co/microsoft/Phi-3.5-mini-instruct) by Microsoft Research, licensed under the [MIT License](https://huggingface.co/microsoft/Phi-3.5-mini-instruct/blob/main/LICENSE).
 
 > Flatpack is part of [Microsoft for Startups Founders Hub](https://foundershub.startups.microsoft.com).
 

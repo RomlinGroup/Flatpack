@@ -4,7 +4,7 @@
 version = "0.0.1"
 
 [environment]
-model_name = "phi-3-5-min"
+model_name = "phi-3-5-mini"
 
 [[port]]
 external = 8080
@@ -43,15 +43,15 @@ setup_commands = [
 ]
 
 [[file]]
-from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/phi-3-5-min/build.sh"
+from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/phi-3-5-mini/build.sh"
 to_destination = "build.sh"
 
 [[file]]
-from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/phi-3-5-min/custom.sh"
+from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/phi-3-5-mini/custom.sh"
 to_destination = "custom.sh"
 
 [[file]]
-from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/phi-3-5-min/device.sh"
+from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/phi-3-5-mini/device.sh"
 to_destination = "device.sh"
 
 [[run]]
