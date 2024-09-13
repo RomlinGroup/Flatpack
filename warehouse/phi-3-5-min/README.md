@@ -6,6 +6,8 @@
 
 `phi-3-5-min` offers a Flatpack adaptation of [Phi-3.5-mini-instruct](https://huggingface.co/microsoft/Phi-3.5-mini-instruct) by Microsoft Research, licensed under the [MIT License](https://huggingface.co/microsoft/Phi-3.5-mini-instruct/blob/main/LICENSE).
 
-We have no official affiliation or association with Microsoft Research, nor are we authorised or endorsed by them. For the official website of Microsoft Research, please visit [https://www.microsoft.com/en-us/research](https://www.microsoft.com/en-us/research).
+> Flatpack is part of [Microsoft for Startups Founders Hub](https://foundershub.startups.microsoft.com).
+
+For the official website of Microsoft Research, please visit [https://www.microsoft.com/en-us/research](https://www.microsoft.com/en-us/research).
 
 Flatpack is currently experimental. Please refrain from using it in production environments.
