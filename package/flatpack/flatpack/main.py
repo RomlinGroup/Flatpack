@@ -1270,36 +1270,6 @@ def fpk_check_ngrok_auth():
         print(f"[INFO] {message}")
 
 
-def fpk_colorize(text, color):
-    """Colorize a given text with the specified color.
-
-    Args:
-        text (str): The text to be colorized.
-        color (str): The color to apply to the text.
-
-    Returns:
-        str: Colorized text or the original text if the color is invalid.
-    """
-    colors = {
-        "blue": "\033[94m",
-        "cyan": "\033[96m",
-        "default": "\033[0m",
-        "green": "\033[92m",
-        "grey": "\033[90m",
-        "magenta": "\033[95m",
-        "red": "\033[91m",
-        "white": "\033[97m",
-        "yellow": "\033[93m"
-    }
-
-    if color not in colors:
-        logger.error("Invalid color '%s' provided. Returning the original text.", color)
-        print(f"[ERROR] Invalid color '{color}' provided. Returning the original text.")
-        return text
-
-    return colors[color] + text + colors["default"]
-
-
 def fpk_create(flatpack_name, repo_url=TEMPLATE_REPO_URL):
     """Create a new flatpack from a template repository.
 
@@ -1423,9 +1393,9 @@ def fpk_display_disclaimer(directory_name: str, local: bool):
     """
     disclaimer_template = """
 -----------------------------------------------------
-STOP AND READ BEFORE YOU PROCEED
+[bold red]STOP AND READ BEFORE YOU PROCEED[/bold red]
 https://pypi.org/project/flatpack
-Copyright 2024 Romlin Group AB
+[bold]Copyright 2024 Romlin Group AB[/bold]
 
 Licensed under the Apache License, Version 2.0
 (the "License"); you may NOT use this Python package
@@ -1441,29 +1411,29 @@ OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing
 permissions and limitations under the License.
 {please_note}
-To accept, type 'YES'. To decline, type 'NO'.
+[bold yellow]To accept, type 'YES'. To decline, type 'NO'.[/bold yellow]
 -----------------------------------------------------
     """
 
     if not local:
         please_note_content = f"""
-PLEASE NOTE: The flatpack you are about to unbox is
+[bold yellow]PLEASE NOTE:[/bold yellow] The flatpack you are about to unbox is
 governed by its own licenses and terms, separate from
 this software. You may find further details at:
 
 https://fpk.ai/w/{directory_name}
         """
-        please_note_colored = fpk_colorize(please_note_content, "yellow")
     else:
-        please_note_colored = ""
+        please_note_content = ""
 
     logger.info(
         "Displayed disclaimer for flatpack '%s' with local set to %s.",
         directory_name,
         local
     )
-    disclaimer_message = disclaimer_template.format(please_note=please_note_colored)
-    print(disclaimer_message)
+
+    disclaimer_message = disclaimer_template.format(please_note=please_note_content)
+    console.print(disclaimer_message)
 
 
 def fpk_download_and_extract_template(repo_url, dest_dir):
@@ -1818,30 +1788,26 @@ def fpk_unbox(directory_name: str, session: httpx.Client, local: bool = False) -
         bool: True if unboxing was successful, False otherwise.
     """
     if not fpk_valid_directory_name(directory_name):
-        message = f"Invalid directory name: '{directory_name}'."
         logger.error("Invalid directory name: '%s'", directory_name)
-        print(f"[ERROR] {message}")
+        print(f"[ERROR] Invalid directory name: '{directory_name}'.")
         return False
 
     flatpack_dir = Path.cwd() / directory_name
 
     if local:
         if not flatpack_dir.exists():
-            message = f"Local directory '{directory_name}' does not exist."
-            logger.error(message)
-            print(f"[ERROR] {message}")
+            logger.error("Local directory '%s' does not exist.", directory_name)
+            print(f"[ERROR] Local directory '{directory_name}' does not exist.")
             return False
         toml_path = flatpack_dir / 'flatpack.toml'
         if not toml_path.exists():
-            message = f"flatpack.toml not found in the specified directory: '{directory_name}'."
-            logger.error("%s", message)
-            print(f"[ERROR] {message}")
+            logger.error("flatpack.toml not found in the specified directory: '%s'.", directory_name)
+            print(f"[ERROR] flatpack.toml not found in the specified directory: '{directory_name}'.")
             return False
     else:
         if flatpack_dir.exists():
-            message = f"Directory '{directory_name}' already exists. Unboxing aborted to prevent conflicts."
-            logger.error(message)
-            print(f"[ERROR] {message}")
+            logger.error("Directory '%s' already exists. Unboxing aborted to prevent conflicts.", directory_name)
+            print(f"[ERROR] Directory '{directory_name}' already exists. Unboxing aborted to prevent conflicts.")
             return False
         flatpack_dir.mkdir(parents=True, exist_ok=True)
 
@@ -1854,24 +1820,28 @@ def fpk_unbox(directory_name: str, session: httpx.Client, local: bool = False) -
 
         index_html_url = f"{TEMPLATE_REPO_URL}/contents/index.html"
 
-        try:
-            response = session.get(index_html_url)
-            response.raise_for_status()
-            index_html_content = response.json()['content']
-            index_html_decoded = base64.b64decode(index_html_content).decode('utf-8')
+        response = session.get(index_html_url)
+        response.raise_for_status()
+        index_html_content = response.json()['content']
+        index_html_decoded = base64.b64decode(index_html_content).decode('utf-8')
 
-            index_html_path = web_dir / "index.html"
-            with open(index_html_path, 'w') as f:
-                f.write(index_html_decoded)
-            logger.info("Copied index.html to %s", index_html_path)
-            print(f"[INFO] Copied index.html to {index_html_path}")
-        except Exception as e:
-            logger.error("Failed to fetch or save index.html: %s", e)
-            print(f"[ERROR] Failed to fetch or save index.html: {e}")
+        index_html_path = web_dir / "index.html"
+        with open(index_html_path, 'w') as f:
+            f.write(index_html_decoded)
+        logger.info("Copied index.html to %s", index_html_path)
+        print(f"[INFO] Copied index.html to {index_html_path}")
+
+    except httpx.RequestError as e:
+        logger.error("Network error occurred while fetching index.html: %s", e)
+        print(f"[ERROR] Network error occurred while fetching index.html: {e}")
+        return False
+    except KeyError as e:
+        logger.error("Unexpected response structure when fetching index.html: %s", e)
+        print(f"[ERROR] Unexpected response structure when fetching index.html: {e}")
+        return False
     except Exception as e:
-        message = f"Failed to create /web directory: {e}"
-        logger.error(message)
-        print(f"[ERROR] {message}")
+        logger.error("Failed to create /web directory or fetch index.html: %s", e)
+        print(f"[ERROR] Failed to create /web directory or fetch index.html: {e}")
         return False
 
     build_dir = flatpack_dir / "build"
@@ -1884,12 +1854,13 @@ def fpk_unbox(directory_name: str, session: httpx.Client, local: bool = False) -
         fpk_url = f"{BASE_URL}/{directory_name}/{directory_name}.fpk"
         try:
             response = session.head(fpk_url)
-            if response.status_code != 200:
-                logger.error(".fpk file does not exist at %s", fpk_url)
-                print(f"[ERROR] .fpk file does not exist at {fpk_url}")
-                return False
+            response.raise_for_status()
             logger.info(".fpk file found at %s", fpk_url)
             print(f"[INFO] .fpk file found at {fpk_url}")
+        except httpx.HTTPStatusError:
+            logger.error(".fpk file does not exist at %s", fpk_url)
+            print(f"[ERROR] .fpk file does not exist at {fpk_url}")
+            return False
         except httpx.RequestError as e:
             logger.error("Network error occurred while checking .fpk file: %s", e)
             print(f"[ERROR] Network error occurred while checking .fpk file: {e}")
@@ -1902,8 +1873,9 @@ def fpk_unbox(directory_name: str, session: httpx.Client, local: bool = False) -
         fpk_path = build_dir / f"{directory_name}.fpk"
 
         try:
+            download_response = session.get(fpk_url)
+            download_response.raise_for_status()
             with open(fpk_path, "wb") as fpk_file:
-                download_response = session.get(fpk_url)
                 fpk_file.write(download_response.content)
             logger.info("Downloaded .fpk file to %s", fpk_path)
             print(f"[INFO] Downloaded .fpk file to {fpk_path}")
@@ -1931,22 +1903,21 @@ def fpk_unbox(directory_name: str, session: httpx.Client, local: bool = False) -
             print(f"[ERROR] flatpack.toml not found in {build_dir}.")
             return False
 
-    toml_content = toml_path.read_text()
-    temp_toml_path.write_text(toml_content)
-
-    bash_script_content = parse_toml_to_venv_script(str(temp_toml_path), env_name=flatpack_dir)
-    bash_script_path = build_dir / 'flatpack.sh'
-    bash_script_path.write_text(bash_script_content)
-
-    temp_toml_path.unlink()
-
-    message = f"Unboxing {directory_name}..."
-    logger.info("%s", message)
-    print(f"[INFO] {message}")
-
-    safe_script_path = shlex.quote(str(bash_script_path.resolve()))
-
     try:
+        toml_content = toml_path.read_text()
+        temp_toml_path.write_text(toml_content)
+
+        bash_script_content = parse_toml_to_venv_script(str(temp_toml_path), env_name=flatpack_dir)
+        bash_script_path = build_dir / 'flatpack.sh'
+        bash_script_path.write_text(bash_script_content)
+
+        temp_toml_path.unlink()
+
+        logger.info("Unboxing %s...", directory_name)
+        print(f"[INFO] Unboxing {directory_name}...")
+
+        safe_script_path = shlex.quote(str(bash_script_path.resolve()))
+
         subprocess.run(['/bin/bash', safe_script_path], check=True)
 
         logger.info("All done!")
@@ -1960,17 +1931,16 @@ def fpk_unbox(directory_name: str, session: httpx.Client, local: bool = False) -
         return True
 
     except subprocess.CalledProcessError as e:
-        message = f"Failed to execute the bash script: {e}"
-        logger.error(message)
-        print(f"[ERROR] {message}")
+        logger.error("Failed to execute the bash script: %s", e)
+        print(f"[ERROR] Failed to execute the bash script: {e}")
         return False
     except Exception as e:
-        message = f"An unexpected error occurred: {e}"
-        logger.error(message)
-        print(f"[ERROR] {message}")
+        logger.error("An unexpected error occurred: %s", e)
+        print(f"[ERROR] An unexpected error occurred: {e}")
         return False
     finally:
-        bash_script_path.unlink()
+        if bash_script_path.exists():
+            bash_script_path.unlink()
 
 
 def fpk_valid_directory_name(name: str) -> bool:
@@ -3617,15 +3587,17 @@ def fpk_cli_handle_unbox(args, session):
     """
     if not args.input:
         logger.error("No flatpack specified for the unbox command.")
-        print("[ERROR] Please specify a flatpack for the unbox command.")
+        console.print("[ERROR] Please specify a flatpack for the unbox command.", style="bold red")
         return
 
     directory_name = args.input
     existing_dirs = fpk_fetch_github_dirs(session)
 
+    console.print("[INFO] Running unbox process...", style="bold green")
+
     if directory_name not in existing_dirs and not args.local:
         logger.error("The flatpack '%s' does not exist.", directory_name)
-        print(f"[ERROR] The flatpack '{directory_name}' does not exist.")
+        console.print(f"[ERROR] The flatpack '{directory_name}' does not exist.", style="bold red")
         return
 
     fpk_display_disclaimer(directory_name, local=args.local)
@@ -3636,37 +3608,40 @@ def fpk_cli_handle_unbox(args, session):
             break
         if user_response == "NO":
             logger.info("Installation aborted by user.")
-            print("[INFO] Installation aborted by user.")
+            console.print("[INFO] Installation aborted by user.", style="bold yellow")
             return
         logger.error("Invalid input from user. Expected 'YES' or 'NO'.")
-        print("[ERROR] Invalid input. Please type 'YES' to accept or 'NO' to decline.")
+        console.print("[ERROR] Invalid input. Please type 'YES' to accept or 'NO' to decline.", style="bold red")
 
     if args.local:
         local_directory_path = Path(directory_name)
+
         if not local_directory_path.exists() or not local_directory_path.is_dir():
             logger.error("Local directory does not exist: '%s'.", directory_name)
-            print(f"[ERROR] Local directory does not exist: '{directory_name}'.")
+            console.print(f"[ERROR] Local directory does not exist: '{directory_name}'.", style="bold red")
             return
+
         toml_path = local_directory_path / 'flatpack.toml'
+
         if not toml_path.exists():
             logger.error("flatpack.toml not found in the specified directory: '%s'.", directory_name)
-            print(f"[ERROR] flatpack.toml not found in '{directory_name}'.")
+            console.print(f"[ERROR] flatpack.toml not found in '{directory_name}'.", style="bold red")
             return
 
     logger.info("Directory name resolved to: '%s'", directory_name)
-    print(f"[INFO] Directory name resolved to: '{directory_name}'")
+    console.print(f"[INFO] Directory name resolved to: '{directory_name}'", style="bold green")
 
     try:
         unbox_result = fpk_unbox(directory_name, session, local=args.local)
         if unbox_result:
             logger.info("Unboxed flatpack '%s' successfully.", directory_name)
-            print(f"[INFO] Unboxed flatpack '{directory_name}' successfully.")
+            console.print(f"[INFO] Unboxed flatpack '{directory_name}' successfully.", style="bold green")
         else:
             logger.info("Unboxing of flatpack '%s' was aborted.", directory_name)
-            print(f"[INFO] Unboxing of flatpack '{directory_name}' was aborted.")
+            console.print(f"[INFO] Unboxing of flatpack '{directory_name}' was aborted.", style="bold yellow")
     except Exception as e:
         logger.error("Failed to unbox flatpack '%s': %s", directory_name, e)
-        print(f"[ERROR] Failed to unbox flatpack '{directory_name}': {e}")
+        console.print(f"[ERROR] Failed to unbox flatpack '{directory_name}': {e}", style="bold red")
 
 
 def fpk_cli_handle_update(args, session):
