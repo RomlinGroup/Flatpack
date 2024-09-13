@@ -2597,7 +2597,6 @@ def fpk_cli_handle_build(args, session):
         console.print(f"[ERROR] An error occurred during the build process: {e}", style="bold red")
     finally:
         cleanup_and_shutdown()
-        console.print("[INFO] Cleanup completed and system shutdown initiated.", style="bold green")
 
 
 def fpk_cli_handle_create(args, session):
