@@ -29,6 +29,7 @@ sox = "*"
 wget = "*"
 
 [packages.python]
+flatpack = "3.7.53"
 numpy = "2.0.1"
 tiktoken = "0.7.0"
 tqdm = "4.66.5"
