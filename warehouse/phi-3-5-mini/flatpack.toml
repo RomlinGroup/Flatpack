@@ -29,9 +29,12 @@ sox = "*"
 wget = "*"
 
 [packages.python]
+accelerate = "0.31.0"
+flash_attn = "2.5.8"
 numpy = "2.0.1"
 tiktoken = "0.7.0"
 tqdm = "4.66.5"
+transformers = "4.43.0"
 
 # [[git]]
 # from_source = "{{git_source_url}}"
