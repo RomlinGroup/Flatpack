@@ -121,7 +121,7 @@ flatpack run <flatpack_name>
 
 ### Share your environment online
 
-> **WARNING:** Sharing your environment online exposes it to the internet. Understand the security risks, as sensitive data may be exposed. You assume all responsibility. We are not liable for data breaches or unauthorised access.
+> **DISCLAIMER:** Sharing your environment online exposes it to the internet and may result in the exposure of sensitive data. You are solely responsible for managing and understanding the security risks. We are not responsible for any data breaches or unauthorised access resulting from using the --share option.
 
 ```bash
 export NGROK_AUTHTOKEN=<your_ngrok_token>
