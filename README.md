@@ -115,7 +115,7 @@ flatpack create <flatpack_name>
 
 ### Run the local development environment
 
-This environment runs code with your permission, meaning it can connect to the Internet, install new software, which might be risky, read and change files on your computer, and slow down your computer if it does big tasks. Be careful about what code you run here.
+> This environment runs code with your permission, meaning it can connect to the Internet, install new software, which might be risky, read and change files on your computer, and slow down your computer if it does big tasks. Be careful about what code you run here.
 
 ```bash
 flatpack run <flatpack_name>
@@ -123,7 +123,7 @@ flatpack run <flatpack_name>
 
 ### Share your environment online
 
-Sharing your environment online exposes it to the Internet and may result in the exposure of sensitive data. You are solely responsible for managing and understanding the security risks. We are not responsible for data breaches or unauthorized access from the --share option.
+> Sharing your environment online exposes it to the Internet and may result in the exposure of sensitive data. You are solely responsible for managing and understanding the security risks. We are not responsible for data breaches or unauthorized access from the --share option.
 
 ```bash
 export NGROK_AUTHTOKEN=<your_ngrok_token>
