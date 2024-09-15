@@ -1330,6 +1330,7 @@ def fpk_download_and_extract_template(repo_url, dest_dir):
         os.rename(extracted_dir, template_dir)
 
         index_html_path = os.path.join(template_dir, "index.html")
+
         if os.path.exists(index_html_path):
             os.remove(index_html_path)
 
@@ -1644,9 +1645,20 @@ def fpk_unbox(directory_name: str, session: httpx.Client, local: bool = False) -
         index_html_decoded = base64.b64decode(index_html_content).decode('utf-8')
 
         index_html_path = web_dir / "index.html"
+        app_css_path = web_dir / "app.css"
+        app_js_path = web_dir / "app.js"
+
         with open(index_html_path, 'w') as f:
             f.write(index_html_decoded)
         logger.info("Copied index.html to %s", index_html_path)
+
+        with open(app_css_path, 'w') as f:
+            f.write(app_css_decoded)
+        logger.info("Copied app.css to %s", app_css_path)
+
+        with open(app_js_path, 'w') as f:
+            f.write(app_js_decoded)
+        logger.info("Copied app.js to %s", app_js_path)
 
     except httpx.RequestError as e:
         logger.error("Network error occurred while fetching index.html: %s", e)
