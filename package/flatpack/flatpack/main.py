@@ -502,7 +502,7 @@ def create_security_notice():
 
 
 def create_warning_message():
-    warning_text = "Sharing your environment online exposes it to the Internet and may result in the exposure of sensitive data. You are solely responsible for managing and understanding the security risks. We are not responsible for data breaches or unauthorized access from the --share option."
+    warning_text = "Sharing your environment online exposes it to the Internet and may result in the exposure of sensitive data. You are solely responsible for managing and understanding the security risks. We are not responsible for data breaches or unauthorised access from the --share option."
 
     warning_message = Text()
     warning_message.append(warning_text, style="bold red")
