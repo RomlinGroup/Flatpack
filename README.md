@@ -113,6 +113,21 @@ Here is how to create a local and private flatpack using [RomlinGroup/template](
 flatpack create <flatpack_name>
 ```
 
+### Run the local development environment
+
+```bash
+flatpack run <flatpack_name>
+```
+
+### Share your environment online
+
+Sharing your environment online exposes it to the Internet. Only use this option if you fully understand the security risks. Sensitive data could be exposed, and unauthorized access is possible if it is not properly secured.
+
+```bash
+export NGROK_AUTHTOKEN=<your_ngrok_token>
+flatpack run <flatpack_name> --share
+```
+
 ## AgentManager
 
 ```bash
