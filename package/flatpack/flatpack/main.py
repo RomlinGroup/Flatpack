@@ -3076,6 +3076,7 @@ def fpk_cli_handle_run(args, session):
     token = generate_secure_token()
     logger.info("API token generated and displayed to user.")
     console.print(f"Generated API token: {token}", style="bold green")
+
     set_token(token)
 
     console.print("")
