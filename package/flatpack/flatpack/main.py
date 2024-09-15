@@ -28,6 +28,7 @@ from importlib.metadata import version
 from io import BytesIO
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
+from textwrap import wrap
 from typing import List, Optional, Union
 from zipfile import ZipFile
 
@@ -41,6 +42,7 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.syntax import Syntax
+from rich.text import Text
 
 from .agent_manager import AgentManager
 from .database_manager import DatabaseManager
@@ -102,17 +104,6 @@ VALIDATION_ATTEMPTS = 0
 
 build_in_progress = False
 shutdown_requested = False
-
-SECURITY_NOTICE = """
-SECURITY NOTICE
-
-This environment runs code with your permissions:
-
-1. Network requests are allowed
-2. Installing packages may pose risks
-3. Code can access local data and files
-4. Resource-heavy tasks may impact your system
-"""
 
 console = Console()
 
@@ -228,7 +219,6 @@ async def check_and_run_schedules():
     global SERVER_START_TIME, db_manager
 
     if not db_manager:
-        logger.error("Database manager is not initialized.")
         return
 
     now = datetime.now(timezone.utc)
@@ -500,6 +490,24 @@ def create_venv(venv_dir: str):
         logger.error("An unexpected error occurred while creating virtual environment: %s", e)
         console.print(
             f"[bold red]ERROR:[/bold red] An unexpected error occurred while creating virtual environment: {e}")
+
+
+def create_security_notice():
+    security_text = "This environment runs code with your permission, meaning it can connect to the Internet, install new software, which might be risky, read and change files on your computer, and slow down your computer if it does big tasks. Be careful about what code you run here."
+
+    security_message = Text()
+    security_message.append(security_text, style="bold yellow")
+
+    return security_message
+
+
+def create_warning_message():
+    warning_text = "Sharing your environment online exposes it to the Internet and may result in the exposure of sensitive data. You are solely responsible for managing and understanding the security risks. We are not responsible for data breaches or unauthorized access from the --share option."
+
+    warning_message = Text()
+    warning_message.append(warning_text, style="bold red")
+
+    return warning_message
 
 
 def decompress_data(input_path, output_path, allowed_dir=None):
@@ -2987,15 +2995,28 @@ def setup_routes(app):
 
 def fpk_cli_handle_run(args, session):
     """Handle the 'run' command to start the FastAPI server."""
+    global console
+
     if not args.input:
         logger.error("Please specify a flatpack for the run command.")
         console.print("Please specify a flatpack for the run command.", style="bold red")
         return
 
-    console.print(SECURITY_NOTICE, style="bold yellow")
+    security_message = create_security_notice()
+
+    console.print(
+        Panel(
+            security_message,
+            title="[bold yellow]SECURITY NOTICE[/bold yellow]",
+            border_style="bold yellow",
+            expand=False,
+            padding=(1, 1),
+        )
+    )
 
     while True:
-        acknowledgment = input("Do you agree to proceed? (YES/NO): ").strip().upper()
+        acknowledgment = console.input("[bold yellow]Do you agree to proceed? (YES/NO):[/bold yellow] ").strip().upper()
+
         if acknowledgment == "YES":
             break
         elif acknowledgment == "NO":
@@ -3025,15 +3046,39 @@ def fpk_cli_handle_run(args, session):
         console.print("The 'build' or 'web' directory is missing in the flatpack.", style="bold yellow")
         return
 
-    if args.share and not os.environ.get('NGROK_AUTHTOKEN'):
-        logger.error("NGROK_AUTHTOKEN environment variable is not set.")
-        console.print("NGROK_AUTHTOKEN environment variable is not set.", style="bold red")
-        return
+    console.print("")
+
+    if args.share:
+        warning_message = create_warning_message()
+
+        console.print(
+            Panel(
+                warning_message,
+                title="[bold red]WARNING[/bold red]",
+                border_style="bold red",
+                expand=False,
+                padding=(1, 1),
+            )
+        )
+
+        while True:
+            user_response = console.input(
+                "[bold red]Do you accept these risks? (YES/NO):[/bold red] "
+            ).strip().upper()
+            if user_response == "YES":
+                break
+            elif user_response == "NO":
+                console.print("[bold red]Sharing aborted. Exiting.[/bold red]")
+                return
+            else:
+                console.print("[bold red]Please answer YES or NO.[/bold red]")
 
     token = generate_secure_token()
     logger.info("API token generated and displayed to user.")
     console.print(f"Generated API token: {token}", style="bold green")
     set_token(token)
+
+    console.print("")
 
     with console.status("[bold green]Initializing FastAPI server...", spinner="dots") as status:
         app = initialize_fastapi_app()
@@ -3046,9 +3091,6 @@ def fpk_cli_handle_run(args, session):
         sock.bind((host, 0))
         port = sock.getsockname()[1]
         sock.close()
-
-    logger.info("Selected available port: %d", port)
-    console.print(f"Selected available port: {port}", style="bold green")
 
     public_url = None
 
