@@ -535,12 +535,14 @@ def decompress_data(input_path, output_path, allowed_dir=None):
 
 def ensure_database_initialized():
     global db_manager, flatpack_directory
-
     if db_manager is None:
-        initialize_database_manager(str(flatpack_directory))
-
-    if db_manager is None:
-        raise ValueError("Database manager is not initialized")
+        if flatpack_directory is None:
+            raise ValueError("flatpack_directory is not set")
+        db_path = os.path.join(flatpack_directory, 'build', 'flatpack.db')
+        logger.info(f"Initializing database at {db_path}")
+        db_manager = DatabaseManager(db_path)
+        db_manager.initialize_database()
+        logger.info("Database initialized successfully")
 
 
 def escape_content_parts(content: str) -> str:
@@ -2741,15 +2743,11 @@ def setup_routes(app):
         """Add a new comment to the database."""
         ensure_database_initialized()
         try:
-            comment_id = db_manager.add_comment(comment.block_id, comment.selected_text, comment.comment)
-            return JSONResponse(content={
-                "message": "Comment added successfully.",
-                "comment_id": comment_id,
-                "created_at": datetime.utcnow().isoformat()
-            }, status_code=201)
+            db_manager.add_comment(comment.block_id, comment.selected_text, comment.comment)
+            return JSONResponse(content={"message": "Comment added successfully."}, status_code=201)
         except Exception as e:
-            logger.error("An error occurred while adding the comment: %s", e)
-            raise HTTPException(status_code=500, detail=f"An error occurred while adding the comment: {e}")
+            logger.error(f"Error adding comment: {str(e)}", exc_info=True)
+            raise HTTPException(status_code=500, detail=f"An error occurred while adding the comment: {str(e)}")
 
     @app.delete("/api/comments/{comment_id}")
     async def delete_comment(comment_id: int, token: str = Depends(authenticate_token)):

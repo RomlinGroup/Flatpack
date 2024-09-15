@@ -123,7 +123,7 @@ class DatabaseManager:
 
     def delete_comment(self, comment_id: int) -> bool:
         query = "DELETE FROM flatpack_comments WHERE id = ?"
-        self._execute_query(query, (comment_id,))
+        self._execute_query(query, (comment_id))
         return True
 
     # Hook operations
@@ -155,7 +155,7 @@ class DatabaseManager:
 
     def delete_hook(self, hook_id: int) -> bool:
         query = "DELETE FROM flatpack_hooks WHERE id = ?"
-        self._execute_query(query, (hook_id,))
+        self._execute_query(query, (hook_id))
         return True
 
     # Schedule operations
@@ -194,7 +194,7 @@ class DatabaseManager:
 
     def delete_schedule(self, schedule_id: int) -> bool:
         query = "DELETE FROM flatpack_schedule WHERE id = ?"
-        self._execute_query(query, (schedule_id,))
+        self._execute_query(query, (schedule_id))
         return True
 
     def delete_schedule_datetime(self, schedule_id: int, datetime_index: int) -> bool:
@@ -221,10 +221,10 @@ class DatabaseManager:
 
     def get_metadata(self, key: str) -> Optional[str]:
         query = "SELECT value FROM flatpack_metadata WHERE key = ?"
-        result = self._fetch_one(query, (key,))
+        result = self._fetch_one(query, (key))
         return result[0] if result else None
 
     def delete_metadata(self, key: str) -> bool:
         query = "DELETE FROM flatpack_metadata WHERE key = ?"
-        self._execute_query(query, (key,))
+        self._execute_query(query, (key))
         return True
