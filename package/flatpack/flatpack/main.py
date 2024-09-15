@@ -1637,37 +1637,27 @@ def fpk_unbox(directory_name: str, session: httpx.Client, local: bool = False) -
         web_dir.mkdir(parents=True, exist_ok=True)
         logger.info("Created /web directory: %s", web_dir)
 
-        index_html_url = f"{TEMPLATE_REPO_URL}/contents/index.html"
+        files_to_download = ['index.html', 'app.css', 'app.js']
+        for file in files_to_download:
+            file_url = f"{TEMPLATE_REPO_URL}/contents/{file}"
+            response = session.get(file_url)
+            response.raise_for_status()
+            file_content = response.json()['content']
+            file_decoded = base64.b64decode(file_content).decode('utf-8')
 
-        response = session.get(index_html_url)
-        response.raise_for_status()
-        index_html_content = response.json()['content']
-        index_html_decoded = base64.b64decode(index_html_content).decode('utf-8')
-
-        index_html_path = web_dir / "index.html"
-        app_css_path = web_dir / "app.css"
-        app_js_path = web_dir / "app.js"
-
-        with open(index_html_path, 'w') as f:
-            f.write(index_html_decoded)
-        logger.info("Copied index.html to %s", index_html_path)
-
-        with open(app_css_path, 'w') as f:
-            f.write(app_css_decoded)
-        logger.info("Copied app.css to %s", app_css_path)
-
-        with open(app_js_path, 'w') as f:
-            f.write(app_js_decoded)
-        logger.info("Copied app.js to %s", app_js_path)
+            file_path = web_dir / file
+            with open(file_path, 'w') as f:
+                f.write(file_decoded)
+            logger.info("Downloaded and saved %s to %s", file, file_path)
 
     except httpx.RequestError as e:
-        logger.error("Network error occurred while fetching index.html: %s", e)
+        logger.error("Network error occurred while fetching files: %s", e)
         return False
     except KeyError as e:
-        logger.error("Unexpected response structure when fetching index.html: %s", e)
+        logger.error("Unexpected response structure when fetching files: %s", e)
         return False
     except Exception as e:
-        logger.error("Failed to create /web directory or fetch index.html: %s", e)
+        logger.error("Failed to create /web directory or fetch files: %s", e)
         return False
 
     build_dir = flatpack_dir / "build"
