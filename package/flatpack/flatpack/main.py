@@ -3066,6 +3066,7 @@ def fpk_cli_handle_run(args, session):
                 "[bold red]Do you accept these risks? (YES/NO):[/bold red] "
             ).strip().upper()
             if user_response == "YES":
+                console.print("")
                 break
             elif user_response == "NO":
                 console.print("[bold red]Sharing aborted. Exiting.[/bold red]")
@@ -3100,8 +3101,10 @@ def fpk_cli_handle_run(args, session):
             ngrok_module = lazy_import('ngrok')
             listener = ngrok_module.forward(f"{host}:{port}", authtoken_from_env=True)
             public_url = listener.url()
+
             logger.info("Ingress established at %s", public_url)
             console.print(f"Ingress established at {public_url}", style="bold green")
+            console.print("")
 
     config = uvicorn.Config(app, host=host, port=port)
     server = uvicorn.Server(config)
