@@ -194,6 +194,9 @@ flatpack compress <hf_model_name> --token <hf_token>
 ## Flatpack (FPK)
 
 - [template](warehouse/template)
+  - app.css
+  - app.js
+  - index.html
   - flatpack.toml
   - README.md
   - build.sh
