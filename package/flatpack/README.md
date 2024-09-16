@@ -84,6 +84,9 @@ Check out the [JLA - Compatibility Checker](https://joinup.ec.europa.eu/collecti
 - **[huggingface-hub](https://pypi.org/project/huggingface-hub/)**\
   Apache Software License (Apache) ([LICENSE](https://github.com/huggingface/huggingface_hub/blob/main/LICENSE))
 
+- **[itsdangerous](https://pypi.org/project/itsdangerous/)**\
+  BSD License ([LICENSE](https://github.com/pallets/itsdangerous/blob/main/LICENSE.txt))
+
 - **[ngrok](https://pypi.org/project/ngrok/)**\
   MIT License (MIT OR Apache-2.0) ([LICENSE](https://github.com/ngrok/ngrok-python/blob/main/LICENSE-APACHE))
 
@@ -126,4 +129,4 @@ Check out the [JLA - Compatibility Checker](https://joinup.ec.europa.eu/collecti
 - **[zstandard](https://pypi.org/project/zstandard/)**\
   BSD License (BSD) ([LICENSE](https://github.com/indygreg/python-zstandard/blob/main/LICENSE))
 
-Last updated: 2024-09-13
+Last updated: 2024-09-16

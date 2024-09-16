@@ -5,7 +5,7 @@ with open("README.md", "r") as f:
 
 setup(
     name="flatpack",
-    version="3.7.61",
+    version="3.7.62",
     license="Apache Software License (Apache-2.0)",
     packages=find_packages(),
     install_requires=[
@@ -16,6 +16,7 @@ setup(
         "hnswlib==0.8.0",
         "httpx==0.27.2",
         "huggingface-hub==0.24.6",
+        "itsdangerous==2.2.0",
         "ngrok==1.4.0",
         "nltk==3.9.1",
         "prettytable==3.11.0",

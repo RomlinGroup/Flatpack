@@ -37,12 +37,17 @@ import requests
 import toml
 import uvicorn
 
+from fastapi import Depends, Form, Header, HTTPException, Request
+from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi.security import APIKeyCookie
+from itsdangerous import BadSignature, SignatureExpired, TimestampSigner
 from pydantic import BaseModel
 from rich.console import Console
 from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.syntax import Syntax
 from rich.text import Text
+from starlette.middleware.sessions import SessionMiddleware
 
 from .agent_manager import AgentManager
 from .database_manager import DatabaseManager
@@ -102,6 +107,13 @@ SERVER_START_TIME = None
 MAX_ATTEMPTS = 5
 VALIDATION_ATTEMPTS = 0
 
+CSRF_EXEMPT_PATHS = [
+    "/",
+    "/csrf-token",
+    "/favicon.ico",
+    "/static"
+]
+
 build_in_progress = False
 shutdown_requested = False
 
@@ -128,6 +140,7 @@ class Hook(BaseModel):
     hook_type: str
 
 
+csrf_cookie = APIKeyCookie(name="csrf_token")
 db_manager = None
 
 
@@ -510,6 +523,24 @@ def create_warning_message():
     return warning_message
 
 
+async def csrf_protect(request: Request):
+    csrf_token_cookie = request.cookies.get("csrf_token")
+    csrf_token_header = request.headers.get("X-CSRF-Token")
+
+    if not csrf_token_cookie or not csrf_token_header:
+        raise HTTPException(status_code=403, detail="CSRF token missing")
+
+    try:
+        unsigned_token = request.app.state.signer.unsign(csrf_token_cookie, max_age=3600)
+        timestamp, token = unsigned_token.decode().split(':')
+
+        if not secrets.compare_digest(token, csrf_token_header):
+            raise HTTPException(status_code=403, detail="CSRF token invalid")
+
+    except (SignatureExpired, BadSignature):
+        raise HTTPException(status_code=403, detail="CSRF token expired or invalid")
+
+
 def decompress_data(input_path, output_path, allowed_dir=None):
     try:
         abs_input_path = validate_file_path(input_path, allowed_dir=allowed_dir)
@@ -576,6 +607,12 @@ def escape_special_chars(content: str) -> str:
     return content.replace('"', '\\"')
 
 
+def generate_csrf_token():
+    token = secrets.token_urlsafe(32)
+    timestamp = str(int(time.time()))
+    return f"{timestamp}:{token}"
+
+
 def generate_secure_token(length=32):
     """Generate a secure token of the specified length.
 
@@ -599,14 +636,21 @@ def get_all_hooks_from_database():
         raise HTTPException(status_code=500, detail=f"An error occurred while fetching hooks: {e}")
 
 
+def get_secret_key():
+    return secrets.token_urlsafe(32)
+
+
 def get_token() -> Optional[str]:
     """Retrieve the token from the configuration file."""
     config = load_config()
     return config.get('token')
 
 
-def initialize_fastapi_app():
+def initialize_fastapi_app(secret_key):
     app = FastAPI()
+
+    app.add_middleware(SessionMiddleware, secret_key=secret_key)
+    app.state.signer = TimestampSigner(secret_key)
 
     uvicorn_logger = logging.getLogger("uvicorn.access")
     uvicorn_logger.addFilter(EndpointFilter())
@@ -2631,8 +2675,33 @@ def setup_routes(app):
     async def startup_event():
         global SERVER_START_TIME
         SERVER_START_TIME = datetime.now(timezone.utc)
+        app.state.csrf_token_base = secrets.token_urlsafe(32)
         logger.info("Server started at %s. Cooldown period: %s", SERVER_START_TIME, COOLDOWN_PERIOD)
+        logger.info("CSRF token base generated for this session: %s", app.state.csrf_token_base)
         asyncio.create_task(run_scheduler())
+
+    @app.middleware("http")
+    async def csrf_middleware(request: Request, call_next):
+        if request.method != "GET" and not any(request.url.path.startswith(path) for path in CSRF_EXEMPT_PATHS):
+            await csrf_protect(request)
+        return await call_next(request)
+
+    @app.get("/csrf-token")
+    async def get_csrf_token(request: Request, response: Response):
+        csrf_token = secrets.token_urlsafe(32)
+        timestamp = str(int(time.time()))
+        token_with_timestamp = f"{timestamp}:{csrf_token}"
+        signed_token = request.app.state.signer.sign(token_with_timestamp).decode()
+
+        response.set_cookie(
+            key="csrf_token",
+            value=signed_token,
+            httponly=True,
+            samesite="strict",
+            secure=False
+        )
+
+        return {"csrf_token": csrf_token}
 
     @app.get("/favicon.ico", include_in_schema=False)
     async def favicon():
@@ -2641,7 +2710,150 @@ def setup_routes(app):
             return FileResponse(favicon_path)
         return Response(status_code=204)
 
-    @app.get("/load_file")
+    @app.post("/test-csrf", dependencies=[Depends(csrf_protect)])
+    async def test_csrf(request: Request):
+        return {"message": "CSRF check passed successfully!"}
+
+    @app.get("/test_db")
+    async def test_db():
+        try:
+            initialize_database_manager(str(flatpack_directory))
+            db_manager._execute_query("SELECT 1")
+
+            return {"message": "Database connection successful"}
+        except sqlite3.Error as e:
+            logger.error("Database connection failed: %s", e)
+            return {"message": f"Database connection failed: {e}"}
+
+    @app.get("/api/build-status", dependencies=[Depends(csrf_protect)])
+    async def get_build_status(token: str = Depends(authenticate_token)):
+        """Get the current build status."""
+        if not flatpack_directory:
+            raise HTTPException(status_code=500, detail="Flatpack directory is not set")
+
+        status_file = os.path.join(flatpack_directory, 'build', 'build_status.json')
+
+        if os.path.exists(status_file):
+            with open(status_file, 'r') as f:
+                status_data = json.load(f)
+            return JSONResponse(content=status_data)
+        return JSONResponse(content={"status": "no_builds"})
+
+    @app.post("/api/clear-build-status", dependencies=[Depends(csrf_protect)])
+    async def clear_build_status(token: str = Depends(authenticate_token)):
+        """Clear the current build status."""
+        if not flatpack_directory:
+            raise HTTPException(status_code=500, detail="Flatpack directory is not set")
+
+        status_file = os.path.join(flatpack_directory, 'build', 'build_status.json')
+
+        try:
+            if os.path.exists(status_file):
+                os.remove(status_file)
+            return JSONResponse(content={"message": "Build status cleared successfully."})
+        except Exception as e:
+            logger.error("Error clearing build status: %s", e)
+            raise HTTPException(status_code=500, detail=f"Error clearing build status: {e}")
+
+    @app.post("/api/comments", dependencies=[Depends(csrf_protect)])
+    async def add_comment(comment: Comment, token: str = Depends(authenticate_token)):
+        """Add a new comment to the database."""
+        ensure_database_initialized()
+        try:
+            db_manager.add_comment(comment.block_id, comment.selected_text, comment.comment)
+            return JSONResponse(content={"message": "Comment added successfully."}, status_code=201)
+        except Exception as e:
+            logger.error(f"Error adding comment: {str(e)}", exc_info=True)
+            raise HTTPException(status_code=500, detail=f"An error occurred while adding the comment: {str(e)}")
+
+    @app.delete("/api/comments/{comment_id}", dependencies=[Depends(csrf_protect)])
+    async def delete_comment(comment_id: int, token: str = Depends(authenticate_token)):
+        """Delete a comment from the database by its ID."""
+        ensure_database_initialized()
+        try:
+            if db_manager.delete_comment(comment_id):
+                return JSONResponse(content={"message": "Comment deleted successfully."}, status_code=200)
+            else:
+                raise HTTPException(status_code=404, detail="Comment not found")
+        except Exception as e:
+            logger.error("An error occurred while deleting the comment: %s", e)
+            raise HTTPException(status_code=500, detail=f"An error occurred while deleting the comment: {e}")
+
+    @app.get("/api/comments", dependencies=[Depends(csrf_protect)])
+    async def get_all_comments(token: str = Depends(authenticate_token)):
+        """Retrieve all comments from the database."""
+        ensure_database_initialized()
+        try:
+            return db_manager.get_all_comments()
+        except Exception as e:
+            logger.error("An error occurred while retrieving comments: %s", e)
+            raise HTTPException(status_code=500, detail=f"An error occurred while retrieving comments: {e}")
+
+    @app.post("/api/build", dependencies=[Depends(csrf_protect)])
+    async def build_flatpack(
+            request: Request,
+            background_tasks: BackgroundTasks,
+            token: str = Depends(authenticate_token)
+    ):
+        """Trigger the build process for the flatpack."""
+        if not flatpack_directory:
+            raise HTTPException(status_code=500, detail="Flatpack directory is not set")
+
+        try:
+            background_tasks.add_task(run_build_process, schedule_id=None)
+            logger.info("Started build process for flatpack located at %s", flatpack_directory)
+
+            return JSONResponse(
+                content={"flatpack": flatpack_directory, "message": "Build process started in background."},
+                status_code=200)
+        except Exception as e:
+            logger.error("Failed to start build process: %s", e)
+            return JSONResponse(
+                content={"flatpack": flatpack_directory, "message": f"Failed to start build process: {e}"},
+                status_code=500)
+
+    @app.get("/api/heartbeat", dependencies=[Depends(csrf_protect)])
+    async def heartbeat():
+        """Endpoint to check the server heartbeat."""
+        current_time = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
+        return JSONResponse(content={"server_time": current_time}, status_code=200)
+
+    @app.post("/api/hooks", dependencies=[Depends(csrf_protect)])
+    async def add_hook(hook: Hook, token: str = Depends(authenticate_token)):
+        try:
+            response = add_hook_to_database(hook)
+            return JSONResponse(content=response, status_code=201)
+        except HTTPException as e:
+            raise e
+        except Exception as e:
+            logger.error("Failed to add hook: %s", e)
+            raise HTTPException(status_code=500, detail="Failed to add hook.")
+
+    @app.delete("/api/hooks/{hook_id}", dependencies=[Depends(csrf_protect)])
+    async def delete_hook(hook_id: int, token: str = Depends(authenticate_token)):
+        """Delete a hook from the database by its ID."""
+        ensure_database_initialized()
+        try:
+            if db_manager.delete_hook(hook_id):
+                return JSONResponse(content={"message": "Hook deleted successfully."}, status_code=200)
+            else:
+                raise HTTPException(status_code=404, detail="Hook not found")
+        except Exception as e:
+            logger.error("An error occurred while deleting the hook: %s", e)
+            raise HTTPException(status_code=500, detail=f"An error occurred while deleting the hook: {e}")
+
+    @app.get("/api/hooks", response_model=List[Hook], dependencies=[Depends(csrf_protect)])
+    async def get_hooks(token: str = Depends(authenticate_token)):
+        try:
+            hooks = get_all_hooks_from_database()
+            return JSONResponse(content={"hooks": hooks}, status_code=200)
+        except HTTPException as e:
+            raise e
+        except Exception as e:
+            logger.error("Failed to retrieve hooks: %s", e)
+            raise HTTPException(status_code=500, detail="Failed to retrieve hooks.")
+
+    @app.get("/api/load_file", dependencies=[Depends(csrf_protect)])
     async def load_file(
             request: Request,
             filename: str,
@@ -2668,185 +2880,7 @@ def setup_routes(app):
         else:
             raise HTTPException(status_code=404, detail="File not found")
 
-    @app.post("/save_file")
-    async def save_file(
-            request: Request,
-            filename: str = Form(...),
-            content: str = Form(...),
-            token: str = Depends(authenticate_token)
-    ):
-        """Save the provided content to the specified file within the flatpack directory."""
-        if not flatpack_directory:
-            raise HTTPException(status_code=500, detail="Flatpack directory is not set")
-
-        file_path = os.path.join(flatpack_directory, 'build', filename)
-
-        if not os.path.commonpath([flatpack_directory, os.path.realpath(file_path)]).startswith(
-                os.path.realpath(flatpack_directory)):
-            raise HTTPException(status_code=403, detail="Access to the requested file is forbidden")
-
-        try:
-            normalized_content = content.replace('\r\n', '\n').replace('\r', '\n')
-            escaped_content = escape_content_parts(normalized_content)
-            with open(file_path, 'w', newline='\n') as file:
-                file.write(escaped_content)
-            return JSONResponse(content={"message": "File saved successfully!"})
-        except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Failed to save file: {e}")
-
-    @app.get("/test", response_class=HTMLResponse)
-    async def test():
-        return """
-        <html>
-            <head>
-                <title>Hello, World!</title>
-            </head>
-            <body>
-                <h1>Hello, World!</h1>
-            </body>
-        </html>
-        """
-
-    @app.get("/test_db")
-    async def test_db():
-        try:
-            initialize_database_manager(str(flatpack_directory))
-            db_manager._execute_query("SELECT 1")
-
-            return {"message": "Database connection successful"}
-        except sqlite3.Error as e:
-            logger.error("Database connection failed: %s", e)
-            return {"message": f"Database connection failed: {e}"}
-
-    @app.get("/api/build-status")
-    async def get_build_status(token: str = Depends(authenticate_token)):
-        """Get the current build status."""
-        if not flatpack_directory:
-            raise HTTPException(status_code=500, detail="Flatpack directory is not set")
-
-        status_file = os.path.join(flatpack_directory, 'build', 'build_status.json')
-
-        if os.path.exists(status_file):
-            with open(status_file, 'r') as f:
-                status_data = json.load(f)
-            return JSONResponse(content=status_data)
-        return JSONResponse(content={"status": "no_builds"})
-
-    @app.post("/api/clear-build-status")
-    async def clear_build_status(token: str = Depends(authenticate_token)):
-        """Clear the current build status."""
-        if not flatpack_directory:
-            raise HTTPException(status_code=500, detail="Flatpack directory is not set")
-
-        status_file = os.path.join(flatpack_directory, 'build', 'build_status.json')
-
-        try:
-            if os.path.exists(status_file):
-                os.remove(status_file)
-            return JSONResponse(content={"message": "Build status cleared successfully."})
-        except Exception as e:
-            logger.error("Error clearing build status: %s", e)
-            raise HTTPException(status_code=500, detail=f"Error clearing build status: {e}")
-
-    @app.post("/api/comments")
-    async def add_comment(comment: Comment, token: str = Depends(authenticate_token)):
-        """Add a new comment to the database."""
-        ensure_database_initialized()
-        try:
-            db_manager.add_comment(comment.block_id, comment.selected_text, comment.comment)
-            return JSONResponse(content={"message": "Comment added successfully."}, status_code=201)
-        except Exception as e:
-            logger.error(f"Error adding comment: {str(e)}", exc_info=True)
-            raise HTTPException(status_code=500, detail=f"An error occurred while adding the comment: {str(e)}")
-
-    @app.delete("/api/comments/{comment_id}")
-    async def delete_comment(comment_id: int, token: str = Depends(authenticate_token)):
-        """Delete a comment from the database by its ID."""
-        ensure_database_initialized()
-        try:
-            if db_manager.delete_comment(comment_id):
-                return JSONResponse(content={"message": "Comment deleted successfully."}, status_code=200)
-            else:
-                raise HTTPException(status_code=404, detail="Comment not found")
-        except Exception as e:
-            logger.error("An error occurred while deleting the comment: %s", e)
-            raise HTTPException(status_code=500, detail=f"An error occurred while deleting the comment: {e}")
-
-    @app.get("/api/comments")
-    async def get_all_comments(token: str = Depends(authenticate_token)):
-        """Retrieve all comments from the database."""
-        ensure_database_initialized()
-        try:
-            return db_manager.get_all_comments()
-        except Exception as e:
-            logger.error("An error occurred while retrieving comments: %s", e)
-            raise HTTPException(status_code=500, detail=f"An error occurred while retrieving comments: {e}")
-
-    @app.post("/api/build")
-    async def build_flatpack(
-            request: Request,
-            background_tasks: BackgroundTasks,
-            token: str = Depends(authenticate_token)
-    ):
-        """Trigger the build process for the flatpack."""
-        if not flatpack_directory:
-            raise HTTPException(status_code=500, detail="Flatpack directory is not set")
-
-        try:
-            background_tasks.add_task(run_build_process, schedule_id=None)
-            logger.info("Started build process for flatpack located at %s", flatpack_directory)
-
-            return JSONResponse(
-                content={"flatpack": flatpack_directory, "message": "Build process started in background."},
-                status_code=200)
-        except Exception as e:
-            logger.error("Failed to start build process: %s", e)
-            return JSONResponse(
-                content={"flatpack": flatpack_directory, "message": f"Failed to start build process: {e}"},
-                status_code=500)
-
-    @app.get("/api/heartbeat")
-    async def heartbeat():
-        """Endpoint to check the server heartbeat."""
-        current_time = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
-        return JSONResponse(content={"server_time": current_time}, status_code=200)
-
-    @app.post("/api/hooks")
-    async def add_hook(hook: Hook, token: str = Depends(authenticate_token)):
-        try:
-            response = add_hook_to_database(hook)
-            return JSONResponse(content=response, status_code=201)
-        except HTTPException as e:
-            raise e
-        except Exception as e:
-            logger.error("Failed to add hook: %s", e)
-            raise HTTPException(status_code=500, detail="Failed to add hook.")
-
-    @app.delete("/api/hooks/{hook_id}")
-    async def delete_hook(hook_id: int, token: str = Depends(authenticate_token)):
-        """Delete a hook from the database by its ID."""
-        ensure_database_initialized()
-        try:
-            if db_manager.delete_hook(hook_id):
-                return JSONResponse(content={"message": "Hook deleted successfully."}, status_code=200)
-            else:
-                raise HTTPException(status_code=404, detail="Hook not found")
-        except Exception as e:
-            logger.error("An error occurred while deleting the hook: %s", e)
-            raise HTTPException(status_code=500, detail=f"An error occurred while deleting the hook: {e}")
-
-    @app.get("/api/hooks", response_model=List[Hook])
-    async def get_hooks(token: str = Depends(authenticate_token)):
-        try:
-            hooks = get_all_hooks_from_database()
-            return JSONResponse(content={"hooks": hooks}, status_code=200)
-        except HTTPException as e:
-            raise e
-        except Exception as e:
-            logger.error("Failed to retrieve hooks: %s", e)
-            raise HTTPException(status_code=500, detail="Failed to retrieve hooks.")
-
-    @app.get("/api/logs")
+    @app.get("/api/logs", dependencies=[Depends(csrf_protect)])
     async def get_all_logs(request: Request, token: str = Depends(authenticate_token)):
         """Get a list of all available logs ordered by date."""
         global flatpack_directory
@@ -2882,7 +2916,7 @@ def setup_routes(app):
             logger.error("Failed to list log files: %s", e)
             raise HTTPException(status_code=500, detail=f"Failed to list log files: {e}")
 
-    @app.get("/api/logs/{log_filename}")
+    @app.get("/api/logs/{log_filename}", dependencies=[Depends(csrf_protect)])
     async def get_log_file(request: Request, log_filename: str, token: str = Depends(authenticate_token)):
         """Get the content of a specific log file."""
         global flatpack_directory
@@ -2909,7 +2943,33 @@ def setup_routes(app):
         else:
             raise HTTPException(status_code=404, detail="Log file not found")
 
-    @app.get("/api/schedule")
+    @app.post("/api/save_file", dependencies=[Depends(csrf_protect)])
+    async def save_file(
+            request: Request,
+            filename: str = Form(...),
+            content: str = Form(...),
+            token: str = Depends(authenticate_token)
+    ):
+        """Save the provided content to the specified file within the flatpack directory."""
+        if not flatpack_directory:
+            raise HTTPException(status_code=500, detail="Flatpack directory is not set")
+
+        file_path = os.path.join(flatpack_directory, 'build', filename)
+
+        if not os.path.commonpath([flatpack_directory, os.path.realpath(file_path)]).startswith(
+                os.path.realpath(flatpack_directory)):
+            raise HTTPException(status_code=403, detail="Access to the requested file is forbidden")
+
+        try:
+            normalized_content = content.replace('\r\n', '\n').replace('\r', '\n')
+            escaped_content = escape_content_parts(normalized_content)
+            with open(file_path, 'w', newline='\n') as file:
+                file.write(escaped_content)
+            return JSONResponse(content={"message": "File saved successfully!"})
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Failed to save file: {e}")
+
+    @app.get("/api/schedule", dependencies=[Depends(csrf_protect)])
     async def get_schedule(token: str = Depends(authenticate_token)):
         ensure_database_initialized()
         try:
@@ -2919,7 +2979,7 @@ def setup_routes(app):
             logger.error("An error occurred while retrieving the schedules: %s", e)
             raise HTTPException(status_code=500, detail=f"An error occurred while retrieving the schedules: {e}")
 
-    @app.post("/api/schedule")
+    @app.post("/api/schedule", dependencies=[Depends(csrf_protect)])
     async def save_schedule(request: Request, token: str = Depends(authenticate_token)):
         ensure_database_initialized()
         try:
@@ -2939,7 +2999,7 @@ def setup_routes(app):
             logger.error("An error occurred while saving the schedule: %s", e)
             raise HTTPException(status_code=500, detail=f"An error occurred while saving the schedule: {e}")
 
-    @app.delete("/api/schedule/{schedule_id}")
+    @app.delete("/api/schedule/{schedule_id}", dependencies=[Depends(csrf_protect)])
     async def delete_schedule_entry(schedule_id: int, datetime_index: Optional[int] = None,
                                     token: str = Depends(authenticate_token)):
         ensure_database_initialized()
@@ -2962,7 +3022,7 @@ def setup_routes(app):
             raise HTTPException(status_code=500,
                                 detail=f"An error occurred while deleting the schedule entry: {e}")
 
-    @app.post("/api/validate_token")
+    @app.post("/api/validate_token", dependencies=[Depends(csrf_protect)])
     async def validate_token(request: Request, api_token: str = Form(...)):
         """Validate the provided API token."""
         global VALIDATION_ATTEMPTS
@@ -2976,7 +3036,7 @@ def setup_routes(app):
             shutdown_server()
         return JSONResponse(content={"message": "Invalid API token."}, status_code=401)
 
-    @app.post("/api/verify")
+    @app.post("/api/verify", dependencies=[Depends(csrf_protect)])
     async def verify_flatpack(
             request: Request,
             token: str = Depends(authenticate_token)
@@ -3076,16 +3136,26 @@ def fpk_cli_handle_run(args, session):
             else:
                 console.print("[bold red]Please answer YES or NO.[/bold red]")
 
+    secret_key = get_secret_key()
+    logger.info(f"[CSRF] New secret key generated for this session: %s", secret_key)
+    console.print(f"[CSRF] New secret key generated for this session: {secret_key}", style="bold blue")
+
+    csrf_token_base = secrets.token_urlsafe(32)
+    logger.info("[CSRF] New token generated for this session: %s", csrf_token_base)
+    console.print(f"[CSRF] New token generated for this session: {csrf_token_base}", style="bold blue")
+
+    console.print("")
+
     token = generate_secure_token()
     logger.info("API token generated and displayed to user.")
-    console.print(f"Generated API token: {token}", style="bold green")
+    console.print(f"Generated API token: {token}", style="bold bright_cyan")
 
     set_token(token)
 
     console.print("")
 
     with console.status("[bold green]Initializing FastAPI server...", spinner="dots") as status:
-        app = initialize_fastapi_app()
+        app = initialize_fastapi_app(secret_key)
         setup_static_directory(app, str(directory))
 
     host = "127.0.0.1"
