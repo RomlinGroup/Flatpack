@@ -1806,7 +1806,7 @@ def fpk_valid_directory_name(name: str) -> bool:
 def fpk_update(flatpack_name: str, session: requests.Session, branch: str = "main"):
     """
     Update files of the specified flatpack with the latest versions from the template.
-    Files are placed in the /build directory, overwriting existing ones.
+    Files are placed in the /web directory, overwriting existing ones.
 
     Args:
         flatpack_name (str): The name of the flatpack to update.
@@ -1816,21 +1816,27 @@ def fpk_update(flatpack_name: str, session: requests.Session, branch: str = "mai
     Returns:
         None
     """
-    files_to_update = ['device.sh', 'index.html']
+    files_to_update = ['app.css', 'app.js', 'device.sh', 'index.html']
 
     flatpack_dir = Path.cwd() / flatpack_name
+
     if not flatpack_dir.exists() or not flatpack_dir.is_dir():
-        logger.error("The flatpack '%s' does not exist or is not a directory.", flatpack_name)
+        console.print(
+            Text(f"[bold red]Error:[/bold red] The flatpack '{flatpack_name}' does not exist or is not a directory."))
         return
 
-    build_dir = flatpack_dir / 'build'
-    if not build_dir.exists():
-        build_dir.mkdir(parents=True)
-        logger.info("Created build directory for flatpack '%s'", flatpack_name)
+    web_dir = flatpack_dir / 'web'
+
+    if not web_dir.exists():
+        console.print(Text(
+            f"[bold red]Error:[/bold red] No web directory found for flatpack '{flatpack_name}'. Aborting update."))
+        return
 
     for file in files_to_update:
         file_url = f"{TEMPLATE_REPO_URL}/contents/{file}?ref={branch}"
-        local_file_path = build_dir / file
+        local_file_path = web_dir / file
+
+        console.print(f"Updating [bold cyan]{file}[/bold cyan]...")
 
         try:
             response = session.get(file_url)
@@ -1844,16 +1850,17 @@ def fpk_update(flatpack_name: str, session: requests.Session, branch: str = "mai
                     local_file.write(content)
 
                 if local_file_path.exists():
-                    logger.info("Replaced existing %s in flatpack '%s/build'", file, flatpack_name)
+                    console.print(
+                        f"[bold green]Replaced[/bold green] existing {file} in flatpack '{flatpack_name}/build'")
                 else:
-                    logger.info("Added new %s to flatpack '%s/build'", file, flatpack_name)
+                    console.print(f"[bold green]Added[/bold green] new {file} to flatpack '{flatpack_name}/build'")
             else:
-                logger.error("Failed to retrieve content for %s", file)
+                console.print(f"[bold red]Error:[/bold red] Failed to retrieve content for {file}")
 
         except requests.RequestException as e:
-            logger.error("Failed to update %s: %s", file, e)
+            console.print(f"[bold red]Error:[/bold red] Failed to update {file}: {str(e)}")
 
-    logger.info("Flatpack '%s' update completed.", flatpack_name)
+    console.print(f"[bold green]Flatpack '{flatpack_name}' update completed.[/bold green]")
 
 
 def fpk_verify(directory: Union[str, None]):
@@ -2166,7 +2173,7 @@ def setup_arg_parser():
     # Update flatpack
     parser_update = subparsers.add_parser(
         'update',
-        help='Update index.html and device.sh of a flatpack from the template'
+        help='Update a flatpack from the template'
     )
 
     parser_update.add_argument(
