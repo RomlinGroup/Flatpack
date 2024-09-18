@@ -1822,14 +1822,14 @@ def fpk_update(flatpack_name: str, session: requests.Session, branch: str = "mai
 
     if not flatpack_dir.exists() or not flatpack_dir.is_dir():
         console.print(
-            Text(f"[bold red]Error:[/bold red] The flatpack '{flatpack_name}' does not exist or is not a directory."))
+            f"[bold red]Error:[/bold red] The flatpack '{flatpack_name}' does not exist or is not a directory.")
         return
 
     web_dir = flatpack_dir / 'web'
 
     if not web_dir.exists():
-        console.print(Text(
-            f"[bold red]Error:[/bold red] No web directory found for flatpack '{flatpack_name}'. Aborting update."))
+        console.print(
+            f"[bold red]Error:[/bold red] No web directory found for flatpack '{flatpack_name}'. Aborting update.")
         return
 
     for file in files_to_update:
