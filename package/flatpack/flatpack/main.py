@@ -967,6 +967,12 @@ def unescape_special_chars(content: str) -> str:
 
 
 async def update_build_status(status, schedule_id=None, error=None):
+    global flatpack_directory
+
+    if not flatpack_directory:
+        logging.error("flatpack_directory is not set")
+        return
+
     status_data = {
         "status": status,
         "timestamp": datetime.now().isoformat(),
@@ -975,7 +981,15 @@ async def update_build_status(status, schedule_id=None, error=None):
     if error:
         status_data["error"] = str(error)
 
-    await asyncio.to_thread(write_status_to_file, status_data)
+    status_file = os.path.join(flatpack_directory, 'build', 'build_status.json')
+
+    try:
+        os.makedirs(os.path.dirname(status_file), exist_ok=True)
+        with open(status_file, 'w') as f:
+            json.dump(status_data, f)
+        logging.info(f"Updated build status: {status}")
+    except Exception as e:
+        logging.error(f"Failed to update build status: {e}")
 
 
 def validate_api_token(api_token: str) -> bool:
