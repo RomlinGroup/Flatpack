@@ -5,8 +5,8 @@ export SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 echo -e "[DEBUG] $(TZ=GMT date +"%Y-%m-%d %H:%M:%S")"
 echo -e "build.sh is running in: $SCRIPT_DIR"
 
-export DEFAULT_REPO_NAME=llama.cpp
-export FLATPACK_NAME=phi-3-5-mini
+export DEFAULT_REPO_NAME=Phi-3-Vision-MLX
+export FLATPACK_NAME=phi-3-mlx
 
 source "$SCRIPT_DIR/device.sh" || {
   echo "Error: Failed to source device.sh" >&2

@@ -4,7 +4,7 @@
 version = "0.0.1"
 
 [environment]
-model_name = "phi-3-5-mini"
+model_name = "phi-3-mlx"
 
 [[port]]
 external = 8080
@@ -34,23 +34,23 @@ tiktoken = "0.7.0"
 tqdm = "4.66.5"
 
 [[git]]
-from_source = "https://github.com/ggerganov/llama.cpp"
-to_destination = "llama.cpp"
-branch = "master"
-setup_commands = [
-    "make"
-]
+from_source = "https://github.com/JosefAlbers/Phi-3-Vision-MLX"
+to_destination = "Phi-3-Vision-MLX"
+branch = "main"
+# setup_commands = [
+#   "{{setup_command}}"
+# ]
 
 [[file]]
-from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/phi-3-5-mini/build.sh"
+from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/phi-3-mlx/build.sh"
 to_destination = "build.sh"
 
 [[file]]
-from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/phi-3-5-mini/custom.sh"
+from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/phi-3-mlx/custom.sh"
 to_destination = "custom.sh"
 
 [[file]]
-from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/phi-3-5-mini/device.sh"
+from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/phi-3-mlx/device.sh"
 to_destination = "device.sh"
 
 [[run]]
