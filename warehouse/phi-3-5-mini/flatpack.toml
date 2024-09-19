@@ -34,9 +34,9 @@ tiktoken = "0.7.0"
 tqdm = "4.66.5"
 
 [[git]]
-from_source = "https://github.com/compilade/llama.cpp"
+from_source = "https://github.com/ggerganov/llama.cpp"
 to_destination = "llama.cpp"
-branch = "compilade/convert-separate-extra-tensors"
+branch = "master"
 setup_commands = [
     "make"
 ]
