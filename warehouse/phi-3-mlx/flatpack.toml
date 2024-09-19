@@ -37,9 +37,9 @@ tqdm = "4.66.5"
 from_source = "https://github.com/JosefAlbers/Phi-3-Vision-MLX"
 to_destination = "Phi-3-Vision-MLX"
 branch = "main"
-# setup_commands = [
-#   "{{setup_command}}"
-# ]
+setup_commands = [
+    "../bin/pip install -e ."
+]
 
 [[file]]
 from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/phi-3-mlx/build.sh"
