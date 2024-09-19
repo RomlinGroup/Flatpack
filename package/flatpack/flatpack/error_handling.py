@@ -50,17 +50,37 @@ def safe_exit(func):
 
 async def shutdown(signal, loop):
     """Cleanup tasks tied to the service's shutdown."""
-    sys.__stderr__.write(f"Received exit signal {signal.name}...\n")
+    sys.__stderr__.write(f"Received exit signal {signal.name}. Shutting down...\n")
+
     tasks = [t for t in asyncio.all_tasks() if t is not asyncio.current_task()]
+    if tasks:
+        sys.__stderr__.write(f"Cancelling {len(tasks)} outstanding tasks...\n")
+        [task.cancel() for task in tasks]
+        await asyncio.gather(*tasks, return_exceptions=True)
 
-    for task in tasks:
-        task.cancel()
-
-    sys.__stderr__.write(f"Cancelling {len(tasks)} outstanding tasks\n")
-    await asyncio.gather(*tasks, return_exceptions=True)
     loop.stop()
 
 
 def handle_asyncio_exception(loop, context):
     msg = context.get("exception", context["message"])
     sys.__stderr__.write(f"Caught asyncio exception: {msg}\n")
+
+
+@safe_exit
+async def main():
+    loop = asyncio.get_running_loop()
+
+    for sig in (signal.SIGTERM, signal.SIGINT):
+        loop.add_signal_handler(sig, lambda: asyncio.create_task(shutdown(sig, loop)))
+
+    loop.set_exception_handler(handle_asyncio_exception)
+
+    sys.__stderr__.write("Application is running. Press Ctrl+C to exit.\n")
+    await asyncio.sleep(10)
+
+
+if __name__ == "__main__":
+    setup_exception_handling()
+    setup_signal_handling()
+
+    main()
