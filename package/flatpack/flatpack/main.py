@@ -49,7 +49,6 @@ from rich.syntax import Syntax
 from rich.text import Text
 from starlette.middleware.sessions import SessionMiddleware
 
-from .agent_manager import AgentManager
 from .database_manager import DatabaseManager
 from .error_handling import safe_exit, setup_exception_handling, setup_signal_handling
 from .parsers import parse_toml_to_venv_script
@@ -1986,59 +1985,6 @@ def setup_arg_parser():
         func=fpk_cli_handle_version
     )
 
-    # Agents
-    parser_agents = subparsers.add_parser(
-        'agents',
-        help='Manage agents'
-    )
-
-    agent_subparsers = parser_agents.add_subparsers(
-        dest='agent_command',
-        help='Available agent commands'
-    )
-
-    ## Add command to list active agents
-    parser_list_agents = agent_subparsers.add_parser(
-        'list',
-        help='List active agents'
-    )
-
-    parser_list_agents.set_defaults(
-        func=fpk_cli_handle_list_agents
-    )
-
-    ## Add command to spawn an agent
-    parser_spawn = agent_subparsers.add_parser(
-        'spawn',
-        help='Spawn a new agent with a script'
-    )
-
-    parser_spawn.add_argument(
-        'script_path',
-        type=str,
-        help='Path to the script to execute'
-    )
-
-    parser_spawn.set_defaults(
-        func=fpk_cli_handle_spawn_agent
-    )
-
-    ## Add command to terminate an agent
-    parser_terminate = agent_subparsers.add_parser(
-        'terminate',
-        help='Terminate an active agent'
-    )
-
-    parser_terminate.add_argument(
-        'pid',
-        type=int,
-        help='Process ID of the agent to terminate'
-    )
-
-    parser_terminate.set_defaults(
-        func=fpk_cli_handle_terminate_agent
-    )
-
     # API Key management
     parser_api_key = subparsers.add_parser(
         'api-key',
@@ -2671,23 +2617,6 @@ def fpk_cli_handle_list(args, session):
         logger.error("No directories found.")
 
 
-def fpk_cli_handle_list_agents(args, session):
-    """List active agents."""
-    agent_manager = AgentManager()
-    agents = agent_manager.list_agents()
-
-    if agents:
-        logger.info("Active agents:")
-        print("Active agents:")
-        for agent in agents:
-            agent_info = (f"PID: {agent['pid']}, Script: {agent['script']}, "
-                          f"Start Time: {agent['start_time']}, Port: {agent['port']}")
-            logger.info(agent_info)
-            print(agent_info)
-    else:
-        logger.info("No active agents found.")
-
-
 flatpack_directory = None
 
 
@@ -3241,39 +3170,6 @@ def fpk_cli_handle_set_api_key(args, session):
             logger.error("Verification failed: API key does not match.")
     except Exception as e:
         logger.error("Error during API key verification: %s", e)
-
-
-def fpk_cli_handle_spawn_agent(args, session):
-    """Handle the 'spawn' command to spawn a new agent with a script.
-
-    Args:
-        args: The command-line arguments.
-        session: The HTTP session.
-    """
-    agent_manager = AgentManager()
-
-    try:
-        pid, port = agent_manager.spawn_agent(args.script_path)
-        logger.info("Agent spawned with PID: %s, Port: %s", pid, port)
-        return port
-    except Exception as e:
-        logger.error("Failed to spawn agent: %s", e)
-        return None
-
-
-def fpk_cli_handle_terminate_agent(args, session):
-    """Handle the 'terminate' command to terminate an active agent.
-
-    Args:
-        args: The command-line arguments.
-        session: The HTTP session.
-    """
-    agent_manager = AgentManager()
-
-    try:
-        agent_manager.terminate_agent(args.pid)
-    except Exception as e:
-        logger.error("Failed to terminate agent with PID %s: %s", args.pid, e)
 
 
 def fpk_cli_handle_unbox(args, session):

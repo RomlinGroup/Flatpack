@@ -130,37 +130,6 @@ export NGROK_AUTHTOKEN=<your_ngrok_token>
 flatpack run <flatpack_name> --share
 ```
 
-## AgentManager
-
-```bash
-wget -nc https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/agents/fast_api_local.py
-```
-
-```bash
-wget -nc https://huggingface.co/ggml-org/gemma-1.1-2b-it-Q4_K_M-GGUF/resolve/main/gemma-1.1-2b-it.Q4_K_M.gguf
-```
-
-```bash
-flatpack agents spawn fast_api_local.py
-```
-
-```bash
-curl -X POST "http://127.0.0.1:<port>/generate-response/" \
-     -H "Content-Type: application/json" \
-     -d '{
-           "prompt": "<your_prompt>",
-           "max_tokens": <max_tokens>
-         }'
-```
-
-```bash
-flatpack agents list
-```
-
-```bash
-flatpack agents terminate <pid>
-```
-
 ## VectorManager (HNSW)
 
 Hierarchical Navigable Small World (HNSW) graphs excel as indexes for vector similarity searches with leading-edge results through high recall rates and rapid search capabilities.

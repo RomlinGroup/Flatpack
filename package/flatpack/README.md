@@ -96,9 +96,6 @@ Check out the [JLA - Compatibility Checker](https://joinup.ec.europa.eu/collecti
 - **[prettytable](https://pypi.org/project/prettytable/)**\
   BSD License (BSD (3 clause)) ([LICENSE](https://github.com/jazzband/prettytable/blob/main/LICENSE))
 
-- **[psutil](https://pypi.org/project/psutil/)**\
-  BSD License (BSD-3-Clause) ([LICENSE](https://github.com/giampaolo/psutil/blob/master/LICENSE))
-
 - **[pydantic](https://pypi.org/project/pydantic/)**\
   MIT License ([LICENSE](https://github.com/pydantic/pydantic/blob/main/LICENSE))
 
