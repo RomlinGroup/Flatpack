@@ -143,8 +143,7 @@ while True:
         top_p = float(msg.split('-top_p=')[1].split(' ')[0])
         msg = msg.replace('-top_p=' + f'{top_p:g}', '')
 
-        if top_p <= 0:
-            top_p = 0
+        top_p = max(top_p, 0)
 
     msg = msg.strip()
 
