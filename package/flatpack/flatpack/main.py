@@ -3419,7 +3419,7 @@ def fpk_cli_handle_version(args, session):
         args: The command-line arguments.
         session: The HTTP session.
     """
-    logger.info("Flatpack version: %s", VERSION)
+    print(VERSION)
 
 
 @safe_exit
