@@ -3158,7 +3158,7 @@ def fpk_cli_handle_run(args, session):
                 console.print("[bold red]Please answer YES or NO.[/bold red]")
 
     secret_key = get_secret_key()
-    logger.info(f"[CSRF] New secret key generated for this session: %s", secret_key)
+    logger.info("[CSRF] New secret key generated for this session: %s", secret_key)
     console.print(f"[CSRF] New secret key generated for this session: {secret_key}", style="bold blue")
 
     csrf_token_base = secrets.token_urlsafe(32)
