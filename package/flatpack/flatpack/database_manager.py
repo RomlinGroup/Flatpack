@@ -200,18 +200,18 @@ class DatabaseManager:
             logger.info(f"Schedule with ID {schedule_id} deleted successfully")
             return True
         except Exception as e:
-            logger.error(f"Error deleting schedule with ID {schedule_id}: {str(e)}")
+            logger.error("Error deleting schedule with ID %s: %s", schedule_id, str(e))
             raise
 
     def delete_schedule_datetime(self, schedule_id: int, datetime_index: int) -> bool:
-        logger.info(
-            f"Attempting to delete datetime from schedule. Schedule ID: {schedule_id}, Datetime index: {datetime_index}")
-        logger.info(f"Type of schedule_id: {type(schedule_id)}, Type of datetime_index: {type(datetime_index)}")
+        logger.info("Attempting to delete datetime from schedule. Schedule ID: %s, Datetime index: %s", schedule_id,
+                    datetime_index)
+        logger.info("Type of schedule_id: %s, Type of datetime_index: %s", type(schedule_id), type(datetime_index))
 
         try:
             schedule = self._fetch_one("SELECT type, datetimes FROM flatpack_schedule WHERE id = ?", (schedule_id,))
             if not schedule or schedule[0] != 'manual':
-                logger.warning(f"Schedule not found or not of type 'manual'. Schedule ID: {schedule_id}")
+                logger.warning("Schedule not found or not of type 'manual'. Schedule ID: %s", schedule_id)
                 return False
 
             datetimes = json.loads(schedule[1])
@@ -219,14 +219,14 @@ class DatabaseManager:
                 del datetimes[datetime_index]
                 query = "UPDATE flatpack_schedule SET datetimes = ? WHERE id = ?"
                 self._execute_query(query, (json.dumps(datetimes), schedule_id))
-                logger.info(f"Datetime at index {datetime_index} deleted from schedule {schedule_id}")
+                logger.info("Datetime at index %s deleted from schedule %s", datetime_index, schedule_id)
                 return True
             else:
-                logger.warning(f"Invalid datetime index {datetime_index} for schedule {schedule_id}")
+                logger.warning("Invalid datetime index %s for schedule %s", datetime_index, schedule_id)
                 return False
         except Exception as e:
-            logger.error(
-                f"Error deleting datetime from schedule. Schedule ID: {schedule_id}, Datetime index: {datetime_index}. Error: {str(e)}")
+            logger.error("Error deleting datetime from schedule. Schedule ID: %s, Datetime index: %s. Error: %s",
+                         schedule_id, datetime_index, str(e))
             raise
 
     def get_all_schedules(self) -> List[Dict[str, Any]]:

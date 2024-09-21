@@ -578,7 +578,7 @@ def ensure_database_initialized():
         if flatpack_directory is None:
             raise ValueError("flatpack_directory is not set")
         db_path = os.path.join(flatpack_directory, 'build', 'flatpack.db')
-        logger.info(f"Initializing database at {db_path}")
+        logger.info("Initializing database at %s", db_path)
         db_manager = DatabaseManager(db_path)
         db_manager.initialize_database()
         logger.info("Database initialized successfully")
@@ -818,7 +818,7 @@ async def run_subprocess(command, log_file, timeout=3600):
 
     while streams and not shutdown_requested:
         if time.time() - start_time > timeout:
-            logger.warning(f"Timeout after {timeout} seconds. Terminating the process.")
+            logger.warning("Timeout after %s seconds. Terminating the process.", timeout)
             break
 
         try:
@@ -844,7 +844,7 @@ async def run_subprocess(command, log_file, timeout=3600):
                 if not readable:
                     streams.remove(stream)
             except Exception as e:
-                logger.error(f"Error processing stream: {e}")
+                logger.error("Error processing stream: %s", e)
                 logger.debug(traceback.format_exc())
                 streams.remove(stream)
 
@@ -987,9 +987,9 @@ async def update_build_status(status, schedule_id=None, error=None):
         os.makedirs(os.path.dirname(status_file), exist_ok=True)
         with open(status_file, 'w') as f:
             json.dump(status_data, f)
-        logging.info(f"Updated build status: {status}")
+        logging.info("Updated build status: %s", status)
     except Exception as e:
-        logging.error(f"Failed to update build status: {e}")
+        logging.error("Failed to update build status: %s", e)
 
 
 def validate_api_token(api_token: str) -> bool:
@@ -2784,7 +2784,7 @@ def setup_routes(app):
             db_manager.add_comment(comment.block_id, comment.selected_text, comment.comment)
             return JSONResponse(content={"message": "Comment added successfully."}, status_code=201)
         except Exception as e:
-            logger.error(f"Error adding comment: {str(e)}", exc_info=True)
+            logger.error("Error adding comment: %s", str(e), exc_info=True)
             raise HTTPException(status_code=500, detail=f"An error occurred while adding the comment: {str(e)}")
 
     @app.delete("/api/comments/{comment_id}", dependencies=[Depends(csrf_protect)])
