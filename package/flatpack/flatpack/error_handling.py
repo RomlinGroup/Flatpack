@@ -55,7 +55,8 @@ async def shutdown(signal, loop):
     tasks = [t for t in asyncio.all_tasks() if t is not asyncio.current_task()]
     if tasks:
         sys.__stderr__.write(f"Cancelling {len(tasks)} outstanding tasks...\n")
-        [task.cancel() for task in tasks]
+        for task in tasks:
+            task.cancel()
         await asyncio.gather(*tasks, return_exceptions=True)
 
     loop.stop()
