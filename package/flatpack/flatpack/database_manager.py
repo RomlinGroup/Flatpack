@@ -15,19 +15,19 @@ class DatabaseManager:
         self.db_path = db_path
 
     def _execute_query(self, query: str, params: tuple = ()) -> None:
-        logger.info(f"Executing query: {query}")
-        logger.info(f"Query parameters: {params}")
+        logger.info("Executing query: %s", query)
+        logger.info("Query parameters: %s", params)
         try:
             with sqlite3.connect(self.db_path) as conn:
                 cursor = conn.cursor()
                 cursor.execute(query, params)
                 affected_rows = cursor.rowcount
                 conn.commit()
-                logger.info(f"Query executed successfully. Affected rows: {affected_rows}")
+                logger.info("Query executed successfully. Affected rows: %s", affected_rows)
         except Error as e:
-            logger.error(f"Database error in _execute_query: {e}")
-            logger.error(f"Failed query: {query}")
-            logger.error(f"Failed query parameters: {params}")
+            logger.error("Database error in _execute_query: %s", e)
+            logger.error("Failed query: %s", query)
+            logger.error("Failed query parameters: %s", params)
             raise
 
     def _fetch_all(self, query: str, params: tuple = ()) -> List[tuple]:
@@ -37,7 +37,7 @@ class DatabaseManager:
                 cursor.execute(query, params)
                 return cursor.fetchall()
         except Error as e:
-            logger.error(f"Database error: {e}")
+            logger.error("Database error: %s", e)
             raise
 
     def _fetch_one(self, query: str, params: tuple = ()) -> Optional[tuple]:
@@ -47,7 +47,7 @@ class DatabaseManager:
                 cursor.execute(query, params)
                 return cursor.fetchone()
         except Error as e:
-            logger.error(f"Database error: {e}")
+            logger.error("Database error: %s", e)
             raise
 
     def initialize_database(self) -> None:
@@ -110,16 +110,16 @@ class DatabaseManager:
         return self._fetch_one("SELECT last_insert_rowid()")[0]
 
     def delete_comment(self, comment_id: int) -> bool:
-        logger.info(f"Attempting to delete comment with ID: {comment_id}")
-        logger.info(f"Type of comment_id: {type(comment_id)}")
+        logger.info("Attempting to delete comment with ID: %s", comment_id)
+        logger.info("Type of comment_id: %s", type(comment_id))
 
         query = "DELETE FROM flatpack_comments WHERE id = ?"
         try:
             self._execute_query(query, (comment_id,))  # Note the comma to make it a tuple
-            logger.info(f"Comment with ID {comment_id} deleted successfully")
+            logger.info("Comment with ID %s deleted successfully", comment_id)
             return True
         except Exception as e:
-            logger.error(f"Error deleting comment with ID {comment_id}: {str(e)}")
+            logger.error("Error deleting comment with ID %s: %s", comment_id, str(e))
             raise
 
     def get_all_comments(self) -> List[Dict[str, Any]]:
@@ -150,16 +150,16 @@ class DatabaseManager:
         return self._fetch_one("SELECT last_insert_rowid()")[0]
 
     def delete_hook(self, hook_id: int) -> bool:
-        logger.info(f"Attempting to delete hook with ID: {hook_id}")
-        logger.info(f"Type of hook_id: {type(hook_id)}")
+        logger.info("Attempting to delete hook with ID: %s", hook_id)
+        logger.info("Type of hook_id: %s", type(hook_id))
 
         query = "DELETE FROM flatpack_hooks WHERE id = ?"
         try:
             self._execute_query(query, (hook_id,))
-            logger.info(f"Hook with ID {hook_id} deleted successfully")
+            logger.info("Hook with ID %s deleted successfully", hook_id)
             return True
         except Exception as e:
-            logger.error(f"Error deleting hook with ID {hook_id}: {str(e)}")
+            logger.error("Error deleting hook with ID %s: %s", hook_id, str(e))
             raise
 
     def get_all_hooks(self) -> List[Dict[str, Any]]:
@@ -191,13 +191,13 @@ class DatabaseManager:
         return self._fetch_one("SELECT last_insert_rowid()")[0]
 
     def delete_schedule(self, schedule_id: int) -> bool:
-        logger.info(f"Attempting to delete schedule with ID: {schedule_id}")
-        logger.info(f"Type of schedule_id: {type(schedule_id)}")
+        logger.info("Attempting to delete schedule with ID: %s", schedule_id)
+        logger.info("Type of schedule_id: %s", type(schedule_id))
 
         query = "DELETE FROM flatpack_schedule WHERE id = ?"
         try:
             self._execute_query(query, (schedule_id,))
-            logger.info(f"Schedule with ID {schedule_id} deleted successfully")
+            logger.info("Schedule with ID %s deleted successfully", schedule_id)
             return True
         except Exception as e:
             logger.error("Error deleting schedule with ID %s: %s", schedule_id, str(e))
