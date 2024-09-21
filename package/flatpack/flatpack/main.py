@@ -165,7 +165,7 @@ def initialize_database_manager(flatpack_directory):
 def setup_logging(log_path: Path):
     """Set up logging configuration."""
     new_logger = logging.getLogger(__name__)
-    new_logger.setLevel(logging.WARNING)
+    new_logger.setLevel(logging.INFO)
 
     console_handler = logging.StreamHandler()
     console_handler.setLevel(logging.INFO)

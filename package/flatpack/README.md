@@ -90,9 +90,6 @@ Check out the [JLA - Compatibility Checker](https://joinup.ec.europa.eu/collecti
 - **[ngrok](https://pypi.org/project/ngrok/)**\
   MIT License (MIT OR Apache-2.0) ([LICENSE](https://github.com/ngrok/ngrok-python/blob/main/LICENSE-APACHE))
 
-- **[nltk](https://pypi.org/project/nltk/)**\
-  Apache Software License (Apache License, Version 2.0) ([LICENSE](https://github.com/nltk/nltk/blob/develop/LICENSE.txt))
-
 - **[prettytable](https://pypi.org/project/prettytable/)**\
   BSD License (BSD (3 clause)) ([LICENSE](https://github.com/jazzband/prettytable/blob/main/LICENSE))
 
@@ -114,6 +111,9 @@ Check out the [JLA - Compatibility Checker](https://joinup.ec.europa.eu/collecti
 - **[sentence-transformers](https://pypi.org/project/sentence-transformers/)**\
   Apache Software License (Apache License 2.0) ([LICENSE](https://github.com/UKPLab/sentence-transformers/blob/master/LICENSE))
 
+- **[spacy](https://pypi.org/project/spacy/)**\
+  MIT License (MIT) ([LICENSE](https://github.com/explosion/spaCy/blob/master/LICENSE))
+
 - **[toml](https://pypi.org/project/toml/)**\
   MIT License (MIT) ([LICENSE](https://github.com/uiri/toml/blob/master/LICENSE))
 
@@ -123,4 +123,4 @@ Check out the [JLA - Compatibility Checker](https://joinup.ec.europa.eu/collecti
 - **[zstandard](https://pypi.org/project/zstandard/)**\
   BSD License (BSD) ([LICENSE](https://github.com/indygreg/python-zstandard/blob/main/LICENSE))
 
-Last updated: 2024-09-21
+Last updated: 2024-09-22

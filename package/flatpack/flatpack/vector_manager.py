@@ -2,16 +2,16 @@ import datetime
 import hashlib
 import hnswlib
 import json
-import nltk
 import numpy as np
 import os
 import requests
+import subprocess
+import sys
 import time
 import warnings
 
 from bs4 import BeautifulSoup
 from contextlib import redirect_stdout
-from nltk.tokenize import sent_tokenize
 from pypdf import PdfReader
 from sentence_transformers import SentenceTransformer
 from typing import Dict, List
@@ -19,15 +19,29 @@ from typing import Dict, List
 warnings.filterwarnings('ignore', category=FutureWarning)
 
 
-def download_nltk_data():
+def ensure_spacy_model():
+    python_path = sys.executable
+    pip_path = f"{python_path} -m pip"
+
     try:
-        nltk.data.find('tokenizers/punkt')
-    except LookupError:
-        with redirect_stdout(open(os.devnull, "w")):
-            nltk.download('punkt', quiet=True)
+        import spacy
+        try:
+            nlp = spacy.load("en_core_web_sm")
+        except OSError:
+            print("Downloading SpaCy model 'en_core_web_sm'...")
+            subprocess.run([python_path, '-m', 'spacy', 'download', 'en_core_web_sm'], check=True)
+            nlp = spacy.load("en_core_web_sm")
+    except ImportError:
+        print("SpaCy is not installed. Installing SpaCy...")
+        subprocess.run([pip_path, 'install', 'spacy'], check=True)
+        print("Installing the required SpaCy model...")
+        subprocess.run([python_path, '-m', 'spacy', 'download', 'en_core_web_sm'], check=True)
+        import spacy
+        nlp = spacy.load("en_core_web_sm")
+    return nlp
 
 
-download_nltk_data()
+nlp = ensure_spacy_model()
 
 BATCH_SIZE = 64
 EMBEDDINGS_FILE = "embeddings.npy"
@@ -165,7 +179,9 @@ class VectorManager:
         """Process the text into chunks and add to the index."""
         if not isinstance(text, str):
             return
-        sentences = sent_tokenize(text)
+
+        doc = nlp(text)
+        sentences = [sent.text for sent in doc.sents]
         chunks = [" ".join(sentences[i:i + SENTENCE_CHUNK_SIZE]).strip() for i in
                   range(0, len(sentences), SENTENCE_CHUNK_SIZE)]
         self.add_texts(chunks, source_reference)
