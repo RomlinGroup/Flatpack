@@ -64,7 +64,6 @@ class VectorManager:
 
         start_time = time.time()
         self.model = SentenceTransformer(model_id)
-        print(f"Model loaded in {time.time() - start_time:.2f} seconds")
 
         self.index = hnswlib.Index(space='cosine', dim=VECTOR_DIMENSION)
         self.metadata, self.hash_set, self.embeddings, self.ids = self._load_metadata_and_embeddings()
@@ -153,7 +152,6 @@ class VectorManager:
 
         start_time = time.time()
         query_embedding = self.model.encode([query_text])[0]
-        print(f"Text encoded in {time.time() - start_time:.2f} seconds")
 
         start_time = time.time()
         labels, distances = self.index.knn_query(query_embedding, k=top_k)
@@ -171,7 +169,6 @@ class VectorManager:
                     "text": entry['text']
                 }
                 results.append(result)
-                print(json.dumps(result, indent=2))
 
         return results
 

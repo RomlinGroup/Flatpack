@@ -46,6 +46,7 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.syntax import Syntax
+from rich.table import Table
 from rich.text import Text
 from starlette.middleware.sessions import SessionMiddleware
 
@@ -3260,31 +3261,40 @@ def fpk_cli_handle_vector_commands(args, session, vm):
         session: The HTTP session.
         vm: The Vector Manager instance.
     """
-    logger.info("Handling vector commands...")
-
     if args.vector_command == 'add-texts':
         vm.add_texts(args.texts, "manual")
-        logger.info("Added %d texts to the database.", len(args.texts))
+        console.print(f"[bold green]Added {len(args.texts)} texts to the database.[/bold green]")
+
     elif args.vector_command == 'search-text':
         results = vm.search_vectors(args.query)
         if results:
-            logger.info("Search results:")
+            console.print("[bold cyan]Search results:[/bold cyan]")
+            table = Table(show_header=True, header_style="bold magenta")
+            table.add_column("ID", style="dim", width=12)
+            table.add_column("Text")
             for result in results:
-                logger.info("%s: %s", result['id'], result['text'])
+                table.add_row(str(result['id']), result['text'])
+            console.print(table)
         else:
-            logger.info("No results found.")
+            console.print("[yellow]No results found.[/yellow]")
+
     elif args.vector_command == 'add-pdf':
+        console.print(f"[bold blue]Adding PDF: {args.pdf_path}[/bold blue]")
         fpk_cli_handle_add_pdf(args.pdf_path, vm)
+
     elif args.vector_command == 'add-url':
+        console.print(f"[bold blue]Adding URL: {args.url}[/bold blue]")
         fpk_cli_handle_add_url(args.url, vm)
+
     elif args.vector_command == 'add-wikipedia':
         vm.add_wikipedia_page(args.page_title)
-        logger.info(
-            "Added text from Wikipedia page: '%s' to the vector database.",
-            args.page_title
-        )
+        console.print(
+            f"[bold green]Added text from Wikipedia page: '{args.page_title}' to the vector database.[/bold green]")
+
     else:
-        logger.error("Unknown vector command.")
+        console.print(f"[bold red]Unknown vector command: {args.vector_command}[/bold red]")
+
+    logger.info("Handled vector command: %s", args.vector_command)
 
 
 def fpk_cli_handle_verify(args, session):
