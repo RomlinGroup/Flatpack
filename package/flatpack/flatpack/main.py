@@ -1,3 +1,18 @@
+import os
+import sys
+
+from pathlib import Path
+from rich.console import Console
+
+PACKAGE_DIR = Path(sys.modules['flatpack'].__file__).parent
+IMPORT_CACHE_FILE = PACKAGE_DIR / ".fpk_import_cache"
+
+console = Console()
+
+if not IMPORT_CACHE_FILE.exists():
+    console.print("[bold green]Initialising Flatpack for the first time. This may take a moment...[/bold green]")
+    console.print("[italic cyan](This initialisation will only occur once.)[/italic cyan]")
+
 import argparse
 import asyncio
 import base64
@@ -5,7 +20,6 @@ import errno
 import json
 import logging
 import mimetypes
-import os
 import pty
 import re
 import secrets
@@ -17,7 +31,6 @@ import socket
 import stat
 import string
 import subprocess
-import sys
 import tarfile
 import tempfile
 import time
@@ -27,7 +40,6 @@ from datetime import datetime, timedelta, timezone
 from importlib.metadata import version
 from io import BytesIO
 from logging.handlers import RotatingFileHandler
-from pathlib import Path
 from textwrap import wrap
 from typing import List, Optional, Union
 from zipfile import ZipFile
@@ -37,12 +49,11 @@ import requests
 import toml
 import uvicorn
 
-from fastapi import Depends, Form, Header, HTTPException, Request
+from fastapi import Depends, FastAPI, Form, Header, HTTPException, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.security import APIKeyCookie
 from itsdangerous import BadSignature, SignatureExpired, TimestampSigner
 from pydantic import BaseModel
-from rich.console import Console
 from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.syntax import Syntax
@@ -55,6 +66,10 @@ from .error_handling import safe_exit, setup_exception_handling, setup_signal_ha
 from .parsers import parse_toml_to_venv_script
 from .session_manager import SessionManager
 from .vector_manager import VectorManager
+
+if not IMPORT_CACHE_FILE.exists():
+    IMPORT_CACHE_FILE.touch()
+    console.print("[bold green]First-time initialisation complete![/bold green]")
 
 
 def lazy_import(module_name, package=None, callable_name=None):
@@ -73,7 +88,6 @@ BeautifulSoup = lazy_import('bs4', callable_name='BeautifulSoup')
 CORSMiddleware = lazy_import('fastapi.middleware.cors', callable_name='CORSMiddleware')
 croniter = lazy_import('croniter', callable_name='croniter')
 Depends = lazy_import('fastapi', callable_name='Depends')
-FastAPI = lazy_import('fastapi', callable_name='FastAPI')
 FileResponse = lazy_import('fastapi.responses', callable_name='FileResponse')
 Form = lazy_import('fastapi', callable_name='Form')
 HTMLResponse = lazy_import('fastapi.responses', callable_name='HTMLResponse')

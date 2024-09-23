@@ -13,35 +13,93 @@ import warnings
 from bs4 import BeautifulSoup
 from contextlib import redirect_stdout
 from pypdf import PdfReader
+from rich.console import Console
+from rich.progress import Progress, SpinnerColumn, TextColumn
 from sentence_transformers import SentenceTransformer
 from typing import Dict, List
 
 warnings.filterwarnings('ignore', category=FutureWarning)
 
+console = Console()
+
 
 def ensure_spacy_model():
     python_path = sys.executable
-    pip_path = f"{python_path} -m pip"
+    pip_path = [python_path, "-m", "pip"]
 
     try:
         import spacy
         try:
             nlp = spacy.load("en_core_web_sm")
+            return nlp
         except OSError:
-            print("Downloading SpaCy model 'en_core_web_sm'...")
-            subprocess.run([python_path, '-m', 'spacy', 'download', 'en_core_web_sm'], check=True)
-            nlp = spacy.load("en_core_web_sm")
+            pass
     except ImportError:
-        print("SpaCy is not installed. Installing SpaCy...")
-        subprocess.run([pip_path, 'install', 'spacy'], check=True)
-        print("Installing the required SpaCy model...")
-        subprocess.run([python_path, '-m', 'spacy', 'download', 'en_core_web_sm'], check=True)
+        pass
+
+    console.print("Installing SpaCy and downloading model...")
+
+    with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            transient=True,
+    ) as progress:
+        install_task = progress.add_task("Installing spaCy...", total=None)
+
+        try:
+            process = subprocess.Popen(
+                pip_path + ['install', 'spacy'],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                universal_newlines=True
+            )
+            for line in process.stdout:
+                if "Installing collected packages" in line:
+                    progress.update(install_task, description="Installing packages...")
+                elif "Successfully installed" in line:
+                    progress.update(install_task, description="SpaCy installed successfully!")
+            process.wait()
+            if process.returncode != 0:
+                raise subprocess.CalledProcessError(process.returncode, pip_path)
+        except (subprocess.CalledProcessError, FileNotFoundError) as e:
+            console.print(f"[red]Error installing spaCy: {e}[/red]")
+            return None
+
+        download_task = progress.add_task("Downloading spaCy model...", total=None)
+        try:
+            process = subprocess.Popen(
+                [python_path, '-m', 'spacy', 'download', 'en_core_web_sm'],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                universal_newlines=True
+            )
+            for line in process.stdout:
+                if "Downloading" in line:
+                    progress.update(download_task, description="Downloading model...")
+                elif "Successfully installed" in line:
+                    progress.update(download_task, description="Model downloaded successfully!")
+            process.wait()
+            if process.returncode != 0:
+                raise subprocess.CalledProcessError(process.returncode,
+                                                    [python_path, '-m', 'spacy', 'download', 'en_core_web_sm'])
+        except (subprocess.CalledProcessError, FileNotFoundError) as e:
+            console.print(f"[red]Error downloading spaCy model: {e}[/red]")
+            return None
+
+    try:
         import spacy
         nlp = spacy.load("en_core_web_sm")
-    return nlp
+        return nlp
+    except ImportError:
+        console.print("[red]Failed to import spaCy after installation.[/red]")
+        return None
 
 
 nlp = ensure_spacy_model()
+
+if nlp is None:
+    console.print("[red]Failed to initialize spaCy. Please check your installation and try again.[/red]")
+    sys.exit(1)
 
 BATCH_SIZE = 64
 EMBEDDINGS_FILE = "embeddings.npy"
