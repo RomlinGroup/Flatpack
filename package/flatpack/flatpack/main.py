@@ -3080,6 +3080,11 @@ def fpk_cli_handle_run(args, session):
             ).strip().upper()
             if user_response == "YES":
                 console.print("")
+                try:
+                    fpk_check_ngrok_auth()
+                except EnvironmentError as e:
+                    console.print(f"[bold red]Error:[/bold red] {str(e)}")
+                    return
                 break
             elif user_response == "NO":
                 console.print("[bold red]Sharing aborted. Exiting.[/bold red]")
