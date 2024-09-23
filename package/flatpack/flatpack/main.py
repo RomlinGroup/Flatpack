@@ -647,7 +647,7 @@ def get_token() -> Optional[str]:
 
 
 def initialize_fastapi_app(secret_key):
-    app = FastAPI()
+    app = FastAPI(openapi_url=None)
 
     app.add_middleware(SessionMiddleware, secret_key=secret_key)
     app.state.signer = TimestampSigner(secret_key)
