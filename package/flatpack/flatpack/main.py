@@ -2104,6 +2104,13 @@ def setup_arg_parser():
         help='Share using ngrok'
     )
 
+    parser_run.add_argument(
+        '--domain',
+        type=str,
+        default=None,
+        help='Custom ngrok domain'
+    )
+
     parser_run.set_defaults(
         func=fpk_cli_handle_run
     )
@@ -3127,7 +3134,12 @@ def fpk_cli_handle_run(args, session):
     if args.share:
         with console.status("[bold green]Establishing ngrok ingress...", spinner="dots"):
             ngrok_module = lazy_import('ngrok')
-            listener = ngrok_module.forward(f"{host}:{port}", authtoken_from_env=True)
+
+            if args.domain:
+                listener = ngrok_module.connect(f"{host}:{port}", authtoken_from_env=True, domain=args.domain)
+            else:
+                listener = ngrok_module.connect(f"{host}:{port}", authtoken_from_env=True)
+
             public_url = listener.url()
 
             logger.info("Ingress established at %s", public_url)
