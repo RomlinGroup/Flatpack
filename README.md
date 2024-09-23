@@ -127,7 +127,7 @@ flatpack run <flatpack_name>
 
 ```bash
 export NGROK_AUTHTOKEN=<your_ngrok_token>
-flatpack run <flatpack_name> --share
+flatpack run <flatpack_name> --domain=<custom_ngrok_domain> --share
 ```
 
 ## VectorManager (HNSW)
