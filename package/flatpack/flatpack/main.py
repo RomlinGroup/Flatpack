@@ -3072,9 +3072,11 @@ def fpk_cli_handle_run(args, session):
         if acknowledgment == "YES":
             break
         elif acknowledgment == "NO":
+            console.print("")
             console.print("You must agree to proceed. Exiting.", style="bold red")
             return
         else:
+            console.print("")
             console.print("Please answer YES or NO.", style="bold yellow")
 
     directory = Path(args.input).resolve()
@@ -3122,13 +3124,16 @@ def fpk_cli_handle_run(args, session):
                 try:
                     fpk_check_ngrok_auth()
                 except EnvironmentError as e:
+                    console.print("")
                     console.print(f"[bold red]Error:[/bold red] {str(e)}")
                     return
                 break
             elif user_response == "NO":
+                console.print("")
                 console.print("[bold red]Sharing aborted. Exiting.[/bold red]")
                 return
             else:
+                console.print("")
                 console.print("[bold red]Please answer YES or NO.[/bold red]")
 
     secret_key = get_secret_key()
