@@ -3114,8 +3114,6 @@ def fpk_cli_handle_run(args, session):
                 try:
                     fpk_check_ngrok_auth()
                 except EnvironmentError as e:
-                    console.print("")
-                    console.print(f"[bold red]Error:[/bold red] {str(e)}")
                     return
                 break
             elif user_response == "NO":
