@@ -10,7 +10,6 @@ IMPORT_CACHE_FILE = PACKAGE_DIR / ".fpk_import_cache"
 console = Console()
 
 if not IMPORT_CACHE_FILE.exists():
-
     ascii_art = """ _____ __    _____ _____ _____ _____ _____ _____ 
 |   __|  |  |  _  |_   _|  _  |  _  |     |  |  |
 |   __|  |__|     | | | |   __|     |   --|    -|
@@ -19,16 +18,7 @@ if not IMPORT_CACHE_FILE.exists():
 
     console.print(f"[bold green]{ascii_art}[/bold green]")
     console.print("[bold green]Initialising Flatpack for the first time. This may take a moment...[/bold green]")
-    console.print("")
-
-    console.print(
-        "[bold yellow]Please allow the setup to complete. Interrupting may cause issues.[/bold yellow]"
-    )
-    console.print("")
-
-    console.print(
-        "[bold red]Flatpack is currently experimental. Please refrain from using it in production environments.[/bold red]"
-    )
+    console.print("[bold yellow]Please allow the setup to complete. Interrupting may cause issues.[/bold yellow]")
 
 import argparse
 import asyncio
