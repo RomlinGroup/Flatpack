@@ -55,7 +55,7 @@ import requests
 import toml
 import uvicorn
 
-from fastapi import Depends, FastAPI, Form, Header, HTTPException, Request
+from fastapi import Cookie, Depends, FastAPI, Form, Header, HTTPException, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.security import APIKeyCookie
 from itsdangerous import BadSignature, SignatureExpired, TimestampSigner
@@ -65,6 +65,7 @@ from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.syntax import Syntax
 from rich.table import Table
 from rich.text import Text
+from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 
 from .database_manager import DatabaseManager
@@ -135,6 +136,8 @@ CSRF_EXEMPT_PATHS = [
     "/favicon.ico",
     "/static"
 ]
+
+active_sessions = {}
 
 build_in_progress = False
 shutdown_requested = False
@@ -233,21 +236,20 @@ def add_hook_to_database(hook: Hook):
 
 
 def authenticate_token(request: Request):
-    """Authenticate the token."""
-    global VALIDATION_ATTEMPTS
+    """Authenticate using either token or session."""
     token = request.headers.get('Authorization')
+    session_id = request.cookies.get('session_id')
     stored_token = get_token()
 
-    if not stored_token:
-        logger.error("Stored token is not set")
-        return
+    if session_id and validate_session(session_id):
+        return session_id
 
-    if token is None or token != f"Bearer {stored_token}":
-        VALIDATION_ATTEMPTS += 1
-        logger.error("Invalid or missing token. Attempt %s", VALIDATION_ATTEMPTS)
-        if VALIDATION_ATTEMPTS >= MAX_ATTEMPTS:
-            shutdown_server()
-        raise HTTPException(status_code=403, detail="Invalid or missing token")
+    if token and token.startswith('Bearer '):
+        token = token.split(' ')[1]
+        if token == stored_token:
+            return token
+
+    raise HTTPException(status_code=401, detail="Invalid or missing authentication")
 
 
 async def check_and_run_schedules():
@@ -334,6 +336,16 @@ def cleanup_and_shutdown():
     logger.info("Cleanup complete.")
 
 
+def create_session(token):
+    session_id = secrets.token_urlsafe(32)
+    expiration = datetime.now() + timedelta(hours=24)
+    active_sessions[session_id] = {
+        "token": token,
+        "expiration": expiration
+    }
+    return session_id
+
+
 def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path, use_euxo: bool = False):
     try:
         with custom_sh_path.open('r') as infile:
@@ -376,7 +388,7 @@ def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path, use_euxo: bool = Fa
 
             outfile.write(f"CONTEXT_PYTHON_SCRIPT=\"{context_python_script_path}\"\n")
 
-            outfile.write("EVAL_BUILD=\"$(dirname \"$SCRIPT_DIR\")/web/eval_build.json\"\n")
+            outfile.write("EVAL_BUILD=\"$(dirname \"$SCRIPT_DIR\")/web/output/eval_build.json\"\n")
 
             outfile.write(f"EXEC_PYTHON_SCRIPT=\"{exec_python_script_path}\"\n")
             outfile.write("CURR=0\n")
@@ -388,7 +400,7 @@ def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path, use_euxo: bool = Fa
 
             outfile.write("datetime=$(date -u +\"%Y-%m-%d %H:%M:%S\")\n")
 
-            outfile.write("DATA_FILE=\"$(dirname \"$SCRIPT_DIR\")/web/eval_data.json\"\n")
+            outfile.write("DATA_FILE=\"$(dirname \"$SCRIPT_DIR\")/web/output/eval_data.json\"\n")
 
             outfile.write("echo '[]' > \"$DATA_FILE\"\n\n")
 
@@ -594,6 +606,11 @@ def decompress_data(input_path, output_path, allowed_dir=None):
         logging.error("An error occurred while decompressing: %s", e)
 
 
+def end_session(session_id):
+    if session_id in active_sessions:
+        del active_sessions[session_id]
+
+
 def ensure_database_initialized():
     global db_manager, flatpack_directory
     if db_manager is None:
@@ -690,6 +707,14 @@ def initialize_fastapi_app(secret_key):
     app = setup_routes(app)
 
     return app
+
+
+def is_user_logged_in(session_id: str) -> bool:
+    if session_id in active_sessions:
+        session = active_sessions[session_id]
+        if datetime.now() < session["expiration"]:
+            return True
+    return False
 
 
 def load_config():
@@ -930,12 +955,24 @@ def setup_signal_handlers(process=None):
 
 
 def setup_static_directory(fastapi_app: FastAPI, directory: str):
-    """Setup the static directory for serving static files."""
+    """Setup the static directory for serving static files, excluding 'output' folder for unauthenticated users."""
     global flatpack_directory
     flatpack_directory = os.path.abspath(directory)
 
     if os.path.exists(flatpack_directory) and os.path.isdir(flatpack_directory):
         static_dir = os.path.join(flatpack_directory, 'web')
+
+        @fastapi_app.middleware("http")
+        async def block_output_directory(request: Request, call_next):
+            if request.url.path.startswith("/output/"):
+                session_id = request.cookies.get('session_id')
+                if session_id and is_user_logged_in(session_id):
+                    return await call_next(request)
+                else:
+                    return JSONResponse(status_code=403, content={
+                        "detail": "Access to the /output directory is forbidden for unauthenticated users"})
+            return await call_next(request)
+
         fastapi_app.mount(
             "/",
             StaticFiles(directory=static_dir, html=True),
@@ -944,7 +981,7 @@ def setup_static_directory(fastapi_app: FastAPI, directory: str):
         logger.info("Static files will be served from: %s", static_dir)
     else:
         logger.error("The directory '%s' does not exist or is not a directory.", flatpack_directory)
-        raise ValueError(error_message)
+        raise ValueError(f"The directory '{directory}' does not exist or is not a directory.")
 
 
 async def shutdown(sig, loop):
@@ -1059,6 +1096,14 @@ def validate_file_path(path, is_input=True, allowed_dir=None):
     return absolute_path
 
 
+def validate_session(session_id):
+    if session_id in active_sessions:
+        session = active_sessions[session_id]
+        if datetime.now() < session["expiration"]:
+            return True
+    return False
+
+
 def write_status_to_file(status_data):
     status_file = os.path.join(flatpack_directory, 'build', 'build_status.json')
 
@@ -1127,18 +1172,13 @@ async def fpk_build(directory: Union[str, None], use_euxo: bool = False):
             logger.error("The web directory '%s' does not exist.", web_dir)
             raise FileNotFoundError(f"The web directory '{web_dir}' does not exist.")
 
-        eval_data_path = web_dir / "eval_data.json"
+        output_dir = web_dir / "output"
+        eval_build_path = output_dir / "eval_build.json"
+        eval_data_path = output_dir / "eval_data.json"
 
         if not eval_data_path.exists():
-            logger.error("The 'eval_data.json' file does not exist in '%s'.", web_dir)
-            raise FileNotFoundError(f"The 'eval_data.json' file does not exist in '{web_dir}'.")
-
-        output_dir = web_dir / "output"
-
-        if output_dir.exists():
-            shutil.rmtree(output_dir)
-
-        output_dir.mkdir(parents=True)
+            logger.error("The 'eval_data.json' file does not exist in '%s'.", output_dir)
+            raise FileNotFoundError(f"The 'eval_data.json' file does not exist in '{output_dir}'.")
 
         with eval_data_path.open('r') as file:
             eval_data = json.load(file)
@@ -1712,12 +1752,17 @@ def fpk_unbox(directory_name: str, session: httpx.Client, local: bool = False) -
         flatpack_dir.mkdir(parents=True, exist_ok=True)
 
     web_dir = flatpack_dir / "web"
+    output_dir = web_dir / "output"
 
     try:
         web_dir.mkdir(parents=True, exist_ok=True)
         logger.info("Created /web directory: %s", web_dir)
 
+        output_dir.mkdir(parents=True, exist_ok=True)
+        logger.info("Created /web/output directory: %s", output_dir)
+
         files_to_download = ['index.html', 'app.css', 'app.js']
+
         for file in files_to_download:
             file_url = f"{TEMPLATE_REPO_URL}/contents/{file}"
             response = session.get(file_url)
@@ -2860,6 +2905,15 @@ def setup_routes(app):
         else:
             raise HTTPException(status_code=404, detail="File not found")
 
+    @app.post("/api/logout", dependencies=[Depends(csrf_protect)])
+    async def logout(request: Request, session_id: str = Cookie(None)):
+        """End the user's session."""
+        if session_id:
+            end_session(session_id)
+        response = JSONResponse(content={"message": "Logged out successfully."}, status_code=200)
+        response.delete_cookie(key="session_id")
+        return response
+
     @app.get("/api/logs", dependencies=[Depends(csrf_protect)])
     async def get_all_logs(request: Request, token: str = Depends(authenticate_token)):
         """Get a list of all available logs ordered by date."""
@@ -3002,15 +3056,24 @@ def setup_routes(app):
             raise HTTPException(status_code=500,
                                 detail=f"An error occurred while deleting the schedule entry: {e}")
 
+    @app.get("/api/user_status")
+    async def user_status(auth: str = Depends(authenticate_token)):
+        """Check if the user is authenticated."""
+        return JSONResponse(content={"authenticated": True}, status_code=200)
+
     @app.post("/api/validate_token", dependencies=[Depends(csrf_protect)])
     async def validate_token(request: Request, api_token: str = Form(...)):
-        """Validate the provided API token."""
+        """Validate the provided API token and create a session."""
         global VALIDATION_ATTEMPTS
         stored_token = get_token()
         if not stored_token:
             return JSONResponse(content={"message": "API token is not set."}, status_code=200)
         if validate_api_token(api_token):
-            return JSONResponse(content={"message": "API token is valid."}, status_code=200)
+            session_id = create_session(api_token)
+            response = JSONResponse(content={"message": "API token is valid.", "session_id": session_id},
+                                    status_code=200)
+            response.set_cookie(key="session_id", value=session_id, httponly=True, samesite="strict")
+            return response
         VALIDATION_ATTEMPTS += 1
         if VALIDATION_ATTEMPTS >= MAX_ATTEMPTS:
             shutdown_server()
