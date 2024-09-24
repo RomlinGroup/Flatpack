@@ -19,8 +19,15 @@ if not IMPORT_CACHE_FILE.exists():
 
     console.print(f"[bold green]{ascii_art}[/bold green]")
     console.print("[bold green]Initialising Flatpack for the first time. This may take a moment...[/bold green]")
-    console.print("[italic cyan](This initialisation will only occur once.)[/italic cyan]")
     console.print("")
+    console.print("[italic cyan](This initialisation will only occur once.)[/italic cyan]")
+
+    console.print("")
+    console.print(
+        "[bold red]Flatpack is currently experimental. Please refrain from using it in production environments.[/bold red]"
+    )
+    console.print("")
+    console.print("[bold red]Flatpack 目前仍处于实验阶段。请勿用于生产环境。[/bold red]")
 
 import argparse
 import asyncio
@@ -78,7 +85,8 @@ from .vector_manager import VectorManager
 
 if not IMPORT_CACHE_FILE.exists():
     IMPORT_CACHE_FILE.touch()
-    console.print("[bold green]First-time initialisation complete![/bold green]")
+    console.print("")
+    console.print("[bold green]First-time initialisation complete! ✨[/bold green]")
     console.print("")
 
 

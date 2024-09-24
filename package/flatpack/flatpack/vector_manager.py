@@ -37,7 +37,8 @@ def ensure_spacy_model():
     except ImportError:
         pass
 
-    console.print("Installing SpaCy and downloading model...")
+    console.print("")
+    console.print("Installing spaCy (MIT) and downloading model...")
 
     with Progress(
             SpinnerColumn(),
@@ -66,6 +67,7 @@ def ensure_spacy_model():
             return None
 
         download_task = progress.add_task("Downloading spaCy model...", total=None)
+
         try:
             process = subprocess.Popen(
                 [python_path, '-m', 'spacy', 'download', 'en_core_web_sm'],
@@ -73,12 +75,9 @@ def ensure_spacy_model():
                 stderr=subprocess.STDOUT,
                 universal_newlines=True
             )
-            for line in process.stdout:
-                if "Downloading" in line:
-                    progress.update(download_task, description="Downloading model...")
-                elif "Successfully installed" in line:
-                    progress.update(download_task, description="Model downloaded successfully!")
+
             process.wait()
+
             if process.returncode != 0:
                 raise subprocess.CalledProcessError(process.returncode,
                                                     [python_path, '-m', 'spacy', 'download', 'en_core_web_sm'])
