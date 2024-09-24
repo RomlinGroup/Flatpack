@@ -20,6 +20,7 @@ if not IMPORT_CACHE_FILE.exists():
     console.print(f"[bold green]{ascii_art}[/bold green]")
     console.print("[bold green]Initialising Flatpack for the first time. This may take a moment...[/bold green]")
     console.print("")
+
     console.print(
         "[bold yellow]Please allow the setup to complete. Interrupting may cause issues.[/bold yellow]"
     )
@@ -28,8 +29,6 @@ if not IMPORT_CACHE_FILE.exists():
     console.print(
         "[bold red]Flatpack is currently experimental. Please refrain from using it in production environments.[/bold red]"
     )
-    console.print("")
-    console.print("[bold red]Flatpack 目前仍处于实验阶段。请勿用于生产环境。[/bold red]")
 
 import argparse
 import asyncio
