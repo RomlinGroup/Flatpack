@@ -8,6 +8,8 @@
 
 > **DISCLAIMER:** This repository contains our research. Verify the information and do your own research (DYOR). We assume no responsibility for accuracy or completeness.
 
+> **免责声明:** 此存储库包含我们的研究。请核实信息并自行研究 (DYOR)。我们不对准确性或完整性承担任何责任。
+
 > **Regarding AI fearmongering:** ["At what specific date in the future, if the apocalypse hasn't happened, will you finally admit to being wrong?"](https://bigthink.com/pessimists-archive/ai-fear-overpopulation/) (Archie McKenzie 2023) / ["Fearmongering is a technique that has benefited many people over the ages."](https://www.youtube.com/watch?v=2ZbRKxZ2cjM) (Fred L. Smith, Jr. 2019)
 
 ## Ready-to-assemble AI
@@ -16,15 +18,23 @@ At Flatpack, our mission is clear: we are committed to building trust in AI.
 
 Flatpack democratises AI and ML through micro language models and model compression. Our platform enables users to train custom language models with 100M to 10B parameters. We introduce flatpacks (FPKs) to integrate AI and ML into edge computing, electronic components, and robots.
 
+在 Flatpack，我们的使命十分明确: 致力于建立对 AI 的信任。
+
+Flatpack 通过微语言模型和模型压缩普及 AI 和 ML。我们的平台使用户能够训练具有 100M 到 10B 个参数的自定义语言模型。我们引入了 flatpack (FPK)，将 AI 和 ML 集成到边缘计算、电子元件和机器人中。
+
 > **Flatpack:** "Picture merging the Swedish ingenuity of flatpacks (hence our name) and ready-to-assemble furniture with the imaginative appeal of certain Danish snap-together toy bricks. Our method of developing micro language models is designed to be intelligently integrated into the physical world."
 
 ## Micro language models
 
 [Micro language models](http://microlanguagemodels.com) (100M to 10B parameters) provide an efficient alternative to large language models, addressing deployment, reliability, and scalability challenges. Their compact size enables rapid pre-training and fine-tuning, allowing organisations to adapt swiftly to market shifts and specific needs. These models can be readily deployed in edge-adjacent environments such as laptops, microprocessors, and smartphones, offering accessibility and versatility.
 
+[微型语言模型](http://microlanguagemodels.com)（100M 到 10B 个参数）为大型语言模型提供了一种有效的替代方案，解决了部署、可靠性和可扩展性挑战。其紧凑尺寸可实现快速预训练和微调，使组织能够迅速适应市场变化和特定需求。这些模型可轻松部署在笔记本电脑、微处理器和智能手机等边缘相邻环境中，提供可访问性及多功能性。
+
 ## Edge artificial intelligence
 
 Edge artificial intelligence uses local devices to enhance decision-making near data sources, improving privacy, response times,  and security while reducing reliance on cloud connectivity. Benefits include decreased latency, improved scalability, and reduced energy usage.
+
+边缘人工智能使用本地设备来增强数据源附近的决策能力，提高隐私性、响应时间和安全性，同时减少对云连接的依赖，包括降低延迟、提高可扩展性和减少能源消耗等优势。
 
 > "Edge artificial intelligence (AI), or AI at the edge, is the implementation of artificial intelligence in an edge computing environment, which allows computations to be done close to where data is actually collected, rather than at a centralized cloud computing facility or an offsite data center." ([Red Hat 2023](https://www.redhat.com/en/topics/edge-computing/what-is-edge-ai))
 

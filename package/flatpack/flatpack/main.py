@@ -10,8 +10,17 @@ IMPORT_CACHE_FILE = PACKAGE_DIR / ".fpk_import_cache"
 console = Console()
 
 if not IMPORT_CACHE_FILE.exists():
+    ascii_art = """                                          
+ _____ __    _____ _____ _____ _____ _____ _____ 
+|   __|  |  |  _  |_   _|  _  |  _  |     |  |  |
+|   __|  |__|     | | | |   __|     |   --|    -|
+|__|  |_____|__|__| |_| |__|  |__|__|_____|__|__|                                                                                                       
+    """
+
+    console.print(f"[bold green]{ascii_art}[/bold green]")
     console.print("[bold green]Initialising Flatpack for the first time. This may take a moment...[/bold green]")
     console.print("[italic cyan](This initialisation will only occur once.)[/italic cyan]")
+    console.print("")
 
 import argparse
 import asyncio
@@ -70,6 +79,7 @@ from .vector_manager import VectorManager
 if not IMPORT_CACHE_FILE.exists():
     IMPORT_CACHE_FILE.touch()
     console.print("[bold green]First-time initialisation complete![/bold green]")
+    console.print("")
 
 
 def lazy_import(module_name, package=None, callable_name=None):

@@ -1,6 +1,12 @@
+<p align="center">
+  <img src="https://romlin.com/wp-content/uploads/2023/05/flatpack_ai_logo.svg" width="100" height="100" alt="Flatpack">
+</p>
+
 # Flatpack
 
 **NOTE:** Flatpack is currently experimental. Please refrain from using it in production environments.
+
+**注意:** Flatpack 目前仍处于实验阶段。请勿用于生产环境。
 
 ## Ready-to-assemble AI
 
@@ -10,10 +16,17 @@ Flatpack democratises AI and ML through micro language models and model compress
 custom language models with 100M to 10B parameters. We introduce flatpacks (FPKs) to integrate AI and ML into edge
 computing, electronic components, and robots.
 
+在 Flatpack，我们的使命十分明确: 致力于建立对 AI 的信任。
+
+Flatpack 通过微语言模型和模型压缩普及 AI 和 ML。我们的平台使用户能够训练具有 100M 到 10B 个参数的自定义语言模型。我们引入了 flatpacks (FPK)，将 AI 和 ML 集成到边缘计算、电子元件和机器人中。
+
 ## Flatpack 3.X.X (Aglaonice)
 
 *Aglaonice, an ancient Greek astronomer from the 2nd or 1st century BC, was celebrated for her precise lunar eclipse
 predictions. Her mastery inspired the Greek proverb: "As the moon obeys Aglaonice," signifying unwavering certainty.*
+
+`3.8.0` (2024-09-24)\
+*Improved package setup and deprecated agent spawning.*
 
 `3.7.0` (2024-09-04)\
 *Added cron and manual scheduling for builds.*

@@ -5,9 +5,10 @@ with open("README.md", "r") as f:
 
 setup(
     name="flatpack",
-    version="3.7.79",
+    version="3.8.5",
     license="Apache Software License (Apache-2.0)",
     packages=find_packages(),
+    python_requires=">=3.11.0",
     install_requires=[
         "beautifulsoup4==4.12.3",
         "croniter==3.0.3",
@@ -35,6 +36,7 @@ setup(
     description="Ready-to-assemble AI",
     long_description=long_description,
     long_description_content_type="text/markdown",
+    url="https://github.com/RomlinGroup/Flatpack",
     entry_points={
         "console_scripts": [
             "flatpack=flatpack.main:main"
