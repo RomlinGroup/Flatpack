@@ -2461,9 +2461,12 @@ def fpk_cli_handle_build(args, session):
 
     try:
         asyncio.run(fpk_build(directory_name, use_euxo=args.use_euxo))
-    except asyncio.CancelledError:
-        logger.info("Build process was cancelled.")
-        console.print("\nBuild process was cancelled.", style="bold yellow")
+    except KeyboardInterrupt:
+        logger.info("Build process was interrupted by user.")
+        console.print("\nBuild process was interrupted by user.", style="bold yellow")
+    except Exception as e:
+        logger.error("An error occurred during the build process: %s", e)
+        console.print(f"\nAn error occurred during the build process: {e}", style="bold red")
     finally:
         cleanup_and_shutdown()
 
