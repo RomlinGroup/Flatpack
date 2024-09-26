@@ -1173,6 +1173,7 @@ async def fpk_build(directory: Union[str, None], use_euxo: bool = False):
             raise FileNotFoundError(f"The web directory '{web_dir}' does not exist.")
 
         output_dir = web_dir / "output"
+
         eval_build_path = output_dir / "eval_build.json"
         eval_data_path = output_dir / "eval_data.json"
 
