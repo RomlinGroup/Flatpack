@@ -2406,6 +2406,7 @@ def fpk_cli_handle_add_url(url, vm):
         logger.error("Failed to access URL: '%s'. Error: %s", url, e)
 
 
+@safe_exit
 def fpk_cli_handle_build(args, session):
     """
     Handle the build command for the flatpack CLI.
@@ -2477,60 +2478,71 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
     try:
         if os.path.exists(local_dir):
             console.print(
-                f"[bold blue]INFO:[/bold blue] The model '{model_id}' is already downloaded in the directory '{local_dir}'.")
-        else:
-            console.print(f"[bold blue]INFO:[/bold blue] Downloading model '{model_id}'...")
-            try:
-                if token:
-                    lazy_import('huggingface_hub').snapshot_download(
-                        repo_id=model_id,
-                        local_dir=local_dir,
-                        revision="main",
-                        token=token
-                    )
-                else:
-                    lazy_import('huggingface_hub').snapshot_download(
-                        repo_id=model_id,
-                        local_dir=local_dir,
-                        revision="main"
-                    )
-                console.print(
-                    f"[bold green]SUCCESS:[/bold green] Finished downloading {model_id} into the directory '{local_dir}'")
-            except Exception as e:
-                console.print(f"[bold red]ERROR:[/bold red] Failed to download the model. Error: {e}")
-                return
+                f"[bold yellow]WARNING:[/bold yellow] Existing model directory '{local_dir}' found. Deleting...")
+            shutil.rmtree(local_dir)
+            console.print(f"[bold green]SUCCESS:[/bold green] Deleted existing model directory '{local_dir}'.")
 
-        llama_cpp_dir = "llama.cpp"
+        console.print(f"[bold blue]INFO:[/bold blue] Downloading model '{model_id}'...")
+        try:
+            if token:
+                lazy_import('huggingface_hub').snapshot_download(
+                    repo_id=model_id,
+                    local_dir=local_dir,
+                    revision="main",
+                    token=token
+                )
+            else:
+                lazy_import('huggingface_hub').snapshot_download(
+                    repo_id=model_id,
+                    local_dir=local_dir,
+                    revision="main"
+                )
+            console.print(
+                f"[bold green]SUCCESS:[/bold green] Finished downloading {model_id} into the directory '{local_dir}'")
+        except Exception as e:
+            console.print(f"[bold red]ERROR:[/bold red] Failed to download the model. Error: {e}")
+            return
+
+        current_dir = os.path.basename(os.getcwd())
+
+        if current_dir == "llama.cpp":
+            console.print(
+                "[bold blue]INFO:[/bold blue] Current directory is already llama.cpp. Using current directory.")
+            llama_cpp_dir = "."
+        else:
+            llama_cpp_dir = "llama.cpp"
+            if not os.path.exists(llama_cpp_dir):
+                console.print("[bold blue]INFO:[/bold blue] Setting up llama.cpp...")
+                git_executable = shutil.which("git")
+                if not git_executable:
+                    console.print("[bold red]ERROR:[/bold red] The 'git' executable was not found in your PATH.")
+                    return
+
+                try:
+                    subprocess.run(
+                        [
+                            git_executable,
+                            "clone",
+                            "--depth",
+                            "1",
+                            "https://github.com/ggerganov/llama.cpp",
+                            llama_cpp_dir
+                        ],
+                        check=True
+                    )
+                    console.print(
+                        f"[bold green]SUCCESS:[/bold green] Finished cloning llama.cpp repository into '{llama_cpp_dir}'")
+                except subprocess.CalledProcessError as e:
+                    console.print(f"[bold red]ERROR:[/bold red] Failed to clone the llama.cpp repository. Error: {e}")
+                    return
+            else:
+                console.print(f"[bold blue]INFO:[/bold blue] llama.cpp directory already exists. Skipping setup.")
+
         ready_file = os.path.join(llama_cpp_dir, "ready")
         requirements_file = os.path.join(llama_cpp_dir, "requirements.txt")
         venv_dir = os.path.join(llama_cpp_dir, "venv")
         venv_python = os.path.join(venv_dir, "bin", "python")
         convert_script = os.path.join(llama_cpp_dir, 'convert_hf_to_gguf.py')
-
-        if not os.path.exists(llama_cpp_dir):
-            console.print("[bold blue]INFO:[/bold blue] Setting up llama.cpp...")
-            git_executable = shutil.which("git")
-            if not git_executable:
-                console.print("[bold red]ERROR:[/bold red] The 'git' executable was not found in your PATH.")
-                return
-
-            try:
-                subprocess.run(
-                    [
-                        git_executable,
-                        "clone",
-                        "--depth",
-                        "1",
-                        "https://github.com/ggerganov/llama.cpp",
-                        llama_cpp_dir
-                    ],
-                    check=True
-                )
-                console.print(
-                    f"[bold green]SUCCESS:[/bold green] Finished cloning llama.cpp repository into '{llama_cpp_dir}'")
-            except subprocess.CalledProcessError as e:
-                console.print(f"[bold red]ERROR:[/bold red] Failed to clone the llama.cpp repository. Error: {e}")
-                return
 
         if not os.path.exists(ready_file):
             console.print("[bold blue]INFO:[/bold blue] Building llama.cpp...")
@@ -2569,6 +2581,8 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
                 console.print(
                     f"[bold red]ERROR:[/bold red] An error occurred during the setup of llama.cpp. Error: {e}")
                 return
+        else:
+            console.print("[bold blue]INFO:[/bold blue] llama.cpp is already built and ready.")
 
         output_file = os.path.join(local_dir, f"{repo_name}-fp16.bin")
         quantized_output_file = os.path.join(local_dir, f"{repo_name}-Q4_K_M.gguf")
@@ -3137,12 +3151,12 @@ def fpk_cli_handle_run(args, session):
     allowed_directory = Path.cwd()
 
     if not directory.is_dir() or not directory.exists():
-        logger.error("The flatpack '%s' does not exist or is not a directory.", directory)
+        console.print("")
         console.print(f"The flatpack '{directory}' does not exist or is not a directory.", style="bold red")
         return
 
     if not directory.is_relative_to(allowed_directory):
-        logger.error("The specified directory is not within allowed paths.")
+        console.print("")
         console.print("The specified directory is not within allowed paths.", style="bold red")
         return
 
@@ -3150,7 +3164,7 @@ def fpk_cli_handle_run(args, session):
     web_dir = directory / 'web'
 
     if not build_dir.exists() or not web_dir.exists():
-        logger.warning("The 'build' or 'web' directory is missing in the flatpack.")
+        console.print("")
         console.print("The 'build' or 'web' directory is missing in the flatpack.", style="bold yellow")
         return
 
@@ -3330,6 +3344,8 @@ def fpk_cli_handle_unbox(args, session):
             return
 
     logger.info("Directory name resolved to: '%s'", directory_name)
+
+    console.print("")
     console.print(f"Directory name resolved to: '{directory_name}'", style="bold green")
 
     try:
