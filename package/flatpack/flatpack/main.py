@@ -139,6 +139,7 @@ CSRF_EXEMPT_PATHS = [
 
 active_sessions = {}
 
+abort_requested = False
 build_in_progress = False
 shutdown_requested = False
 
@@ -222,6 +223,19 @@ logger = logging.getLogger("schedule_logger")
 schedule_lock = asyncio.Lock()
 
 uvicorn_server = None
+
+
+async def abort_build_process():
+    global build_in_progress, abort_requested
+    if build_in_progress:
+        abort_requested = True
+        logger.info("Build abort requested.")
+        while build_in_progress:
+            await asyncio.sleep(0.5)
+        abort_requested = False
+        logger.info("Build process aborted.")
+    else:
+        logger.info("No build in progress to abort.")
 
 
 def add_hook_to_database(hook: Hook):
@@ -738,7 +752,7 @@ def load_config():
 
 
 async def run_build_process(schedule_id=None):
-    global build_in_progress
+    global build_in_progress, abort_requested
 
     build_in_progress = True
     logger.info("Running build process...")
@@ -754,19 +768,34 @@ async def run_build_process(schedule_id=None):
         ]
 
         for step_name, duration in steps:
+            if abort_requested:
+                logger.info(f"Build aborted during step: {step_name}")
+                await update_build_status("aborted", schedule_id)
+                return
+
             await update_build_status(f"in_progress: {step_name}", schedule_id)
             await asyncio.sleep(duration)
+
+        if abort_requested:
+            logger.info("Build aborted before running build script")
+            await update_build_status("aborted", schedule_id)
+            return
 
         await update_build_status("in_progress: Running build script", schedule_id)
         await fpk_build(flatpack_directory)
 
-        await update_build_status("completed", schedule_id)
-        logger.info("Build process completed.")
+        if abort_requested:
+            logger.info("Build aborted after running build script")
+            await update_build_status("aborted", schedule_id)
+        else:
+            await update_build_status("completed", schedule_id)
+            logger.info("Build process completed.")
     except Exception as e:
         logger.error("Build process failed: %s", e)
         await update_build_status("failed", schedule_id, error=str(e))
     finally:
         build_in_progress = False
+        abort_requested = False
 
 
 async def run_scheduler():
@@ -848,7 +877,7 @@ def filter_log_line(line):
 
 
 async def run_subprocess(command, log_file, timeout=3600):
-    global shutdown_requested
+    global shutdown_requested, abort_requested
     out_r, out_w = pty.openpty()
     err_r, err_w = pty.openpty()
     process = subprocess.Popen(
@@ -863,7 +892,7 @@ async def run_subprocess(command, log_file, timeout=3600):
     streams = [OutStream(out_r), OutStream(err_r)]
     start_time = time.time()
 
-    while streams and not shutdown_requested:
+    while streams and not shutdown_requested and not abort_requested:
         if time.time() - start_time > timeout:
             logger.warning("Timeout after %s seconds. Terminating the process.", timeout)
             break
@@ -898,7 +927,11 @@ async def run_subprocess(command, log_file, timeout=3600):
         await asyncio.sleep(0)
 
     if process.poll() is None:
-        logger.info("Terminating subprocess...")
+        if abort_requested:
+            logger.info("Aborting subprocess...")
+        else:
+            logger.info("Terminating subprocess...")
+
         os.killpg(os.getpgid(process.pid), signal.SIGTERM)
         try:
             process.wait(timeout=5)
@@ -2764,6 +2797,47 @@ def setup_routes(app):
         except sqlite3.Error as e:
             logger.error("Database connection failed: %s", e)
             return {"message": f"Database connection failed: {e}"}
+
+    @app.post("/api/abort-build", dependencies=[Depends(csrf_protect)])
+    async def abort_build(token: str = Depends(authenticate_token)):
+        """Abort the current build process."""
+        if not build_in_progress:
+            return JSONResponse(content={"message": "No build in progress to abort."}, status_code=400)
+
+        await abort_build_process()
+        return JSONResponse(content={"message": "Build process aborted successfully."}, status_code=200)
+
+    @app.post("/api/build", dependencies=[Depends(csrf_protect)])
+    async def build_flatpack(
+            request: Request,
+            background_tasks: BackgroundTasks,
+            token: str = Depends(authenticate_token)
+    ):
+        """Trigger the build process for the flatpack."""
+        global abort_requested
+
+        if not flatpack_directory:
+            raise HTTPException(status_code=500, detail="Flatpack directory is not set")
+
+        if build_in_progress:
+            return JSONResponse(
+                content={"message": "A build is already in progress."},
+                status_code=409
+            )
+
+        try:
+            abort_requested = False
+            background_tasks.add_task(run_build_process, schedule_id=None)
+            logger.info("Started build process for flatpack located at %s", flatpack_directory)
+
+            return JSONResponse(
+                content={"flatpack": flatpack_directory, "message": "Build process started in background."},
+                status_code=200)
+        except Exception as e:
+            logger.error("Failed to start build process: %s", e)
+            return JSONResponse(
+                content={"flatpack": flatpack_directory, "message": f"Failed to start build process: {e}"},
+                status_code=500)
 
     @app.get("/api/build-status", dependencies=[Depends(csrf_protect)])
     async def get_build_status(token: str = Depends(authenticate_token)):
