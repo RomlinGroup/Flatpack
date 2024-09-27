@@ -3080,6 +3080,7 @@ def setup_routes(app):
         try:
             normalized_content = content.replace('\r\n', '\n').replace('\r', '\n')
             escaped_content = escape_content_parts(normalized_content)
+            
             with open(file_path, 'w', newline='\n') as file:
                 file.write(escaped_content)
             return JSONResponse(content={"message": "File saved successfully!"})
