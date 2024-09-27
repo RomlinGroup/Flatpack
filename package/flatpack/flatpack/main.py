@@ -1310,38 +1310,20 @@ def fpk_check_ngrok_auth():
 
 
 def fpk_create(flatpack_name, repo_url=TEMPLATE_REPO_URL):
-    """Create a new flatpack from a template repository.
-
-    Args:
-        flatpack_name (str): The name of the flatpack to create.
-        repo_url (str, optional): The URL of the template repository. Defaults to TEMPLATE_REPO_URL.
-
-    Raises:
-        ValueError: If the flatpack name format is invalid or if the directory already exists.
-        OSError: If there are issues with file or directory operations.
-        Exception: For any other unexpected errors.
-    """
+    """Create a new flatpack from a template repository."""
     if not re.match(r'^[a-z0-9-]+$', flatpack_name):
-        error_message = "Invalid name format. Only lowercase letters, numbers, and hyphens are allowed."
-        logger.error(error_message)
-        raise ValueError(error_message)
+        raise ValueError("Invalid name format. Only lowercase letters, numbers, and hyphens are allowed.")
 
     flatpack_name = flatpack_name.lower().replace(' ', '-')
     current_dir = os.getcwd()
     flatpack_dir = os.path.join(current_dir, flatpack_name)
+    template_dir = None
 
     if os.path.exists(flatpack_dir):
-        error_message = f"Directory '{flatpack_name}' already exists. Aborting creation."
-        logger.error(error_message)
-        raise ValueError(error_message)
+        raise ValueError(f"Directory '{flatpack_name}' already exists.")
 
     try:
         template_dir = fpk_download_and_extract_template(repo_url, current_dir)
-    except Exception as e:
-        logger.error("Failed to download and extract template: %s", e)
-        raise
-
-    try:
         os.makedirs(flatpack_dir, exist_ok=True)
         logger.info("Created flatpack directory: %s", flatpack_dir)
 
@@ -1354,29 +1336,16 @@ def fpk_create(flatpack_name, repo_url=TEMPLATE_REPO_URL):
                 shutil.copytree(s, d, dirs_exist_ok=True)
             else:
                 shutil.copy2(s, d)
+
         logger.info("Copied template files to flatpack directory: %s", flatpack_dir)
 
         files_to_edit = [
-            (
-                os.path.join(flatpack_dir, "README.md"),
-                r"# template",
-                f"# {flatpack_name}"
-            ),
-            (
-                os.path.join(flatpack_dir, "flatpack.toml"),
-                r"{{model_name}}",
-                flatpack_name
-            ),
-            (
-                os.path.join(flatpack_dir, "build.sh"),
-                r"export DEFAULT_REPO_NAME=template",
-                f"export DEFAULT_REPO_NAME={flatpack_name}"
-            ),
-            (
-                os.path.join(flatpack_dir, "build.sh"),
-                r"export FLATPACK_NAME=template",
-                f"export FLATPACK_NAME={flatpack_name}"
-            )
+            (os.path.join(flatpack_dir, "README.md"), r"# template", f"# {flatpack_name}"),
+            (os.path.join(flatpack_dir, "flatpack.toml"), r"{{model_name}}", flatpack_name),
+            (os.path.join(flatpack_dir, "build.sh"), r"export DEFAULT_REPO_NAME=template",
+             f"export DEFAULT_REPO_NAME={flatpack_name}"),
+            (os.path.join(flatpack_dir, "build.sh"), r"export FLATPACK_NAME=template",
+             f"export FLATPACK_NAME={flatpack_name}")
         ]
 
         for file_path, pattern, replacement in files_to_edit:
@@ -1385,16 +1354,27 @@ def fpk_create(flatpack_name, repo_url=TEMPLATE_REPO_URL):
             newdata = re.sub(pattern, replacement, filedata)
             with open(file_path, 'w') as file:
                 file.write(newdata)
-        logger.info("Edited template files for flatpack: %s", flatpack_name)
 
+        logger.info("Edited template files for flatpack: %s", flatpack_name)
         shutil.rmtree(template_dir)
         logger.info("Removed temporary template directory: %s", template_dir)
 
-    except OSError as e:
-        logger.error("Failed during flatpack creation: %s", e)
+    except KeyboardInterrupt:
+        logger.warning("Operation cancelled by user. Cleaning up...")
+        if template_dir and os.path.exists(template_dir):
+            shutil.rmtree(template_dir)
+        if os.path.exists(flatpack_dir):
+            shutil.rmtree(flatpack_dir)
+        raise
+
+    except Exception as e:
+        logger.error(f"An error occurred: {str(e)}")
+        if os.path.exists(flatpack_dir):
+            shutil.rmtree(flatpack_dir)
         raise
 
     logger.info("Successfully created %s", flatpack_name)
+    return flatpack_dir
 
 
 def fpk_display_disclaimer(directory_name: str, local: bool):
@@ -1483,10 +1463,14 @@ def fpk_download_and_extract_template(repo_url, dest_dir):
         extracted_dir = os.path.join(dest_dir, top_level_dir)
         os.rename(extracted_dir, template_dir)
 
-        index_html_path = os.path.join(template_dir, "index.html")
+        files_to_remove = ["app.css", "app.js", "index.html"]
 
-        if os.path.exists(index_html_path):
-            os.remove(index_html_path)
+        for file in files_to_remove:
+            file_path = os.path.join(template_dir, file)
+            if os.path.exists(file_path):
+                os.remove(file_path)
+            else:
+                print(f"File not found: {file}")
 
         logger.info(
             "Downloaded and extracted template from %s to %s", repo_url, dest_dir
@@ -2473,17 +2457,24 @@ def fpk_cli_handle_build(args, session):
 
 def fpk_cli_handle_create(args, session):
     if not args.input:
-        logger.error("No flatpack name specified.")
+        console.print("[bold red]Error:[/bold red] No flatpack name specified.")
         return
 
     flatpack_name = args.input
-
     if not fpk_valid_directory_name(flatpack_name):
-        logger.error("Invalid flatpack name: '%s'.", flatpack_name)
+        console.print(
+            f"[bold red]Error:[/bold red] Invalid flatpack name: '{flatpack_name}'. Only lowercase letters, numbers, and hyphens are allowed.")
         return
 
-    fpk_create(flatpack_name)
-    logger.info("Flatpack '%s' created successfully.", flatpack_name)
+    try:
+        with console.status(f"[bold blue]Creating flatpack '{flatpack_name}'..."):
+            fpk_create(flatpack_name)
+
+        console.print(f"[bold green]Success:[/bold green] Flatpack '{flatpack_name}' created successfully.")
+    except ValueError as e:
+        console.print(f"[bold yellow]Warning:[/bold yellow] {str(e)}")
+    except Exception as e:
+        console.print(f"[bold red]Error:[/bold red] An unexpected error occurred: {str(e)}")
 
 
 def fpk_cli_handle_compress(args, session: httpx.Client):
@@ -3378,7 +3369,7 @@ def fpk_cli_handle_unbox(args, session):
         session: The HTTP session.
     """
     if not args.input:
-        logger.error("No flatpack specified for the unbox command.")
+        console.print("")
         console.print("Please specify a flatpack for the unbox command.", style="bold red")
         return
 
@@ -3388,7 +3379,7 @@ def fpk_cli_handle_unbox(args, session):
     console.print("Running unbox process...", style="bold green")
 
     if directory_name not in existing_dirs and not args.local:
-        logger.error("The flatpack '%s' does not exist.", directory_name)
+        console.print("")
         console.print(f"The flatpack '{directory_name}' does not exist.", style="bold red")
         return
 
@@ -3399,7 +3390,7 @@ def fpk_cli_handle_unbox(args, session):
         if user_response == "YES":
             break
         if user_response == "NO":
-            logger.info("Installation aborted by user.")
+            console.print("")
             console.print("Installation aborted by user.", style="bold yellow")
             return
         logger.error("Invalid input from user. Expected 'YES' or 'NO'.")
