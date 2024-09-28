@@ -1,0 +1,7 @@
+[
+  {
+    "type": "bash",
+    "disabled": false,
+    "code": "chmod u+x ./dev/download_starter_pack.sh\n./dev/download_starter_pack.sh\nmake train_gpt2\nOMP_NUM_THREADS=8 ./train_gpt2"
+  }
+]

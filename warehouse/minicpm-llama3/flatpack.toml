@@ -45,12 +45,12 @@ setup_commands = [
 ]
 
 [[file]]
-from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/minicpm-llama3/build.sh"
-to_destination = "build.sh"
+from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/minicpm-llama3/custom.json"
+to_destination = "custom.json"
 
 [[file]]
-from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/minicpm-llama3/custom.sh"
-to_destination = "custom.sh"
+from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/minicpm-llama3/build.sh"
+to_destination = "build.sh"
 
 [[file]]
 from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/minicpm-llama3/device.sh"
@@ -63,10 +63,6 @@ to_destination = "tiger.png"
 [[run]]
 command = "chmod +x"
 file = "build.sh"
-
-[[run]]
-command = "chmod +x"
-file = "custom.sh"
 
 [[run]]
 command = "chmod +x"

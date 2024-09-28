@@ -1,0 +1,17 @@
+[
+  {
+    "type": "bash",
+    "disabled": false,
+    "code": "if [ -f ../tiger.png ]; then\n    cp -f ../tiger.png tiger.png\nfi"
+  },
+  {
+    "type": "bash",
+    "disabled": false,
+    "code": "../bin/python sample.py \\\n    --cpu \\\n    --image \"tiger.png\" \\\n    --prompt \"Should I pet this dog?\" \\\n    > output.txt \\\n    2>log.txt"
+  },
+  {
+    "type": "bash",
+    "disabled": false,
+    "code": "if [ -f \"output.txt\" ]; then\n    cat output.txt\nelse\n    echo \"Error: output.txt does not exist.\"\nfi"
+  }
+]

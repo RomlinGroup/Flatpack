@@ -1,0 +1,22 @@
+[
+  {
+    "type": "bash",
+    "disabled": false,
+    "code": "../bin/pip install --pre torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/nightly/cpu"
+  },
+  {
+    "type": "bash",
+    "disabled": false,
+    "code": "../bin/python data/shakespeare_char/prepare.py"
+  },
+  {
+    "type": "bash",
+    "disabled": false,
+    "code": "../bin/python train.py config/train_shakespeare_char.py \\\n    --device=cpu \\\n    --compile=False \\\n    --eval_iters=20 \\\n    --log_interval=1 \\\n    --block_size=64 \\\n    --batch_size=12 \\\n    --n_layer=4 \\\n    --n_head=4 \\\n    --n_embd=128 \\\n    --max_iters=2000 \\\n    --lr_decay_iters=2000 \\\n    --dropout=0.0"
+  },
+  {
+    "type": "bash",
+    "disabled": false,
+    "code": "../bin/python sample.py --out_dir=out-shakespeare-char --device=cpu > output.txt 2>&1"
+  }
+]

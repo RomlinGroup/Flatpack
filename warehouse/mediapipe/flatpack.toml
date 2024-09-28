@@ -44,12 +44,12 @@ branch = "master"
 # ]
 
 [[file]]
-from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/mediapipe/build.sh"
-to_destination = "build.sh"
+from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/mediapipe/custom.json"
+to_destination = "custom.json"
 
 [[file]]
-from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/mediapipe/custom.sh"
-to_destination = "custom.sh"
+from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/mediapipe/build.sh"
+to_destination = "build.sh"
 
 [[file]]
 from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/mediapipe/device.sh"
@@ -62,10 +62,6 @@ to_destination = "cat_and_dog.png"
 [[run]]
 command = "chmod +x"
 file = "build.sh"
-
-[[run]]
-command = "chmod +x"
-file = "custom.sh"
 
 [[run]]
 command = "chmod +x"

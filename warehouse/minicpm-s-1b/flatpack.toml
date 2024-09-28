@@ -43,12 +43,12 @@ setup_commands = [
 ]
 
 [[file]]
-from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/minicpm-s-1b/build.sh"
-to_destination = "build.sh"
+from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/minicpm-s-1b/custom.json"
+to_destination = "custom.json"
 
 [[file]]
-from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/minicpm-s-1b/custom.sh"
-to_destination = "custom.sh"
+from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/minicpm-s-1b/build.sh"
+to_destination = "build.sh"
 
 [[file]]
 from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/minicpm-s-1b/device.sh"
@@ -57,10 +57,6 @@ to_destination = "device.sh"
 [[run]]
 command = "chmod +x"
 file = "build.sh"
-
-[[run]]
-command = "chmod +x"
-file = "custom.sh"
 
 [[run]]
 command = "chmod +x"

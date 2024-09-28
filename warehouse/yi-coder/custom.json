@@ -1,0 +1,12 @@
+[
+  {
+    "type": "bash",
+    "disabled": false,
+    "code": "../bin/pip install --pre torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/nightly/cpu"
+  },
+  {
+    "type": "python",
+    "disabled": false,
+    "code": "from transformers import AutoModelForCausalLM, AutoTokenizer\n\ndevice = \"mps\"\nmodel_path = \"01-ai/Yi-Coder-9B-Chat\"\n\ntokenizer = AutoTokenizer.from_pretrained(model_path)\nmodel = AutoModelForCausalLM.from_pretrained(model_path, device_map=\"auto\").eval()\n\nprompt = \"Write a quick sort algorithm.\"\nmessages = [\n    {\"role\": \"system\", \"content\": \"You are a helpful assistant.\"},\n    {\"role\": \"user\", \"content\": prompt}\n]\n\ntext = tokenizer.apply_chat_template(\n    messages,\n    tokenize=False,\n    add_generation_prompt=True\n)\n\nmodel_inputs = tokenizer([text], return_tensors=\"pt\").to(device)\n\ngenerated_ids = model.generate(\n    model_inputs.input_ids,\n    max_new_tokens=1024,\n    eos_token_id=tokenizer.eos_token_id\n)\n\ngenerated_ids = [\n    output_ids[len(input_ids):] for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids)\n]\n\nresponse = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]\nprint(response)"
+  }
+]

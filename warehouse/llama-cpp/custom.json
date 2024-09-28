@@ -1,0 +1,17 @@
+[
+  {
+    "type": "bash",
+    "disabled": false,
+    "code": "if [ ! -f models/gemma-1.1-2b-it.Q4_K_M.gguf ]; then\n    wget -nc -O models/gemma-1.1-2b-it.Q4_K_M.gguf \"https://huggingface.co/ggml-org/gemma-1.1-2b-it-Q4_K_M-GGUF/resolve/main/gemma-1.1-2b-it.Q4_K_M.gguf\"\nelse\n    echo \"Model already exist.\"\nfi"
+  },
+  {
+    "type": "bash",
+    "disabled": false,
+    "code": "./llama-cli \\\n    -m models/gemma-1.1-2b-it.Q4_K_M.gguf \\\n    -n 64 \\\n    -p \"What is the meaning of life?\" \\\n    > output.txt \\\n    2>log.txt"
+  },
+  {
+    "type": "bash",
+    "disabled": false,
+    "code": "if [ -f \"output.txt\" ]; then\n    cat output.txt\nelse\n    echo \"Error: output.txt does not exist.\"\nfi"
+  }
+]
