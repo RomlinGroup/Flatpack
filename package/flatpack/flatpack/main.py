@@ -360,29 +360,15 @@ def create_session(token):
     return session_id
 
 
-def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path, use_euxo: bool = False):
+def create_temp_sh(custom_json_path: Path, temp_sh_path: Path, use_euxo: bool = False):
     try:
-        with custom_sh_path.open('r') as infile:
-            script = infile.read()
+        with custom_json_path.open('r', encoding='utf-8') as infile:
+            code_blocks = json.load(infile)
 
-        script = strip_html(script)
+        def is_block_disabled(block):
+            return block.get('disabled', False)
 
-        parts = []
-        lines = script.splitlines()
-        i = 0
-        while i < len(lines):
-            line = lines[i].strip()
-            if line.startswith(
-                    ('part_bash """', 'part_python """', 'disabled part_bash """', 'disabled part_python """')):
-                start_line = i
-                i += 1
-                while i < len(lines) and not lines[i].strip().endswith('"""'):
-                    i += 1
-                end_line = i + 1 if i < len(lines) else i
-                parts.append('\n'.join(lines[start_line:end_line]).strip())
-            i += 1
-
-        last_count = sum(1 for part in parts if not part.startswith('disabled'))
+        last_count = sum(1 for block in code_blocks if not is_block_disabled(block))
 
         temp_sh_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -392,7 +378,7 @@ def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path, use_euxo: bool = Fa
         with tempfile.NamedTemporaryFile(mode='w', delete=False) as exec_python_script:
             exec_python_script_path = Path(exec_python_script.name)
 
-        with temp_sh_path.open('w') as outfile:
+        with temp_sh_path.open('w', encoding='utf-8') as outfile:
             outfile.write("#!/bin/bash\n")
             outfile.write(f"set -{'eux' if use_euxo else 'eu'}o pipefail\n")
 
@@ -454,39 +440,49 @@ def create_temp_sh(custom_sh_path: Path, temp_sh_path: Path, use_euxo: bool = Fa
 
             outfile.write("update_eval_build \"$CURR\" 1\n\n")
 
-            for part in parts:
-                part_lines = part.splitlines()
-                if len(part_lines) < 2:
+            for block in code_blocks:
+                if is_block_disabled(block):
                     continue
 
-                header = part_lines[0].strip()
-                code_lines = part_lines[1:-1]
-
-                if header.startswith('disabled'):
-                    continue
-
-                language = 'bash' if 'part_bash' in header else 'python' if 'part_python' in header else None
-                code = '\n'.join(code_lines).strip().replace('\\"', '"')
+                language = block.get('type')
+                code = block.get('code', '').replace('\r\n', '\n').replace('\r', '\n')
 
                 if language == 'bash':
-                    code = code.replace('$$', r'$$$$')
                     outfile.write(f"{code}\n")
                     outfile.write("((CURR++))\n")
 
+
                 elif language == 'python':
-                    context_code = "\n".join(
-                        line for line in code_lines if not line.strip().startswith(('print(', 'subprocess.run')))
-                    execution_code = "\n".join(
-                        line for line in code_lines if line.strip().startswith(('print(', 'subprocess.run')))
+                    context_code = []
+                    execution_code = []
+                    in_execution = False
+                    code_lines = code.splitlines()
+
+                    for line in code_lines:
+                        stripped_line = line.strip()
+
+                        if stripped_line.startswith(('subprocess.run(', 'print(', 'with open(')):
+                            in_execution = True
+
+                        if in_execution:
+                            execution_code.append(line)
+                        else:
+                            context_code.append(line)
 
                     if context_code:
-                        outfile.write(f"echo \"{context_code}\" >> \"$CONTEXT_PYTHON_SCRIPT\"\n")
+                        context_code_str = '\n'.join(context_code)
+                        context_code_escaped = context_code_str.replace('"', r'\"').replace('`', r'\`')
+                        outfile.write(f"echo \"{context_code_escaped}\" >> \"$CONTEXT_PYTHON_SCRIPT\"\n")
 
                     outfile.write("echo \"try:\" > \"$EXEC_PYTHON_SCRIPT\"\n")
                     outfile.write("sed 's/^/    /' \"$CONTEXT_PYTHON_SCRIPT\" >> \"$EXEC_PYTHON_SCRIPT\"\n")
 
                     if execution_code:
-                        outfile.write(f"echo \"{execution_code}\" | sed 's/^/    /' >> \"$EXEC_PYTHON_SCRIPT\"\n")
+                        execution_code_str = '\n'.join(execution_code)
+                        execution_code_escaped = execution_code_str.replace('"', r'\"').replace('`', r'\`')
+
+                        outfile.write(
+                            f"echo \"{execution_code_escaped}\" | sed 's/^/    /' >> \"$EXEC_PYTHON_SCRIPT\"\n")
 
                     outfile.write("echo \"except Exception as e:\" >> \"$EXEC_PYTHON_SCRIPT\"\n")
                     outfile.write("echo \"    print(e)\" >> \"$EXEC_PYTHON_SCRIPT\"\n")
@@ -1173,14 +1169,14 @@ async def fpk_build(directory: Union[str, None], use_euxo: bool = False):
         logger.error("The build directory '%s' does not exist.", build_dir)
         raise ValueError(f"The build directory '{build_dir}' does not exist.")
 
-    custom_sh_path = build_dir / 'custom.sh'
+    custom_json_path = build_dir / 'custom.json'
 
-    if not custom_sh_path.exists() or not custom_sh_path.is_file():
-        logger.error("custom.sh not found in %s. Build process canceled.", build_dir)
-        raise FileNotFoundError(f"custom.sh not found in {build_dir}. Build process canceled.")
+    if not custom_json_path.exists() or not custom_json_path.is_file():
+        logger.error("custom.json not found in %s. Build process canceled.", build_dir)
+        raise FileNotFoundError(f"custom.json not found in {build_dir}. Build process canceled.")
 
     temp_sh_path = build_dir / 'temp.sh'
-    create_temp_sh(custom_sh_path, temp_sh_path, use_euxo=use_euxo)
+    create_temp_sh(custom_json_path, temp_sh_path, use_euxo=use_euxo)
 
     building_script_path = build_dir / 'build.sh'
 
@@ -2961,41 +2957,34 @@ def setup_routes(app):
             logger.error("Failed to retrieve hooks: %s", e)
             raise HTTPException(status_code=500, detail="Failed to retrieve hooks.")
 
-    @app.get("/api/load_file", dependencies=[Depends(csrf_protect)])
+    @app.get("/api/load_file")
     async def load_file(
-            request: Request,
             filename: str,
             token: str = Depends(authenticate_token)
     ):
-        """Load and return the contents of a specified file from the flatpack directory."""
         if not flatpack_directory:
             raise HTTPException(status_code=500, detail="Flatpack directory is not set")
 
         file_path = os.path.join(flatpack_directory, 'build', filename)
 
-        if not os.path.commonpath([flatpack_directory, os.path.realpath(file_path)]).startswith(
-                os.path.realpath(flatpack_directory)):
-            raise HTTPException(status_code=403, detail="Access to the requested file is forbidden")
-
-        if os.path.exists(file_path):
-            try:
-                with open(file_path, 'r') as file:
-                    content = file.read()
-                    unescaped_content = unescape_content_parts(content)
-                    return JSONResponse(content={"content": unescaped_content})
-            except Exception as e:
-                raise HTTPException(status_code=500, detail=f"Error reading file: {e}")
-        else:
+        if not os.path.isfile(file_path):
             raise HTTPException(status_code=404, detail="File not found")
 
-    @app.post("/api/logout", dependencies=[Depends(csrf_protect)])
-    async def logout(request: Request, session_id: str = Cookie(None)):
-        """End the user's session."""
-        if session_id:
-            end_session(session_id)
-        response = JSONResponse(content={"message": "Logged out successfully."}, status_code=200)
-        response.delete_cookie(key="session_id")
-        return response
+        try:
+            with open(file_path, 'r', encoding='utf-8') as file:
+                code_blocks = json.load(file)
+
+                if not isinstance(code_blocks, list):
+                    raise ValueError("Invalid file format: Expected a list of code blocks")
+
+                json_content = json.dumps(code_blocks)
+
+                base64_content = base64.b64encode(json_content.encode('utf-8')).decode('utf-8')
+
+                return JSONResponse(content={"content": base64_content})
+
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Failed to load file: {e}")
 
     @app.get("/api/logs", dependencies=[Depends(csrf_protect)])
     async def get_all_logs(request: Request, token: str = Depends(authenticate_token)):
@@ -3067,7 +3056,6 @@ def setup_routes(app):
             content: str = Form(...),
             token: str = Depends(authenticate_token)
     ):
-        """Save the provided content to the specified file within the flatpack directory."""
         if not flatpack_directory:
             raise HTTPException(status_code=500, detail="Flatpack directory is not set")
 
@@ -3078,12 +3066,15 @@ def setup_routes(app):
             raise HTTPException(status_code=403, detail="Access to the requested file is forbidden")
 
         try:
-            normalized_content = content.replace('\r\n', '\n').replace('\r', '\n')
-            escaped_content = escape_content_parts(normalized_content)
-            
-            with open(file_path, 'w', newline='\n') as file:
-                file.write(escaped_content)
+            decoded_content = base64.b64decode(content.encode('utf-8')).decode('utf-8')
+
+            code_blocks = json.loads(decoded_content)
+
+            with open(file_path, 'w', encoding='utf-8') as file:
+                json.dump(code_blocks, file, ensure_ascii=False, indent=4)
+
             return JSONResponse(content={"message": "File saved successfully!"})
+
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Failed to save file: {e}")
 
