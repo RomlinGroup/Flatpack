@@ -180,8 +180,8 @@ flatpack compress <hf_model_name> --token <hf_token>
   - index.html
   - flatpack.toml
   - README.md
+  - custom.json
   - build.sh
-  - custom.sh
   - device.sh
 
 ### Code signing
