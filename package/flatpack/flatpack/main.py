@@ -3136,11 +3136,12 @@ def setup_routes(app):
         """Check if the user is authenticated."""
         return JSONResponse(content={"authenticated": True}, status_code=200)
 
-    @app.post("/api/validate_token", dependencies=[Depends(csrf_protect)])
+    @app.post("/api/validate_token")
     async def validate_token(request: Request, api_token: str = Form(...)):
         """Validate the provided API token and create a session."""
         global VALIDATION_ATTEMPTS
         stored_token = get_token()
+
         if not stored_token:
             return JSONResponse(content={"message": "API token is not set."}, status_code=200)
         if validate_api_token(api_token):
