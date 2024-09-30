@@ -1910,6 +1910,7 @@ def fpk_update(flatpack_name: str, session: requests.Session, branch: str = "mai
         None
     """
     files_to_update = ['app.css', 'app.js', 'device.sh', 'index.html', 'teletext.woff2']
+    binary_extensions = ['.sh', '.woff2']
 
     flatpack_dir = Path.cwd() / flatpack_name
 
@@ -1937,21 +1938,28 @@ def fpk_update(flatpack_name: str, session: requests.Session, branch: str = "mai
             file_data = response.json()
 
             if 'content' in file_data:
-                content = base64.b64decode(file_data['content']).decode('utf-8')
+                file_content = base64.b64decode(file_data['content'])
 
-                with open(local_file_path, 'w') as local_file:
-                    local_file.write(content)
+                if any(file.endswith(ext) for ext in binary_extensions):
+                    with open(local_file_path, 'wb') as local_file:
+                        local_file.write(file_content)
+                else:
+                    content = file_content.decode('utf-8')
+                    with open(local_file_path, 'w', encoding='utf-8') as local_file:
+                        local_file.write(content)
 
                 if local_file_path.exists():
                     console.print(
-                        f"[bold green]Replaced[/bold green] existing {file} in flatpack '{flatpack_name}/build'")
+                        f"[bold green]Replaced[/bold green] existing {file} in flatpack '{flatpack_name}/web'")
                 else:
-                    console.print(f"[bold green]Added[/bold green] new {file} to flatpack '{flatpack_name}/build'")
+                    console.print(f"[bold green]Added[/bold green] new {file} to flatpack '{flatpack_name}/web'")
             else:
                 console.print(f"[bold red]Error:[/bold red] Failed to retrieve content for {file}")
 
         except requests.RequestException as e:
             console.print(f"[bold red]Error:[/bold red] Failed to update {file}: {str(e)}")
+        except UnicodeDecodeError as e:
+            console.print(f"[bold red]Error:[/bold red] Failed to decode content for {file}: {str(e)}")
 
     console.print(f"[bold green]Flatpack '{flatpack_name}' update completed.[/bold green]")
 
