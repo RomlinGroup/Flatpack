@@ -1459,7 +1459,7 @@ def fpk_download_and_extract_template(repo_url, dest_dir):
         extracted_dir = os.path.join(dest_dir, top_level_dir)
         os.rename(extracted_dir, template_dir)
 
-        files_to_remove = ["app.css", "app.js", "index.html"]
+        files_to_remove = ["app.css", "app.js", "index.html", "teletext.woff2"]
 
         for file in files_to_remove:
             file_path = os.path.join(template_dir, file)
@@ -1775,7 +1775,7 @@ def fpk_unbox(directory_name: str, session: httpx.Client, local: bool = False) -
         output_dir.mkdir(parents=True, exist_ok=True)
         logger.info("Created /web/output directory: %s", output_dir)
 
-        files_to_download = ['index.html', 'app.css', 'app.js']
+        files_to_download = ['app.css', 'app.js', 'index.html', "teletext.woff2"]
 
         for file in files_to_download:
             file_url = f"{TEMPLATE_REPO_URL}/contents/{file}"
@@ -1911,7 +1911,7 @@ def fpk_update(flatpack_name: str, session: requests.Session, branch: str = "mai
     Returns:
         None
     """
-    files_to_update = ['app.css', 'app.js', 'device.sh', 'index.html']
+    files_to_update = ['app.css', 'app.js', 'device.sh', 'index.html', 'teletext.woff2']
 
     flatpack_dir = Path.cwd() / flatpack_name
 
