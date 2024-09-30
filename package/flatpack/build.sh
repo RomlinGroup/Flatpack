@@ -17,7 +17,6 @@ check_flatpack() {
 }
 
 echo "Cleaning up old build and distribution directories..."
-
 remove_dir "build"
 remove_dir "dist"
 remove_dir "flatpack.egg-info"
@@ -28,7 +27,6 @@ command -v python3 >/dev/null 2>&1 || {
   echo "Python3 is not found. Please install it first."
   exit 1
 }
-
 echo "Using Python version: $(python3 --version)"
 
 if ! command -v pipx &>/dev/null; then
@@ -51,3 +49,14 @@ echo "Building the PyPI package..."
 python -m build
 
 deactivate
+
+echo "Installing the locally built version of flatpack..."
+pipx install dist/*.whl
+
+echo "Ensuring pipx executables are in PATH..."
+pipx ensurepath
+
+echo "Installation complete. Checking final state..."
+check_flatpack
+
+echo "You may need to restart your terminal or run 'source ~/.zshrc' (or equivalent) for PATH changes to take effect."
