@@ -1735,16 +1735,7 @@ def fpk_set_secure_file_permissions(file_path):
 
 
 def fpk_unbox(directory_name: str, session: httpx.Client, local: bool = False) -> bool:
-    """Unbox a flatpack from GitHub or a local directory.
-
-    Args:
-        directory_name (str): Name of the flatpack directory.
-        session (httpx.Client): HTTP client session for making requests.
-        local (bool): Indicates if the flatpack is local. Defaults to False.
-
-    Returns:
-        bool: True if unboxing was successful, False otherwise.
-    """
+    """Unbox a flatpack from GitHub or a local directory."""
     if not fpk_valid_directory_name(directory_name):
         logger.error("Invalid directory name: '%s'", directory_name)
         return False
@@ -1781,12 +1772,19 @@ def fpk_unbox(directory_name: str, session: httpx.Client, local: bool = False) -
             file_url = f"{TEMPLATE_REPO_URL}/contents/{file}"
             response = session.get(file_url)
             response.raise_for_status()
+
             file_content = response.json()['content']
-            file_decoded = base64.b64decode(file_content).decode('utf-8')
+            file_decoded = base64.b64decode(file_content)
 
             file_path = web_dir / file
-            with open(file_path, 'w') as f:
-                f.write(file_decoded)
+
+            if file.endswith(".woff2"):
+                with open(file_path, 'wb') as f:
+                    f.write(file_decoded)
+            else:
+                with open(file_path, 'w', encoding='utf-8') as f:
+                    f.write(file_decoded.decode('utf-8'))
+
             logger.info("Downloaded and saved %s to %s", file, file_path)
 
     except httpx.RequestError as e:
