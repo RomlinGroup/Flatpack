@@ -24,6 +24,10 @@ Flatpack 通过微语言模型和模型压缩普及 AI 和 ML。我们的平台�
 
 > **Flatpack:** "Picture merging the Swedish ingenuity of flatpacks (hence our name) and ready-to-assemble furniture with the imaginative appeal of certain Danish snap-together toy bricks. Our method of developing micro language models is designed to be intelligently integrated into the physical world."
 
+<p align="center">
+  <img src="https://fpk.ai/assets/flatpack_demo.svg" width="600">
+</p>
+
 ## Micro language models
 
 [Micro language models](http://microlanguagemodels.com) (100M to 10B parameters) provide an efficient alternative to large language models, addressing deployment, reliability, and scalability challenges. Their compact size enables rapid pre-training and fine-tuning, allowing organisations to adapt swiftly to market shifts and specific needs. These models can be readily deployed in edge-adjacent environments such as laptops, microprocessors, and smartphones, offering accessibility and versatility.
