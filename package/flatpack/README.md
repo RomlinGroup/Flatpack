@@ -10,6 +10,10 @@
 
 ## Ready-to-assemble AI
 
+<p align="center">
+  <img src="https://fpk.ai/assets/flatpack_demo.svg" width="600">
+</p>
+
 At Flatpack, our mission is clear: we are committed to building trust in AI.
 
 Flatpack democratises AI and ML through micro language models and model compression. Our platform enables users to train
