@@ -185,7 +185,7 @@ flatpack compress <hf_model_name> --token <hf_token>
   - build.sh
   - device.sh
 
-> The Teletext50 font ([teletext.woff2](https://github.com/RomlinGroup/template/raw/refs/heads/main/teletext.woff2)) in our template is graciously borrowed from [github.com/glxxyz/bedstead](https://github.com/glxxyz/bedstead) ([CC0 1.0 Universal](https://github.com/glxxyz/bedstead/blob/main/COPYING))
+> The Teletext50 font ([teletext.woff2](https://github.com/RomlinGroup/template/raw/refs/heads/main/teletext.woff2)) in our template is graciously borrowed from [https://github.com/glxxyz/bedstead](https://github.com/glxxyz/bedstead) ([CC0 1.0 Universal](https://github.com/glxxyz/bedstead/blob/main/COPYING))
 
 ### Code signing
 
