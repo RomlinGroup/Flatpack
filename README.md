@@ -14,6 +14,10 @@
 
 ## Ready-to-assemble AI
 
+<p align="center">
+  <img src="https://fpk.ai/assets/flatpack_demo.svg" width="600">
+</p>
+
 At Flatpack, our mission is clear: we are committed to building trust in AI.
 
 Flatpack democratises AI and ML through micro language models and model compression. Our platform enables users to train custom language models with 100M to 10B parameters. We introduce flatpacks (FPKs) to integrate AI and ML into edge computing, electronic components, and robots.
@@ -23,10 +27,6 @@ Flatpack democratises AI and ML through micro language models and model compress
 Flatpack 通过微语言模型和模型压缩普及 AI 和 ML。我们的平台使用户能够训练具有 100M 到 10B 个参数的自定义语言模型。我们引入了 flatpack (FPK)，将 AI 和 ML 集成到边缘计算、电子元件和机器人中。
 
 > **Flatpack:** "Picture merging the Swedish ingenuity of flatpacks (hence our name) and ready-to-assemble furniture with the imaginative appeal of certain Danish snap-together toy bricks. Our method of developing micro language models is designed to be intelligently integrated into the physical world."
-
-<p align="center">
-  <img src="https://fpk.ai/assets/flatpack_demo.svg" width="600">
-</p>
 
 ## Micro language models
 
