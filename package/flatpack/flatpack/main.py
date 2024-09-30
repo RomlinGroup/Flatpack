@@ -765,7 +765,7 @@ async def run_build_process(schedule_id=None):
 
         for step_name, duration in steps:
             if abort_requested:
-                logger.info(f"Build aborted during step: {step_name}")
+                logger.info("Build aborted during step: %s", step_name)
                 await update_build_status("aborted", schedule_id)
                 return
 
@@ -1364,7 +1364,7 @@ def fpk_create(flatpack_name, repo_url=TEMPLATE_REPO_URL):
         raise
 
     except Exception as e:
-        logger.error(f"An error occurred: {str(e)}")
+        logger.error("An error occurred: %s", str(e))
         if os.path.exists(flatpack_dir):
             shutil.rmtree(flatpack_dir)
         raise
