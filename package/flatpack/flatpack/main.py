@@ -453,7 +453,7 @@ def create_temp_sh(custom_json_path: Path, temp_sh_path: Path, use_euxo: bool = 
             outfile.write("    if [ \"$hook_type\" = \"bash\" ]; then\n")
             outfile.write("        eval \"$hook_script\"\n")
             outfile.write("    elif [ \"$hook_type\" = \"python\" ]; then\n")
-            outfile.write("        echo \"$hook_script\" | $VENV_PYTHON\n")
+            outfile.write("        echo \"$hook_script\" >> \"$CONTEXT_PYTHON_SCRIPT\"\n")
             outfile.write("    else\n")
             outfile.write("        echo \"Unsupported hook type: $hook_type\"\n")
             outfile.write("    fi\n")
