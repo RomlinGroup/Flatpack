@@ -445,7 +445,28 @@ def create_temp_sh(custom_json_path: Path, temp_sh_path: Path, use_euxo: bool = 
             outfile.write("    }\" > \"$EVAL_BUILD\"\n")
             outfile.write("}\n\n")
 
+            outfile.write("function execute_hook() {\n")
+            outfile.write("    local hook_name=\"$1\"\n")
+            outfile.write("    local hook_type=\"$2\"\n")
+            outfile.write("    local hook_script=\"$3\"\n")
+            outfile.write("    echo \"Executing $hook_type hook: $hook_name\"\n")
+            outfile.write("    if [ \"$hook_type\" = \"bash\" ]; then\n")
+            outfile.write("        eval \"$hook_script\"\n")
+            outfile.write("    elif [ \"$hook_type\" = \"python\" ]; then\n")
+            outfile.write("        echo \"$hook_script\" | $VENV_PYTHON\n")
+            outfile.write("    else\n")
+            outfile.write("        echo \"Unsupported hook type: $hook_type\"\n")
+            outfile.write("    fi\n")
+            outfile.write("}\n\n")
+
             outfile.write("update_eval_build \"$CURR\" 1\n\n")
+
+            outfile.write("# Execute 'before' hooks\n")
+            for hook in hooks:
+                if hook.get('hook_placement') == 'before':
+                    hook_script = hook['hook_script'].replace('"', '\\"')
+                    outfile.write(f"execute_hook \"{hook['hook_name']}\" \"{hook['hook_type']}\" \"{hook_script}\"\n")
+            outfile.write("\n")
 
             for block in code_blocks:
                 if is_block_disabled(block):
@@ -457,7 +478,6 @@ def create_temp_sh(custom_json_path: Path, temp_sh_path: Path, use_euxo: bool = 
                 if language == 'bash':
                     outfile.write(f"{code}\n")
                     outfile.write("((CURR++))\n")
-
 
                 elif language == 'python':
                     context_code = []
@@ -510,27 +530,12 @@ def create_temp_sh(custom_json_path: Path, temp_sh_path: Path, use_euxo: bool = 
 
                 outfile.write("update_eval_build \"$CURR\" \"$EVAL\"\n\n")
 
-            outfile.write("function execute_hook() {\n")
-            outfile.write("    local hook_name=\"$1\"\n")
-            outfile.write("    local hook_type=\"$2\"\n")
-            outfile.write("    local hook_script=\"$3\"\n")
-            outfile.write("    echo \"Executing $hook_type hook: $hook_name\"\n")
-            outfile.write("    if [ \"$hook_type\" = \"bash\" ]; then\n")
-            outfile.write("        eval \"$hook_script\"\n")
-            outfile.write("    elif [ \"$hook_type\" = \"python\" ]; then\n")
-            outfile.write("        echo \"$hook_script\" | $VENV_PYTHON\n")
-            outfile.write("    else\n")
-            outfile.write("        echo \"Unsupported hook type: $hook_type\"\n")
-            outfile.write("    fi\n")
-            outfile.write("}\n\n")
-
-            outfile.write("# Execute hooks\n")
-
+            outfile.write("# Execute 'after' hooks\n")
             for hook in hooks:
-                hook_script = hook['hook_script'].replace('"', '\\"')
-                outfile.write(f"execute_hook \"{hook['hook_name']}\" \"{hook['hook_type']}\" \"{hook_script}\"\n")
-
-            outfile.write("\n\n")
+                if hook.get('hook_placement') == 'after':
+                    hook_script = hook['hook_script'].replace('"', '\\"')
+                    outfile.write(f"execute_hook \"{hook['hook_name']}\" \"{hook['hook_type']}\" \"{hook_script}\"\n")
+            outfile.write("\n")
 
         logger.info("Temp script generated successfully at %s", temp_sh_path)
 
