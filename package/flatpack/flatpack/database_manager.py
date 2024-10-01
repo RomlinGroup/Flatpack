@@ -70,6 +70,7 @@ class DatabaseManager:
             CREATE TABLE IF NOT EXISTS flatpack_hooks (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 hook_name TEXT NOT NULL,
+                hook_placement TEXT NOT NULL,
                 hook_script TEXT NOT NULL,
                 hook_type TEXT NOT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP

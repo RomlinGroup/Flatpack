@@ -163,6 +163,7 @@ class EndpointFilter(logging.Filter):
 
 class Hook(BaseModel):
     hook_name: str
+    hook_placement: str
     hook_script: str
     hook_type: str
 
@@ -243,7 +244,7 @@ def add_hook_to_database(hook: Hook):
     global db_manager
     ensure_database_initialized()
     try:
-        hook_id = db_manager.add_hook(hook.hook_name, hook.hook_script, hook.hook_type)
+        hook_id = db_manager.add_hook(hook.hook_name, hook.hook_placement, hook.hook_script, hook.hook_type)
         return {"message": "Hook added successfully.", "hook_id": hook_id}
     except Exception as e:
         logger.error("An error occurred while adding the hook: %s", e)
