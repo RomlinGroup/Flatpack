@@ -244,8 +244,16 @@ def add_hook_to_database(hook: Hook):
     global db_manager
     ensure_database_initialized()
     try:
-        hook_id = db_manager.add_hook(hook.hook_name, hook.hook_placement, hook.hook_script, hook.hook_type)
-        return {"message": "Hook added successfully.", "hook_id": hook_id}
+        if db_manager.hook_exists(hook.hook_name):
+            existing_hook = db_manager.get_hook_by_name(hook.hook_name)
+            return {
+                "message": "Hook with this name already exists.",
+                "existing_hook": existing_hook,
+                "new_hook": hook.dict()
+            }
+        else:
+            hook_id = db_manager.add_hook(hook.hook_name, hook.hook_placement, hook.hook_script, hook.hook_type)
+            return {"message": "Hook added successfully.", "hook_id": hook_id}
     except Exception as e:
         logger.error("An error occurred while adding the hook: %s", e)
         raise HTTPException(status_code=500, detail=f"An error occurred while adding the hook: {e}")
@@ -2953,6 +2961,8 @@ def setup_routes(app):
     async def add_hook(hook: Hook, token: str = Depends(authenticate_token)):
         try:
             response = add_hook_to_database(hook)
+            if "existing_hook" in response:
+                return JSONResponse(content=response, status_code=409)
             return JSONResponse(content=response, status_code=201)
         except HTTPException as e:
             raise e
@@ -2960,18 +2970,19 @@ def setup_routes(app):
             logger.error("Failed to add hook: %s", e)
             raise HTTPException(status_code=500, detail="Failed to add hook.")
 
-    @app.delete("/api/hooks/{hook_id}", dependencies=[Depends(csrf_protect)])
-    async def delete_hook(hook_id: int, token: str = Depends(authenticate_token)):
-        """Delete a hook from the database by its ID."""
+    @app.put("/api/hooks/{hook_id}", dependencies=[Depends(csrf_protect)])
+    async def update_hook(hook_id: int, hook: Hook, token: str = Depends(authenticate_token)):
         ensure_database_initialized()
         try:
-            if db_manager.delete_hook(hook_id):
-                return JSONResponse(content={"message": "Hook deleted successfully."}, status_code=200)
+            success = db_manager.update_hook(hook_id, hook.hook_name, hook.hook_placement, hook.hook_script,
+                                             hook.hook_type)
+            if success:
+                return JSONResponse(content={"message": "Hook updated successfully."}, status_code=200)
             else:
-                raise HTTPException(status_code=404, detail="Hook not found")
+                raise HTTPException(status_code=404, detail="Hook not found or update failed.")
         except Exception as e:
-            logger.error("An error occurred while deleting the hook: %s", e)
-            raise HTTPException(status_code=500, detail=f"An error occurred while deleting the hook: {e}")
+            logger.error("An error occurred while updating the hook: %s", e)
+            raise HTTPException(status_code=500, detail=f"An error occurred while updating the hook: {e}")
 
     @app.get("/api/hooks", response_model=List[Hook], dependencies=[Depends(csrf_protect)])
     async def get_hooks(token: str = Depends(authenticate_token)):

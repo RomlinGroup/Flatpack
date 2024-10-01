@@ -182,6 +182,42 @@ class DatabaseManager:
             for row in results
         ]
 
+    def get_hook_by_name(self, hook_name: str) -> Optional[Dict[str, Any]]:
+        query = """
+        SELECT id, hook_name, hook_placement, hook_script, hook_type, created_at
+        FROM flatpack_hooks
+        WHERE hook_name = ?
+        """
+        result = self._fetch_one(query, (hook_name,))
+        if result:
+            return {
+                "id": result[0],
+                "hook_name": result[1],
+                "hook_placement": result[2],
+                "hook_script": result[3],
+                "hook_type": result[4],
+                "created_at": result[5]
+            }
+        return None
+
+    def hook_exists(self, hook_name: str) -> bool:
+        query = "SELECT COUNT(*) FROM flatpack_hooks WHERE hook_name = ?"
+        result = self._fetch_one(query, (hook_name,))
+        return result[0] > 0 if result else False
+
+    def update_hook(self, hook_id: int, hook_name: str, hook_placement: str, hook_script: str, hook_type: str) -> bool:
+        query = """
+        UPDATE flatpack_hooks 
+        SET hook_name = ?, hook_placement = ?, hook_script = ?, hook_type = ?
+        WHERE id = ?
+        """
+        try:
+            self._execute_query(query, (hook_name, hook_placement, hook_script, hook_type, hook_id))
+            return True
+        except Exception as e:
+            logger.error("Error updating hook with ID %s: %s", hook_id, str(e))
+            return False
+
     # Schedule operations
     def add_schedule(self, schedule_type: str, pattern: Optional[str], datetimes: Optional[List[str]]) -> int:
         query = """
