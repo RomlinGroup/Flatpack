@@ -27,6 +27,7 @@ import json
 import logging
 import mimetypes
 import pty
+import random
 import re
 import secrets
 import select
@@ -361,6 +362,8 @@ def create_session(token):
 
 
 def create_temp_sh(custom_json_path: Path, temp_sh_path: Path, use_euxo: bool = False):
+    global flatpack_directory
+
     try:
         with custom_json_path.open('r', encoding='utf-8') as infile:
             code_blocks = json.load(infile)
@@ -377,6 +380,9 @@ def create_temp_sh(custom_json_path: Path, temp_sh_path: Path, use_euxo: bool = 
 
         with tempfile.NamedTemporaryFile(mode='w', delete=False) as exec_python_script:
             exec_python_script_path = Path(exec_python_script.name)
+
+        ensure_database_initialized()
+        hooks = db_manager.get_all_hooks()
 
         with temp_sh_path.open('w', encoding='utf-8') as outfile:
             outfile.write("#!/bin/bash\n")
@@ -503,6 +509,28 @@ def create_temp_sh(custom_json_path: Path, temp_sh_path: Path, use_euxo: bool = 
 
                 outfile.write("update_eval_build \"$CURR\" \"$EVAL\"\n\n")
 
+            outfile.write("function execute_hook() {\n")
+            outfile.write("    local hook_name=\"$1\"\n")
+            outfile.write("    local hook_type=\"$2\"\n")
+            outfile.write("    local hook_script=\"$3\"\n")
+            outfile.write("    echo \"Executing $hook_type hook: $hook_name\"\n")
+            outfile.write("    if [ \"$hook_type\" = \"bash\" ]; then\n")
+            outfile.write("        eval \"$hook_script\"\n")
+            outfile.write("    elif [ \"$hook_type\" = \"python\" ]; then\n")
+            outfile.write("        echo \"$hook_script\" | $VENV_PYTHON\n")
+            outfile.write("    else\n")
+            outfile.write("        echo \"Unsupported hook type: $hook_type\"\n")
+            outfile.write("    fi\n")
+            outfile.write("}\n\n")
+
+            outfile.write("# Execute hooks\n")
+
+            for hook in hooks:
+                hook_script = hook['hook_script'].replace('"', '\\"')
+                outfile.write(f"execute_hook \"{hook['hook_name']}\" \"{hook['hook_type']}\" \"{hook_script}\"\n")
+
+            outfile.write("\n\n")
+
         logger.info("Temp script generated successfully at %s", temp_sh_path)
 
     except Exception as e:
@@ -623,9 +651,12 @@ def end_session(session_id):
 
 def ensure_database_initialized():
     global db_manager, flatpack_directory
+
     if db_manager is None:
+
         if flatpack_directory is None:
             raise ValueError("flatpack_directory is not set")
+
         db_path = os.path.join(flatpack_directory, 'build', 'flatpack.db')
         logger.info("Initializing database at %s", db_path)
         db_manager = DatabaseManager(db_path)
@@ -1142,6 +1173,7 @@ def write_status_to_file(status_data):
 
 async def fpk_build(directory: Union[str, None], use_euxo: bool = False):
     """Asynchronous function to build a flatpack."""
+    global flatpack_directory
     cache_file_path = HOME_DIR / ".fpk_unbox.cache"
 
     if directory:
@@ -1149,10 +1181,14 @@ async def fpk_build(directory: Union[str, None], use_euxo: bool = False):
         if not flatpack_dir.exists():
             logger.error("The directory '%s' does not exist.", flatpack_dir)
             raise ValueError(f"The directory '{flatpack_dir}' does not exist.")
+
         last_unboxed_flatpack = str(flatpack_dir)
+        flatpack_directory = last_unboxed_flatpack
     elif cache_file_path.exists():
         logger.info("Found cached flatpack in %s", cache_file_path)
+
         last_unboxed_flatpack = cache_file_path.read_text().strip()
+        flatpack_directory = last_unboxed_flatpack
     else:
         logger.error("No cached flatpack found, and no valid directory provided.")
         raise ValueError("No cached flatpack found, and no valid directory provided.")
@@ -1237,27 +1273,6 @@ async def fpk_build(directory: Union[str, None], use_euxo: bool = False):
                         logger.error("File %s not found.", source_file)
                 else:
                     logger.error("Could not determine relative path for %s", original_path)
-
-        initialize_database_manager(str(flatpack_dir))
-        hooks = db_manager.get_all_hooks()
-
-        for hook in hooks:
-            hook_name = hook['hook_name']
-            hook_script = hook['hook_script']
-            hook_type = hook['hook_type']
-            logger.info("Dry run - Preparing to execute hook: %s", hook_name)
-
-            if hook_type == "bash":
-                hook_command = shlex.split(hook_script)
-                logger.info("Dry run - Bash command: %s", ' '.join(hook_command))
-
-            elif hook_type == "python":
-                logger.info("Dry run - Python script:\n%s", hook_script)
-
-            else:
-                logger.warning("Unsupported hook type for %s. Skipping.", hook_name)
-
-    logger.info("Build process completed successfully.")
 
 
 def fpk_cache_unbox(directory_name: str):
