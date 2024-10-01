@@ -142,12 +142,12 @@ class DatabaseManager:
         ]
 
     # Hook operations
-    def add_hook(self, hook_name: str, hook_script: str, hook_type: str) -> int:
+    def add_hook(self, hook_name: str, hook_placement: str, hook_script: str, hook_type: str) -> int:
         query = """
-        INSERT INTO flatpack_hooks (hook_name, hook_script, hook_type)
-        VALUES (?, ?, ?)
+        INSERT INTO flatpack_hooks (hook_name, hook_placement, hook_script, hook_type)
+        VALUES (?, ?, ?, ?)
         """
-        self._execute_query(query, (hook_name, hook_script, hook_type))
+        self._execute_query(query, (hook_name, hook_placement, hook_script, hook_type))
         return self._fetch_one("SELECT last_insert_rowid()")[0]
 
     def delete_hook(self, hook_id: int) -> bool:
@@ -165,7 +165,7 @@ class DatabaseManager:
 
     def get_all_hooks(self) -> List[Dict[str, Any]]:
         query = """
-        SELECT id, hook_name, hook_script, hook_type, created_at
+        SELECT id, hook_name, hook_placement, hook_script, hook_type, created_at
         FROM flatpack_hooks
         ORDER BY created_at DESC
         """
@@ -174,9 +174,10 @@ class DatabaseManager:
             {
                 "id": row[0],
                 "hook_name": row[1],
-                "hook_script": row[2],
-                "hook_type": row[3],
-                "created_at": row[4]
+                "hook_placement": row[2],
+                "hook_script": row[3],
+                "hook_type": row[4],
+                "created_at": row[5]
             }
             for row in results
         ]
