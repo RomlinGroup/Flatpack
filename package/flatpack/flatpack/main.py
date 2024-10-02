@@ -2970,6 +2970,30 @@ def setup_routes(app):
             logger.error("Failed to add hook: %s", e)
             raise HTTPException(status_code=500, detail="Failed to add hook.")
 
+    @app.delete("/api/hooks/{hook_id}", dependencies=[Depends(csrf_protect)])
+    async def delete_hook(hook_id: int, token: str = Depends(authenticate_token)):
+        """Delete a hook from the database by its ID."""
+        ensure_database_initialized()
+        try:
+            if db_manager.delete_hook(hook_id):
+                return JSONResponse(content={"message": "Hook deleted successfully."}, status_code=200)
+            else:
+                raise HTTPException(status_code=404, detail="Hook not found")
+        except Exception as e:
+            logger.error("An error occurred while deleting the hook: %s", e)
+            raise HTTPException(status_code=500, detail=f"An error occurred while deleting the hook: {e}")
+
+    @app.get("/api/hooks", response_model=List[Hook], dependencies=[Depends(csrf_protect)])
+    async def get_hooks(token: str = Depends(authenticate_token)):
+        try:
+            hooks = get_all_hooks_from_database()
+            return JSONResponse(content={"hooks": hooks}, status_code=200)
+        except HTTPException as e:
+            raise e
+        except Exception as e:
+            logger.error("Failed to retrieve hooks: %s", e)
+            raise HTTPException(status_code=500, detail="Failed to retrieve hooks.")
+
     @app.put("/api/hooks/{hook_id}", dependencies=[Depends(csrf_protect)])
     async def update_hook(hook_id: int, hook: Hook, token: str = Depends(authenticate_token)):
         ensure_database_initialized()
@@ -2983,17 +3007,6 @@ def setup_routes(app):
         except Exception as e:
             logger.error("An error occurred while updating the hook: %s", e)
             raise HTTPException(status_code=500, detail=f"An error occurred while updating the hook: {e}")
-
-    @app.get("/api/hooks", response_model=List[Hook], dependencies=[Depends(csrf_protect)])
-    async def get_hooks(token: str = Depends(authenticate_token)):
-        try:
-            hooks = get_all_hooks_from_database()
-            return JSONResponse(content={"hooks": hooks}, status_code=200)
-        except HTTPException as e:
-            raise e
-        except Exception as e:
-            logger.error("Failed to retrieve hooks: %s", e)
-            raise HTTPException(status_code=500, detail="Failed to retrieve hooks.")
 
     @app.get("/api/load_file")
     async def load_file(
