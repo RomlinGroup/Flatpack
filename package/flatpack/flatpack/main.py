@@ -341,6 +341,74 @@ async def check_and_run_schedules():
             logger.error("An error occurred: %s", e)
 
 
+def check_node_and_run_npm_install(web_dir):
+    original_dir = os.getcwd()
+
+    try:
+        console.print("")
+
+        try:
+            node_version = subprocess.run(
+                ["node", "--version"],
+                check=True,
+                capture_output=True,
+                text=True
+            ).stdout.strip()
+
+            console.print(f"[green]Node.js version:[/green] {node_version}")
+
+            console.print("")
+
+            console.print("[green]npm is assumed to be installed with Node.js[/green]")
+
+            console.print("")
+
+            os.chdir(web_dir)
+
+            with console.status("[bold green]Running npm install..."):
+                subprocess.run(["npm", "install"], check=True, capture_output=True)
+
+            console.print("[bold green]Successfully ran 'npm install' in the web directory[/bold green]")
+
+        except FileNotFoundError:
+            console.print(Panel(
+                "[bold red]Node.js is not installed or not in the system PATH.[/bold red]\n\n"
+                "To resolve this issue:\n"
+                "1. Download and install Node.js from [link=https://nodejs.org]https://nodejs.org[/link]\n"
+                "2. npm is included with Node.js installation\n"
+                "3. After installation, restart your terminal and run this script again\n\n"
+                "[yellow]Aborting further operations due to missing Node.js.[/yellow]",
+                title="Error: Node.js not found",
+                expand=False
+            ))
+
+            return False
+
+    except subprocess.CalledProcessError as e:
+        console.print(Panel(
+            f"[bold red]An error occurred while running a command:[/bold red]\n\n{e}\n\n"
+            "[yellow]Aborting further operations due to this error.[/yellow]",
+            title="Command Error",
+            expand=False
+        ))
+        return False
+
+    except Exception as e:
+        console.print(Panel(
+            f"[bold red]An unexpected error occurred:[/bold red]\n\n{str(e)}\n\n"
+            "[yellow]Aborting further operations due to this error.[/yellow]",
+            title="Unexpected Error",
+            expand=False
+        ))
+        return False
+
+    finally:
+        os.chdir(original_dir)
+        console.print("")
+
+    return True
+
+
 def cleanup_and_shutdown():
     """Perform cleanup operations."""
     logger.info("Starting cleanup process...")
@@ -1488,7 +1556,7 @@ def fpk_download_and_extract_template(repo_url, dest_dir):
         extracted_dir = os.path.join(dest_dir, top_level_dir)
         os.rename(extracted_dir, template_dir)
 
-        files_to_remove = ["app.css", "app.js", "index.html", "teletext.woff2"]
+        files_to_remove = ['app.css', 'app.js', 'index.html', 'package.json', 'teletext.woff2']
 
         for file in files_to_remove:
             file_path = os.path.join(template_dir, file)
@@ -1795,7 +1863,7 @@ def fpk_unbox(directory_name: str, session: httpx.Client, local: bool = False) -
         output_dir.mkdir(parents=True, exist_ok=True)
         logger.info("Created /web/output directory: %s", output_dir)
 
-        files_to_download = ['app.css', 'app.js', 'index.html', "teletext.woff2"]
+        files_to_download = ['app.css', 'app.js', 'index.html', 'package.json', 'teletext.woff2']
 
         for file in files_to_download:
             file_url = f"{TEMPLATE_REPO_URL}/contents/{file}"
@@ -1815,6 +1883,15 @@ def fpk_unbox(directory_name: str, session: httpx.Client, local: bool = False) -
                     f.write(file_decoded.decode('utf-8'))
 
             logger.info("Downloaded and saved %s to %s", file, file_path)
+
+        if not check_node_and_run_npm_install(web_dir):
+            console.print("[yellow]Cleaning up: Removing the flatpack directory due to failure.[/yellow]")
+            try:
+                shutil.rmtree(flatpack_dir)
+                console.print("[green]Cleanup successful: Flatpack directory removed.[/green]")
+            except Exception as e:
+                console.print(f"[red]Error during cleanup: {e}[/red]")
+            sys.exit(1)
 
     except httpx.RequestError as e:
         logger.error("Network error occurred while fetching files: %s", e)
@@ -1938,7 +2015,7 @@ def fpk_update(flatpack_name: str, session: requests.Session, branch: str = "mai
     Returns:
         None
     """
-    files_to_update = ['app.css', 'app.js', 'device.sh', 'index.html', 'teletext.woff2']
+    files_to_update = ['app.css', 'app.js', 'device.sh', 'index.html', 'package.json', 'teletext.woff2']
     binary_extensions = ['.sh', '.woff2']
 
     flatpack_dir = Path.cwd() / flatpack_name
