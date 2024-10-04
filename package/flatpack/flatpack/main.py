@@ -1863,6 +1863,13 @@ def fpk_unbox(directory_name: str, session: httpx.Client, local: bool = False) -
         output_dir.mkdir(parents=True, exist_ok=True)
         logger.info("Created /web/output directory: %s", output_dir)
 
+        eval_data_path = output_dir / "eval_data.json"
+
+        with open(eval_data_path, 'w') as f:
+            json.dump([], f)
+
+        logger.info("Created empty eval_data.json in %s", eval_data_path)
+
         files_to_download = ['app.css', 'app.js', 'index.html', 'package.json', 'teletext.woff2']
 
         for file in files_to_download:
