@@ -348,8 +348,11 @@ def check_node_and_run_npm_install(web_dir):
         console.print("")
 
         try:
+            node_path = get_executable_path('node')
+            npm_path = get_executable_path('npm')
+
             node_version = subprocess.run(
-                ["node", "--version"],
+                [node_path, "--version"],
                 check=True,
                 capture_output=True,
                 text=True
@@ -366,7 +369,7 @@ def check_node_and_run_npm_install(web_dir):
             os.chdir(web_dir)
 
             with console.status("[bold green]Running npm install..."):
-                subprocess.run(["npm", "install"], check=True, capture_output=True)
+                subprocess.run([npm_path, "install"], check=True, capture_output=True)
 
             console.print("[bold green]Successfully ran 'npm install' in the web directory[/bold green]")
 
@@ -796,6 +799,19 @@ def get_all_hooks_from_database():
     except Exception as e:
         logger.error("An error occurred while fetching hooks: %s", e)
         raise HTTPException(status_code=500, detail=f"An error occurred while fetching hooks: {e}")
+
+
+def get_executable_path(executable):
+    if sys.platform.startswith('win'):
+        try:
+            return subprocess.check_output(['where', executable]).decode().strip().split('\n')[0]
+        except subprocess.CalledProcessError:
+            return None
+    else:
+        try:
+            return subprocess.check_output(['which', executable]).decode().strip()
+        except subprocess.CalledProcessError:
+            return None
 
 
 def get_secret_key():
