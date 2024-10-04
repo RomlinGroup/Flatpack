@@ -802,14 +802,32 @@ def get_all_hooks_from_database():
 
 
 def get_executable_path(executable):
+    """
+    Securely get the full path of an executable.
+    """
     if sys.platform.startswith('win'):
+        system_root = os.environ.get('SystemRoot', 'C:\\Windows')
+        where_cmd = os.path.join(system_root, 'System32', 'where.exe')
         try:
-            return subprocess.check_output(['where', executable]).decode().strip().split('\n')[0]
+            result = subprocess.run([where_cmd, executable],
+                                    check=True,
+                                    capture_output=True,
+                                    text=True)
+            paths = result.stdout.strip().split('\n')
+            return paths[0] if paths else None
         except subprocess.CalledProcessError:
             return None
     else:
         try:
-            return subprocess.check_output(['which', executable]).decode().strip()
+            which_cmd = '/usr/bin/which'
+            if not os.path.exists(which_cmd):
+                which_cmd = '/bin/which'
+
+            result = subprocess.run([which_cmd, executable],
+                                    check=True,
+                                    capture_output=True,
+                                    text=True)
+            return result.stdout.strip()
         except subprocess.CalledProcessError:
             return None
 
