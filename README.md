@@ -15,7 +15,7 @@
 ## Ready-to-assemble AI
 
 <p align="center">
-  <img src="https://fpk.ai/assets/recording.svg" width="600">
+  <img src="https://fpk.ai/assets/demo.svg" width="600">
 </p>
 
 At Flatpack, our mission is clear: we are committed to building trust in AI.
