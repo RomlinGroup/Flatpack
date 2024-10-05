@@ -2931,7 +2931,11 @@ def sync_hooks_to_db_on_startup():
         try:
             add_hook_to_database(Hook(**hook))
         except Exception as e:
-            logger.warning(f"Hook {hook.get('hook_name', 'unknown')} might already exist in the database. {e}")
+            logger.warning(
+                "Hook %s might already exist in the database. %s",
+                hook.get('hook_name', 'unknown'),
+                e
+            )
 
 
 def update_hook_in_file(hook_id, updated_hook):
