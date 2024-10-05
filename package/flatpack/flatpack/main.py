@@ -117,6 +117,7 @@ HOME_DIR.mkdir(exist_ok=True)
 
 CONFIG_FILE_PATH = HOME_DIR / ".fpk_config.toml"
 GITHUB_CACHE = HOME_DIR / ".fpk_github.cache"
+HOOKS_FILE = "build/hooks.json"
 
 BASE_URL = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse"
 GITHUB_REPO_URL = "https://api.github.com/repos/RomlinGroup/Flatpack"
@@ -441,8 +442,11 @@ def create_session(token):
     return session_id
 
 
-def create_temp_sh(custom_json_path: Path, temp_sh_path: Path, use_euxo: bool = False):
+def create_temp_sh(custom_json_path: Path, temp_sh_path: Path, use_euxo: bool = False, hooks: List[dict] = None):
     global flatpack_directory
+
+    if hooks is None:
+        hooks = []
 
     try:
         with custom_json_path.open('r', encoding='utf-8') as infile:
@@ -1327,8 +1331,9 @@ async def fpk_build(directory: Union[str, None], use_euxo: bool = False):
         logger.error("custom.json not found in %s. Build process canceled.", build_dir)
         raise FileNotFoundError(f"custom.json not found in {build_dir}. Build process canceled.")
 
+    hooks = load_and_get_hooks()
     temp_sh_path = build_dir / 'temp.sh'
-    create_temp_sh(custom_json_path, temp_sh_path, use_euxo=use_euxo)
+    create_temp_sh(custom_json_path, temp_sh_path, use_euxo=use_euxo, hooks=hooks)
 
     building_script_path = build_dir / 'build.sh'
 
@@ -2883,6 +2888,60 @@ def fpk_cli_handle_list(args, session):
         logger.error("No directories found.")
 
 
+# Hooks
+
+def load_and_get_hooks():
+    hooks_file_path = os.path.join(flatpack_directory, HOOKS_FILE)
+    if os.path.exists(hooks_file_path):
+        with open(hooks_file_path, "r") as f:
+            return json.load(f).get("hooks", [])
+    return []
+
+
+def add_hook_to_file(hook):
+    hooks = load_hooks_from_file()
+    hooks.append(hook.dict())
+    save_hooks_to_file(hooks)
+
+
+def delete_hook_from_file(hook_id):
+    hooks = load_hooks_from_file()
+    hooks = [hook for hook in hooks if hook["hook_id"] != hook_id]
+    save_hooks_to_file(hooks)
+
+
+def load_hooks_from_file():
+    hooks_file_path = os.path.join(flatpack_directory, HOOKS_FILE)
+    if os.path.exists(hooks_file_path):
+        with open(hooks_file_path, "r") as f:
+            return json.load(f).get("hooks", [])
+    return []
+
+
+def save_hooks_to_file(hooks):
+    hooks_file_path = os.path.join(flatpack_directory, HOOKS_FILE)
+    os.makedirs(os.path.dirname(hooks_file_path), exist_ok=True)
+    with open(hooks_file_path, "w") as f:
+        json.dump({"hooks": hooks}, f, indent=4)
+
+
+def sync_hooks_to_db_on_startup():
+    hooks = load_and_get_hooks()
+    for hook in hooks:
+        try:
+            add_hook_to_database(Hook(**hook))
+        except Exception as e:
+            logger.warning(f"Hook {hook.get('hook_name', 'unknown')} might already exist in the database. {e}")
+
+
+def update_hook_in_file(hook_id, updated_hook):
+    hooks = load_hooks_from_file()
+    for hook in hooks:
+        if hook["hook_id"] == hook_id:
+            hook.update(updated_hook.dict())
+    save_hooks_to_file(hooks)
+
+
 flatpack_directory = None
 
 
@@ -2895,6 +2954,7 @@ def setup_routes(app):
         logger.info("Server started at %s. Cooldown period: %s", SERVER_START_TIME, COOLDOWN_PERIOD)
         logger.info("CSRF token base generated for this session: %s", app.state.csrf_token_base)
         asyncio.create_task(run_scheduler())
+        sync_hooks_to_db_on_startup()
 
     @app.middleware("http")
     async def csrf_middleware(request: Request, call_next):
@@ -3081,6 +3141,10 @@ def setup_routes(app):
             response = add_hook_to_database(hook)
             if "existing_hook" in response:
                 return JSONResponse(content=response, status_code=409)
+
+            hooks = get_all_hooks_from_database()
+            save_hooks_to_file(hooks)
+
             return JSONResponse(content=response, status_code=201)
         except HTTPException as e:
             raise e
@@ -3090,10 +3154,11 @@ def setup_routes(app):
 
     @app.delete("/api/hooks/{hook_id}", dependencies=[Depends(csrf_protect)])
     async def delete_hook(hook_id: int, token: str = Depends(authenticate_token)):
-        """Delete a hook from the database by its ID."""
         ensure_database_initialized()
         try:
             if db_manager.delete_hook(hook_id):
+                hooks = get_all_hooks_from_database()
+                save_hooks_to_file(hooks)
                 return JSONResponse(content={"message": "Hook deleted successfully."}, status_code=200)
             else:
                 raise HTTPException(status_code=404, detail="Hook not found")
@@ -3104,6 +3169,10 @@ def setup_routes(app):
     @app.get("/api/hooks", response_model=List[Hook], dependencies=[Depends(csrf_protect)])
     async def get_hooks(token: str = Depends(authenticate_token)):
         try:
+            hooks_from_file = load_hooks_from_file()
+            for hook in hooks_from_file:
+                add_hook_to_database(Hook(**hook))
+
             hooks = get_all_hooks_from_database()
             return JSONResponse(content={"hooks": hooks}, status_code=200)
         except HTTPException as e:
@@ -3119,6 +3188,8 @@ def setup_routes(app):
             success = db_manager.update_hook(hook_id, hook.hook_name, hook.hook_placement, hook.hook_script,
                                              hook.hook_type)
             if success:
+                hooks = get_all_hooks_from_database()
+                save_hooks_to_file(hooks)
                 return JSONResponse(content={"message": "Hook updated successfully."}, status_code=200)
             else:
                 raise HTTPException(status_code=404, detail="Hook not found or update failed.")
