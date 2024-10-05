@@ -1893,11 +1893,15 @@ def fpk_unbox(directory_name: str, session: httpx.Client, local: bool = False) -
         flatpack_dir.mkdir(parents=True, exist_ok=True)
 
     web_dir = flatpack_dir / "web"
+    build_dir = flatpack_dir / "build"
     output_dir = web_dir / "output"
 
     try:
         web_dir.mkdir(parents=True, exist_ok=True)
         logger.info("Created /web directory: %s", web_dir)
+
+        build_dir.mkdir(parents=True, exist_ok=True)
+        logger.info("Created /build directory: %s", build_dir)
 
         output_dir.mkdir(parents=True, exist_ok=True)
         logger.info("Created /web/output directory: %s", output_dir)
@@ -1909,26 +1913,31 @@ def fpk_unbox(directory_name: str, session: httpx.Client, local: bool = False) -
 
         logger.info("Created empty eval_data.json in %s", eval_data_path)
 
-        files_to_download = ['app.css', 'app.js', 'index.html', 'package.json', 'teletext.woff2']
+        files_to_download = {
+            'build': ['hooks.json'],
+            'web': ['app.css', 'app.js', 'index.html', 'package.json', 'teletext.woff2']
+        }
 
-        for file in files_to_download:
-            file_url = f"{TEMPLATE_REPO_URL}/contents/{file}"
-            response = session.get(file_url)
-            response.raise_for_status()
+        for dir_name, files in files_to_download.items():
+            target_dir = web_dir if dir_name == 'web' else build_dir
+            for file in files:
+                file_url = f"{TEMPLATE_REPO_URL}/contents/{file}"
+                response = session.get(file_url)
+                response.raise_for_status()
 
-            file_content = response.json()['content']
-            file_decoded = base64.b64decode(file_content)
+                file_content = response.json()['content']
+                file_decoded = base64.b64decode(file_content)
 
-            file_path = web_dir / file
+                file_path = target_dir / file
 
-            if file.endswith(".woff2"):
-                with open(file_path, 'wb') as f:
-                    f.write(file_decoded)
-            else:
-                with open(file_path, 'w', encoding='utf-8') as f:
-                    f.write(file_decoded.decode('utf-8'))
+                if file.endswith(".woff2"):
+                    with open(file_path, 'wb') as f:
+                        f.write(file_decoded)
+                else:
+                    with open(file_path, 'w', encoding='utf-8') as f:
+                        f.write(file_decoded.decode('utf-8'))
 
-            logger.info("Downloaded and saved %s to %s", file, file_path)
+                logger.info("Downloaded and saved %s to %s", file, file_path)
 
         if not check_node_and_run_npm_install(web_dir):
             console.print("[yellow]Cleaning up: Removing the flatpack directory due to failure.[/yellow]")
@@ -1946,7 +1955,7 @@ def fpk_unbox(directory_name: str, session: httpx.Client, local: bool = False) -
         logger.error("Unexpected response structure when fetching files: %s", e)
         return False
     except Exception as e:
-        logger.error("Failed to create /web directory or fetch files: %s", e)
+        logger.error("Failed to create directories or fetch files: %s", e)
         return False
 
     build_dir = flatpack_dir / "build"
@@ -2051,7 +2060,7 @@ def fpk_valid_directory_name(name: str) -> bool:
 def fpk_update(flatpack_name: str, session: requests.Session, branch: str = "main"):
     """
     Update files of the specified flatpack with the latest versions from the template.
-    Files are placed in the /web directory, overwriting existing ones.
+    Files are placed in the /web or /build directory, overwriting existing ones.
 
     Args:
         flatpack_name (str): The name of the flatpack to update.
@@ -2061,7 +2070,11 @@ def fpk_update(flatpack_name: str, session: requests.Session, branch: str = "mai
     Returns:
         None
     """
-    files_to_update = ['app.css', 'app.js', 'device.sh', 'index.html', 'package.json', 'teletext.woff2']
+    files_to_update = {
+        'build': ['hooks.json', 'device.sh'],
+        'web': ['app.css', 'app.js', 'index.html', 'package.json', 'teletext.woff2']
+    }
+
     binary_extensions = ['.sh', '.woff2']
 
     flatpack_dir = Path.cwd() / flatpack_name
@@ -2072,46 +2085,52 @@ def fpk_update(flatpack_name: str, session: requests.Session, branch: str = "mai
         return
 
     web_dir = flatpack_dir / 'web'
+    build_dir = flatpack_dir / 'build'
 
     if not web_dir.exists():
         console.print(
             f"[bold red]Error:[/bold red] No web directory found for flatpack '{flatpack_name}'. Aborting update.")
         return
 
-    for file in files_to_update:
-        file_url = f"{TEMPLATE_REPO_URL}/contents/{file}?ref={branch}"
-        local_file_path = web_dir / file
+    if not build_dir.exists():
+        build_dir.mkdir(parents=True, exist_ok=True)
+        console.print(f"Created [bold cyan]build[/bold cyan] directory for flatpack '{flatpack_name}'.")
 
-        console.print(f"Updating [bold cyan]{file}[/bold cyan]...")
+    for dir_name, files in files_to_update.items():
+        target_dir = web_dir if dir_name == 'web' else build_dir
+        for file in files:
+            file_url = f"{TEMPLATE_REPO_URL}/contents/{file}?ref={branch}"
+            local_file_path = target_dir / file
+            console.print(f"Updating [bold cyan]{file}[/bold cyan]...")
 
-        try:
-            response = session.get(file_url)
-            response.raise_for_status()
-            file_data = response.json()
+            try:
+                response = session.get(file_url)
+                response.raise_for_status()
+                file_data = response.json()
 
-            if 'content' in file_data:
-                file_content = base64.b64decode(file_data['content'])
+                if 'content' in file_data:
+                    file_content = base64.b64decode(file_data['content'])
+                    if any(file.endswith(ext) for ext in binary_extensions):
+                        with open(local_file_path, 'wb') as local_file:
+                            local_file.write(file_content)
+                    else:
+                        content = file_content.decode('utf-8')
+                        with open(local_file_path, 'w', encoding='utf-8') as local_file:
+                            local_file.write(content)
 
-                if any(file.endswith(ext) for ext in binary_extensions):
-                    with open(local_file_path, 'wb') as local_file:
-                        local_file.write(file_content)
+                    if local_file_path.exists():
+                        console.print(
+                            f"[bold green]Replaced[/bold green] existing {file} in flatpack '{flatpack_name}/{dir_name}'")
+                    else:
+                        console.print(
+                            f"[bold green]Added[/bold green] new {file} to flatpack '{flatpack_name}/{dir_name}'")
                 else:
-                    content = file_content.decode('utf-8')
-                    with open(local_file_path, 'w', encoding='utf-8') as local_file:
-                        local_file.write(content)
+                    console.print(f"[bold red]Error:[/bold red] Failed to retrieve content for {file}")
 
-                if local_file_path.exists():
-                    console.print(
-                        f"[bold green]Replaced[/bold green] existing {file} in flatpack '{flatpack_name}/web'")
-                else:
-                    console.print(f"[bold green]Added[/bold green] new {file} to flatpack '{flatpack_name}/web'")
-            else:
-                console.print(f"[bold red]Error:[/bold red] Failed to retrieve content for {file}")
-
-        except requests.RequestException as e:
-            console.print(f"[bold red]Error:[/bold red] Failed to update {file}: {str(e)}")
-        except UnicodeDecodeError as e:
-            console.print(f"[bold red]Error:[/bold red] Failed to decode content for {file}: {str(e)}")
+            except requests.RequestException as e:
+                console.print(f"[bold red]Error:[/bold red] Failed to update {file}: {str(e)}")
+            except UnicodeDecodeError as e:
+                console.print(f"[bold red]Error:[/bold red] Failed to decode content for {file}: {str(e)}")
 
     console.print(f"[bold green]Flatpack '{flatpack_name}' update completed.[/bold green]")
 
