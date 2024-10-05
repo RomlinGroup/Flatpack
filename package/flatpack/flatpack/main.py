@@ -1914,9 +1914,14 @@ def fpk_unbox(directory_name: str, session: httpx.Client, local: bool = False) -
         logger.info("Created empty eval_data.json in %s", eval_data_path)
 
         files_to_download = {
-            'build': ['hooks.json'],
+            'build': [],
             'web': ['app.css', 'app.js', 'index.html', 'package.json', 'teletext.woff2']
         }
+
+        hooks_json_path = flatpack_dir / 'build' / 'hooks.json'
+
+        if not hooks_json_path.exists():
+            files_to_download['build'].append('hooks.json')
 
         for dir_name, files in files_to_download.items():
             target_dir = web_dir if dir_name == 'web' else build_dir
@@ -2071,7 +2076,7 @@ def fpk_update(flatpack_name: str, session: requests.Session, branch: str = "mai
         None
     """
     files_to_update = {
-        'build': ['hooks.json', 'device.sh'],
+        'build': ['device.sh'],
         'web': ['app.css', 'app.js', 'index.html', 'package.json', 'teletext.woff2']
     }
 

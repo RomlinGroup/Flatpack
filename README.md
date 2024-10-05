@@ -186,6 +186,7 @@ flatpack compress <hf_model_name> --token <hf_token>
   - flatpack.toml
   - README.md
   - custom.json
+  - hooks.json
   - build.sh
   - device.sh
 
