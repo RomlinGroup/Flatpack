@@ -614,10 +614,12 @@ def create_temp_sh(custom_json_path: Path, temp_sh_path: Path, use_euxo: bool = 
                 outfile.write("update_eval_build \"$CURR\" \"$EVAL\"\n\n")
 
             outfile.write("# Execute 'after' hooks\n")
+
             for hook in hooks:
                 if hook.get('hook_placement') == 'after':
                     hook_script = hook['hook_script'].replace('"', '\\"')
                     outfile.write(f"execute_hook \"{hook['hook_name']}\" \"{hook['hook_type']}\" \"{hook_script}\"\n")
+
             outfile.write("\n")
 
         logger.info("Temp script generated successfully at %s", temp_sh_path)

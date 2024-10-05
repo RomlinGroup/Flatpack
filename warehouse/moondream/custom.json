@@ -5,9 +5,9 @@
     "code": "if [ -f ../tiger.png ]; then\n    cp -f ../tiger.png tiger.png\nfi"
   },
   {
-    "type": "bash",
+    "type": "python",
     "disabled": false,
-    "code": "../bin/python sample.py \\\n    --cpu \\\n    --image \"tiger.png\" \\\n    --prompt \"Should I pet this dog?\" \\\n    > output.txt \\\n    2>log.txt"
+    "code": "from PIL import Image\nfrom transformers import AutoModelForCausalLM, AutoTokenizer\n\nmodel_id = \"vikhyatk/moondream2\"\nrevision = \"2024-08-26\"\n\nmodel = AutoModelForCausalLM.from_pretrained(\n    model_id, trust_remote_code=True, revision=revision\n)\n\ntokenizer = AutoTokenizer.from_pretrained(model_id, revision=revision)\n\nimage = Image.open('tiger.png')\nenc_image = model.encode_image(image)\n\nresult = model.answer_question(enc_image, \"Should I pet this dog?\", tokenizer)\n\nwith open('output.txt', 'w') as f:\n    f.write(result)"
   },
   {
     "type": "bash",
