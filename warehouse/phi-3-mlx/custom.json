@@ -5,13 +5,13 @@
     "code": "../bin/pip install --pre torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/nightly/cpu"
   },
   {
-    "type": "python",
+    "type": "bash",
     "disabled": false,
-    "code": "from phi_3_vision_mlx import train_lora\n\ntrain_lora(\n    lora_layers=5,\n    lora_rank=16,\n    epochs=10,\n    lr=1e-4,\n    warmup=0.5,\n    dataset_path=\"JosefAlbers/akemiH_MedQA_Reason\"\n)"
+    "code": "if [ -f ../tiger.png ]; then\n    cp -f ../tiger.png tiger.png\nfi"
   },
   {
     "type": "python",
     "disabled": false,
-    "code": "from phi_3_vision_mlx import generate, test_lora\n\ngenerate(\n    \"Describe the potential applications of CRISPR gene editing in medicine.\",\n    blind_model=True,\n    quantize_model=True,\n    use_adapter=True\n)\n\ntest_lora()"
+    "code": "from phi_3_vision_mlx import generate\n\ngenerate('Should I pet this dog?', 'tiger.png')"
   }
 ]

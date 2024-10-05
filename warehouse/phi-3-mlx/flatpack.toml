@@ -53,6 +53,10 @@ to_destination = "build.sh"
 from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/phi-3-mlx/device.sh"
 to_destination = "device.sh"
 
+[[file]]
+from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/phi-3-mlx/tiger.png"
+to_destination = "tiger.png"
+
 [[run]]
 command = "chmod +x"
 file = "build.sh"
