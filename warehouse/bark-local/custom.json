@@ -7,6 +7,6 @@
   {
     "type": "python",
     "disabled": false,
-    "code": "import scipy\nfrom transformers import AutoProcessor, BarkModel\n\nprocessor = AutoProcessor.from_pretrained(\"suno/bark\")\nmodel = BarkModel.from_pretrained(\"suno/bark\")\n\ninputs = processor(\"What is the meaning of life?\")\naudio_array = model.generate(**inputs)\naudio_array = audio_array.cpu().numpy().squeeze()\n\nsample_rate = model.generation_config.sample_rate\nscipy.io.wavfile.write(\"output.wav\", rate=sample_rate, data=audio_array)"
+    "code": "import scipy\n\nfrom transformers import AutoProcessor, BarkModel\n\nprompt = \"What is the meaning of life?\"\n\nwith open(\"output.txt\", \"w\") as f:\n    f.write(prompt)\n\nprocessor = AutoProcessor.from_pretrained(\"suno/bark\")\nmodel = BarkModel.from_pretrained(\"suno/bark\")\n\ninputs = processor(prompt)\naudio_array = model.generate(**inputs)\naudio_array = audio_array.cpu().numpy().squeeze()\n\nsample_rate = model.generation_config.sample_rate\nscipy.io.wavfile.write(\"output.wav\", rate=sample_rate, data=audio_array)"
   }
 ]
