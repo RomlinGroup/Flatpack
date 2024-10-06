@@ -2,11 +2,16 @@
   {
     "type": "bash",
     "disabled": false,
-    "code": "echo \"Hello from Bash!\""
+    "code": "if [ ! -f models/AMD-Llama-135m-Q4_K_M.gguf ]; then\n    wget -nc -O models/AMD-Llama-135m-Q4_K_M.gguf \"https://huggingface.co/bartowski/AMD-Llama-135m-GGUF/resolve/main/AMD-Llama-135m-Q4_K_M.gguf\"\nelse\n    echo \"Model already exist.\"\nfi"
   },
   {
-    "type": "python",
+    "type": "bash",
     "disabled": false,
-    "code": "print(\"Hello from Python!\")"
+    "code": "./llama-cli \\\n    -m models/AMD-Llama-135m-Q4_K_M.gguf \\\n    -n 64 \\\n    -p \"What is the meaning of life?\" \\\n    > output.txt \\\n    2>log.txt"
+  },
+  {
+    "type": "bash",
+    "disabled": false,
+    "code": "if [ -f \"output.txt\" ]; then\n    cat output.txt\nelse\n    echo \"Error: output.txt does not exist.\"\nfi"
   }
 ]
