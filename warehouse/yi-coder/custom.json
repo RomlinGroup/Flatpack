@@ -2,12 +2,12 @@
   {
     "type": "bash",
     "disabled": false,
-    "code": "if [ ! -f models/Yi-9B-Coder-Q4_K_M.gguf ]; then\n    wget -nc -O models/Yi-9B-Coder-Q4_K_M.gguf \"https://huggingface.co/bartowski/Yi-9B-Coder-GGUF/resolve/main/Yi-9B-Coder-Q4_K_M.gguf\"\nelse\n    echo \"Model already exist.\"\nfi"
+    "code": "if [ ! -f models/Yi-Coder-9B-Chat-Q4_K_M.gguf ]; then\n    wget -nc -O models/Yi-Coder-9B-Chat-Q4_K_M.gguf \"https://huggingface.co/bartowski/Yi-Coder-9B-Chat-GGUF/resolve/main/Yi-Coder-9B-Chat-Q4_K_M.gguf\"\nelse\n    echo \"Model already exist.\"\nfi"
   },
   {
     "type": "bash",
     "disabled": false,
-    "code": "./llama-cli \\\n    -m models/Yi-9B-Coder-Q4_K_M.gguf \\\n    -n 64 \\\n    -p \"Write a quick sort algorithm.\" \\\n    > output.txt \\\n    2>log.txt"
+    "code": "./llama-cli \\\n    -m models/Yi-Coder-9B-Chat-Q4_K_M.gguf \\\n    -n 64 \\\n    -p \"Write a quick sort algorithm.\" \\\n    > output.txt \\\n    2>log.txt"
   },
   {
     "type": "bash",
