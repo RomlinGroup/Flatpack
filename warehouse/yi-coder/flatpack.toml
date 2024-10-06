@@ -34,12 +34,12 @@ tiktoken = "0.7.0"
 tqdm = "4.66.5"
 
 [[git]]
-from_source = "https://github.com/01-ai/Yi-Coder"
-to_destination = "Yi-Coder"
-branch = "main"
-# setup_commands = [
-#   "{{setup_command}}"
-# ]
+from_source = "https://github.com/ggerganov/llama.cpp"
+to_destination = "llama.cpp"
+branch = "master"
+setup_commands = [
+    "make"
+]
 
 [[file]]
 from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/yi-coder/custom.json"
