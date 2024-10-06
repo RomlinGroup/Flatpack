@@ -1,4 +1,4 @@
-# lets-talk
+# amd-llama
 
 [![PyPI - Version](https://img.shields.io/pypi/v/flatpack)](https://pypi.org/project/flatpack/)
 

@@ -4,7 +4,7 @@
 version = "0.0.1"
 
 [environment]
-model_name = "lets-talk"
+model_name = "amd-llama"
 
 [[port]]
 external = 8080
@@ -42,15 +42,15 @@ tqdm = "4.66.5"
 # ]
 
 [[file]]
-from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/lets-talk/custom.json"
+from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/amd-lama/custom.json"
 to_destination = "custom.json"
 
 [[file]]
-from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/lets-talk/build.sh"
+from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/amd-lama/build.sh"
 to_destination = "build.sh"
 
 [[file]]
-from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/lets-talk/device.sh"
+from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/amd-lama/device.sh"
 to_destination = "device.sh"
 
 [[run]]
