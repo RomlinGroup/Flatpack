@@ -2346,6 +2346,14 @@ def setup_arg_parser():
         help='Hugging Face token for private repositories'
     )
 
+    parser_compress.add_argument(
+        '--method',
+        type=str,
+        default='llama.cpp',
+        choices=['llama.cpp'],
+        help='Compression method to use (default: llama.cpp)'
+    )
+
     parser_compress.set_defaults(
         func=fpk_cli_handle_compress
     )
@@ -2670,6 +2678,7 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
     """
     model_id = args.model_id
     token = args.token
+    method = getattr(args, 'method', 'llama.cpp')
 
     if not re.match(r'^[\w-]+/[\w.-]+$', model_id):
         logger.error("Invalid Hugging Face repository format specified.")
@@ -2710,147 +2719,154 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
             console.print(f"[bold red]ERROR:[/bold red] Failed to download the model. Error: {e}")
             return
 
-        current_dir = os.path.basename(os.getcwd())
+        if method == 'llama.cpp':
+            current_dir = os.path.basename(os.getcwd())
 
-        if current_dir == "llama.cpp":
-            console.print(
-                "[bold blue]INFO:[/bold blue] Current directory is already llama.cpp. Using current directory.")
-            llama_cpp_dir = "."
-        else:
-            llama_cpp_dir = "llama.cpp"
-            if not os.path.exists(llama_cpp_dir):
-                console.print("[bold blue]INFO:[/bold blue] Setting up llama.cpp...")
-                git_executable = shutil.which("git")
-                if not git_executable:
-                    console.print("[bold red]ERROR:[/bold red] The 'git' executable was not found in your PATH.")
-                    return
+            if current_dir == "llama.cpp":
+                console.print(
+                    "[bold blue]INFO:[/bold blue] Current directory is already llama.cpp. Using current directory.")
+                llama_cpp_dir = "."
+            else:
+                llama_cpp_dir = "llama.cpp"
+                if not os.path.exists(llama_cpp_dir):
+                    console.print("[bold blue]INFO:[/bold blue] Setting up llama.cpp...")
+                    git_executable = shutil.which("git")
+                    if not git_executable:
+                        console.print("[bold red]ERROR:[/bold red] The 'git' executable was not found in your PATH.")
+                        return
 
+                    try:
+                        subprocess.run(
+                            [
+                                git_executable,
+                                "clone",
+                                "--depth",
+                                "1",
+                                "https://github.com/ggerganov/llama.cpp",
+                                llama_cpp_dir
+                            ],
+                            check=True
+                        )
+                        console.print(
+                            f"[bold green]SUCCESS:[/bold green] Finished cloning llama.cpp repository into '{llama_cpp_dir}'")
+                    except subprocess.CalledProcessError as e:
+                        console.print(
+                            f"[bold red]ERROR:[/bold red] Failed to clone the llama.cpp repository. Error: {e}")
+                        return
+                else:
+                    console.print(f"[bold blue]INFO:[/bold blue] llama.cpp directory already exists. Skipping setup.")
+
+            ready_file = os.path.join(llama_cpp_dir, "ready")
+            requirements_file = os.path.join(llama_cpp_dir, "requirements.txt")
+            venv_dir = os.path.join(llama_cpp_dir, "venv")
+            venv_python = os.path.join(venv_dir, "bin", "python")
+            convert_script = os.path.join(llama_cpp_dir, 'convert_hf_to_gguf.py')
+
+            if not os.path.exists(ready_file):
+                console.print("[bold blue]INFO:[/bold blue] Building llama.cpp...")
                 try:
-                    subprocess.run(
-                        [
-                            git_executable,
-                            "clone",
-                            "--depth",
-                            "1",
-                            "https://github.com/ggerganov/llama.cpp",
-                            llama_cpp_dir
-                        ],
-                        check=True
-                    )
-                    console.print(
-                        f"[bold green]SUCCESS:[/bold green] Finished cloning llama.cpp repository into '{llama_cpp_dir}'")
+                    make_executable = shutil.which("make")
+                    if not make_executable:
+                        console.print("[bold red]ERROR:[/bold red] 'make' executable not found in PATH.")
+                        return
+
+                    subprocess.run([make_executable], cwd=llama_cpp_dir, check=True)
+                    console.print("[bold green]SUCCESS:[/bold green] Finished building llama.cpp")
+
+                    if not os.path.exists(venv_dir):
+                        console.print(f"[bold blue]INFO:[/bold blue] Creating virtual environment in '{venv_dir}'...")
+                        create_venv(venv_dir)
+                    else:
+                        console.print(
+                            f"[bold blue]INFO:[/bold blue] Virtual environment already exists in '{venv_dir}'")
+
+                    console.print("[bold blue]INFO:[/bold blue] Installing llama.cpp dependencies...")
+                    pip_command = [
+                        "/bin/bash", "-c",
+                        (
+                            f"source {shlex.quote(os.path.join(venv_dir, 'bin', 'activate'))} && "
+                            f"pip install -r {shlex.quote(requirements_file)}"
+                        )
+                    ]
+                    subprocess.run(pip_command, check=True)
+                    console.print("[bold green]SUCCESS:[/bold green] Finished installing llama.cpp dependencies")
+
+                    with open(ready_file, 'w') as f:
+                        f.write("Ready")
                 except subprocess.CalledProcessError as e:
-                    console.print(f"[bold red]ERROR:[/bold red] Failed to clone the llama.cpp repository. Error: {e}")
+                    console.print(f"[bold red]ERROR:[/bold red] Failed to build llama.cpp. Error: {e}")
+                    return
+                except Exception as e:
+                    console.print(
+                        f"[bold red]ERROR:[/bold red] An error occurred during the setup of llama.cpp. Error: {e}")
                     return
             else:
-                console.print(f"[bold blue]INFO:[/bold blue] llama.cpp directory already exists. Skipping setup.")
+                console.print("[bold blue]INFO:[/bold blue] llama.cpp is already built and ready.")
 
-        ready_file = os.path.join(llama_cpp_dir, "ready")
-        requirements_file = os.path.join(llama_cpp_dir, "requirements.txt")
-        venv_dir = os.path.join(llama_cpp_dir, "venv")
-        venv_python = os.path.join(venv_dir, "bin", "python")
-        convert_script = os.path.join(llama_cpp_dir, 'convert_hf_to_gguf.py')
+            output_file = os.path.join(local_dir, f"{repo_name}-fp16.bin")
+            quantized_output_file = os.path.join(local_dir, f"{repo_name}-Q4_K_M.gguf")
+            outtype = "f16"
 
-        if not os.path.exists(ready_file):
-            console.print("[bold blue]INFO:[/bold blue] Building llama.cpp...")
-            try:
-                make_executable = shutil.which("make")
-                if not make_executable:
-                    console.print("[bold red]ERROR:[/bold red] 'make' executable not found in PATH.")
+            if not os.path.exists(convert_script):
+                console.print(f"[bold red]ERROR:[/bold red] The conversion script '{convert_script}' does not exist.")
+                return
+
+            if not os.path.exists(output_file):
+                console.print("[bold blue]INFO:[/bold blue] Converting the model...")
+                try:
+                    venv_activate = os.path.join(venv_dir, "bin", "activate")
+                    convert_command = [
+                        "/bin/bash", "-c",
+                        (
+                            f"source {shlex.quote(venv_activate)} && {shlex.quote(venv_python)} "
+                            f"{shlex.quote(convert_script)} {shlex.quote(local_dir)} --outfile "
+                            f"{shlex.quote(output_file)} --outtype {shlex.quote(outtype)}"
+                        )
+                    ]
+                    console.print(Panel(Syntax(" ".join(convert_command), "bash", theme="monokai", line_numbers=True),
+                                        title="Conversion Command", expand=False))
+                    subprocess.run(convert_command, check=True)
+                    console.print(
+                        f"[bold green]SUCCESS:[/bold green] Conversion complete. The model has been compressed and saved as '{output_file}'")
+                except subprocess.CalledProcessError as e:
+                    console.print(f"[bold red]ERROR:[/bold red] Conversion failed. Error: {e}")
                     return
-
-                subprocess.run([make_executable], cwd=llama_cpp_dir, check=True)
-                console.print("[bold green]SUCCESS:[/bold green] Finished building llama.cpp")
-
-                if not os.path.exists(venv_dir):
-                    console.print(f"[bold blue]INFO:[/bold blue] Creating virtual environment in '{venv_dir}'...")
-                    create_venv(venv_dir)
-                else:
-                    console.print(f"[bold blue]INFO:[/bold blue] Virtual environment already exists in '{venv_dir}'")
-
-                console.print("[bold blue]INFO:[/bold blue] Installing llama.cpp dependencies...")
-                pip_command = [
-                    "/bin/bash", "-c",
-                    (
-                        f"source {shlex.quote(os.path.join(venv_dir, 'bin', 'activate'))} && "
-                        f"pip install -r {shlex.quote(requirements_file)}"
-                    )
-                ]
-                subprocess.run(pip_command, check=True)
-                console.print("[bold green]SUCCESS:[/bold green] Finished installing llama.cpp dependencies")
-
-                with open(ready_file, 'w') as f:
-                    f.write("Ready")
-            except subprocess.CalledProcessError as e:
-                console.print(f"[bold red]ERROR:[/bold red] Failed to build llama.cpp. Error: {e}")
-                return
-            except Exception as e:
+                except Exception as e:
+                    console.print(
+                        f"[bold red]ERROR:[/bold red] An error occurred during the model conversion. Error: {e}")
+                    return
+            else:
                 console.print(
-                    f"[bold red]ERROR:[/bold red] An error occurred during the setup of llama.cpp. Error: {e}")
-                return
+                    f"[bold blue]INFO:[/bold blue] The model has already been converted and saved as '{output_file}'.")
+
+            if os.path.exists(output_file):
+                console.print("[bold blue]INFO:[/bold blue] Quantizing the model...")
+                try:
+                    quantize_command = [
+                        os.path.join(llama_cpp_dir, 'llama-quantize'),
+                        output_file,
+                        quantized_output_file,
+                        "Q4_K_M"
+                    ]
+                    subprocess.run(quantize_command, check=True)
+                    console.print(
+                        f"[bold green]SUCCESS:[/bold green] Quantization complete. The quantized model has been saved as '{quantized_output_file}'.")
+
+                    console.print(f"[bold blue]INFO:[/bold blue] Deleting the original .bin file '{output_file}'...")
+                    os.remove(output_file)
+                    console.print(f"[bold green]SUCCESS:[/bold green] Deleted the original .bin file '{output_file}'.")
+                except subprocess.CalledProcessError as e:
+                    console.print(f"[bold red]ERROR:[/bold red] Quantization failed. Error: {e}")
+                    return
+                except Exception as e:
+                    console.print(
+                        f"[bold red]ERROR:[/bold red] An error occurred during the quantization process. Error: {e}")
+                    return
+            else:
+                console.print(f"[bold red]ERROR:[/bold red] The original model file '{output_file}' does not exist.")
+
         else:
-            console.print("[bold blue]INFO:[/bold blue] llama.cpp is already built and ready.")
-
-        output_file = os.path.join(local_dir, f"{repo_name}-fp16.bin")
-        quantized_output_file = os.path.join(local_dir, f"{repo_name}-Q4_K_M.gguf")
-        outtype = "f16"
-
-        if not os.path.exists(convert_script):
-            console.print(f"[bold red]ERROR:[/bold red] The conversion script '{convert_script}' does not exist.")
-            return
-
-        if not os.path.exists(output_file):
-            console.print("[bold blue]INFO:[/bold blue] Converting the model...")
-            try:
-                venv_activate = os.path.join(venv_dir, "bin", "activate")
-                convert_command = [
-                    "/bin/bash", "-c",
-                    (
-                        f"source {shlex.quote(venv_activate)} && {shlex.quote(venv_python)} "
-                        f"{shlex.quote(convert_script)} {shlex.quote(local_dir)} --outfile "
-                        f"{shlex.quote(output_file)} --outtype {shlex.quote(outtype)}"
-                    )
-                ]
-                console.print(Panel(Syntax(" ".join(convert_command), "bash", theme="monokai", line_numbers=True),
-                                    title="Conversion Command", expand=False))
-                subprocess.run(convert_command, check=True)
-                console.print(
-                    f"[bold green]SUCCESS:[/bold green] Conversion complete. The model has been compressed and saved as '{output_file}'")
-            except subprocess.CalledProcessError as e:
-                console.print(f"[bold red]ERROR:[/bold red] Conversion failed. Error: {e}")
-                return
-            except Exception as e:
-                console.print(f"[bold red]ERROR:[/bold red] An error occurred during the model conversion. Error: {e}")
-                return
-        else:
-            console.print(
-                f"[bold blue]INFO:[/bold blue] The model has already been converted and saved as '{output_file}'.")
-
-        if os.path.exists(output_file):
-            console.print("[bold blue]INFO:[/bold blue] Quantizing the model...")
-            try:
-                quantize_command = [
-                    os.path.join(llama_cpp_dir, 'llama-quantize'),
-                    output_file,
-                    quantized_output_file,
-                    "Q4_K_M"
-                ]
-                subprocess.run(quantize_command, check=True)
-                console.print(
-                    f"[bold green]SUCCESS:[/bold green] Quantization complete. The quantized model has been saved as '{quantized_output_file}'.")
-
-                console.print(f"[bold blue]INFO:[/bold blue] Deleting the original .bin file '{output_file}'...")
-                os.remove(output_file)
-                console.print(f"[bold green]SUCCESS:[/bold green] Deleted the original .bin file '{output_file}'.")
-            except subprocess.CalledProcessError as e:
-                console.print(f"[bold red]ERROR:[/bold red] Quantization failed. Error: {e}")
-                return
-            except Exception as e:
-                console.print(
-                    f"[bold red]ERROR:[/bold red] An error occurred during the quantization process. Error: {e}")
-                return
-        else:
-            console.print(f"[bold red]ERROR:[/bold red] The original model file '{output_file}' does not exist.")
+            console.print(f"[bold red]ERROR:[/bold red] Unsupported compression method: {method}")
 
     except KeyboardInterrupt:
         console.print("\n[bold yellow]WARNING:[/bold yellow] Process interrupted by user. Exiting...")
