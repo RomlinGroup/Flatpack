@@ -1,4 +1,4 @@
-# Tutorial
+# Flatpack
 
 1. https://pipx.pypa.io/stable/installation/
 2. `pipx install flatpack`
