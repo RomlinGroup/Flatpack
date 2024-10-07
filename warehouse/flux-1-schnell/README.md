@@ -1,4 +1,4 @@
-# rwkv-train
+# flux-1-schnell
 
 [![PyPI - Version](https://img.shields.io/pypi/v/flatpack)](https://pypi.org/project/flatpack/)
 
@@ -6,9 +6,9 @@
 
 > **免责声明:** 此存储库包含我们的研究。请核实信息并自行研究 (DYOR)。我们不对准确性或完整性承担任何责任。
 
-`rwkv-train` offers a Flatpack adaptation of [RWKV-LM](https://github.com/BlinkDL/RWKV-LM) by Bo Peng, licensed under the [Apache License 2.0](https://github.com/BlinkDL/RWKV-LM/blob/main/LICENSE).
+`flux-1-schnell` offers a Flatpack adaptation of [FLUX.1 [schnell]](https://huggingface.co/black-forest-labs/FLUX.1-schnell) by Black Forest Labs, licensed under the [Apache License 2.0](https://huggingface.co/black-forest-labs/FLUX.1-schnell).
 
-We have no official affiliation or association with Bo Peng, nor are we authorised or endorsed by him. For the official GitHub profile of Bo Peng, please visit [https://github.com/BlinkDL](https://github.com/BlinkDL).
+We have no official affiliation or association with Black Forest Labs, nor are we authorised or endorsed by them. For the official website of Black Forest Labs, please visit [https://blackforestlabs.ai](https://blackforestlabs.ai).
 
 Flatpack is currently experimental. Please refrain from using it in production environments.
 
