@@ -2856,8 +2856,6 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
         console.print("\n[bold yellow]WARNING:[/bold yellow] Process interrupted by user. Exiting...")
     except Exception as e:
         console.print(f"[bold red]ERROR:[/bold red] An unexpected error occurred: {e}")
-    finally:
-        console.print(Panel.fit("[bold green]Compression process completed[/bold green]", title="Compression Status"))
 
 
 def fpk_cli_handle_find(args, session):
