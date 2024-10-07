@@ -2694,9 +2694,10 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
     try:
         if os.path.exists(local_dir):
             console.print(
-                f"[bold yellow]WARNING:[/bold yellow] Existing model directory '{local_dir}' found. Deleting...")
-            shutil.rmtree(local_dir)
-            console.print(f"[bold green]SUCCESS:[/bold green] Deleted existing model directory '{local_dir}'.")
+                f"[bold yellow]INFO:[/bold yellow] Existing model directory '{local_dir}' found. Attempting to resume download...")
+        else:
+            console.print(f"[bold blue]INFO:[/bold blue] Creating new directory '{local_dir}' for the model...")
+            os.makedirs(local_dir, exist_ok=True)
 
         console.print(f"[bold blue]INFO:[/bold blue] Downloading model '{model_id}'...")
         try:
@@ -2705,13 +2706,15 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
                     repo_id=model_id,
                     local_dir=local_dir,
                     revision="main",
-                    token=token
+                    token=token,
+                    resume_download=True
                 )
             else:
                 lazy_import('huggingface_hub').snapshot_download(
                     repo_id=model_id,
                     local_dir=local_dir,
-                    revision="main"
+                    revision="main",
+                    resume_download=True
                 )
             console.print(
                 f"[bold green]SUCCESS:[/bold green] Finished downloading {model_id} into the directory '{local_dir}'")
