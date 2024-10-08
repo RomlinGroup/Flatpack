@@ -13,7 +13,7 @@ setup(
         "beautifulsoup4==4.12.3",
         "croniter==3.0.3",
         "cryptography==43.0.1",
-        "fastapi==0.115.0",
+        "fastapi==0.110.2",
         "hnswlib==0.8.0",
         "httpx==0.27.2",
         "huggingface-hub==0.25.1",
