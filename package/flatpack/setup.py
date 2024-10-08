@@ -5,7 +5,7 @@ with open("README.md", "r") as f:
 
 setup(
     name="flatpack",
-    version="3.9.15",
+    version="3.9.16",
     license="Apache Software License (Apache-2.0)",
     packages=find_packages(),
     python_requires=">=3.10.0",
@@ -26,7 +26,7 @@ setup(
         "requests==2.32.3",
         "rich==13.9.2",
         "sentence-transformers==3.1.1",
-        "spacy==3.8.2",
+        "spacy==3.8.0",
         "toml==0.10.2",
         "uvicorn==0.31.0",
         "zstandard==0.23.0"
