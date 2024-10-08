@@ -1866,6 +1866,10 @@ def fpk_set_secure_file_permissions(file_path):
 
 def fpk_unbox(directory_name: str, session: httpx.Client, local: bool = False) -> bool:
     """Unbox a flatpack from GitHub or a local directory."""
+    if directory_name is None:
+        logger.error("Directory name cannot be None")
+        return False
+
     if not fpk_valid_directory_name(directory_name):
         logger.error("Invalid directory name: '%s'", directory_name)
         return False
@@ -3650,14 +3654,13 @@ def fpk_cli_handle_unbox(args, session):
         args: The command-line arguments.
         session: The HTTP session.
     """
-    if not args.input:
-        console.print("")
+    if args.input is None:
         console.print("Please specify a flatpack for the unbox command.", style="bold red")
         return
 
     directory_name = args.input
-    existing_dirs = fpk_fetch_github_dirs(session)
 
+    existing_dirs = fpk_fetch_github_dirs(session)
     console.print("Running unbox process...", style="bold green")
 
     if directory_name not in existing_dirs and not args.local:
@@ -3686,12 +3689,18 @@ def fpk_cli_handle_unbox(args, session):
             console.print(f"Local directory does not exist: '{directory_name}'.", style="bold red")
             return
 
+        directory_name = str(local_directory_path.resolve())  # Update directory_name to full path
         toml_path = local_directory_path / 'flatpack.toml'
 
         if not toml_path.exists():
             logger.error("flatpack.toml not found in the specified directory: '%s'.", directory_name)
             console.print(f"flatpack.toml not found in '{directory_name}'.", style="bold red")
             return
+
+    if directory_name is None or directory_name.strip() == "":
+        logger.error("Invalid directory name")
+        console.print("Invalid directory name", style="bold red")
+        return
 
     logger.info("Directory name resolved to: '%s'", directory_name)
 
