@@ -343,68 +343,70 @@ async def check_and_run_schedules():
 
 
 def check_node_and_run_npm_install(web_dir):
-    original_dir = os.getcwd()
+    if web_dir is None or not isinstance(web_dir, (str, os.PathLike)):
+        console.print(Panel(
+            "[bold red]Invalid web directory provided.[/bold red]\n\n"
+            "[yellow]Aborting further operations due to this error.[/yellow]",
+            title="Error: Invalid Directory", expand=False
+        ))
+        return False
 
+    original_dir = os.getcwd()
     try:
         console.print("")
-
         try:
             node_path = get_executable_path('node')
             npm_path = get_executable_path('npm')
 
+            if node_path is None or npm_path is None:
+                raise FileNotFoundError("Node.js or npm not found")
+
             node_version = subprocess.run(
-                [node_path, "--version"],
-                check=True,
-                capture_output=True,
-                text=True
+                [node_path, "--version"], check=True, capture_output=True, text=True
             ).stdout.strip()
-
             console.print(f"[green]Node.js version:[/green] {node_version}")
-
             console.print("")
-
             console.print("[green]npm is assumed to be installed with Node.js[/green]")
-
             console.print("")
 
-            os.chdir(web_dir)
+            web_dir_path = Path(web_dir).resolve()
+
+            if not web_dir_path.exists() or not web_dir_path.is_dir():
+                raise FileNotFoundError(f"Web directory not found: {web_dir_path}")
+
+            os.chdir(web_dir_path)
 
             with console.status("[bold green]Running npm install..."):
                 subprocess.run([npm_path, "install"], check=True, capture_output=True)
-
             console.print("[bold green]Successfully ran 'npm install' in the web directory[/bold green]")
 
-        except FileNotFoundError:
+        except FileNotFoundError as e:
             console.print(Panel(
-                "[bold red]Node.js is not installed or not in the system PATH.[/bold red]\n\n"
+                f"[bold red]{str(e)}[/bold red]\n\n"
                 "To resolve this issue:\n"
                 "1. Download and install Node.js from [link=https://nodejs.org]https://nodejs.org[/link]\n"
                 "2. npm is included with Node.js installation\n"
                 "3. After installation, restart your terminal and run this script again\n\n"
-                "[yellow]Aborting further operations due to missing Node.js.[/yellow]",
-                title="Error: Node.js not found",
-                expand=False
+                "[yellow]Aborting further operations due to missing Node.js or npm.[/yellow]",
+                title="Error: Node.js or npm not found", expand=False
             ))
-
             return False
 
-    except subprocess.CalledProcessError as e:
-        console.print(Panel(
-            f"[bold red]An error occurred while running a command:[/bold red]\n\n{e}\n\n"
-            "[yellow]Aborting further operations due to this error.[/yellow]",
-            title="Command Error",
-            expand=False
-        ))
-        return False
+        except subprocess.CalledProcessError as e:
+            console.print(Panel(
+                f"[bold red]An error occurred while running a command:[/bold red]\n\n{e}\n\n"
+                "[yellow]Aborting further operations due to this error.[/yellow]",
+                title="Command Error", expand=False
+            ))
+            return False
 
-    except Exception as e:
-        console.print(Panel(
-            f"[bold red]An unexpected error occurred:[/bold red]\n\n{str(e)}\n\n"
-            "[yellow]Aborting further operations due to this error.[/yellow]",
-            title="Unexpected Error",
-            expand=False
-        ))
-        return False
+        except Exception as e:
+            console.print(Panel(
+                f"[bold red]An unexpected error occurred:[/bold red]\n\n{str(e)}\n\n"
+                "[yellow]Aborting further operations due to this error.[/yellow]",
+                title="Unexpected Error", expand=False
+            ))
+            return False
 
     finally:
         os.chdir(original_dir)
