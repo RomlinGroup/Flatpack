@@ -631,7 +631,7 @@ def create_temp_sh(custom_json_path: Path, temp_sh_path: Path, use_euxo: bool = 
 
 def create_venv(venv_dir: str):
     """
-    Create a virtual environment in the specified directory using Python 3.11.
+    Create a virtual environment in the specified directory using the current Python version.
 
     Args:
         venv_dir (str): The directory where the virtual environment will be created.
@@ -639,15 +639,7 @@ def create_venv(venv_dir: str):
     Returns:
         None
     """
-    python_version = "3.11"
-    python_executable = f"python{python_version}"
-
-    try:
-        subprocess.run([python_executable, "--version"], check=True, capture_output=True)
-    except subprocess.CalledProcessError:
-        console.print(
-            f"[bold yellow]WARNING:[/bold yellow] Python {python_version} not found. Falling back to system Python.")
-        python_executable = sys.executable
+    python_executable = sys.executable
 
     try:
         subprocess.run(
@@ -2700,6 +2692,7 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
             os.makedirs(local_dir, exist_ok=True)
 
         console.print(f"[bold blue]INFO:[/bold blue] Downloading model '{model_id}'...")
+
         try:
             if token:
                 lazy_import('huggingface_hub').snapshot_download(
@@ -2716,6 +2709,7 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
                     revision="main",
                     resume_download=True
                 )
+
             console.print(
                 f"[bold green]SUCCESS:[/bold green] Finished downloading {model_id} into the directory '{local_dir}'")
         except Exception as e:
@@ -2731,9 +2725,11 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
                 llama_cpp_dir = "."
             else:
                 llama_cpp_dir = "llama.cpp"
+
                 if not os.path.exists(llama_cpp_dir):
                     console.print("[bold blue]INFO:[/bold blue] Setting up llama.cpp...")
                     git_executable = shutil.which("git")
+
                     if not git_executable:
                         console.print("[bold red]ERROR:[/bold red] The 'git' executable was not found in your PATH.")
                         return
@@ -2750,6 +2746,7 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
                             ],
                             check=True
                         )
+
                         console.print(
                             f"[bold green]SUCCESS:[/bold green] Finished cloning llama.cpp repository into '{llama_cpp_dir}'")
                     except subprocess.CalledProcessError as e:
@@ -2767,13 +2764,16 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
 
             if not os.path.exists(ready_file):
                 console.print("[bold blue]INFO:[/bold blue] Building llama.cpp...")
+
                 try:
                     make_executable = shutil.which("make")
+
                     if not make_executable:
                         console.print("[bold red]ERROR:[/bold red] 'make' executable not found in PATH.")
                         return
 
                     subprocess.run([make_executable], cwd=llama_cpp_dir, check=True)
+
                     console.print("[bold green]SUCCESS:[/bold green] Finished building llama.cpp")
 
                     if not os.path.exists(venv_dir):
@@ -2816,6 +2816,7 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
 
             if not os.path.exists(output_file):
                 console.print("[bold blue]INFO:[/bold blue] Converting the model...")
+
                 try:
                     venv_activate = os.path.join(venv_dir, "bin", "activate")
                     convert_command = [
@@ -2844,6 +2845,7 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
 
             if os.path.exists(output_file):
                 console.print("[bold blue]INFO:[/bold blue] Quantizing the model...")
+
                 try:
                     quantize_command = [
                         os.path.join(llama_cpp_dir, 'llama-quantize'),
