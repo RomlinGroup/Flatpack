@@ -82,6 +82,16 @@ sudo apt-get install -y build-essential git pipx python3-dev python3.11 python3.
 pipx install flatpack && sudo reboot
 ```
 
+### Install on Ubuntu 24.04.1 LTS
+
+```bash
+sudo apt-get install python3-dev
+```
+
+```bash
+pipx install flatpack
+```
+
 ### Install on Windows 11
 
 Install [Ubuntu 24.04 LTS](https://apps.microsoft.com/detail/9nz3klhxdjp5) using Windows Subsystem for Linux (WSL).
