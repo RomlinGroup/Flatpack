@@ -119,10 +119,6 @@ sudo apt install build-essential git pipx python3-dev -y
 pipx install flatpack
 ```
 
-```bash
-sudo reboot
-```
-
 ### Install on Windows 11
 
 Install [Ubuntu 24.04.1 LTS](https://apps.microsoft.com/detail/9nz3klhxdjp5) using Windows Subsystem for Linux (WSL).
