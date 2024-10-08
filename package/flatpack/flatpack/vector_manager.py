@@ -1,104 +1,21 @@
 import datetime
 import hashlib
-import hnswlib
 import json
-import numpy as np
 import os
-import requests
-import subprocess
 import sys
 import time
 import warnings
 
-from bs4 import BeautifulSoup
-from contextlib import redirect_stdout
-from pypdf import PdfReader
-from rich.console import Console
-from rich.progress import Progress, SpinnerColumn, TextColumn
-from sentence_transformers import SentenceTransformer
 from typing import Dict, List
 
+import hnswlib
+import numpy as np
+import requests
+
+from bs4 import BeautifulSoup
+from sentence_transformers import SentenceTransformer
+
 warnings.filterwarnings('ignore', category=FutureWarning)
-
-console = Console()
-
-
-def ensure_spacy_model():
-    python_path = sys.executable
-    pip_path = [python_path, "-m", "pip"]
-
-    try:
-        import spacy
-        try:
-            nlp = spacy.load("en_core_web_sm")
-            return nlp
-        except OSError:
-            pass
-    except ImportError:
-        pass
-
-    console.print("")
-    console.print("Installing spaCy (MIT) and downloading model...")
-
-    with Progress(
-            SpinnerColumn(),
-            TextColumn("[progress.description]{task.description}"),
-            transient=True,
-    ) as progress:
-        install_task = progress.add_task("Installing spaCy...", total=None)
-
-        try:
-            process = subprocess.Popen(
-                pip_path + ['install', 'spacy'],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-                universal_newlines=True
-            )
-            for line in process.stdout:
-                if "Installing collected packages" in line:
-                    progress.update(install_task, description="Installing packages...")
-                elif "Successfully installed" in line:
-                    progress.update(install_task, description="SpaCy installed successfully!")
-            process.wait()
-            if process.returncode != 0:
-                raise subprocess.CalledProcessError(process.returncode, pip_path)
-        except (subprocess.CalledProcessError, FileNotFoundError) as e:
-            console.print(f"[red]Error installing spaCy: {e}[/red]")
-            return None
-
-        download_task = progress.add_task("Downloading spaCy model...", total=None)
-
-        try:
-            process = subprocess.Popen(
-                [python_path, '-m', 'spacy', 'download', 'en_core_web_sm'],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-                universal_newlines=True
-            )
-
-            process.wait()
-
-            if process.returncode != 0:
-                raise subprocess.CalledProcessError(process.returncode,
-                                                    [python_path, '-m', 'spacy', 'download', 'en_core_web_sm'])
-        except (subprocess.CalledProcessError, FileNotFoundError) as e:
-            console.print(f"[red]Error downloading spaCy model: {e}[/red]")
-            return None
-
-    try:
-        import spacy
-        nlp = spacy.load("en_core_web_sm")
-        return nlp
-    except ImportError:
-        console.print("[red]Failed to import spaCy after installation.[/red]")
-        return None
-
-
-nlp = ensure_spacy_model()
-
-if nlp is None:
-    console.print("[red]Failed to initialize spaCy. Please check your installation and try again.[/red]")
-    sys.exit(1)
 
 BATCH_SIZE = 64
 EMBEDDINGS_FILE = "embeddings.npy"
@@ -234,8 +151,7 @@ class VectorManager:
         if not isinstance(text, str):
             return
 
-        doc = nlp(text)
-        sentences = [sent.text for sent in doc.sents]
+        sentences = [s.strip() for s in text.replace('!', '.').replace('?', '.').split('.') if s.strip()]
         chunks = [" ".join(sentences[i:i + SENTENCE_CHUNK_SIZE]).strip() for i in
                   range(0, len(sentences), SENTENCE_CHUNK_SIZE)]
         self.add_texts(chunks, source_reference)

@@ -26,7 +26,6 @@ setup(
         "requests==2.32.3",
         "rich==13.9.2",
         "sentence-transformers==3.1.1",
-        "spacy==3.7.5",
         "toml==0.10.2",
         "uvicorn==0.31.0",
         "zstandard==0.23.0"

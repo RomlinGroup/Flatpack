@@ -131,9 +131,6 @@ Check out the [JLA - Compatibility Checker](https://joinup.ec.europa.eu/collecti
 - **[sentence-transformers](https://pypi.org/project/sentence-transformers/)**\
   Apache Software License (Apache License 2.0) ([LICENSE](https://github.com/UKPLab/sentence-transformers/blob/master/LICENSE))
 
-- **[spacy](https://pypi.org/project/spacy/)**\
-  MIT License (MIT) ([LICENSE](https://github.com/explosion/spaCy/blob/master/LICENSE))
-
 - **[toml](https://pypi.org/project/toml/)**\
   MIT License (MIT) ([LICENSE](https://github.com/uiri/toml/blob/master/LICENSE))
 
