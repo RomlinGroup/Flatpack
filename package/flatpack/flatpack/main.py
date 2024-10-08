@@ -352,6 +352,7 @@ def check_node_and_run_npm_install(web_dir):
         return False
 
     original_dir = os.getcwd()
+
     try:
         console.print("")
         try:
@@ -378,6 +379,7 @@ def check_node_and_run_npm_install(web_dir):
 
             with console.status("[bold green]Running npm install..."):
                 subprocess.run([npm_path, "install"], check=True, capture_output=True)
+
             console.print("[bold green]Successfully ran 'npm install' in the web directory[/bold green]")
 
         except FileNotFoundError as e:
@@ -1949,11 +1951,13 @@ def fpk_unbox(directory_name: str, session: httpx.Client, local: bool = False) -
 
         if not check_node_and_run_npm_install(web_dir):
             console.print("[yellow]Cleaning up: Removing the flatpack directory due to failure.[/yellow]")
+
             try:
                 shutil.rmtree(flatpack_dir)
                 console.print("[green]Cleanup successful: Flatpack directory removed.[/green]")
             except Exception as e:
                 console.print(f"[red]Error during cleanup: {e}[/red]")
+
             sys.exit(1)
 
     except httpx.RequestError as e:
