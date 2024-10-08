@@ -85,6 +85,10 @@ pipx install flatpack && sudo reboot
 ### Install on Ubuntu 24.04.1 LTS
 
 ```bash
+sudo apt update && sudo apt upgrade -y
+```
+
+```bash
 sudo apt-get install python3-dev
 ```
 
