@@ -1019,7 +1019,7 @@ def filter_log_line(line):
     return stripped_line
 
 
-async def run_subprocess(command, log_file, timeout=3600):
+async def run_subprocess(command, log_file, timeout=21600):
     global shutdown_requested, abort_requested
     out_r, out_w = pty.openpty()
     err_r, err_w = pty.openpty()
