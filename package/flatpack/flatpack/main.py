@@ -3,6 +3,11 @@ import sys
 
 from pathlib import Path
 from rich.console import Console
+from rich.panel import Panel
+from rich.progress import Progress, SpinnerColumn, TextColumn
+from rich.syntax import Syntax
+from rich.table import Table
+from rich.text import Text
 
 PACKAGE_DIR = Path(sys.modules['flatpack'].__file__).parent
 IMPORT_CACHE_FILE = PACKAGE_DIR / ".fpk_import_cache"
@@ -61,11 +66,6 @@ from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.security import APIKeyCookie
 from itsdangerous import BadSignature, SignatureExpired, TimestampSigner
 from pydantic import BaseModel
-from rich.panel import Panel
-from rich.progress import Progress, SpinnerColumn, TextColumn
-from rich.syntax import Syntax
-from rich.table import Table
-from rich.text import Text
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 
