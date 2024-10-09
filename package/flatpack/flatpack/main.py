@@ -2,6 +2,7 @@ import os
 import sys
 
 from pathlib import Path
+from werkzeug.utils import secure_filename
 from rich.console import Console
 from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
@@ -3354,7 +3355,8 @@ def setup_routes(app):
         if not flatpack_directory:
             raise HTTPException(status_code=500, detail="Flatpack directory is not set")
 
-        file_path = os.path.join(flatpack_directory, 'build', filename)
+        sanitized_filename = secure_filename(filename)
+        file_path = os.path.join(flatpack_directory, 'build', sanitized_filename)
 
         if not os.path.commonpath([flatpack_directory, os.path.realpath(file_path)]).startswith(
                 os.path.realpath(flatpack_directory)):
