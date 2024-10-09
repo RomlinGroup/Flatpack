@@ -3278,26 +3278,44 @@ def setup_routes(app):
         if not flatpack_directory:
             raise HTTPException(status_code=500, detail="Flatpack directory is not set")
 
-        file_path = os.path.join(flatpack_directory, 'build', filename)
+        sanitized_filename = secure_filename(filename)
+        build_dir = Path(flatpack_directory) / 'build'
+        file_path = build_dir / sanitized_filename
 
-        if not os.path.isfile(file_path):
+        try:
+            file_path = file_path.resolve()
+            build_dir = build_dir.resolve()
+
+            if not file_path.is_relative_to(build_dir):
+                raise HTTPException(status_code=403, detail="Access to the requested file is forbidden")
+        except Exception as e:
+            logger.error("Error validating file path: %s", e)
+            raise HTTPException(status_code=400, detail="Invalid file path")
+
+        if not file_path.is_file():
             raise HTTPException(status_code=404, detail="File not found")
 
         try:
             with open(file_path, 'r', encoding='utf-8') as file:
                 code_blocks = json.load(file)
 
-                if not isinstance(code_blocks, list):
-                    raise ValueError("Invalid file format: Expected a list of code blocks")
+            if not isinstance(code_blocks, list):
+                raise ValueError("Invalid file format: Expected a list of code blocks")
 
-                json_content = json.dumps(code_blocks)
+            json_content = json.dumps(code_blocks)
+            base64_content = base64.b64encode(json_content.encode('utf-8')).decode('utf-8')
 
-                base64_content = base64.b64encode(json_content.encode('utf-8')).decode('utf-8')
+            return JSONResponse(content={"content": base64_content})
 
-                return JSONResponse(content={"content": base64_content})
-
+        except json.JSONDecodeError:
+            logger.error("Error decoding JSON from file: %s", sanitized_filename)
+            raise HTTPException(status_code=400, detail="Invalid JSON format in file")
+        except ValueError as ve:
+            logger.error("Error validating file content: %s", str(ve))
+            raise HTTPException(status_code=400, detail=str(ve))
         except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Failed to load file: {e}")
+            logger.error("Error reading file '%s': %s", sanitized_filename, str(e))
+            raise HTTPException(status_code=500, detail="Error reading file")
 
     @app.get("/api/logs", dependencies=[Depends(csrf_protect)])
     async def get_all_logs(request: Request, token: str = Depends(authenticate_token)):
