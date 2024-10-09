@@ -1916,7 +1916,7 @@ def fpk_unbox(directory_name: str, session: httpx.Client, local: bool = False) -
         with open(eval_data_path, 'w') as f:
             json.dump([], f)
 
-        logger.info(f"Created empty eval_data.json in {eval_data_path}")
+        logger.info("Created empty eval_data.json in %s", eval_data_path)
 
         files_to_download = {
             'build': [],
