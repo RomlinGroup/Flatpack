@@ -2,7 +2,6 @@ import os
 import sys
 
 from pathlib import Path
-from werkzeug.utils import secure_filename
 from rich.console import Console
 from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
@@ -48,6 +47,7 @@ import tarfile
 import tempfile
 import time
 import traceback
+import unicodedata
 
 from datetime import datetime, timedelta, timezone
 from importlib.metadata import version
@@ -1103,6 +1103,23 @@ def save_config(config):
         logger.error("Error saving config: %s", error_message)
 
 
+def secure_filename(filename):
+    """
+    Sanitize a filename to make it secure.
+
+    Args:
+        filename (str): The filename to sanitize.
+
+    Returns:
+        str: A sanitized version of the filename.
+    """
+    filename = unicodedata.normalize('NFKD', filename)
+    filename = filename.encode('ascii', 'ignore').decode('ascii')
+    filename = re.sub(r'[^\w\.-]', '_', filename)
+    filename = filename.strip('._')
+    return filename
+
+
 def set_token(token: str):
     try:
         config = load_config()
@@ -1906,7 +1923,7 @@ def fpk_unbox(directory_name: str, session: httpx.Client, local: bool = False) -
         logger.info("Created /build directory: %s", build_dir)
 
         output_dir.mkdir(parents=True, exist_ok=True)
-        logger.info("Created empty eval_data.json in %s", eval_data_path)
+        logger.info("Created /web/output directory: %s", output_dir)
 
         eval_data_path = output_dir / "eval_data.json"
 
