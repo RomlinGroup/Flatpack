@@ -1870,30 +1870,30 @@ def fpk_set_secure_file_permissions(file_path):
 
 def fpk_unbox(directory_name: str, session: httpx.Client, local: bool = False) -> bool:
     """Unbox a flatpack from GitHub or a local directory."""
-    logger.info(f"Starting fpk_unbox with directory_name: '{directory_name}', local: {local}")
+    logger.info("Starting fpk_unbox with directory_name: '%s', local: %s", directory_name, local)
 
     if directory_name is None or not isinstance(directory_name, str) or directory_name.strip() == "":
-        logger.error(f"Invalid directory name: {directory_name}")
+        logger.error("Invalid directory name: %s", directory_name)
         return False
 
     if not fpk_valid_directory_name(directory_name):
-        logger.error(f"Invalid directory name: '{directory_name}'")
+        logger.error("Invalid directory name: '%s'", directory_name)
         return False
 
     flatpack_dir = Path.cwd() / directory_name
-    logger.info(f"Flatpack directory: {flatpack_dir}")
+    logger.info("Flatpack directory: %s", flatpack_dir)
 
     if local:
         if not flatpack_dir.exists():
-            logger.error(f"Local directory '{directory_name}' does not exist.")
+            logger.error("Local directory '%s' does not exist.", directory_name)
             return False
         toml_path = flatpack_dir / 'flatpack.toml'
         if not toml_path.exists():
-            logger.error(f"flatpack.toml not found in the specified directory: '{directory_name}'.")
+            logger.error("flatpack.toml not found in the specified directory: '%s'.", directory_name)
             return False
     else:
         if flatpack_dir.exists():
-            logger.error(f"Directory '{directory_name}' already exists. Unboxing aborted to prevent conflicts.")
+            logger.error("Directory '%s' already exists. Unboxing aborted to prevent conflicts.", directory_name)
             return False
         flatpack_dir.mkdir(parents=True, exist_ok=True)
 
@@ -1903,13 +1903,13 @@ def fpk_unbox(directory_name: str, session: httpx.Client, local: bool = False) -
 
     try:
         web_dir.mkdir(parents=True, exist_ok=True)
-        logger.info(f"Created /web directory: {web_dir}")
+        logger.info("Created /web directory: %s", web_dir)
 
         build_dir.mkdir(parents=True, exist_ok=True)
-        logger.info(f"Created /build directory: {build_dir}")
+        logger.info("Created /build directory: %s", build_dir)
 
         output_dir.mkdir(parents=True, exist_ok=True)
-        logger.info(f"Created /web/output directory: {output_dir}")
+        logger.info("Created empty eval_data.json in %s", eval_data_path)
 
         eval_data_path = output_dir / "eval_data.json"
 
