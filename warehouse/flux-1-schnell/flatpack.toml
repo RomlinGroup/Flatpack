@@ -39,12 +39,9 @@ transformers = "4.45.2"
 from_source = "https://github.com/leejet/stable-diffusion.cpp"
 to_destination = "stable-diffusion.cpp"
 branch = "master"
-setup_commands = [
-    "mkdir build",
-    "cd build",
-    "cmake .. -DSD_METAL=ON",
-    "cmake --build . --config Release"
-]
+# setup_commands = [
+#   "{{setup_command}}"
+# ]
 
 [[file]]
 from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/flux-1-schnell/custom.json"
