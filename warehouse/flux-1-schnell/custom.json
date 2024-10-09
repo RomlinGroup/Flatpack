@@ -2,11 +2,11 @@
   {
     "type": "bash",
     "disabled": false,
-    "code": "echo \"Hello from Bash!\""
+    "code": "mkdir -p build\n\nif [[ $(uname -s) == \"Linux\" && -x \"$(command -v nvidia-smi)\" ]]; then\n    cmake -B build -DSD_CUBLAS=ON\nelif [[ $(uname -s) == \"Darwin\" ]]; then\n    cmake -B build -DSD_METAL=ON\nelse\n    cmake -B build\nfi\n\ncmake --build build --config Release"
   },
   {
-    "type": "python",
+    "type": "bash",
     "disabled": false,
-    "code": "print(\"Hello from Python!\")"
+    "code": "mkdir -p models\n\nif [ ! -f models/flux1-schnell-q4_k.gguf ]; then\n    wget -nc -O models/flux1-schnell-q4_k.gguf \"https://huggingface.co/leejet/FLUX.1-schnell-gguf/resolve/main/flux1-schnell-q4_k.gguf\"\nelse\n    echo \"Model already exist.\"\nfi"
   }
 ]
