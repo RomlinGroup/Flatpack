@@ -17,7 +17,7 @@
   {
     "type": "bash",
     "disabled": false,
-    "code": "if [ -f \".torch_load_fix_applied\" ]; then\n    echo \"Fix already applied.\"\nelse\n    sed -i '' 's/\\(torch\\.load([^)]*\\))/\\1, weights_only=True)/' sample.py && \n    touch \".torch_load_fix_applied\" && \n    echo \"Fix applied.\"\nfi"
+    "code": "[ -f \".torch_load_fix_applied\" ] && echo \"Fix already applied.\" || (\n    if [[ \"$OSTYPE\" == \"darwin\"* ]]; then\n        sed -i '' 's/torch\\.load(\\([^)]*\\))/torch.load(\\1, weights_only=True)/g' sample.py\n    else\n        sed -i 's/torch\\.load(\\([^)]*\\))/torch.load(\\1, weights_only=True)/g' sample.py\n    fi &&\n    touch \".torch_load_fix_applied\" &&\n    echo \"Fix applied.\"\n)"
   },
   {
     "type": "bash",
