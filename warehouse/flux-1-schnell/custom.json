@@ -2,11 +2,11 @@
   {
     "type": "bash",
     "disabled": false,
-    "code": "../bin/pip install --pre torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/nightly/cpu"
+    "code": "echo \"Hello from Bash!\""
   },
   {
     "type": "python",
     "disabled": false,
-    "code": "import torch\n\nfrom diffusers import FluxPipeline\n\npipe = FluxPipeline.from_pretrained(\"black-forest-labs/FLUX.1-schnell\", torch_dtype=torch.bfloat16)\n\npipe.enable_model_cpu_offload()\n\nprompt = \"A tiger running through the jungle.\"\n\nimage = pipe(\n    prompt,\n    guidance_scale=0.0,\n    num_inference_steps=4,\n    max_sequence_length=256,\n    generator=torch.Generator(\"cpu\").manual_seed(0)\n).images[0]\n\nimage.save(\"flux-schnell.png\")"
+    "code": "print(\"Hello from Python!\")"
   }
 ]
