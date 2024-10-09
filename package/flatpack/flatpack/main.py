@@ -159,7 +159,7 @@ class EndpointFilter(logging.Filter):
     def filter(self, record):
         return all(
             endpoint not in record.getMessage()
-            for endpoint in ['GET /api/heartbeat', 'GET /api/build-status']
+            for endpoint in ['GET /api/heartbeat', 'GET /api/build-status', 'GET /csrf-token']
         )
 
 
@@ -500,10 +500,8 @@ def create_temp_sh(custom_json_path: Path, temp_sh_path: Path, use_euxo: bool = 
 
             outfile.write("function log_data() {\n")
             outfile.write("    local part_number=\"$1\"\n")
-
             outfile.write(
-                "    local new_files=$(find \"$SCRIPT_DIR\" -type f -newer \"$DATA_FILE\" \\( -name '*.jpg' -o -name '*.jpeg' -o -name '*.png' -o -name '*.txt' -o -name '*.wav' \\) ! -path '*/bin/*' ! -path '*/lib/*')\n"
-            )
+                "    local new_files=$(find \"$SCRIPT_DIR\" -type f -newer \"$DATA_FILE\" \\( -name '*.jpg' -o -name '*.jpeg' -o -name '*.png' -o -name '*.txt' -o -name '*.wav' \\) ! -path '*/bin/*' ! -path '*/lib/*')\n")
             outfile.write("    if [ -n \"$new_files\" ]; then\n")
             outfile.write("        local log_entries=\"[]\"\n")
             outfile.write("        local temp_file=$(mktemp)\n")
@@ -511,12 +509,16 @@ def create_temp_sh(custom_json_path: Path, temp_sh_path: Path, use_euxo: bool = 
             outfile.write("            local mime_type=$(file --mime-type -b \"$file\")\n")
             outfile.write("            local web=$(basename \"$file\")\n")
             outfile.write(
-                "            local json_entry=\"{\\\"eval\\\": $part_number, \\\"file\\\": \\\"$file\\\", \\\"public\\\": \\\"/output/$web\\\", \\\"type\\\": \\\"$mime_type\\\"}\"\n"
-            )
-            outfile.write("            log_entries=$(echo \"$log_entries\" | jq \". + [$json_entry]\")\n")
-            outfile.write("        done\n")
+                "            local json_entry=\"{\\\"eval\\\": $part_number, \\\"file\\\": \\\"$file\\\", \\\"public\\\": \\\"/output/$web\\\", \\\"type\\\": \\\"$mime_type\\\"}\"\n")
             outfile.write(
-                "        jq \". + $log_entries\" \"$DATA_FILE\" > \"$temp_file\" && mv \"$temp_file\" \"$DATA_FILE\"\n")
+                "            if ! jq -e \". | any(.file == \\\"$file\\\")\" \"$DATA_FILE\" > /dev/null; then\n")
+            outfile.write("                log_entries=$(echo \"$log_entries\" | jq \". + [$json_entry]\")\n")
+            outfile.write("            fi\n")
+            outfile.write("        done\n")
+            outfile.write("        if [ \"$(echo \"$log_entries\" | jq '. | length')\" -gt 0 ]; then\n")
+            outfile.write(
+                "            jq -s '.[0] + .[1]' \"$DATA_FILE\" <(echo \"$log_entries\") > \"$temp_file\" && mv \"$temp_file\" \"$DATA_FILE\"\n")
+            outfile.write("        fi\n")
             outfile.write("    fi\n")
             outfile.write("    touch \"$DATA_FILE\"\n")
             outfile.write("}\n\n")
