@@ -803,9 +803,7 @@ def get_all_hooks_from_database():
 
 
 def get_executable_path(executable):
-    """
-    Securely get the full path of an executable.
-    """
+    """Securely get the full path of an executable."""
     if sys.platform.startswith('win'):
         system_root = os.environ.get('SystemRoot', 'C:\\Windows')
         where_cmd = os.path.join(system_root, 'System32', 'where.exe')
