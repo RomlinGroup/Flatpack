@@ -2,11 +2,21 @@
   {
     "type": "bash",
     "disabled": false,
+    "code": "case \"$(uname -s)\" in\n    Darwin*)\n        echo \"macOS detected\"\n        brew install cmake || (echo \"Homebrew not found. Install it first.\" && exit 1)\n        ;;\n    Linux*)\n        echo \"Linux detected\"\n        sudo apt-get update && sudo apt-get install -y cmake\n        ;;\n\nesac\n\ncmake --version || echo \"CMake installation failed\""
+  },
+  {
+    "type": "bash",
+    "disabled": false,
     "code": "mkdir -p build\n\nif [[ $(uname -s) == \"Linux\" && -x \"$(command -v nvidia-smi)\" ]]; then\n    cmake -B build -DSD_CUBLAS=ON\nelif [[ $(uname -s) == \"Darwin\" ]]; then\n    cmake -B build -DSD_METAL=ON\nelse\n    cmake -B build\nfi\n\ncmake --build build --config Release"
   },
   {
     "type": "bash",
     "disabled": false,
-    "code": "mkdir -p models\n\nif [ ! -f models/flux1-schnell-q4_k.gguf ]; then\n    wget -nc -O models/flux1-schnell-q4_k.gguf \"https://huggingface.co/leejet/FLUX.1-schnell-gguf/resolve/main/flux1-schnell-q4_k.gguf\"\nelse\n    echo \"Model already exist.\"\nfi"
+    "code": "mkdir -p models\n\nif [ ! -f models/flux1-schnell-q4_k.gguf ]; then\n    wget -nc -O models/flux1-schnell-q4_k.gguf \"https://huggingface.co/leejet/FLUX.1-schnell-gguf/resolve/main/flux1-schnell-q4_k.gguf\"\nelse\n    echo \"Model already exist.\"\nfi\n\nif [ ! -f models/ae.safetensors ]; then\n    wget -nc -O models/ae.safetensors \"https://huggingface.co/black-forest-labs/FLUX.1-schnell/resolve/main/ae.safetensors\"\nelse\n    echo \"ae.safetensors exist.\"\nfi\n\nif [ ! -f models/clip_l.safetensors ]; then\n    wget -nc -O models/clip_l.safetensors \"https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/clip_l.safetensors\"\nelse\n    echo \"clip_l.safetensors exist.\"\nfi\n\nif [ ! -f models/diffusion_pytorch_model.safetensors ]; then\n    wget -nc -O models/diffusion_pytorch_model.safetensors \"https://huggingface.co/black-forest-labs/FLUX.1-schnell/resolve/main/vae/diffusion_pytorch_model.safetensors\"\nelse\n    echo \"diffusion_pytorch_model.safetensors exist.\"\nfi\n\nif [ ! -f models/t5xxl_fp16.safetensors ]; then\n    wget -nc -O models/t5xxl_fp16.safetensors \"https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/t5xxl_fp16.safetensors\"\nelse\n    echo \"t5xxl_fp16.safetensors exist.\"\nfi"
+  },
+  {
+    "type": "bash",
+    "disabled": false,
+    "code": "./build/bin/sd \\\n--cfg-scale 1.0 \\\n--clip_l ./models/clip_l.safetensors \\\n--diffusion-model ./models/flux1-schnell-q4_k.gguf \\\n--sampling-method euler \\\n--t5xxl ./models/t5xxl_fp16.safetensors \\\n--vae ./models/ae.safetensors \\\n-p \"A tiger running through the jungle.\" \\\n-H 512 \\\n-W 512"
   }
 ]
