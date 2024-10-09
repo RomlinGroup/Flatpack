@@ -40,8 +40,10 @@ from_source = "https://github.com/leejet/stable-diffusion.cpp"
 to_destination = "stable-diffusion.cpp"
 branch = "master"
 setup_commands = [
-    "mkdir -p build",
-    "cmake -B build -S . && cmake --build build --config Release",
+    "mkdir build",
+    "cd build",
+    "cmake .. -DSD_METAL=ON",
+    "cmake --build . --config Release"
 ]
 
 [[file]]
