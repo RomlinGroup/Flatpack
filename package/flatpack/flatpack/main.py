@@ -3416,11 +3416,10 @@ def setup_routes(app):
                     return JSONResponse(content={"message": "Schedule datetime entry deleted successfully."},
                                         status_code=200)
                 raise HTTPException(status_code=404, detail="Datetime entry not found")
-            else:
-                success = db_manager.delete_schedule(schedule_id)
-                if success:
-                    return JSONResponse(content={"message": "Entire schedule deleted successfully."}, status_code=200)
-                raise HTTPException(status_code=404, detail="Schedule not found")
+            success = db_manager.delete_schedule(schedule_id)
+            if success:
+                return JSONResponse(content={"message": "Entire schedule deleted successfully."}, status_code=200)
+            raise HTTPException(status_code=404, detail="Schedule not found")
         except Exception as e:
             logger.error("An error occurred while deleting the schedule entry: %s", e)
             raise HTTPException(status_code=500,
