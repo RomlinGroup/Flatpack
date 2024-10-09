@@ -1897,6 +1897,11 @@ def fpk_unbox(directory_name: str, session: httpx.Client, local: bool = False) -
     flatpack_dir = Path.cwd() / directory_name
     logger.info("Flatpack directory: %s", flatpack_dir)
 
+    if not os.path.exists(CONFIG_FILE_PATH):
+        logger.info("Config file not found. Creating initial configuration.")
+        default_config = {}
+        save_config(default_config)
+
     if local:
         if not flatpack_dir.exists():
             logger.error("Local directory '%s' does not exist.", directory_name)
