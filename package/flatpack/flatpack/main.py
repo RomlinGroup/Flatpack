@@ -3350,14 +3350,19 @@ def setup_routes(app):
             else:
                 raise HTTPException(status_code=500, detail="No cached flatpack directory found")
 
-        log_path = logs_directory / log_filename
+        sanitized_log_filename = secure_filename(log_filename)
+        log_path = logs_directory / sanitized_log_filename
+
         if log_path.exists() and log_path.is_file():
             try:
+                if not log_path.resolve().is_relative_to(logs_directory.resolve()):
+                    raise HTTPException(status_code=403, detail="Access to the requested file is forbidden")
+
                 with open(log_path, 'r') as file:
                     content = file.read()
                 return JSONResponse(content={"log": content}, status_code=200)
             except Exception as e:
-                logger.error("Error reading log file '%s': %s", log_filename, e)
+                logger.error("Error reading log file '%s': %s", sanitized_log_filename, e)
                 raise HTTPException(status_code=500, detail=f"Error reading log file: {e}")
         else:
             raise HTTPException(status_code=404, detail="Log file not found")
