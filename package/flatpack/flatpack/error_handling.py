@@ -32,8 +32,7 @@ def safe_exit(func):
         try:
             if asyncio.iscoroutinefunction(func):
                 return asyncio.run(func(*args, **kwargs))
-            else:
-                return func(*args, **kwargs)
+            return func(*args, **kwargs)
         except SystemExit:
             sys.__stderr__.write("Exiting the program...\n")
             sys.exit(0)

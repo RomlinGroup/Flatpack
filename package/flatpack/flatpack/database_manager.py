@@ -259,9 +259,8 @@ class DatabaseManager:
                 self._execute_query(query, (json.dumps(datetimes), schedule_id))
                 logger.info("Datetime at index %s deleted from schedule %s", datetime_index, schedule_id)
                 return True
-            else:
-                logger.warning("Invalid datetime index %s for schedule %s", datetime_index, schedule_id)
-                return False
+            logger.warning("Invalid datetime index %s for schedule %s", datetime_index, schedule_id)
+            return False
         except Exception as e:
             logger.error("Error deleting datetime from schedule. Schedule ID: %s, Datetime index: %s. Error: %s",
                          schedule_id, datetime_index, str(e))

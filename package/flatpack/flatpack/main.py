@@ -252,9 +252,8 @@ def add_hook_to_database(hook: Hook):
                 "existing_hook": existing_hook,
                 "new_hook": hook.dict()
             }
-        else:
-            hook_id = db_manager.add_hook(hook.hook_name, hook.hook_placement, hook.hook_script, hook.hook_type)
-            return {"message": "Hook added successfully.", "hook_id": hook_id}
+        hook_id = db_manager.add_hook(hook.hook_name, hook.hook_placement, hook.hook_script, hook.hook_type)
+        return {"message": "Hook added successfully.", "hook_id": hook_id}
     except Exception as e:
         logger.error("An error occurred while adding the hook: %s", e)
         raise HTTPException(status_code=500, detail=f"An error occurred while adding the hook: {e}")
@@ -1146,9 +1145,8 @@ def setup_static_directory(fastapi_app: FastAPI, directory: str):
                 session_id = request.cookies.get('session_id')
                 if session_id and is_user_logged_in(session_id):
                     return await call_next(request)
-                else:
-                    return JSONResponse(status_code=403, content={
-                        "detail": "Access to the /output directory is forbidden for unauthenticated users"})
+                return JSONResponse(status_code=403, content={
+                    "detail": "Access to the /output directory is forbidden for unauthenticated users"})
             return await call_next(request)
 
         fastapi_app.mount(
@@ -3152,8 +3150,7 @@ def setup_routes(app):
         try:
             if db_manager.delete_comment(comment_id):
                 return JSONResponse(content={"message": "Comment deleted successfully."}, status_code=200)
-            else:
-                raise HTTPException(status_code=404, detail="Comment not found")
+            raise HTTPException(status_code=404, detail="Comment not found")
         except Exception as e:
             logger.error("An error occurred while deleting the comment: %s", e)
             raise HTTPException(status_code=500, detail=f"An error occurred while deleting the comment: {e}")
@@ -3222,8 +3219,7 @@ def setup_routes(app):
                 hooks = get_all_hooks_from_database()
                 save_hooks_to_file(hooks)
                 return JSONResponse(content={"message": "Hook deleted successfully."}, status_code=200)
-            else:
-                raise HTTPException(status_code=404, detail="Hook not found")
+            raise HTTPException(status_code=404, detail="Hook not found")
         except Exception as e:
             logger.error("An error occurred while deleting the hook: %s", e)
             raise HTTPException(status_code=500, detail=f"An error occurred while deleting the hook: {e}")
@@ -3253,8 +3249,7 @@ def setup_routes(app):
                 hooks = get_all_hooks_from_database()
                 save_hooks_to_file(hooks)
                 return JSONResponse(content={"message": "Hook updated successfully."}, status_code=200)
-            else:
-                raise HTTPException(status_code=404, detail="Hook not found or update failed.")
+            raise HTTPException(status_code=404, detail="Hook not found or update failed.")
         except Exception as e:
             logger.error("An error occurred while updating the hook: %s", e)
             raise HTTPException(status_code=500, detail=f"An error occurred while updating the hook: {e}")
@@ -3420,14 +3415,12 @@ def setup_routes(app):
                 if success:
                     return JSONResponse(content={"message": "Schedule datetime entry deleted successfully."},
                                         status_code=200)
-                else:
-                    raise HTTPException(status_code=404, detail="Datetime entry not found")
+                raise HTTPException(status_code=404, detail="Datetime entry not found")
             else:
                 success = db_manager.delete_schedule(schedule_id)
                 if success:
                     return JSONResponse(content={"message": "Entire schedule deleted successfully."}, status_code=200)
-                else:
-                    raise HTTPException(status_code=404, detail="Schedule not found")
+                raise HTTPException(status_code=404, detail="Schedule not found")
         except Exception as e:
             logger.error("An error occurred while deleting the schedule entry: %s", e)
             raise HTTPException(status_code=500,
