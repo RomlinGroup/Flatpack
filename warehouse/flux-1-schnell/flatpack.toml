@@ -39,9 +39,11 @@ transformers = "4.45.2"
 from_source = "https://github.com/leejet/stable-diffusion.cpp"
 to_destination = "stable-diffusion.cpp"
 branch = "master"
-# setup_commands = [
-#   "{{setup_command}}"
-# ]
+setup_commands = [
+    "git pull origin master",
+    "git submodule init",
+    "git submodule update"
+]
 
 [[file]]
 from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/flux-1-schnell/custom.json"
