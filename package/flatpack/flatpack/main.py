@@ -3494,7 +3494,7 @@ def fpk_cli_handle_run(args, session):
 
         if acknowledgment == "YES":
             break
-        elif acknowledgment == "NO":
+        if acknowledgment == "NO":
             console.print("")
             console.print("You must agree to proceed. Exiting.", style="bold red")
             return
@@ -3549,7 +3549,7 @@ def fpk_cli_handle_run(args, session):
                 except EnvironmentError as e:
                     return
                 break
-            elif user_response == "NO":
+            if user_response == "NO":
                 console.print("")
                 console.print("[bold red]Sharing aborted. Exiting.[/bold red]")
                 return
