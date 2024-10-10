@@ -198,18 +198,24 @@
     };
 
     const generateSVG = () => {
-        let svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="${currentGridSize}" height="${currentGridSize}" viewBox="0 0 ${currentGridSize} ${currentGridSize}">\n`;
-
+        let paths = '';
+        let currentColor = null;
         drawingGrid.querySelectorAll('.draw-cell').forEach((cell, index) => {
             if (cell.dataset.color) {
                 const x = index % currentGridSize;
                 const y = Math.floor(index / currentGridSize);
-                svgContent += `  <rect x="${x}" y="${y}" width="1" height="1" fill="${cell.dataset.color}"/>\n`;
+                if (cell.dataset.color !== currentColor) {
+                    if (currentColor) paths += '" fill="' + currentColor + '"/>';
+                    paths += '<path d="M' + x + ' ' + y;
+                    currentColor = cell.dataset.color;
+                } else {
+                    paths += 'M' + x + ' ' + y;
+                }
+                paths += 'h1v1h-1z';
             }
         });
-
-        svgContent += '</svg>';
-        return svgContent;
+        if (currentColor) paths += '" fill="' + currentColor + '"/>';
+        return '<svg xmlns="http://www.w3.org/2000/svg" width="' + currentGridSize + '" height="' + currentGridSize + '" viewBox="0 0 ' + currentGridSize + ' ' + currentGridSize + '">' + paths + '</svg>';
     };
 
     exportButton.addEventListener('click', () => {
@@ -226,7 +232,7 @@
     copyButton.addEventListener('click', () => {
         const svgString = generateSVG();
         navigator.clipboard.writeText(svgString).then(() => {
-            alert('Formatted SVG code copied to clipboard!');
+            alert('Compressed SVG code copied to clipboard!');
         }).catch(err => {
             console.error('Failed to copy: ', err);
             alert('Failed to copy SVG code. See console for details.');
