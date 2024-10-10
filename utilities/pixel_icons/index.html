@@ -59,6 +59,10 @@
             height: 340px;
         }
 
+        .active {
+            background-color: #e0e0e0;
+        }
+
         .bg-cell {
             border: 1px solid #ddd;
             box-sizing: border-box;
@@ -81,6 +85,8 @@
 <h1>Pixel Icons</h1>
 <div id="controls">
     <input type="color" id="colorPicker" value="#000000">
+    <button id="drawMode" class="active">Draw</button>
+    <button id="eraseMode">Erase</button>
     <select id="gridSize">
         <option value="9">9x9</option>
         <option value="11">11x11</option>
@@ -93,6 +99,12 @@
         <option value="25">25x25</option>
         <option value="33">33x33</option>
         <option value="65">65x65</option>
+    </select>
+    <select id="brushSize">
+        <option value="1">1x1</option>
+        <option value="2">2x2</option>
+        <option value="4">4x4</option>
+        <option value="8">8x8</option>
     </select>
     <button id="export">Export as SVG</button>
     <button id="copy">Copy SVG Code</button>
@@ -110,9 +122,15 @@
     const clearButton = document.getElementById('clear');
     const colorPicker = document.getElementById('colorPicker');
     const gridSizeSelect = document.getElementById('gridSize');
+    const brushSizeSelect = document.getElementById('brushSize');
+    const drawModeButton = document.getElementById('drawMode');
+    const eraseModeButton = document.getElementById('eraseMode');
     const gridContainer = document.getElementById('gridContainer');
 
     let currentGridSize = 17;
+    let currentBrushSize = 1;
+    let isDrawing = false;
+    let isErasing = false;
 
     const createBackgroundCell = (index, size) => {
         const cell = document.createElement('div');
@@ -128,16 +146,48 @@
     const createDrawingCell = () => {
         const cell = document.createElement('div');
         cell.classList.add('draw-cell');
-        cell.addEventListener('click', () => {
-            if (cell.style.backgroundColor) {
-                cell.style.backgroundColor = '';
-                delete cell.dataset.color;
-            } else {
-                cell.style.backgroundColor = colorPicker.value;
-                cell.dataset.color = colorPicker.value;
-            }
-        });
         return cell;
+    };
+
+    const startDrawing = (e) => {
+        e.preventDefault();
+        isDrawing = true;
+        draw(e);
+    };
+
+    const stopDrawing = () => {
+        isDrawing = false;
+    };
+
+    const draw = (e) => {
+        if (!isDrawing && e.buttons !== 1) return;
+        const cell = e.target.closest('.draw-cell');
+        if (cell) drawPixels(cell);
+    };
+
+    const drawPixels = (centerCell) => {
+        const centerIndex = Array.from(drawingGrid.children).indexOf(centerCell);
+        const centerCol = centerIndex % currentGridSize;
+        const centerRow = Math.floor(centerIndex / currentGridSize);
+        const brushOffset = Math.floor(currentBrushSize / 2);
+
+        for (let row = centerRow - brushOffset; row < centerRow - brushOffset + currentBrushSize; row++) {
+            for (let col = centerCol - brushOffset; col < centerCol - brushOffset + currentBrushSize; col++) {
+                if (row >= 0 && row < currentGridSize && col >= 0 && col < currentGridSize) {
+                    const index = row * currentGridSize + col;
+                    const cell = drawingGrid.children[index];
+                    if (cell) {
+                        if (isErasing) {
+                            cell.style.backgroundColor = '';
+                            delete cell.dataset.color;
+                        } else if (!cell.dataset.color || cell.dataset.color !== colorPicker.value) {
+                            cell.style.backgroundColor = colorPicker.value;
+                            cell.dataset.color = colorPicker.value;
+                        }
+                    }
+                }
+            }
+        }
     };
 
     const updateGrid = (size) => {
@@ -203,8 +253,29 @@
     });
 
     gridSizeSelect.addEventListener('change', (e) => {
-        updateGrid(parseInt(e.target.value));
+        updateGrid(parseInt(e.target.value, 10));
     });
+
+    brushSizeSelect.addEventListener('change', (e) => {
+        currentBrushSize = parseInt(e.target.value, 10);
+    });
+
+    drawModeButton.addEventListener('click', () => {
+        isErasing = false;
+        drawModeButton.classList.add('active');
+        eraseModeButton.classList.remove('active');
+    });
+
+    eraseModeButton.addEventListener('click', () => {
+        isErasing = true;
+        eraseModeButton.classList.add('active');
+        drawModeButton.classList.remove('active');
+    });
+
+    drawingGrid.addEventListener('mousedown', startDrawing);
+    drawingGrid.addEventListener('mousemove', draw);
+    drawingGrid.addEventListener('mouseup', stopDrawing);
+    drawingGrid.addEventListener('mouseleave', stopDrawing);
 
     updateGrid(currentGridSize);
 </script>
