@@ -21,10 +21,11 @@
             margin-bottom: 20px;
         }
 
-        button {
+        button, select {
             padding: 10px 20px;
             font-size: 16px;
             cursor: pointer;
+            margin: 0 5px;
         }
 
         #backgroundGrid, #drawingGrid {
@@ -32,7 +33,6 @@
             top: 0;
             left: 0;
             display: grid;
-            grid-template-columns: repeat(17, 20px);
             grid-gap: 1px;
         }
 
@@ -50,6 +50,7 @@
             justify-content: center;
             align-items: center;
             margin-bottom: 20px;
+            flex-wrap: wrap;
         }
 
         #gridContainer {
@@ -61,11 +62,6 @@
         .bg-cell {
             border: 1px solid #ddd;
             box-sizing: border-box;
-        }
-
-        .bg-cell, .draw-cell {
-            width: 20px;
-            height: 20px;
         }
 
         .crosshair-center {
@@ -85,7 +81,22 @@
 <h1>Pixel Icons</h1>
 <div id="controls">
     <input type="color" id="colorPicker" value="#000000">
+    <select id="gridSize">
+        <option value="9">9x9</option>
+        <option value="11">11x11</option>
+        <option value="13">13x13</option>
+        <option value="15">15x15</option>
+        <option value="17" selected>17x17</option>
+        <option value="19">19x19</option>
+        <option value="21">21x21</option>
+        <option value="23">23x23</option>
+        <option value="25">25x25</option>
+        <option value="33">33x33</option>
+        <option value="65">65x65</option>
+    </select>
     <button id="export">Export as SVG</button>
+    <button id="copy">Copy SVG Code</button>
+    <button id="clear">Clear Canvas</button>
 </div>
 <div id="gridContainer">
     <div id="backgroundGrid"></div>
@@ -95,15 +106,22 @@
     const backgroundGrid = document.getElementById('backgroundGrid');
     const drawingGrid = document.getElementById('drawingGrid');
     const exportButton = document.getElementById('export');
+    const copyButton = document.getElementById('copy');
+    const clearButton = document.getElementById('clear');
     const colorPicker = document.getElementById('colorPicker');
+    const gridSizeSelect = document.getElementById('gridSize');
+    const gridContainer = document.getElementById('gridContainer');
 
-    const createBackgroundCell = (index) => {
+    let currentGridSize = 17;
+
+    const createBackgroundCell = (index, size) => {
         const cell = document.createElement('div');
         cell.classList.add('bg-cell');
-        const row = Math.floor(index / 17);
-        const col = index % 17;
-        if (row === 8 && col === 8) cell.classList.add('crosshair-center');
-        else if (row === 8 || col === 8) cell.classList.add('crosshair-line');
+        const row = Math.floor(index / size);
+        const col = index % size;
+        const center = Math.floor(size / 2);
+        if (row === center && col === center) cell.classList.add('crosshair-center');
+        else if (row === center || col === center) cell.classList.add('crosshair-line');
         return cell;
     };
 
@@ -122,22 +140,60 @@
         return cell;
     };
 
-    backgroundGrid.append(...Array.from({length: 17 * 17}, (_, i) => createBackgroundCell(i)));
-    drawingGrid.append(...Array.from({length: 17 * 17}, createDrawingCell));
+    const updateGrid = (size) => {
+        currentGridSize = size;
+        const cellSize = 340 / size;
 
-    exportButton.addEventListener('click', () => {
+        backgroundGrid.innerHTML = '';
+        drawingGrid.innerHTML = '';
+
+        backgroundGrid.style.gridTemplateColumns = `repeat(${size}, ${cellSize}px)`;
+        drawingGrid.style.gridTemplateColumns = `repeat(${size}, ${cellSize}px)`;
+
+        backgroundGrid.append(...Array.from({length: size * size}, (_, i) => createBackgroundCell(i, size)));
+        drawingGrid.append(...Array.from({length: size * size}, createDrawingCell));
+
+        document.querySelectorAll('.bg-cell, .draw-cell').forEach(cell => {
+            cell.style.width = `${cellSize}px`;
+            cell.style.height = `${cellSize}px`;
+        });
+    };
+
+    const generateSVG = () => {
         const svgNS = "http://www.w3.org/2000/svg";
         const svg = document.createElementNS(svgNS, "svg");
-        svg.setAttribute("viewBox", "0 0 17 17");
-        const rects = [];
+        svg.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+        svg.setAttribute("width", currentGridSize.toString());
+        svg.setAttribute("height", currentGridSize.toString());
+        svg.setAttribute("viewBox", `0 0 ${currentGridSize} ${currentGridSize}`);
+        svg.setAttribute("fill", "none");
+        svg.setAttribute("stroke", colorPicker.value);
+        svg.setAttribute("stroke-width", "1.5");
+        svg.setAttribute("stroke-linecap", "round");
+        svg.setAttribute("stroke-linejoin", "round");
+
+        const path = document.createElementNS(svgNS, "path");
+        let d = "";
+
         drawingGrid.querySelectorAll('.draw-cell').forEach((cell, index) => {
-            const color = cell.dataset.color;
-            if (color) {
-                rects.push(`<rect x="${index % 17}" y="${Math.floor(index / 17)}" width="1" height="1" fill="${color}"/>`);
+            if (cell.dataset.color) {
+                const x = index % currentGridSize;
+                const y = Math.floor(index / currentGridSize);
+                d += `M${x},${y}h1v1h-1z`;
             }
         });
-        svg.innerHTML = rects.join('');
-        const svgBlob = new Blob([svg.outerHTML], {type: "image/svg+xml"});
+
+        if (d) {
+            path.setAttribute("d", d);
+            svg.appendChild(path);
+        }
+
+        return new XMLSerializer().serializeToString(svg);
+    };
+
+    exportButton.addEventListener('click', () => {
+        const svgString = generateSVG();
+        const svgBlob = new Blob([svgString], {type: "image/svg+xml"});
         const url = URL.createObjectURL(svgBlob);
         const link = document.createElement("a");
         link.href = url;
@@ -145,6 +201,29 @@
         link.click();
         URL.revokeObjectURL(url);
     });
+
+    copyButton.addEventListener('click', () => {
+        const svgString = generateSVG();
+        navigator.clipboard.writeText(svgString).then(() => {
+            alert('SVG code copied to clipboard!');
+        }).catch(err => {
+            console.error('Failed to copy: ', err);
+            alert('Failed to copy SVG code. See console for details.');
+        });
+    });
+
+    clearButton.addEventListener('click', () => {
+        drawingGrid.querySelectorAll('.draw-cell').forEach(cell => {
+            cell.style.backgroundColor = '';
+            delete cell.dataset.color;
+        });
+    });
+
+    gridSizeSelect.addEventListener('change', (e) => {
+        updateGrid(parseInt(e.target.value));
+    });
+
+    updateGrid(currentGridSize);
 </script>
 </body>
 </html>
