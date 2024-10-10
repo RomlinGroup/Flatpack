@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pixel Icons</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        #backgroundGrid, #drawingGrid {
+            position: absolute;
+            top: 0;
+            left: 0;
+            display: grid;
+            grid-template-columns: repeat(17, 20px);
+            grid-gap: 1px;
+        }
+
+        #colorPicker {
+            width: 50px;
+            height: 50px;
+            padding: 0;
+            border: none;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+
+        #controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        #gridContainer {
+            position: relative;
+            width: 340px;
+            height: 340px;
+        }
+
+        .bg-cell {
+            border: 1px solid #ddd;
+            box-sizing: border-box;
+        }
+
+        .bg-cell, .draw-cell {
+            width: 20px;
+            height: 20px;
+        }
+
+        .crosshair-center {
+            background-color: #e0e0e0;
+        }
+
+        .crosshair-line {
+            background-color: #f0f0f0;
+        }
+
+        .draw-cell {
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+<h1>Pixel Icons</h1>
+<div id="controls">
+    <input type="color" id="colorPicker" value="#000000">
+    <button id="export">Export as SVG</button>
+</div>
+<div id="gridContainer">
+    <div id="backgroundGrid"></div>
+    <div id="drawingGrid"></div>
+</div>
+<script>
+    const backgroundGrid = document.getElementById('backgroundGrid');
+    const drawingGrid = document.getElementById('drawingGrid');
+    const exportButton = document.getElementById('export');
+    const colorPicker = document.getElementById('colorPicker');
+
+    const createBackgroundCell = (index) => {
+        const cell = document.createElement('div');
+        cell.classList.add('bg-cell');
+        const row = Math.floor(index / 17);
+        const col = index % 17;
+        if (row === 8 && col === 8) cell.classList.add('crosshair-center');
+        else if (row === 8 || col === 8) cell.classList.add('crosshair-line');
+        return cell;
+    };
+
+    const createDrawingCell = () => {
+        const cell = document.createElement('div');
+        cell.classList.add('draw-cell');
+        cell.addEventListener('click', () => {
+            if (cell.style.backgroundColor) {
+                cell.style.backgroundColor = '';
+                delete cell.dataset.color;
+            } else {
+                cell.style.backgroundColor = colorPicker.value;
+                cell.dataset.color = colorPicker.value;
+            }
+        });
+        return cell;
+    };
+
+    backgroundGrid.append(...Array.from({length: 17 * 17}, (_, i) => createBackgroundCell(i)));
+    drawingGrid.append(...Array.from({length: 17 * 17}, createDrawingCell));
+
+    exportButton.addEventListener('click', () => {
+        const svgNS = "http://www.w3.org/2000/svg";
+        const svg = document.createElementNS(svgNS, "svg");
+        svg.setAttribute("viewBox", "0 0 17 17");
+        const rects = [];
+        drawingGrid.querySelectorAll('.draw-cell').forEach((cell, index) => {
+            const color = cell.dataset.color;
+            if (color) {
+                rects.push(`<rect x="${index % 17}" y="${Math.floor(index / 17)}" width="1" height="1" fill="${color}"/>`);
+            }
+        });
+        svg.innerHTML = rects.join('');
+        const svgBlob = new Blob([svg.outerHTML], {type: "image/svg+xml"});
+        const url = URL.createObjectURL(svgBlob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = "icon.svg";
+        link.click();
+        URL.revokeObjectURL(url);
+    });
+</script>
+</body>
+</html>
