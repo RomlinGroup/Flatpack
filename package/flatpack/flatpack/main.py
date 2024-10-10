@@ -2177,55 +2177,29 @@ def fpk_verify(directory: Union[str, None]):
     """Verify a flatpack.
 
     Args:
-        directory (Union[str, None]): The directory to use for verification. If None, a cached directory will be used if available.
+        directory (Union[str, None]): The directory to use for verification.
+            If None, a cached directory will be used if available.
 
     Returns:
         None
     """
-    cache_file_path = HOME_DIR / ".fpk_unbox.cache"
-    logger.info("Looking for cached flatpack in %s", cache_file_path)
+    console.print("[yellow]Flatpack verification functionality is not yet implemented.[/yellow]")
 
+    cache_file_path = HOME_DIR / ".fpk_unbox.cache"
     last_unboxed_flatpack = None
 
     if directory and fpk_valid_directory_name(directory):
-        logger.info("Using provided directory: %s", directory)
         last_unboxed_flatpack = directory
     elif cache_file_path.exists():
-        logger.info("Found cached flatpack in %s", cache_file_path)
         last_unboxed_flatpack = cache_file_path.read_text().strip()
     else:
-        message = "No cached flatpack found, and no valid directory provided."
-        logger.error(message)
-        return
-
-    if not last_unboxed_flatpack:
-        message = "No valid flatpack directory found."
-        logger.error(message)
+        console.print("[red]No valid flatpack directory found.[/red]")
         return
 
     verification_script_path = Path(last_unboxed_flatpack) / 'build' / 'build.sh'
-
     if not verification_script_path.exists() or not verification_script_path.is_file():
-        message = f"Verification script not found in {last_unboxed_flatpack}."
-        logger.error(message)
+        console.print(f"[red]Verification script not found in {last_unboxed_flatpack}.[/red]")
         return
-
-    safe_script_path = shlex.quote(str(verification_script_path.resolve()))
-
-    try:
-        env_vars = {'VERIFY_MODE': 'true'}
-        subprocess.run(
-            ['/bin/bash', '-u', safe_script_path],
-            check=True,
-            env={**env_vars, **os.environ}
-        )
-        logger.info("Verification script executed successfully.")
-    except subprocess.CalledProcessError as e:
-        message = f"An error occurred while executing the verification script: {e}"
-        logger.error(message)
-    except Exception as e:
-        message = f"An unexpected error occurred: {e}"
-        logger.error(message)
 
 
 def setup_arg_parser():
