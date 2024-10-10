@@ -3282,6 +3282,26 @@ def setup_routes(app):
             logger.error("An error occurred while updating the hook: %s", e)
             raise HTTPException(status_code=500, detail=f"An error occurred while updating the hook: {e}")
 
+    @app.get("/api/list_image_files", dependencies=[Depends(csrf_protect)])
+    async def list_image_files(token: str = Depends(authenticate_token)):
+        global flatpack_directory
+        if not flatpack_directory:
+            raise HTTPException(status_code=500, detail="Flatpack directory is not set")
+
+        output_folder = Path(flatpack_directory) / "web" / "output"
+        allowed_extensions = {'.jpg', '.jpeg', '.png', '.gif'}
+
+        try:
+            image_files = [
+                f.name for f in output_folder.iterdir()
+                if f.is_file() and f.suffix.lower() in allowed_extensions
+            ]
+
+            return JSONResponse(content={'files': image_files})
+        except Exception as e:
+            logger.error(f"Error listing image files: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"Error listing image files: {str(e)}")
+
     @app.get("/api/load_file")
     async def load_file(
             filename: str,
