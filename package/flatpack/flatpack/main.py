@@ -3287,10 +3287,8 @@ def setup_routes(app):
         global flatpack_directory
         if not flatpack_directory:
             raise HTTPException(status_code=500, detail="Flatpack directory is not set")
-
         output_folder = Path(flatpack_directory) / "web" / "output"
         allowed_extensions = {'.gif', '.jpeg', '.jpg', '.png'}
-
         try:
             image_files = [
                 {
@@ -3300,12 +3298,10 @@ def setup_routes(app):
                 for f in output_folder.iterdir()
                 if f.is_file() and f.suffix.lower() in allowed_extensions
             ]
-
             image_files.sort(key=lambda x: x['created_at'], reverse=True)
-
             return JSONResponse(content={'files': image_files})
         except Exception as e:
-            logger.error(f"Error listing image files: {str(e)}")
+            logger.error("Error listing image files: %s", str(e))
             raise HTTPException(status_code=500, detail=f"Error listing image files: {str(e)}")
 
     @app.get("/api/load_file")
