@@ -79,14 +79,15 @@
 </head>
 <body>
 <h1>Pixel Icons</h1>
+
 <div id="controls">
     <input type="color" id="colorPicker" value="#000000">
     <select id="gridSize">
-        <option value="9">9x9</option>
+        <option value="9" selected>9x9</option>
         <option value="11">11x11</option>
         <option value="13">13x13</option>
         <option value="15">15x15</option>
-        <option value="17" selected>17x17</option>
+        <option value="17">17x17</option>
         <option value="19">19x19</option>
         <option value="21">21x21</option>
         <option value="23">23x23</option>
@@ -98,10 +99,12 @@
     <button id="copy">Copy SVG Code</button>
     <button id="clear">Clear Canvas</button>
 </div>
+
 <div id="gridContainer">
     <div id="backgroundGrid"></div>
     <div id="drawingGrid"></div>
 </div>
+
 <script>
     const backgroundGrid = document.getElementById('backgroundGrid');
     const drawingGrid = document.getElementById('drawingGrid');
@@ -112,7 +115,7 @@
     const gridSizeSelect = document.getElementById('gridSize');
     const gridContainer = document.getElementById('gridContainer');
 
-    let currentGridSize = 17;
+    let currentGridSize = 9;
 
     const createBackgroundCell = (index, size) => {
         const cell = document.createElement('div');
@@ -166,27 +169,20 @@
         svg.setAttribute("width", currentGridSize.toString());
         svg.setAttribute("height", currentGridSize.toString());
         svg.setAttribute("viewBox", `0 0 ${currentGridSize} ${currentGridSize}`);
-        svg.setAttribute("fill", "none");
-        svg.setAttribute("stroke", colorPicker.value);
-        svg.setAttribute("stroke-width", "1.5");
-        svg.setAttribute("stroke-linecap", "round");
-        svg.setAttribute("stroke-linejoin", "round");
-
-        const path = document.createElementNS(svgNS, "path");
-        let d = "";
 
         drawingGrid.querySelectorAll('.draw-cell').forEach((cell, index) => {
             if (cell.dataset.color) {
+                const rect = document.createElementNS(svgNS, "rect");
                 const x = index % currentGridSize;
                 const y = Math.floor(index / currentGridSize);
-                d += `M${x},${y}h1v1h-1z`;
+                rect.setAttribute("x", x.toString());
+                rect.setAttribute("y", y.toString());
+                rect.setAttribute("width", "1");
+                rect.setAttribute("height", "1");
+                rect.setAttribute("fill", cell.dataset.color);
+                svg.appendChild(rect);
             }
         });
-
-        if (d) {
-            path.setAttribute("d", d);
-            svg.appendChild(path);
-        }
 
         return new XMLSerializer().serializeToString(svg);
     };
