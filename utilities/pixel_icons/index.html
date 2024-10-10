@@ -68,10 +68,6 @@
             box-sizing: border-box;
         }
 
-        .crosshair-center {
-            background-color: #e0e0e0;
-        }
-
         .crosshair-line {
             background-color: #f0f0f0;
         }
@@ -88,17 +84,7 @@
     <button id="drawMode" class="active">Draw</button>
     <button id="eraseMode">Erase</button>
     <select id="gridSize">
-        <option value="9">9x9</option>
-        <option value="11">11x11</option>
-        <option value="13">13x13</option>
-        <option value="15">15x15</option>
-        <option value="17" selected>17x17</option>
-        <option value="19">19x19</option>
-        <option value="21">21x21</option>
-        <option value="23">23x23</option>
-        <option value="25">25x25</option>
-        <option value="33">33x33</option>
-        <option value="65">65x65</option>
+        <option value="16" selected>16x16</option>
     </select>
     <select id="brushSize">
         <option value="1">1x1</option>
@@ -127,7 +113,7 @@
     const eraseModeButton = document.getElementById('eraseMode');
     const gridContainer = document.getElementById('gridContainer');
 
-    let currentGridSize = 17;
+    let currentGridSize = 16;
     let currentBrushSize = 1;
     let isDrawing = false;
     let isErasing = false;
@@ -137,9 +123,11 @@
         cell.classList.add('bg-cell');
         const row = Math.floor(index / size);
         const col = index % size;
-        const center = Math.floor(size / 2);
-        if (row === center && col === center) cell.classList.add('crosshair-center');
-        else if (row === center || col === center) cell.classList.add('crosshair-line');
+        const centerStart = size / 2 - 1;
+        const centerEnd = size / 2;
+        if (row === centerStart || row === centerEnd || col === centerStart || col === centerEnd) {
+            cell.classList.add('crosshair-line');
+        }
         return cell;
     };
 
