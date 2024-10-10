@@ -159,7 +159,12 @@ class EndpointFilter(logging.Filter):
     def filter(self, record):
         return all(
             endpoint not in record.getMessage()
-            for endpoint in ['GET /api/heartbeat', 'GET /api/build-status', 'GET /csrf-token']
+            for endpoint in [
+                'GET /api/heartbeat',
+                'GET /api/build-status',
+                'GET /api/clear-build-status',
+                'GET /csrf-token'
+            ]
         )
 
 
