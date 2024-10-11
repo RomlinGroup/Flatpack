@@ -1614,7 +1614,7 @@ def fpk_download_and_extract_template(repo_url, dest_dir):
         extracted_dir = os.path.join(dest_dir, top_level_dir)
         os.rename(extracted_dir, template_dir)
 
-        files_to_remove = ['app.css', 'app.js', 'index.html', 'package.json', 'teletext.woff2']
+        files_to_remove = ['app.css', 'app.js', 'index.html', 'package.json', 'robotomono.woff2']
 
         for file in files_to_remove:
             file_path = os.path.join(template_dir, file)
@@ -1946,7 +1946,7 @@ def fpk_unbox(directory_name: str, session: httpx.Client, local: bool = False) -
 
         files_to_download = {
             'build': [],
-            'web': ['app.css', 'app.js', 'index.html', 'package.json', 'teletext.woff2']
+            'web': ['app.css', 'app.js', 'index.html', 'package.json', 'robotomono.woff2']
         }
 
         hooks_json_path = flatpack_dir / 'build' / 'hooks.json'
@@ -2110,7 +2110,7 @@ def fpk_update(flatpack_name: str, session: requests.Session, branch: str = "mai
     """
     files_to_update = {
         'build': ['device.sh'],
-        'web': ['app.css', 'app.js', 'index.html', 'package.json', 'teletext.woff2']
+        'web': ['app.css', 'app.js', 'index.html', 'package.json', 'robotomono.woff2']
     }
 
     binary_extensions = ['.sh', '.woff2']
