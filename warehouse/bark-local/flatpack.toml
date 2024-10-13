@@ -5,6 +5,7 @@ version = "0.0.1"
 
 [environment]
 model_name = "bark-local"
+python_version = "3.12"
 
 [[port]]
 external = 8080
@@ -39,6 +40,7 @@ tqdm = "4.66.5"
 # from_source = "{{git_source_url}}"
 # to_destination = "{{git_destination_dir}}"
 # branch = "{{branch_name}}"
+# requirements_file = "requirements.txt"
 # setup_commands = [
 #   "{{setup_command}}"
 # ]

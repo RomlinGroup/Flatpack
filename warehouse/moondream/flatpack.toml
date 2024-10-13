@@ -5,6 +5,7 @@ version = "0.0.1"
 
 [environment]
 model_name = "moondream"
+python_version = "3.12"
 
 [[port]]
 external = 8080
@@ -37,6 +38,7 @@ tqdm = "4.66.5"
 from_source = "https://github.com/vikhyat/moondream"
 to_destination = "moondream"
 branch = "main"
+requirements_file = "requirements.txt"
 # setup_commands = [
 #   "{{setup_command}}"
 # ]

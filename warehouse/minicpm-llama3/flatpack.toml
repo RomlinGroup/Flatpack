@@ -5,6 +5,7 @@ version = "0.0.1"
 
 [environment]
 model_name = "minicpm-llama3"
+python_version = "3.12"
 
 [[port]]
 external = 8080
@@ -39,6 +40,7 @@ wheel = "0.44.0"
 from_source = "https://github.com/OpenBMB/llama.cpp.git"
 to_destination = "llama.cpp"
 branch = "minicpm-v2.5"
+requirements_file = "requirements.txt"
 setup_commands = [
     "make",
     "make minicpmv-cli"

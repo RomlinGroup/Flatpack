@@ -50,15 +50,21 @@ def load_toml_config(file_path):
     if not model_name:
         raise ValueError("Missing model_name in flatpack.toml")
 
-    return config, model_name
+    python_version = config["environment"].get("python_version")
+
+    return config, model_name, python_version
 
 
-def generate_venv_setup_script(env_name, build_prefix):
+def generate_venv_setup_script(env_name, build_prefix, python_version=None):
     """Generate the script to set up the virtual environment."""
+    python_cmd = f"python{python_version}" if python_version else "python3"
+
     return f"""
 echo "Checking for Python"
 
-if [[ -x "$(command -v python3.12)" ]]; then
+if [[ "{python_version}" != "None" ]] && [[ -x "$(command -v python{python_version})" ]]; then
+    PYTHON_CMD=python{python_version}
+elif [[ -x "$(command -v python3.12)" ]]; then
     PYTHON_CMD=python3.12
 elif [[ -x "$(command -v python3.11)" ]]; then
     PYTHON_CMD=python3.11
@@ -132,6 +138,7 @@ def clone_git_repositories_script(git_repos, model_name, build_prefix):
         to_destination = git.get("to_destination")
         branch = git.get("branch")
         setup_commands = git.get("setup_commands", [])
+        requirements_file = git.get("requirements_file", "requirements.txt")
 
         if from_source and to_destination and branch:
             repo_path = f"{model_name}/{build_prefix}/{to_destination}"
@@ -145,11 +152,11 @@ else
     exit 1
 fi
 
-if [ -f {repo_path}/requirements.txt ]; then
-    echo "Found requirements.txt, installing dependencies..."
-    ${{VENV_PIP}} install -r {repo_path}/requirements.txt
+if [ -f {repo_path}/{requirements_file} ]; then
+    echo "Found {requirements_file}, installing dependencies..."
+    ${{VENV_PIP}} install -r {repo_path}/{requirements_file}
 else
-    echo "No requirements.txt found."
+    echo "No {requirements_file} found."
 fi
             """.strip()
 
@@ -215,7 +222,7 @@ def parse_toml_to_venv_script(file_path: str, env_name="myenv") -> str:
     Returns:
     - Bash script as a string.
     """
-    config, model_name = load_toml_config(file_path)
+    config, model_name, python_version = load_toml_config(file_path)
     build_prefix = "build"
 
     script = ["#!/bin/bash", f"mkdir -p {model_name}/{build_prefix}"]
@@ -234,7 +241,7 @@ fi
         """.strip()
         script.append(apt_install)
 
-    script.append(generate_venv_setup_script(env_name, build_prefix))
+    script.append(generate_venv_setup_script(env_name, build_prefix, python_version))
     script.extend(create_directories_script(model_name, build_prefix, config.get("directories", {})))
     script.append(f"export model_name={model_name}")
 

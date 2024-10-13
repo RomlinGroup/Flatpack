@@ -5,6 +5,7 @@ version = "0.0.1"
 
 [environment]
 model_name = "minicpm-s-1b"
+python_version = "3.12"
 
 [[port]]
 external = 8080
@@ -37,6 +38,7 @@ tqdm = "4.66.5"
 from_source = "https://github.com/SJTU-IPADS/PowerInfer"
 to_destination = "PowerInfer"
 branch = "main"
+requirements_file = "requirements.txt"
 setup_commands = [
     "cmake -S . -B build",
     "cmake --build build --config Release"

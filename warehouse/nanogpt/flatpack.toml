@@ -5,6 +5,7 @@ version = "0.0.1"
 
 [environment]
 model_name = "nanogpt"
+python_version = "3.12"
 
 [[port]]
 external = 8080
@@ -40,6 +41,7 @@ wandb = "0.17.9"
 from_source = "https://github.com/karpathy/nanoGPT"
 to_destination = "nanoGPT"
 branch = "master"
+requirements_file = "requirements.txt"
 # setup_commands = [
 #   "{{setup_command}}"
 # ]

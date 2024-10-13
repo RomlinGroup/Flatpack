@@ -5,6 +5,7 @@ version = "0.0.1"
 
 [environment]
 model_name = "flux-1-schnell"
+python_version = "3.12"
 
 [[port]]
 external = 8080
@@ -39,6 +40,7 @@ transformers = "4.45.2"
 from_source = "https://github.com/leejet/stable-diffusion.cpp"
 to_destination = "stable-diffusion.cpp"
 branch = "master"
+requirements_file = "requirements.txt"
 setup_commands = [
     "git pull origin master",
     "git submodule init",

@@ -5,6 +5,7 @@ version = "0.0.1"
 
 [environment]
 model_name = "mediapipe"
+python_version = "3.12"
 
 [[port]]
 external = 8080
@@ -39,6 +40,7 @@ tqdm = "4.66.5"
 from_source = "https://github.com/google-ai-edge/mediapipe"
 to_destination = "mediapipe"
 branch = "master"
+requirements_file = "requirements.txt"
 # setup_commands = [
 #   "{{setup_command}}"
 # ]

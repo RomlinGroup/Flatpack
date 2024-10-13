@@ -5,6 +5,7 @@ version = "0.0.1"
 
 [environment]
 model_name = "yi-coder"
+python_version = "3.12"
 
 [[port]]
 external = 8080
@@ -37,6 +38,7 @@ tqdm = "4.66.5"
 from_source = "https://github.com/ggerganov/llama.cpp"
 to_destination = "llama.cpp"
 branch = "master"
+requirements_file = "requirements.txt"
 setup_commands = [
     "make"
 ]
