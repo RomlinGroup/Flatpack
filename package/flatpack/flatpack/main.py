@@ -1344,6 +1344,8 @@ async def fpk_build(directory: Union[str, None], use_euxo: bool = False):
         logger.error("The build directory '%s' does not exist.", build_dir)
         raise ValueError(f"The build directory '{build_dir}' does not exist.")
 
+    sync_hooks_to_db_on_startup()
+
     custom_json_path = build_dir / 'custom.json'
 
     if not custom_json_path.exists() or not custom_json_path.is_file():
@@ -3016,7 +3018,6 @@ def setup_routes(app):
         logger.info("Server started at %s. Cooldown period: %s", SERVER_START_TIME, COOLDOWN_PERIOD)
         logger.info("CSRF token base generated for this session: %s", app.state.csrf_token_base)
         asyncio.create_task(run_scheduler())
-        sync_hooks_to_db_on_startup()
 
     @app.middleware("http")
     async def csrf_middleware(request: Request, call_next):
@@ -3521,7 +3522,6 @@ def fpk_cli_handle_run(args, session):
     global console
 
     if not args.input:
-        logger.error("Please specify a flatpack for the run command.")
         console.print("Please specify a flatpack for the run command.", style="bold red")
         return
 
