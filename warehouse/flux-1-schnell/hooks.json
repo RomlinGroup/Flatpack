@@ -2,11 +2,11 @@
   "hooks": [
     {
       "id": 1,
-      "hook_name": "hello_world",
+      "hook_name": "prompt",
       "hook_placement": "before",
-      "hook_script": "echo \"Hello, World!\"",
+      "hook_script": "prompt=\"This is a high-definition photographic portrait of a human subject.\"",
       "hook_type": "bash",
-      "created_at": "1970-01-01 00:00:00"
+      "created_at": "2024-10-10 15:07:34"
     }
   ]
 }
