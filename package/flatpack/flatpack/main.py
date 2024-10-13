@@ -468,12 +468,6 @@ def create_temp_sh(custom_json_path: Path, temp_sh_path: Path, use_euxo: bool = 
 
         temp_sh_path.parent.mkdir(parents=True, exist_ok=True)
 
-        with tempfile.NamedTemporaryFile(mode='w', delete=False) as context_python_script:
-            context_python_script_path = Path(context_python_script.name)
-
-        with tempfile.NamedTemporaryFile(mode='w', delete=False) as exec_python_script:
-            exec_python_script_path = Path(exec_python_script.name)
-
         ensure_database_initialized()
         hooks = db_manager.get_all_hooks()
 
@@ -483,19 +477,25 @@ def create_temp_sh(custom_json_path: Path, temp_sh_path: Path, use_euxo: bool = 
 
             outfile.write('export SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"\n')
 
-            outfile.write("VENV_PYTHON=${VENV_PYTHON:-python}\n")
+            outfile.write("VENV_PYTHON=${VENV_PYTHON:-$SCRIPT_DIR/venv/bin/python}\n")
 
-            outfile.write(f"CONTEXT_PYTHON_SCRIPT=\"{context_python_script_path}\"\n")
+            outfile.write('echo "DEFAULT_REPO_NAME: $SCRIPT_DIR/$DEFAULT_REPO_NAME"\n')
+            outfile.write('echo "FLATPACK_NAME: $FLATPACK_NAME"\n')
+            outfile.write('echo "PYTHON_INTERPRETER: $VENV_PYTHON"\n')
 
             outfile.write("EVAL_BUILD=\"$(dirname \"$SCRIPT_DIR\")/web/output/eval_build.json\"\n")
 
-            outfile.write(f"EXEC_PYTHON_SCRIPT=\"{exec_python_script_path}\"\n")
-            outfile.write("CURR=0\n")
-            outfile.write(f"last_count={last_count}\n")
+            outfile.write('CONTEXT_PYTHON_SCRIPT="context_python_script.py"\n')
+            outfile.write('EXEC_PYTHON_SCRIPT="exec_python_script.py"\n')
 
-            outfile.write("trap 'rm -f \"$CONTEXT_PYTHON_SCRIPT\" \"$EXEC_PYTHON_SCRIPT\"; exit' EXIT INT TERM\n")
-            outfile.write("rm -f \"$CONTEXT_PYTHON_SCRIPT\" \"$EXEC_PYTHON_SCRIPT\"\n")
-            outfile.write("touch \"$CONTEXT_PYTHON_SCRIPT\" \"$EXEC_PYTHON_SCRIPT\"\n")
+            outfile.write('touch "$CONTEXT_PYTHON_SCRIPT" "$EXEC_PYTHON_SCRIPT"\n')
+
+            outfile.write('> "$CONTEXT_PYTHON_SCRIPT"\n')
+            outfile.write('> "$EXEC_PYTHON_SCRIPT"\n')
+
+            outfile.write("CURR=0\n")
+
+            outfile.write(f"last_count={last_count}\n")
 
             outfile.write("datetime=$(date -u +\"%Y-%m-%d %H:%M:%S\")\n")
 
@@ -556,10 +556,12 @@ def create_temp_sh(custom_json_path: Path, temp_sh_path: Path, use_euxo: bool = 
             outfile.write("update_eval_build \"$CURR\" 1\n\n")
 
             outfile.write("# Execute 'before' hooks\n")
+
             for hook in hooks:
                 if hook.get('hook_placement') == 'before':
                     hook_script = hook['hook_script'].replace('"', '\\"')
                     outfile.write(f"execute_hook \"{hook['hook_name']}\" \"{hook['hook_type']}\" \"{hook_script}\"\n")
+
             outfile.write("\n")
 
             for block in code_blocks:
@@ -1353,6 +1355,7 @@ async def fpk_build(directory: Union[str, None], use_euxo: bool = False):
         raise FileNotFoundError(f"custom.json not found in {build_dir}. Build process canceled.")
 
     hooks = load_and_get_hooks()
+
     temp_sh_path = build_dir / 'temp.sh'
     create_temp_sh(custom_json_path, temp_sh_path, use_euxo=use_euxo, hooks=hooks)
 
