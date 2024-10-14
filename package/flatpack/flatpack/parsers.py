@@ -144,9 +144,22 @@ def clone_git_repositories_script(git_repos, model_name, build_prefix):
             repo_path = f"{model_name}/{build_prefix}/{to_destination}"
             git_clone = f"""
 echo "Cloning repository from: {from_source}"
-git clone --depth=1 -b {branch} {from_source} {repo_path}
+git clone --depth=1 {from_source} -b {branch} {repo_path}
 if [ $? -eq 0 ]; then
     echo "Git clone was successful."
+    
+    cd {repo_path}
+    
+    current_branch=$(git rev-parse --abbrev-ref HEAD)
+    
+    if [ "$current_branch" = "{branch}" ]; then
+        echo "Confirmed: Successfully cloned the correct branch: {branch}"
+    else
+        echo "Warning: Cloned branch ($current_branch) does not match the intended branch ({branch})"
+        exit 1
+    fi
+    
+    cd -
 else
     echo "Git clone failed."
     exit 1
