@@ -476,12 +476,30 @@ def create_temp_sh(custom_json_path: Path, temp_sh_path: Path, use_euxo: bool = 
             outfile.write(f"set -{'eux' if use_euxo else 'eu'}o pipefail\n")
 
             outfile.write('export SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"\n')
+            outfile.write('echo "Script is running in $SCRIPT_DIR"\n')
 
-            outfile.write("VENV_PYTHON=${VENV_PYTHON:-$SCRIPT_DIR/venv/bin/python}\n")
+            outfile.write('if [ -n "${VIRTUAL_ENV:-}" ]; then\n')
+            outfile.write('    : # Already activated\n')
+            outfile.write('elif [ -f "$SCRIPT_DIR/bin/activate" ]; then\n')
+            outfile.write('    . "$SCRIPT_DIR/bin/activate"\n')
+            outfile.write('elif [ -f "$SCRIPT_DIR/bin/activate.fish" ]; then\n')
+            outfile.write('    . "$SCRIPT_DIR/bin/activate.fish"\n')
+            outfile.write('elif [ -f "$SCRIPT_DIR/bin/activate.csh" ]; then\n')
+            outfile.write('    source "$SCRIPT_DIR/bin/activate.csh"\n')
+            outfile.write('elif [ -f "$SCRIPT_DIR/bin/Activate.ps1" ]; then\n')
+            outfile.write('    pwsh -File "$SCRIPT_DIR/bin/Activate.ps1"\n')
+            outfile.write('elif [ -f "$SCRIPT_DIR/Scripts/activate" ]; then\n')
+            outfile.write('    . "$SCRIPT_DIR/Scripts/activate"\n')
+            outfile.write('fi\n')
 
-            outfile.write('echo "DEFAULT_REPO_NAME: $SCRIPT_DIR/$DEFAULT_REPO_NAME"\n')
-            outfile.write('echo "FLATPACK_NAME: $FLATPACK_NAME"\n')
-            outfile.write('echo "PYTHON_INTERPRETER: $VENV_PYTHON"\n')
+            outfile.write('VENV_PYTHON=${VIRTUAL_ENV:+$VIRTUAL_ENV/bin/python}\n')
+            outfile.write('VENV_PYTHON=${VENV_PYTHON:-$(command -v python3 || command -v python)}\n')
+
+            outfile.write(
+                '[ ! -x "$VENV_PYTHON" ] && echo "Error: Python not found in virtual environment." && exit 1\n'
+            )
+
+            outfile.write('echo "Virtual environment is $VENV_PYTHON"\n')
 
             outfile.write("EVAL_BUILD=\"$(dirname \"$SCRIPT_DIR\")/web/output/eval_build.json\"\n")
 
@@ -1044,46 +1062,57 @@ async def run_subprocess(command, log_file, timeout=21600):
     streams = [OutStream(out_r), OutStream(err_r)]
     start_time = time.time()
 
+    async def handle_input():
+        while not shutdown_requested and not abort_requested:
+            if sys.stdin in select.select([sys.stdin], [], [], 0)[0]:
+                line = sys.stdin.readline()
+                if line:
+                    process.stdin.write(line.encode())
+                    process.stdin.flush()
+            await asyncio.sleep(0.1)
+
+    input_task = asyncio.create_task(handle_input())
+
     while streams and not shutdown_requested and not abort_requested:
         if time.time() - start_time > timeout:
             logger.warning("Timeout after %s seconds. Terminating the process.", timeout)
             break
-
         try:
             rlist, _, _ = select.select(streams, [], [], 1.0)
         except select.error as e:
             if e.args[0] != errno.EINTR:
                 raise
             continue
-
         for stream in rlist:
             try:
                 lines, readable, raw_output = stream.read_lines()
                 if raw_output:
                     sys.stdout.buffer.write(raw_output)
                     sys.stdout.buffer.flush()
-
                 for line in lines:
                     filtered_line = filter_log_line(line)
                     if filtered_line is not None:
                         log_file.write(filtered_line + '\n')
                         log_file.flush()
-
                 if not readable:
                     streams.remove(stream)
             except Exception as e:
                 logger.error("Error processing stream: %s", e)
                 logger.debug(traceback.format_exc())
                 streams.remove(stream)
-
         await asyncio.sleep(0)
+
+    input_task.cancel()
+    try:
+        await input_task
+    except asyncio.CancelledError:
+        pass
 
     if process.poll() is None:
         if abort_requested:
             logger.info("Aborting subprocess...")
         else:
             logger.info("Terminating subprocess...")
-
         os.killpg(os.getpgid(process.pid), signal.SIGTERM)
         try:
             process.wait(timeout=5)
@@ -1319,6 +1348,7 @@ async def fpk_build(directory: Union[str, None], use_euxo: bool = False):
 
     if directory:
         flatpack_dir = Path.cwd() / directory
+
         if not flatpack_dir.exists():
             logger.error("The directory '%s' does not exist.", flatpack_dir)
             raise ValueError(f"The directory '{flatpack_dir}' does not exist.")
@@ -1357,6 +1387,10 @@ async def fpk_build(directory: Union[str, None], use_euxo: bool = False):
     hooks = load_and_get_hooks()
 
     temp_sh_path = build_dir / 'temp.sh'
+
+    if temp_sh_path.exists():
+        temp_sh_path.unlink()
+
     create_temp_sh(custom_json_path, temp_sh_path, use_euxo=use_euxo, hooks=hooks)
 
     building_script_path = build_dir / 'build.sh'
