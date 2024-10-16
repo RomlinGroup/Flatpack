@@ -53,7 +53,7 @@ from datetime import datetime, timedelta, timezone
 from importlib.metadata import version
 from io import BytesIO
 from logging.handlers import RotatingFileHandler
-from textwrap import wrap
+from textwrap import dedent, wrap
 from typing import List, Optional, Union
 from zipfile import ZipFile
 
@@ -62,11 +62,13 @@ import requests
 import toml
 import uvicorn
 
+from black import format_str, FileMode
 from fastapi import Cookie, Depends, FastAPI, Form, Header, HTTPException, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.security import APIKeyCookie
 from itsdangerous import BadSignature, SignatureExpired, TimestampSigner
 from pydantic import BaseModel
+from redbaron import RedBaron
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 
@@ -451,9 +453,7 @@ def create_session(token):
     return session_id
 
 
-def create_temp_sh(custom_json_path: Path, temp_sh_path: Path, use_euxo: bool = False, hooks: List[dict] = None):
-    global flatpack_directory
-
+def create_temp_sh(build_dir, custom_json_path: Path, temp_sh_path: Path, use_euxo: bool = False, hooks: list = None):
     if hooks is None:
         hooks = []
 
@@ -467,196 +467,118 @@ def create_temp_sh(custom_json_path: Path, temp_sh_path: Path, use_euxo: bool = 
         last_count = sum(1 for block in code_blocks if not is_block_disabled(block))
 
         temp_sh_path.parent.mkdir(parents=True, exist_ok=True)
+        context_script_path = build_dir / "context_script.py"
 
-        ensure_database_initialized()
-        hooks = db_manager.get_all_hooks()
+        with context_script_path.open('w') as context_file:
+            pass
+
+        context_seen = set()
 
         with temp_sh_path.open('w', encoding='utf-8') as outfile:
-            outfile.write("#!/bin/bash\n")
-            outfile.write(f"set -{'eux' if use_euxo else 'eu'}o pipefail\n")
+            header_script = dedent(f"""\
+                #!/bin/bash
+                set -{'eux' if use_euxo else 'eu'}o pipefail
 
-            outfile.write('export SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"\n')
-            outfile.write('echo "Script is running in $SCRIPT_DIR"\n')
+                export SCRIPT_DIR="$(cd "$(dirname "${{BASH_SOURCE[0]}}")" && pwd)"
+                echo "Script is running in $SCRIPT_DIR"
 
-            outfile.write('if [ -n "${VIRTUAL_ENV:-}" ]; then\n')
-            outfile.write('    : # Already activated\n')
-            outfile.write('elif [ -f "$SCRIPT_DIR/bin/activate" ]; then\n')
-            outfile.write('    . "$SCRIPT_DIR/bin/activate"\n')
-            outfile.write('elif [ -f "$SCRIPT_DIR/bin/activate.fish" ]; then\n')
-            outfile.write('    . "$SCRIPT_DIR/bin/activate.fish"\n')
-            outfile.write('elif [ -f "$SCRIPT_DIR/bin/activate.csh" ]; then\n')
-            outfile.write('    source "$SCRIPT_DIR/bin/activate.csh"\n')
-            outfile.write('elif [ -f "$SCRIPT_DIR/bin/Activate.ps1" ]; then\n')
-            outfile.write('    pwsh -File "$SCRIPT_DIR/bin/Activate.ps1"\n')
-            outfile.write('elif [ -f "$SCRIPT_DIR/Scripts/activate" ]; then\n')
-            outfile.write('    . "$SCRIPT_DIR/Scripts/activate"\n')
-            outfile.write('fi\n')
+                if [ -n "${{VIRTUAL_ENV:-}}" ]; then
+                    : # Already activated
+                elif [ -f "$SCRIPT_DIR/bin/activate" ]; then
+                    . "$SCRIPT_DIR/bin/activate"
+                elif [ -f "$SCRIPT_DIR/Scripts/activate" ]; then
+                    . "$SCRIPT_DIR/Scripts/activate"
+                fi
 
-            outfile.write('VENV_PYTHON=${VIRTUAL_ENV:+$VIRTUAL_ENV/bin/python}\n')
-            outfile.write('VENV_PYTHON=${VENV_PYTHON:-$(command -v python3 || command -v python)}\n')
+                VENV_PYTHON=${{VIRTUAL_ENV:+$VIRTUAL_ENV/bin/python}}
+                VENV_PYTHON=${{VENV_PYTHON:-$(command -v python3 || command -v python)}}
+                
+                [ ! -x "$VENV_PYTHON" ] && echo "Error: Python not found in virtual environment." && exit 1
+                
+                echo "Virtual environment is $VENV_PYTHON"
 
-            outfile.write(
-                '[ ! -x "$VENV_PYTHON" ] && echo "Error: Python not found in virtual environment." && exit 1\n'
-            )
+                datetime=$(date -u +"%Y-%m-%d %H:%M:%S")
+                last_count={last_count}
+                
+                CURR=0
+                EVAL_BUILD="$(dirname "$SCRIPT_DIR")/web/output/eval_build.json"
+                
+                DATA_FILE="$(dirname "$SCRIPT_DIR")/web/output/eval_data.json"
+                echo '[]' > "$DATA_FILE"
 
-            outfile.write('echo "Virtual environment is $VENV_PYTHON"\n')
+                function log_and_update() {{
+                    local curr="$1"
+                    # Log data
+                    local new_files=$(find "$SCRIPT_DIR" -type f -newer "$DATA_FILE" \\( -name '*.jpg' -o -name '*.png' -o -name '*.txt' -o -name '*.wav' \\))
+                    if [ -n "$new_files" ]; then
+                        local log_entries="[]"
+                        for file in $new_files; do
+                            local mime_type=$(file --mime-type -b "$file")
+                            local json_entry="{{\\"eval\\": $curr, \\"file\\": \\"$file\\", \\"type\\": \\"$mime_type\\"}}"
+                            log_entries=$(echo "$log_entries" | jq ". + [$json_entry]")
+                        done
+                        jq -s '.[0] + .[1]' "$DATA_FILE" <(echo "$log_entries") > "$DATA_FILE.tmp" && mv "$DATA_FILE.tmp" "$DATA_FILE"
+                    fi
 
-            outfile.write("EVAL_BUILD=\"$(dirname \"$SCRIPT_DIR\")/web/output/eval_build.json\"\n")
+                    # Update eval build
+                    local eval_count
+                    if [ "$curr" -eq "$last_count" ]; then
+                        eval_count="null"
+                    else
+                        eval_count=$((curr + 1))
+                    fi
+                    echo "{{
+                        \\"curr\\": $curr,
+                        \\"last\\": $last_count,
+                        \\"eval\\": $eval_count,
+                        \\"datetime\\": \\"$datetime\\"
+                    }}" > "$EVAL_BUILD"
+                }}
+            """)
 
-            outfile.write('CONTEXT_PYTHON_SCRIPT="context_python_script.py"\n')
-            outfile.write('EXEC_PYTHON_SCRIPT="exec_python_script.py"\n')
+            outfile.write(header_script)
 
-            outfile.write('touch "$CONTEXT_PYTHON_SCRIPT" "$EXEC_PYTHON_SCRIPT"\n')
+            def process_python_block(code):
+                red = RedBaron(code)
+                context_code, execution_code = [], []
 
-            outfile.write('> "$CONTEXT_PYTHON_SCRIPT"\n')
-            outfile.write('> "$EXEC_PYTHON_SCRIPT"\n')
+                for node in red:
+                    if node.type in ('def', 'class', 'import', 'from_import', 'assignment'):
+                        context_code.append(node.dumps())
+                    else:
+                        execution_code.append(node.dumps())
+                return context_code, execution_code
 
-            outfile.write("CURR=0\n")
-
-            outfile.write(f"last_count={last_count}\n")
-
-            outfile.write("datetime=$(date -u +\"%Y-%m-%d %H:%M:%S\")\n")
-
-            outfile.write("DATA_FILE=\"$(dirname \"$SCRIPT_DIR\")/web/output/eval_data.json\"\n")
-
-            outfile.write("echo '[]' > \"$DATA_FILE\"\n\n")
-
-            outfile.write("function log_data() {\n")
-            outfile.write("    local part_number=\"$1\"\n")
-            outfile.write(
-                "    local new_files=$(find \"$SCRIPT_DIR\" -type f -newer \"$DATA_FILE\" \\( -name '*.jpg' -o -name '*.jpeg' -o -name '*.png' -o -name '*.txt' -o -name '*.wav' \\) ! -path '*/bin/*' ! -path '*/lib/*')\n")
-            outfile.write("    if [ -n \"$new_files\" ]; then\n")
-            outfile.write("        local log_entries=\"[]\"\n")
-            outfile.write("        local temp_file=$(mktemp)\n")
-            outfile.write("        for file in $new_files; do\n")
-            outfile.write("            local mime_type=$(file --mime-type -b \"$file\")\n")
-            outfile.write("            local web=$(basename \"$file\")\n")
-            outfile.write(
-                "            local json_entry=\"{\\\"eval\\\": $part_number, \\\"file\\\": \\\"$file\\\", \\\"public\\\": \\\"/output/$web\\\", \\\"type\\\": \\\"$mime_type\\\"}\"\n")
-            outfile.write(
-                "            if ! jq -e \". | any(.file == \\\"$file\\\")\" \"$DATA_FILE\" > /dev/null; then\n")
-            outfile.write("                log_entries=$(echo \"$log_entries\" | jq \". + [$json_entry]\")\n")
-            outfile.write("            fi\n")
-            outfile.write("        done\n")
-            outfile.write("        if [ \"$(echo \"$log_entries\" | jq '. | length')\" -gt 0 ]; then\n")
-            outfile.write(
-                "            jq -s '.[0] + .[1]' \"$DATA_FILE\" <(echo \"$log_entries\") > \"$temp_file\" && mv \"$temp_file\" \"$DATA_FILE\"\n")
-            outfile.write("        fi\n")
-            outfile.write("    fi\n")
-            outfile.write("    touch \"$DATA_FILE\"\n")
-            outfile.write("}\n\n")
-
-            outfile.write("function update_eval_build() {\n")
-            outfile.write("    local curr=\"$1\"\n")
-            outfile.write("    local eval=\"$2\"\n")
-            outfile.write("    echo \"{\n")
-            outfile.write("        \\\"curr\\\": $curr,\n")
-            outfile.write("        \\\"last\\\": $last_count,\n")
-            outfile.write("        \\\"eval\\\": $eval,\n")
-            outfile.write("        \\\"datetime\\\": \\\"$datetime\\\"\n")
-            outfile.write("    }\" > \"$EVAL_BUILD\"\n")
-            outfile.write("}\n\n")
-
-            outfile.write("function execute_hook() {\n")
-            outfile.write("    local hook_name=\"$1\"\n")
-            outfile.write("    local hook_type=\"$2\"\n")
-            outfile.write("    local hook_script=\"$3\"\n")
-            outfile.write("    echo \"Executing $hook_type hook: $hook_name\"\n")
-            outfile.write("    if [ \"$hook_type\" = \"bash\" ]; then\n")
-            outfile.write("        eval \"$hook_script\"\n")
-            outfile.write("    elif [ \"$hook_type\" = \"python\" ]; then\n")
-            outfile.write("        echo \"$hook_script\" >> \"$CONTEXT_PYTHON_SCRIPT\"\n")
-            outfile.write("    else\n")
-            outfile.write("        echo \"Unsupported hook type: $hook_type\"\n")
-            outfile.write("    fi\n")
-            outfile.write("}\n\n")
-
-            outfile.write("update_eval_build \"$CURR\" 1\n\n")
-
-            outfile.write("# Execute 'before' hooks\n")
-
-            for hook in hooks:
-                if hook.get('hook_placement') == 'before':
-                    hook_script = hook['hook_script'].replace('"', '\\"')
-                    outfile.write(f"execute_hook \"{hook['hook_name']}\" \"{hook['hook_type']}\" \"{hook_script}\"\n")
-
-            outfile.write("\n")
-
-            for block in code_blocks:
+            for block_index, block in enumerate(code_blocks):
                 if is_block_disabled(block):
                     continue
 
+                code = block.get('code', '')
                 language = block.get('type')
-                code = block.get('code', '').replace('\r\n', '\n').replace('\r', '\n')
 
                 if language == 'bash':
-                    outfile.write(f"{code}\n")
-                    outfile.write("((CURR++))\n")
+                    outfile.write(f"{code}\n((CURR++))\nlog_and_update \"$CURR\"\n\n")
 
                 elif language == 'python':
-                    context_code = []
-                    execution_code = []
-                    in_execution = False
-                    code_lines = code.splitlines()
+                    context_code, execution_code = process_python_block(code)
+                    unique_context = [line for line in context_code if line not in context_seen]
+                    context_seen.update(unique_context)
 
-                    for line in code_lines:
-                        stripped_line = line.strip()
+                    with context_script_path.open('a') as context_file:
+                        context_file.write("\n".join(unique_context) + "\n")
 
-                        if stripped_line.startswith(('subprocess.run(', 'print(', 'with open(')):
-                            in_execution = True
+                    exec_path = build_dir / f"execution_script_{block_index}.py"
+                    with exec_path.open('w') as exec_file:
+                        exec_file.write(f"from context_script import *\n\n")
+                        exec_file.write("\n".join(execution_code) + "\n")
 
-                        if in_execution:
-                            execution_code.append(line)
-                        else:
-                            context_code.append(line)
+                    outfile.write(f"$VENV_PYTHON {exec_path}\n((CURR++))\nlog_and_update \"$CURR\"\n\n")
+                    outfile.write(f"rm -f {exec_path}\n")
 
-                    if context_code:
-                        context_code_str = '\n'.join(context_code)
-                        context_code_escaped = context_code_str.replace('"', r'\"').replace('`', r'\`')
-                        outfile.write(f"echo \"{context_code_escaped}\" >> \"$CONTEXT_PYTHON_SCRIPT\"\n")
-
-                    outfile.write("echo \"try:\" > \"$EXEC_PYTHON_SCRIPT\"\n")
-                    outfile.write("sed 's/^/    /' \"$CONTEXT_PYTHON_SCRIPT\" >> \"$EXEC_PYTHON_SCRIPT\"\n")
-
-                    if execution_code:
-                        execution_code_str = '\n'.join(execution_code)
-                        execution_code_escaped = execution_code_str.replace('"', r'\"').replace('`', r'\`')
-
-                        outfile.write(
-                            f"echo \"{execution_code_escaped}\" | sed 's/^/    /' >> \"$EXEC_PYTHON_SCRIPT\"\n")
-
-                    outfile.write("echo \"except Exception as e:\" >> \"$EXEC_PYTHON_SCRIPT\"\n")
-                    outfile.write("echo \"    print(e)\" >> \"$EXEC_PYTHON_SCRIPT\"\n")
-                    outfile.write("echo \"    import sys; sys.exit(1)\" >> \"$EXEC_PYTHON_SCRIPT\"\n")
-                    outfile.write("$VENV_PYTHON \"$EXEC_PYTHON_SCRIPT\"\n")
-                    outfile.write("((CURR++))\n")
-
-                else:
-                    continue
-
-                outfile.write("log_data \"$CURR\"\n")
-
-                outfile.write("if [ \"$CURR\" -eq \"$last_count\" ]; then\n")
-                outfile.write("    EVAL=\"null\"\n")
-                outfile.write("else\n")
-                outfile.write("    EVAL=$((CURR + 1))\n")
-                outfile.write("fi\n")
-
-                outfile.write("update_eval_build \"$CURR\" \"$EVAL\"\n\n")
-
-            outfile.write("# Execute 'after' hooks\n")
-
-            for hook in hooks:
-                if hook.get('hook_placement') == 'after':
-                    hook_script = hook['hook_script'].replace('"', '\\"')
-                    outfile.write(f"execute_hook \"{hook['hook_name']}\" \"{hook['hook_type']}\" \"{hook_script}\"\n")
-
-            outfile.write("\n")
-
-        logger.info("Temp script generated successfully at %s", temp_sh_path)
+        logging.info("Temp script generated successfully at %s", temp_sh_path)
 
     except Exception as e:
-        logger.error("An error occurred while creating temp script: %s", e, exc_info=True)
+        logging.error("An error occurred while creating temp script: %s", e, exc_info=True)
         raise
 
 
@@ -1391,7 +1313,21 @@ async def fpk_build(directory: Union[str, None], use_euxo: bool = False):
     if temp_sh_path.exists():
         temp_sh_path.unlink()
 
-    create_temp_sh(custom_json_path, temp_sh_path, use_euxo=use_euxo, hooks=hooks)
+    create_temp_sh(build_dir, custom_json_path, temp_sh_path, use_euxo=use_euxo, hooks=hooks)
+
+    lines = temp_sh_path.read_text().splitlines()
+
+    start = 0
+
+    while start < len(lines) and not lines[start].strip():
+        start += 1
+
+    end = len(lines)
+
+    while end > start and not lines[end - 1].strip():
+        end -= 1
+
+    temp_sh_path.write_text('\n'.join(lines[start:end]), encoding='utf-8')
 
     building_script_path = build_dir / 'build.sh'
 

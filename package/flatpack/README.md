@@ -18,7 +18,8 @@ computing, electronic components, and robots.
 
 在 Flatpack，我们的使命十分明确: 致力于建立对 AI 的信任。
 
-Flatpack 通过微语言模型和模型压缩普及 AI 和 ML。我们的平台使用户能够训练具有 100M 到 10B 个参数的自定义语言模型。我们引入了 flatpacks (FPK)，将 AI 和 ML 集成到边缘计算、电子元件和机器人中。
+Flatpack 通过微语言模型和模型压缩普及 AI 和 ML。我们的平台使用户能够训练具有 100M 到 10B 个参数的自定义语言模型。我们引入了
+flatpacks (FPK)，将 AI 和 ML 集成到边缘计算、电子元件和机器人中。
 
 ## Flatpack 3.X.X (Aglaonice)
 
@@ -75,18 +76,24 @@ This project is released under [Apache-2.0](https://github.com/RomlinGroup/Flatp
 
 ## install_requires
 
-**DISCLAIMER:** This information is only a technical reference, not an endorsement or legal advice. Before using any software for commercial purposes, perform compatibility checks and seek legal advice. You are responsible for ensuring compliance with licensing requirements.
+**DISCLAIMER:** This information is only a technical reference, not an endorsement or legal advice. Before using any
+software for commercial purposes, perform compatibility checks and seek legal advice. You are responsible for ensuring
+compliance with licensing requirements.
 
 Check out the [JLA - Compatibility Checker](https://joinup.ec.europa.eu/collection/eupl/solution/joinup-licensing-assistant/jla-compatibility-checker) (European Commission 2024).
 
 - **[beautifulsoup4](https://pypi.org/project/beautifulsoup4/)**\
   MIT License (MIT License) ([LICENSE](https://pypi.org/project/beautifulsoup4/))
 
+- **[black](https://pypi.org/project/black/)**\
+  MIT License (MIT) ([LICENSE](https://github.com/psf/black/blob/main/LICENSE))
+
 - **[croniter](https://pypi.org/project/croniter/)**\
   MIT License (MIT License) ([LICENSE](https://github.com/kiorky/croniter/blob/master/LICENSE))
 
 - **[cryptography](https://pypi.org/project/cryptography/)**\
-  Apache Software License, BSD License (Apache-2.0 OR BSD-3-Clause) ([LICENSE](https://github.com/pyca/cryptography/blob/main/LICENSE))
+  Apache Software License, BSD License (Apache-2.0 OR
+  BSD-3-Clause) ([LICENSE](https://github.com/pyca/cryptography/blob/main/LICENSE))
 
 - **[fastapi](https://pypi.org/project/fastapi/)**\
   MIT License ([LICENSE](https://github.com/tiangolo/fastapi/blob/master/LICENSE))
@@ -117,6 +124,9 @@ Check out the [JLA - Compatibility Checker](https://joinup.ec.europa.eu/collecti
 
 - **[python-multipart](https://pypi.org/project/python-multipart/)**\
   Apache Software License ([LICENSE](https://github.com/Kludex/python-multipart/blob/master/LICENSE.txt))
+
+- **[redbaron](https://pypi.org/project/redbaron/)**\
+  GNU Lesser General Public License v3 (LGPLv3) (lgplv3+) ([LICENSE](https://pypi.org/project/redbaron/))
 
 - **[requests](https://pypi.org/project/requests/)**\
   Apache Software License (Apache 2.0) ([LICENSE](https://github.com/psf/requests/blob/main/LICENSE))
