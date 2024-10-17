@@ -8,6 +8,7 @@ from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.syntax import Syntax
 from rich.table import Table
 from rich.text import Text
+from textwrap import dedent, wrap
 
 PACKAGE_DIR = Path(sys.modules['flatpack'].__file__).parent
 IMPORT_CACHE_FILE = PACKAGE_DIR / ".fpk_import_cache"
@@ -54,7 +55,6 @@ from datetime import datetime, timedelta, timezone
 from importlib.metadata import version
 from io import BytesIO
 from logging.handlers import RotatingFileHandler
-from textwrap import dedent, wrap
 from typing import List, Optional, Union
 from zipfile import ZipFile
 
