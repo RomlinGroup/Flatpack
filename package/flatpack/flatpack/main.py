@@ -15,11 +15,12 @@ IMPORT_CACHE_FILE = PACKAGE_DIR / ".fpk_import_cache"
 console = Console()
 
 if not IMPORT_CACHE_FILE.exists():
-    ascii_art = """ _____ __    _____ _____ _____ _____ _____ _____ 
-|   __|  |  |  _  |_   _|  _  |  _  |     |  |  |
-|   __|  |__|     | | | |   __|     |   --|    -|
-|__|  |_____|__|__| |_| |__|  |__|__|_____|__|__|                                                                                                       
-    """
+    ascii_art = dedent(f"""\
+         _____ __    _____ _____ _____ _____ _____ _____ 
+        |   __|  |  |  _  |_   _|  _  |  _  |     |  |  |
+        |   __|  |__|     | | | |   __|     |   --|    -|
+        |__|  |_____|__|__| |_| |__|  |__|__|_____|__|__|                                                                                                       
+    """)
 
     console.print(f"[bold green]{ascii_art}[/bold green]")
     console.print("[bold green]Initialising Flatpack for the first time. This may take a moment...[/bold green]")
@@ -58,6 +59,7 @@ from typing import List, Optional, Union
 from zipfile import ZipFile
 
 import httpx
+import libcst as cst
 import requests
 import toml
 import uvicorn
@@ -67,8 +69,8 @@ from fastapi import Cookie, Depends, FastAPI, Form, Header, HTTPException, Reque
 from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.security import APIKeyCookie
 from itsdangerous import BadSignature, SignatureExpired, TimestampSigner
+from libcst import matchers as m
 from pydantic import BaseModel
-from redbaron import RedBaron
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 
@@ -538,16 +540,59 @@ def create_temp_sh(build_dir, custom_json_path: Path, temp_sh_path: Path, use_eu
 
             outfile.write(header_script)
 
-            def process_python_block(code):
-                red = RedBaron(code)
-                context_code, execution_code = [], []
+            import libcst as cst
+            import libcst.matchers as m
 
-                for node in red:
-                    if node.type in ('def', 'class', 'import', 'from_import', 'assignment'):
-                        context_code.append(node.dumps())
-                    else:
-                        execution_code.append(node.dumps())
-                return context_code, execution_code
+            class TopLevelCodeVisitor(cst.CSTVisitor):
+                def __init__(self):
+                    self.context_code = []
+                    self.execution_code = []
+                    self.depth = 0
+
+                def visit_FunctionDef(self, node):
+                    if self.depth == 0:
+                        self.context_code.append(node)
+                    self.depth += 1
+
+                def leave_FunctionDef(self, node):
+                    self.depth -= 1
+
+                def visit_ClassDef(self, node):
+                    if self.depth == 0:
+                        self.context_code.append(node)
+                    self.depth += 1
+
+                def leave_ClassDef(self, node):
+                    self.depth -= 1
+
+                def visit_Import(self, node):
+                    if self.depth == 0:
+                        self.context_code.append(node)
+
+                def visit_ImportFrom(self, node):
+                    if self.depth == 0:
+                        self.context_code.append(node)
+
+                def visit_Assign(self, node):
+                    if self.depth == 0:
+                        self.context_code.append(node)
+
+                def visit_Expr(self, node):
+                    if self.depth == 0:
+                        if m.matches(node.value, m.Call()):
+                            self.execution_code.append(node)
+                        else:
+                            self.context_code.append(node)
+
+            def process_python_block(code):
+                tree = cst.parse_module(code)
+                visitor = TopLevelCodeVisitor()
+                tree.visit(visitor)
+
+                context_code_str = [tree.code_for_node(stmt) for stmt in visitor.context_code]
+                execution_code_str = [tree.code_for_node(stmt) for stmt in visitor.execution_code]
+
+                return context_code_str, execution_code_str
 
             for block_index, block in enumerate(code_blocks):
                 if is_block_disabled(block):
@@ -2610,6 +2655,7 @@ def fpk_cli_handle_build(args, session):
         console.print("No directory name provided. Using cached directory if available.", style="bold yellow")
 
     console.print("Running build process...", style="bold green")
+    console.print("")
 
     try:
         asyncio.run(fpk_build(directory_name, use_euxo=args.use_euxo))
@@ -2922,7 +2968,6 @@ def fpk_cli_handle_list(args, session):
 
 
 # Hooks
-
 def load_and_get_hooks():
     hooks_file_path = os.path.join(flatpack_directory, HOOKS_FILE)
     if os.path.exists(hooks_file_path):
@@ -3711,7 +3756,7 @@ def fpk_cli_handle_unbox(args, session):
             console.print(f"Local directory does not exist: '{directory_name}'.", style="bold red")
             return
 
-        directory_name = str(local_directory_path.resolve())  # Update directory_name to full path
+        directory_name = str(local_directory_path.resolve())
         toml_path = local_directory_path / 'flatpack.toml'
 
         if not toml_path.exists():

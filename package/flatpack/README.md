@@ -92,8 +92,7 @@ Check out the [JLA - Compatibility Checker](https://joinup.ec.europa.eu/collecti
   MIT License (MIT License) ([LICENSE](https://github.com/kiorky/croniter/blob/master/LICENSE))
 
 - **[cryptography](https://pypi.org/project/cryptography/)**\
-  Apache Software License, BSD License (Apache-2.0 OR
-  BSD-3-Clause) ([LICENSE](https://github.com/pyca/cryptography/blob/main/LICENSE))
+  Apache Software License, BSD License (Apache-2.0 OR BSD-3-Clause) ([LICENSE](https://github.com/pyca/cryptography/blob/main/LICENSE))
 
 - **[fastapi](https://pypi.org/project/fastapi/)**\
   MIT License ([LICENSE](https://github.com/tiangolo/fastapi/blob/master/LICENSE))
@@ -110,6 +109,9 @@ Check out the [JLA - Compatibility Checker](https://joinup.ec.europa.eu/collecti
 - **[itsdangerous](https://pypi.org/project/itsdangerous/)**\
   BSD License ([LICENSE](https://github.com/pallets/itsdangerous/blob/main/LICENSE.txt))
 
+- **[libcst](https://pypi.org/project/libcst/)**\
+   MIT License ([LICENSE](https://github.com/Instagram/LibCST/blob/main/LICENSE))
+
 - **[ngrok](https://pypi.org/project/ngrok/)**\
   MIT License (MIT OR Apache-2.0) ([LICENSE](https://github.com/ngrok/ngrok-python/blob/main/LICENSE-APACHE))
 
@@ -124,9 +126,6 @@ Check out the [JLA - Compatibility Checker](https://joinup.ec.europa.eu/collecti
 
 - **[python-multipart](https://pypi.org/project/python-multipart/)**\
   Apache Software License ([LICENSE](https://github.com/Kludex/python-multipart/blob/master/LICENSE.txt))
-
-- **[redbaron](https://pypi.org/project/redbaron/)**\
-  GNU Lesser General Public License v3 (LGPLv3) (lgplv3+) ([LICENSE](https://pypi.org/project/redbaron/))
 
 - **[requests](https://pypi.org/project/requests/)**\
   Apache Software License (Apache 2.0) ([LICENSE](https://github.com/psf/requests/blob/main/LICENSE))
@@ -149,4 +148,4 @@ Check out the [JLA - Compatibility Checker](https://joinup.ec.europa.eu/collecti
 - **[zstandard](https://pypi.org/project/zstandard/)**\
   BSD License (BSD) ([LICENSE](https://github.com/indygreg/python-zstandard/blob/main/LICENSE))
 
-Last updated: 2024-10-09
+Last updated: 2024-10-17
