@@ -466,6 +466,23 @@ def create_temp_sh(build_dir, custom_json_path: Path, temp_sh_path: Path, use_eu
         def is_block_disabled(block):
             return block.get('disabled', False)
 
+        def process_hook(hook, outfile, context_script_path, context_seen, hook_index):
+            outfile.write(f"\n# Hook: {hook['hook_name']}\n")
+            if hook['hook_type'] == 'bash':
+                outfile.write(f"{hook['hook_script']}\n")
+            elif hook['hook_type'] == 'python':
+                hook_context, hook_execution = process_python_block(hook['hook_script'])
+
+                with context_script_path.open('a') as context_file:
+                    unique_context = [line for line in hook_context if line not in context_seen]
+                    context_seen.update(unique_context)
+                    if unique_context:
+                        context_file.write("\n".join(unique_context) + "\n")
+
+                exec_script_path = build_dir / f"execution_script_hook_{hook_index}.py"
+                with exec_script_path.open('a') as exec_file:
+                    exec_file.write("\n".join(hook_execution) + "\n")
+
         last_count = sum(1 for block in code_blocks if not is_block_disabled(block))
 
         temp_sh_path.parent.mkdir(parents=True, exist_ok=True)
@@ -475,6 +492,9 @@ def create_temp_sh(build_dir, custom_json_path: Path, temp_sh_path: Path, use_eu
             pass
 
         context_seen = set()
+
+        ensure_database_initialized()
+        hooks = db_manager.get_all_hooks()
 
         with temp_sh_path.open('w', encoding='utf-8') as outfile:
             header_script = dedent(f"""\
@@ -598,6 +618,11 @@ def create_temp_sh(build_dir, custom_json_path: Path, temp_sh_path: Path, use_eu
 
                 return context_code_str, execution_code_str
 
+            # Process hooks (before)
+            for hook_index, hook in enumerate(hooks):
+                if hook.get('hook_placement') == 'before':
+                    process_hook(hook, outfile, context_script_path, context_seen, hook_index)
+
             for block_index, block in enumerate(code_blocks):
                 if is_block_disabled(block):
                     continue
@@ -617,12 +642,18 @@ def create_temp_sh(build_dir, custom_json_path: Path, temp_sh_path: Path, use_eu
                         context_file.write("\n".join(unique_context) + "\n")
 
                     exec_path = build_dir / f"execution_script_{block_index}.py"
+
                     with exec_path.open('w') as exec_file:
                         exec_file.write(f"from context_script import *\n\n")
                         exec_file.write("\n".join(execution_code) + "\n")
 
                     outfile.write(f"$VENV_PYTHON {exec_path}\n((CURR++))\nlog_and_update \"$CURR\"\n\n")
                     outfile.write(f"rm -f {exec_path}\n")
+
+            # Process hooks (after)
+            for hook_index, hook in enumerate(hooks):
+                if hook.get('hook_placement') == 'after':
+                    process_hook(hook, outfile, context_script_path, context_seen, hook_index)
 
         logging.info("Temp script generated successfully at %s", temp_sh_path)
 
