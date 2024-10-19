@@ -467,6 +467,11 @@ def create_temp_sh(build_dir, custom_json_path: Path, temp_sh_path: Path, use_eu
             return block.get('disabled', False)
 
         def process_hook(hook, outfile, context_script_path, context_seen, hook_index):
+            required_fields = ['hook_name', 'hook_type', 'hook_script']
+            if not all(field in hook for field in required_fields):
+                logging.error("Hook is missing required fields: %s", hook)
+                return
+
             outfile.write(f"\n# Hook: {hook['hook_name']}\n")
             if hook['hook_type'] == 'bash':
                 outfile.write(f"{hook['hook_script']}\n")
@@ -474,8 +479,8 @@ def create_temp_sh(build_dir, custom_json_path: Path, temp_sh_path: Path, use_eu
                 hook_context, hook_execution = process_python_block(hook['hook_script'])
 
                 with context_script_path.open('a') as context_file:
-                    unique_context = [line for line in hook_context if line not in context_seen]
-                    context_seen.update(unique_context)
+                    unique_context = [line for line in hook_context if line.strip() not in context_seen]
+                    context_seen.update(line.strip() for line in unique_context)
                     if unique_context:
                         context_file.write("\n".join(unique_context) + "\n")
 
@@ -564,30 +569,63 @@ def create_temp_sh(build_dir, custom_json_path: Path, temp_sh_path: Path, use_eu
 
             outfile.write(header_script)
 
-            import libcst as cst
-            import libcst.matchers as m
-
             class TopLevelCodeVisitor(cst.CSTVisitor):
                 def __init__(self):
                     self.context_code = []
                     self.execution_code = []
                     self.depth = 0
 
-                def visit_FunctionDef(self, node):
-                    if self.depth == 0:
-                        self.context_code.append(node)
-                    self.depth += 1
+                def leave_ClassDef(self, node):
+                    self.depth -= 1
+
+                def leave_For(self, node):
+                    self.depth -= 1
 
                 def leave_FunctionDef(self, node):
                     self.depth -= 1
+
+                def leave_If(self, node):
+                    self.depth -= 1
+
+                def leave_Try(self, node):
+                    self.depth -= 1
+
+                def leave_While(self, node):
+                    self.depth -= 1
+
+                def leave_With(self, node):
+                    self.depth -= 1
+
+                def visit_Assign(self, node):
+                    if self.depth == 0:
+                        self.context_code.append(node)
 
                 def visit_ClassDef(self, node):
                     if self.depth == 0:
                         self.context_code.append(node)
                     self.depth += 1
 
-                def leave_ClassDef(self, node):
-                    self.depth -= 1
+                def visit_Expr(self, node):
+                    if self.depth == 0:
+                        if m.matches(node.value, m.Call()):
+                            self.execution_code.append(node)
+                        else:
+                            self.context_code.append(node)
+
+                def visit_For(self, node):
+                    if self.depth == 0:
+                        self.execution_code.append(node)
+                    self.depth += 1
+
+                def visit_FunctionDef(self, node):
+                    if self.depth == 0:
+                        self.context_code.append(node)
+                    self.depth += 1
+
+                def visit_If(self, node):
+                    if self.depth == 0:
+                        self.execution_code.append(node)
+                    self.depth += 1
 
                 def visit_Import(self, node):
                     if self.depth == 0:
@@ -597,16 +635,20 @@ def create_temp_sh(build_dir, custom_json_path: Path, temp_sh_path: Path, use_eu
                     if self.depth == 0:
                         self.context_code.append(node)
 
-                def visit_Assign(self, node):
+                def visit_Try(self, node):
                     if self.depth == 0:
-                        self.context_code.append(node)
+                        self.execution_code.append(node)
+                    self.depth += 1
 
-                def visit_Expr(self, node):
+                def visit_While(self, node):
                     if self.depth == 0:
-                        if m.matches(node.value, m.Call()):
-                            self.execution_code.append(node)
-                        else:
-                            self.context_code.append(node)
+                        self.execution_code.append(node)
+                    self.depth += 1
+
+                def visit_With(self, node):
+                    if self.depth == 0:
+                        self.execution_code.append(node)
+                    self.depth += 1
 
             def process_python_block(code):
                 tree = cst.parse_module(code)
@@ -635,20 +677,21 @@ def create_temp_sh(build_dir, custom_json_path: Path, temp_sh_path: Path, use_eu
 
                 elif language == 'python':
                     context_code, execution_code = process_python_block(code)
+
                     unique_context = [line for line in context_code if line not in context_seen]
                     context_seen.update(unique_context)
 
-                    with context_script_path.open('a') as context_file:
-                        context_file.write("\n".join(unique_context) + "\n")
+                    if unique_context:
+                        with context_script_path.open('a') as context_file:
+                            context_file.write("\n".join(unique_context) + "\n")
 
                     exec_path = build_dir / f"execution_script_{block_index}.py"
-
                     with exec_path.open('w') as exec_file:
                         exec_file.write(f"from context_script import *\n\n")
-                        exec_file.write("\n".join(execution_code) + "\n")
+                        exec_file.write("\n".join(execution_code) + "\n")  # Write once
 
-                    outfile.write(f"$VENV_PYTHON {exec_path}\n((CURR++))\nlog_and_update \"$CURR\"\n\n")
-                    outfile.write(f"rm -f {exec_path}\n")
+                    outfile.write(f"$VENV_PYTHON {exec_path}\n((CURR++))\nlog_and_update \"$CURR\"\n")
+                    outfile.write(f"rm -f {exec_path}\n\n")
 
             # Process hooks (after)
             for hook_index, hook in enumerate(hooks):
