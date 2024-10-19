@@ -510,25 +510,29 @@ def create_temp_sh(build_dir, custom_json_path: Path, temp_sh_path: Path, use_eu
 
                 function log_and_update() {{
                     local curr="$1"
-                    # Log data
+                    
                     local new_files=$(find "$SCRIPT_DIR" -type f -newer "$DATA_FILE" \\( -name '*.jpg' -o -name '*.png' -o -name '*.txt' -o -name '*.wav' \\))
+                    
                     if [ -n "$new_files" ]; then
                         local log_entries="[]"
+                        
                         for file in $new_files; do
+                            local public="/output/$(basename "$file")"
                             local mime_type=$(file --mime-type -b "$file")
-                            local json_entry="{{\\"eval\\": $curr, \\"file\\": \\"$file\\", \\"type\\": \\"$mime_type\\"}}"
+                            local json_entry="{{\\"eval\\": $curr, \\"file\\": \\"$file\\", \\"public\\": \\"$public\\", \\"type\\": \\"$mime_type\\"}}"
                             log_entries=$(echo "$log_entries" | jq ". + [$json_entry]")
                         done
+                        
                         jq -s '.[0] + .[1]' "$DATA_FILE" <(echo "$log_entries") > "$DATA_FILE.tmp" && mv "$DATA_FILE.tmp" "$DATA_FILE"
                     fi
 
-                    # Update eval build
                     local eval_count
                     if [ "$curr" -eq "$last_count" ]; then
                         eval_count="null"
                     else
                         eval_count=$((curr + 1))
                     fi
+                    
                     echo "{{
                         \\"curr\\": $curr,
                         \\"last\\": $last_count,
