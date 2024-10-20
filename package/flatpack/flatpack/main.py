@@ -536,7 +536,7 @@ def create_temp_sh(build_dir, custom_json_path: Path, temp_sh_path: Path, use_eu
                 function log_and_update() {{
                     local curr="$1"
                     
-                    local new_files=$(find "$SCRIPT_DIR" -type f -newer "$DATA_FILE" \\( -name '*.jpg' -o -name '*.png' -o -name '*.txt' -o -name '*.wav' \\))
+                    local new_files=$(find "$SCRIPT_DIR" -type f -newer "$DATA_FILE" \\( -name '*.gif' -o -name '*.jpeg' -o -name '*.jpg' -o -name '*.mp3' -o -name '*.mp4' -o -name '*.png' -o -name '*.txt' -o -name '*.wav' \\))
                     
                     if [ -n "$new_files" ]; then
                         local log_entries="[]"
@@ -852,11 +852,11 @@ def generate_csrf_token():
     return f"{timestamp}:{token}"
 
 
-def generate_secure_token(length=32):
+def generate_secure_token(length=8):
     """Generate a secure token of the specified length.
 
     Args:
-        length (int): The length of the token to generate. Default is 32.
+        length (int): The length of the token to generate. Default is 8.
 
     Returns:
         str: A securely generated token.
@@ -3353,15 +3353,15 @@ def setup_routes(app):
             logger.error("An error occurred while updating the hook: %s", e)
             raise HTTPException(status_code=500, detail=f"An error occurred while updating the hook: {e}")
 
-    @app.get("/api/list_image_files", dependencies=[Depends(csrf_protect)])
-    async def list_image_files(token: str = Depends(authenticate_token)):
+    @app.get("/api/list_media_files", dependencies=[Depends(csrf_protect)])
+    async def list_media_files(token: str = Depends(authenticate_token)):
         global flatpack_directory
         if not flatpack_directory:
             raise HTTPException(status_code=500, detail="Flatpack directory is not set")
         output_folder = Path(flatpack_directory) / "web" / "output"
-        allowed_extensions = {'.gif', '.jpeg', '.jpg', '.png'}
+        allowed_extensions = {'.gif', '.jpeg', '.jpg', '.mp3', '.mp4', '.png', '.wav'}
         try:
-            image_files = [
+            media_files = [
                 {
                     'name': f.name,
                     'created_at': f.stat().st_ctime
@@ -3369,11 +3369,11 @@ def setup_routes(app):
                 for f in output_folder.iterdir()
                 if f.is_file() and f.suffix.lower() in allowed_extensions
             ]
-            image_files.sort(key=lambda x: x['created_at'], reverse=True)
-            return JSONResponse(content={'files': image_files})
+            media_files.sort(key=lambda x: x['created_at'], reverse=True)
+            return JSONResponse(content={'files': media_files})
         except Exception as e:
-            logger.error("Error listing image files: %s", str(e))
-            raise HTTPException(status_code=500, detail=f"Error listing image files: {str(e)}")
+            logger.error("Error listing media files: %s", str(e))
+            raise HTTPException(status_code=500, detail=f"Error listing media files: {str(e)}")
 
     @app.get("/api/load_file")
     async def load_file(
