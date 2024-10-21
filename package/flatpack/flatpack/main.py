@@ -110,6 +110,7 @@ HTMLResponse = lazy_import('fastapi.responses', callable_name='HTMLResponse')
 HTTPException = lazy_import('fastapi', callable_name='HTTPException')
 JSONResponse = lazy_import('fastapi.responses', callable_name='JSONResponse')
 ngrok = lazy_import('ngrok')
+NgrokError = lazy_import('ngrok.exceptions', callable_name='NgrokError')
 PrettyTable = lazy_import('prettytable', callable_name='PrettyTable')
 Request = lazy_import('fastapi', callable_name='Request')
 Response = lazy_import('fastapi.responses', callable_name='Response')
@@ -496,6 +497,7 @@ def create_temp_sh(build_dir, custom_json_path: Path, temp_sh_path: Path, use_eu
                 return
 
             outfile.write(f"\n# Hook: {hook['hook_name']}\n")
+
             if hook['hook_type'] == 'bash':
                 outfile.write(f"{hook['hook_script']}\n")
             elif hook['hook_type'] == 'python':
@@ -3147,6 +3149,18 @@ def setup_routes(app):
         logger.info("CSRF token base generated for this session: %s", app.state.csrf_token_base)
         asyncio.create_task(run_scheduler())
 
+    @app.on_event("shutdown")
+    async def shutdown_event():
+        if hasattr(app.state, 'ngrok_listener'):
+            try:
+                ngrok_module = lazy_import('ngrok')
+                ngrok_module.disconnect(app.state.ngrok_listener)
+                logger.info("Disconnected ngrok ingress.")
+                console.print("Disconnected ngrok ingress.", style="bold green")
+            except Exception as e:
+                logger.error(f"Failed to disconnect ngrok ingress: {e}")
+                console.print(f"Failed to disconnect ngrok ingress: {e}", style="bold red")
+
     @app.middleware("http")
     async def csrf_middleware(request: Request, call_next):
         if request.method != "GET" and not any(request.url.path.startswith(path) for path in CSRF_EXEMPT_PATHS):
@@ -3767,18 +3781,30 @@ def fpk_cli_handle_run(args, session):
 
     if args.share:
         with console.status("[bold green]Establishing ngrok ingress...", spinner="dots"):
-            ngrok_module = lazy_import('ngrok')
+            try:
+                if args.domain:
+                    listener = ngrok.connect(f"{host}:{port}", authtoken_from_env=True, domain=args.domain)
+                else:
+                    listener = ngrok.connect(f"{host}:{port}", authtoken_from_env=True)
 
-            if args.domain:
-                listener = ngrok_module.connect(f"{host}:{port}", authtoken_from_env=True, domain=args.domain)
-            else:
-                listener = ngrok_module.connect(f"{host}:{port}", authtoken_from_env=True)
+                public_url = listener.url()
 
-            public_url = listener.url()
+                app.state.ngrok_listener = listener
+                app.state.public_url = public_url
 
-            logger.info("Ingress established at %s", public_url)
-            console.print(f"Ingress established at {public_url}", style="bold green")
-            console.print("")
+                logger.info("Ingress established at %s", public_url)
+                console.print(f"Ingress established at {public_url}", style="bold green")
+                console.print("")
+            except ValueError as e:
+                error_message = str(e)
+                if "ERR_NGROK_319" in error_message:
+                    console.print("[bold red]Error: Custom domain not reserved[/bold red]", style="bold red")
+                    console.print("You must reserve the custom domain in your ngrok dashboard before using it.")
+                    console.print(f"Please visit: https://dashboard.ngrok.com/domains/new")
+                    console.print("After reserving the domain, try running the command again.")
+                else:
+                    console.print(f"[bold red]Error establishing ngrok ingress: {error_message}[/bold red]")
+                return
 
     config = uvicorn.Config(app, host=host, port=port)
     server = uvicorn.Server(config)
