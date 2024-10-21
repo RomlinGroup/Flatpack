@@ -3154,12 +3154,20 @@ def setup_routes(app):
         if hasattr(app.state, 'ngrok_listener'):
             try:
                 ngrok_module = lazy_import('ngrok')
-                ngrok_module.disconnect(app.state.ngrok_listener)
+                await asyncio.wait_for(
+                    asyncio.to_thread(ngrok_module.disconnect, app.state.ngrok_listener.url()),
+                    timeout=5.0
+                )
                 logger.info("Disconnected ngrok ingress.")
                 console.print("Disconnected ngrok ingress.", style="bold green")
+            except asyncio.TimeoutError:
+                logger.error("Timed out while trying to disconnect ngrok ingress.")
+                console.print("Timed out while trying to disconnect ngrok ingress.", style="bold red")
             except Exception as e:
                 logger.error(f"Failed to disconnect ngrok ingress: {e}")
                 console.print(f"Failed to disconnect ngrok ingress: {e}", style="bold red")
+            finally:
+                app.state.ngrok_listener = None
 
     @app.middleware("http")
     async def csrf_middleware(request: Request, call_next):
@@ -3812,21 +3820,22 @@ def fpk_cli_handle_run(args, session):
     background_tasks = BackgroundTasks()
     background_tasks.add_task(run_scheduler)
 
+    def shutdown_server(signum, frame):
+        logger.info("Received shutdown signal. Stopping the server...")
+        console.print("Received shutdown signal. Stopping the server...", style="bold yellow")
+        server.should_exit = True
+
+    signal.signal(signal.SIGINT, shutdown_server)
+    signal.signal(signal.SIGTERM, shutdown_server)
+
     try:
         server.run()
-    except KeyboardInterrupt:
-        logger.warning("Process interrupted by user (KeyboardInterrupt).")
-        console.print("Process interrupted by user. Exiting.", style="bold yellow")
+    except Exception as e:
+        logger.error(f"Server error: {e}")
+        console.print(f"Server error: {e}", style="bold red")
     finally:
-        if args.share and public_url:
-            try:
-                ngrok_module = lazy_import('ngrok')
-                ngrok_module.disconnect(public_url)
-                logger.info("Disconnected ngrok ingress.")
-                console.print("Disconnected ngrok ingress.", style="bold green")
-            except Exception as e:
-                logger.error("Failed to disconnect ngrok ingress: %s", str(e))
-                console.print(f"Failed to disconnect ngrok ingress: {e}", style="bold red")
+        logger.info("Server shutdown complete.")
+        console.print("Server shutdown complete.", style="bold green")
 
 
 def fpk_cli_handle_set_api_key(args, session):
