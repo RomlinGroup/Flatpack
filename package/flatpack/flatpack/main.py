@@ -73,6 +73,7 @@ from libcst import matchers as m
 from pydantic import BaseModel
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.middleware.sessions import SessionMiddleware
+from starlette.responses import JSONResponse
 
 from .database_manager import DatabaseManager
 from .error_handling import safe_exit, setup_exception_handling, setup_signal_handling
@@ -157,6 +158,28 @@ class Comment(BaseModel):
     block_id: str
     selected_text: str
     comment: str
+
+
+class ConnectionLimitMiddleware(BaseHTTPMiddleware):
+    def __init__(self, app):
+        super().__init__(app)
+        self.connected_ip = None
+        self.lock = asyncio.Lock()
+
+    async def dispatch(self, request, call_next):
+        client_ip = request.client.host
+
+        async with self.lock:
+            if self.connected_ip is None:
+                self.connected_ip = client_ip
+            elif self.connected_ip != client_ip:
+                return JSONResponse({"detail": "Another client is already connected"}, status_code=503)
+
+        try:
+            response = await call_next(request)
+            return response
+        finally:
+            pass
 
 
 class EndpointFilter(logging.Filter):
@@ -1500,7 +1523,14 @@ async def fpk_build(directory: Union[str, None], use_euxo: bool = False):
                     source_file = build_dir / relative_path
 
                     if source_file.exists():
-                        allowed_mimetypes = ['audio/wav', 'audio/x-wav', 'image/jpeg', 'image/png', 'text/plain']
+                        allowed_mimetypes = [
+                            'audio/wav',
+                            'audio/x-wav',
+                            'image/jpeg',
+                            'image/png',
+                            'text/plain',
+                            'video/mp4'
+                        ]
                         mime_type, _ = mimetypes.guess_type(source_file)
 
                         if mime_type in allowed_mimetypes:
@@ -3106,6 +3136,8 @@ flatpack_directory = None
 
 
 def setup_routes(app):
+    app.add_middleware(ConnectionLimitMiddleware)
+
     @app.on_event("startup")
     async def startup_event():
         global SERVER_START_TIME
