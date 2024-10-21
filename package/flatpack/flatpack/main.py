@@ -189,8 +189,8 @@ class EndpointFilter(logging.Filter):
             for endpoint in [
                 'GET /api/heartbeat',
                 'GET /api/build-status',
-                'GET /api/clear-build-status',
-                'GET /csrf-token'
+                'GET /csrf-token',
+                'POST /api/clear-build-status'
             ]
         )
 
