@@ -713,7 +713,7 @@ def create_temp_sh(build_dir, custom_json_path: Path, temp_sh_path: Path, use_eu
                     exec_path = build_dir / f"execution_script_{block_index}.py"
                     with exec_path.open('w') as exec_file:
                         exec_file.write(f"from context_script import *\n\n")
-                        exec_file.write("\n".join(execution_code) + "\n")  # Write once
+                        exec_file.write("\n".join(execution_code) + "\n")
 
                     outfile.write(f"$VENV_PYTHON {exec_path}\n((CURR++))\nlog_and_update \"$CURR\"\n")
                     outfile.write(f"rm -f {exec_path}\n\n")
