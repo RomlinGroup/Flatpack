@@ -47,6 +47,7 @@ import string
 import subprocess
 import tarfile
 import tempfile
+import threading
 import time
 import traceback
 import unicodedata
@@ -150,6 +151,8 @@ active_sessions = {}
 
 abort_requested = False
 build_in_progress = False
+force_exit_timer = None
+shutdown_in_progress = False
 shutdown_requested = False
 
 console = Console()
@@ -3668,7 +3671,6 @@ def setup_routes(app):
 
 
 def fpk_cli_handle_run(args, session):
-    """Handle the 'run' command to start the FastAPI server."""
     global console
 
     if not args.input:
@@ -3814,28 +3816,40 @@ def fpk_cli_handle_run(args, session):
                     console.print(f"[bold red]Error establishing ngrok ingress: {error_message}[/bold red]")
                 return
 
-    config = uvicorn.Config(app, host=host, port=port)
+    config = uvicorn.Config(
+        app,
+        host=host,
+        port=port,
+        timeout_keep_alive=0,
+        timeout_graceful_shutdown=1,
+        loop="auto",
+        lifespan="off"
+    )
     server = uvicorn.Server(config)
 
     background_tasks = BackgroundTasks()
     background_tasks.add_task(run_scheduler)
 
-    def shutdown_server(signum, frame):
-        logger.info("Received shutdown signal. Stopping the server...")
-        console.print("Received shutdown signal. Stopping the server...", style="bold yellow")
-        server.should_exit = True
+    def force_exit():
+        os.kill(os.getpid(), signal.SIGKILL)
 
-    signal.signal(signal.SIGINT, shutdown_server)
-    signal.signal(signal.SIGTERM, shutdown_server)
+    def aggressive_handle_exit(sig, frame):
+        server.should_exit = True
+        force_exit()
+
+    server.handle_exit = aggressive_handle_exit
+
+    signal.signal(signal.SIGINT, aggressive_handle_exit)
+    signal.signal(signal.SIGTERM, aggressive_handle_exit)
 
     try:
         server.run()
+    except KeyboardInterrupt:
+        force_exit()
     except Exception as e:
         logger.error(f"Server error: {e}")
         console.print(f"Server error: {e}", style="bold red")
-    finally:
-        logger.info("Server shutdown complete.")
-        console.print("Server shutdown complete.", style="bold green")
+        force_exit()
 
 
 def fpk_cli_handle_set_api_key(args, session):
