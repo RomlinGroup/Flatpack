@@ -3230,13 +3230,49 @@ def setup_routes(app):
             return {"message": f"Database connection failed: {e}"}
 
     @app.post("/api/abort-build", dependencies=[Depends(csrf_protect)])
-    async def abort_build(token: str = Depends(authenticate_token)):
-        """Abort the current build process."""
-        if not build_in_progress:
-            return JSONResponse(content={"message": "No build in progress to abort."}, status_code=400)
+    async def abort_build(request: Request, token: str = Depends(authenticate_token)):
+        """Force abort the current build process by killing all related processes."""
+        global build_in_progress, abort_requested, flatpack_directory
 
-        await abort_build_process()
-        return JSONResponse(content={"message": "Build process aborted successfully."}, status_code=200)
+        try:
+            if flatpack_directory:
+                build_dir = os.path.join(flatpack_directory, 'build')
+                kill_cmd = f"pkill -f '{build_dir}'"
+                try:
+                    subprocess.run(kill_cmd, shell=True)
+                except Exception as e:
+                    logger.warning(f"Error killing processes: {e}")
+
+            build_in_progress = False
+            abort_requested = False
+
+            try:
+                status_file = os.path.join(flatpack_directory, 'build', 'build_status.json')
+                status_data = {
+                    "status": "aborted",
+                    "timestamp": datetime.now().isoformat(),
+                    "error": "Build forcefully terminated"
+                }
+                os.makedirs(os.path.dirname(status_file), exist_ok=True)
+                with open(status_file, 'w') as f:
+                    json.dump(status_data, f)
+            except Exception as e:
+                logger.error(f"Error updating status file: {e}")
+
+            logger.info("Build forcefully terminated")
+            return JSONResponse(
+                content={"message": "Build process forcefully terminated."},
+                status_code=200
+            )
+
+        except Exception as e:
+            logger.error(f"Error in force abort: {e}")
+            build_in_progress = False
+            abort_requested = False
+            return JSONResponse(
+                content={"message": "Attempted force abort with errors."},
+                status_code=200
+            )
 
     @app.post("/api/build", dependencies=[Depends(csrf_protect)])
     async def build_flatpack(
