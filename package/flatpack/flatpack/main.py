@@ -89,6 +89,18 @@ if not IMPORT_CACHE_FILE.exists():
     console.print("")
 
 
+def set_file_limits():
+    """Set higher limits for number of open files."""
+    try:
+        import resource
+        soft, hard = resource.getrlimit(resource.RLIMIT_NOFILE)
+        resource.setrlimit(resource.RLIMIT_NOFILE, (hard, hard))
+        return True
+    except Exception as e:
+        print(f"Warning: Could not increase file limits: {e}")
+        return False
+
+
 def lazy_import(module_name, package=None, callable_name=None):
     import importlib
     try:
@@ -4039,6 +4051,7 @@ def fpk_cli_handle_version(args, session):
 def main():
     setup_exception_handling()
     setup_signal_handling()
+    set_file_limits()
 
     with SessionManager() as session:
         parser = setup_arg_parser()
