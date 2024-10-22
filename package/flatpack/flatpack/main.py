@@ -56,11 +56,12 @@ from datetime import datetime, timedelta, timezone
 from importlib.metadata import version
 from io import BytesIO
 from logging.handlers import RotatingFileHandler
-from typing import List, Optional, Union
+from typing import List, Optional, Set, Union
 from zipfile import ZipFile
 
 import httpx
 import libcst as cst
+import psutil
 import requests
 import toml
 import uvicorn
@@ -942,6 +943,16 @@ def get_executable_path(executable):
             return result.stdout.strip()
         except subprocess.CalledProcessError:
             return None
+
+
+def get_process_tree(pid: int) -> Set[int]:
+    """Recursively get all child process IDs in the process tree."""
+    try:
+        process = psutil.Process(pid)
+        children = process.children(recursive=True)
+        return {pid} | {child.pid for child in children}
+    except (psutil.NoSuchProcess, psutil.AccessDenied):
+        return set()
 
 
 def get_secret_key():
@@ -3231,47 +3242,129 @@ def setup_routes(app):
 
     @app.post("/api/abort-build", dependencies=[Depends(csrf_protect)])
     async def abort_build(request: Request, token: str = Depends(authenticate_token)):
-        """Force abort the current build process by killing all related processes."""
+        """Force abort the current build process by killing all related processes and cleaning up resources."""
         global build_in_progress, abort_requested, flatpack_directory
 
         try:
-            if flatpack_directory:
-                build_dir = os.path.join(flatpack_directory, 'build')
-                kill_cmd = f"pkill -f '{build_dir}'"
+            if not flatpack_directory:
+                return JSONResponse(
+                    content={"message": "No active build directory."},
+                    status_code=400
+                )
+
+            build_dir = Path(flatpack_directory) / 'build'
+
+            build_processes = set()
+            for proc in psutil.process_iter(['pid', 'cmdline', 'name']):
                 try:
-                    subprocess.run(kill_cmd, shell=True)
-                except Exception as e:
-                    logger.warning(f"Error killing processes: {e}")
+                    if any(str(build_dir) in str(arg) for arg in proc.cmdline()):
+                        process_tree = get_process_tree(proc.pid)
+                        build_processes.update(process_tree)
+                except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+                    continue
+
+            for pid in build_processes:
+                try:
+                    os.kill(pid, signal.SIGTERM)
+                except ProcessLookupError:
+                    continue
+
+            await asyncio.sleep(5)
+
+            remaining_processes = set()
+
+            for pid in build_processes:
+                try:
+                    if psutil.pid_exists(pid):
+                        try:
+                            proc = psutil.Process(pid)
+                            for file in proc.open_files():
+                                try:
+                                    os.close(file.fd)
+                                except:
+                                    pass
+                            for conn in proc.connections():
+                                try:
+                                    socket = conn.fd
+                                    os.close(socket)
+                                except:
+                                    pass
+                        except (psutil.NoSuchProcess, psutil.AccessDenied):
+                            pass
+
+                        os.kill(pid, signal.SIGKILL)
+                        remaining_processes.add(pid)
+                except ProcessLookupError:
+                    continue
+
+            temp_files = [
+                'temp.sh',
+                'execution_script_*.py',
+                'context_script.py'
+            ]
+
+            for pattern in temp_files:
+                for file in build_dir.glob(pattern):
+                    try:
+                        file.unlink()
+                    except (PermissionError, FileNotFoundError):
+                        continue
+
+            memory_released = 0
+
+            try:
+                memory_released = sum(
+                    psutil.Process(pid).memory_info().rss
+                    for pid in build_processes
+                    if psutil.pid_exists(pid)
+                )
+            except:
+                pass
 
             build_in_progress = False
             abort_requested = False
 
-            try:
-                status_file = os.path.join(flatpack_directory, 'build', 'build_status.json')
-                status_data = {
-                    "status": "aborted",
-                    "timestamp": datetime.now().isoformat(),
-                    "error": "Build forcefully terminated"
-                }
-                os.makedirs(os.path.dirname(status_file), exist_ok=True)
-                with open(status_file, 'w') as f:
-                    json.dump(status_data, f)
-            except Exception as e:
-                logger.error(f"Error updating status file: {e}")
+            status_file = build_dir / 'build_status.json'
+            status_data = {
+                "status": "aborted",
+                "timestamp": datetime.now().isoformat(),
+                "error": "Build forcefully terminated",
+                "killed_processes": len(build_processes),
+                "remaining_processes": len(remaining_processes),
+                "memory_released_bytes": memory_released
+            }
 
-            logger.info("Build forcefully terminated")
+            os.makedirs(status_file.parent, exist_ok=True)
+            with open(status_file, 'w') as f:
+                json.dump(status_data, f)
+
+            logger.info(
+                "Build forcefully terminated. Killed %d processes, %d required force kill. Memory released: %d bytes",
+                len(build_processes),
+                len(remaining_processes),
+                memory_released
+            )
+
             return JSONResponse(
-                content={"message": "Build process forcefully terminated."},
+                content={
+                    "message": "Build process forcefully terminated.",
+                    "processes_terminated": len(build_processes),
+                    "processes_force_killed": len(remaining_processes),
+                    "memory_released_bytes": memory_released
+                },
                 status_code=200
             )
 
         except Exception as e:
-            logger.error(f"Error in force abort: {e}")
+            logger.error("Error in force abort: %s", str(e))
             build_in_progress = False
             abort_requested = False
             return JSONResponse(
-                content={"message": "Attempted force abort with errors."},
-                status_code=200
+                content={
+                    "message": f"Attempted force abort with errors: {str(e)}",
+                    "error": str(e)
+                },
+                status_code=500
             )
 
     @app.post("/api/build", dependencies=[Depends(csrf_protect)])
