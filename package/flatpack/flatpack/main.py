@@ -3963,9 +3963,10 @@ def fpk_cli_handle_run(args, session):
         port=port,
         timeout_keep_alive=0,
         timeout_graceful_shutdown=1,
-        loop="auto",
-        lifespan="off"
+        loop="asyncio",
+        lifespan="on"
     )
+
     server = uvicorn.Server(config)
 
     background_tasks = BackgroundTasks()
