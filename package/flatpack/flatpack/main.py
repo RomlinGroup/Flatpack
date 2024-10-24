@@ -42,6 +42,7 @@ import shlex
 import shutil
 import signal
 import socket
+import sqlite3
 import stat
 import string
 import subprocess
