@@ -3231,7 +3231,7 @@ def setup_routes(app):
     async def test_csrf(request: Request):
         return {"message": "CSRF check passed successfully!"}
 
-    @app.get("/test_db")
+    @app.get("/test-db")
     async def test_db():
         try:
             initialize_database_manager(str(flatpack_directory))
@@ -3575,7 +3575,7 @@ def setup_routes(app):
             logger.error("Error listing media files: %s", str(e))
             raise HTTPException(status_code=500, detail=f"Error listing media files: {str(e)}")
 
-    @app.get("/api/load_file")
+    @app.get("/api/load-file")
     async def load_file(
             filename: str,
             token: str = Depends(authenticate_token)
@@ -3690,7 +3690,7 @@ def setup_routes(app):
         else:
             raise HTTPException(status_code=404, detail="Log file not found")
 
-    @app.post("/api/save_file", dependencies=[Depends(csrf_protect)])
+    @app.post("/api/save-file", dependencies=[Depends(csrf_protect)])
     async def save_file(
             request: Request,
             filename: str = Form(...),
@@ -3770,12 +3770,12 @@ def setup_routes(app):
             raise HTTPException(status_code=500,
                                 detail=f"An error occurred while deleting the schedule entry: {e}")
 
-    @app.get("/api/user_status")
+    @app.get("/api/user-status")
     async def user_status(auth: str = Depends(authenticate_token)):
         """Check if the user is authenticated."""
         return JSONResponse(content={"authenticated": True}, status_code=200)
 
-    @app.post("/api/validate_token")
+    @app.post("/api/validate-token")
     async def validate_token(request: Request, api_token: str = Form(...)):
         """Validate the provided API token and create a session."""
         global VALIDATION_ATTEMPTS
