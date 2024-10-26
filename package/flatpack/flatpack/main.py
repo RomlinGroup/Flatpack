@@ -207,6 +207,7 @@ class EndpointFilter(logging.Filter):
             for endpoint in [
                 'GET /api/heartbeat',
                 'GET /api/build-status',
+                'GET /api/list-media-files',
                 'GET /csrf-token',
                 'POST /api/clear-build-status'
             ]
@@ -3552,7 +3553,7 @@ def setup_routes(app):
             logger.error("An error occurred while updating the hook: %s", e)
             raise HTTPException(status_code=500, detail=f"An error occurred while updating the hook: {e}")
 
-    @app.get("/api/list_media_files", dependencies=[Depends(csrf_protect)])
+    @app.get("/api/list-media-files", dependencies=[Depends(csrf_protect)])
     async def list_media_files(token: str = Depends(authenticate_token)):
         global flatpack_directory
         if not flatpack_directory:
