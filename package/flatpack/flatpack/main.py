@@ -3192,7 +3192,7 @@ def setup_routes(app):
                 logger.error("Timed out while trying to disconnect ngrok ingress.")
                 console.print("Timed out while trying to disconnect ngrok ingress.", style="bold red")
             except Exception as e:
-                logger.error(f"Failed to disconnect ngrok ingress: {e}")
+                logger.error("Failed to disconnect ngrok ingress: %s", e)
                 console.print(f"Failed to disconnect ngrok ingress: {e}", style="bold red")
             finally:
                 app.state.ngrok_listener = None
@@ -3991,7 +3991,7 @@ def fpk_cli_handle_run(args, session):
     except KeyboardInterrupt:
         force_exit()
     except Exception as e:
-        logger.error(f"Server error: {e}")
+        logger.error("Server error: %s", e)
         console.print(f"Server error: {e}", style="bold red")
         force_exit()
 
