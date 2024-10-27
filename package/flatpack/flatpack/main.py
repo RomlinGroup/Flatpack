@@ -219,6 +219,7 @@ class Hook(BaseModel):
     hook_placement: str
     hook_script: str
     hook_type: str
+    show_on_frontpage: bool = False
 
 
 csrf_cookie = APIKeyCookie(name="csrf_token")
@@ -304,7 +305,14 @@ def add_hook_to_database(hook: Hook):
                 "existing_hook": existing_hook,
                 "new_hook": hook.dict()
             }
-        hook_id = db_manager.add_hook(hook.hook_name, hook.hook_placement, hook.hook_script, hook.hook_type)
+
+        hook_id = db_manager.add_hook(
+            hook.hook_name,
+            hook.hook_placement,
+            hook.hook_script,
+            hook.hook_type,
+            hook.show_on_frontpage
+        )
         return {"message": "Hook added successfully.", "hook_id": hook_id}
     except Exception as e:
         logger.error("An error occurred while adding the hook: %s", e)
@@ -3542,12 +3550,20 @@ def setup_routes(app):
     async def update_hook(hook_id: int, hook: Hook, token: str = Depends(authenticate_token)):
         ensure_database_initialized()
         try:
-            success = db_manager.update_hook(hook_id, hook.hook_name, hook.hook_placement, hook.hook_script,
-                                             hook.hook_type)
+            success = db_manager.update_hook(
+                hook_id,
+                hook.hook_name,
+                hook.hook_placement,
+                hook.hook_script,
+                hook.hook_type,
+                hook.show_on_frontpage
+            )
+
             if success:
                 hooks = get_all_hooks_from_database()
                 save_hooks_to_file(hooks)
                 return JSONResponse(content={"message": "Hook updated successfully."}, status_code=200)
+
             raise HTTPException(status_code=404, detail="Hook not found or update failed.")
         except Exception as e:
             logger.error("An error occurred while updating the hook: %s", e)

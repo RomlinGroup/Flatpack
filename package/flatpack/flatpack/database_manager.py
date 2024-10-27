@@ -73,6 +73,7 @@ class DatabaseManager:
                 hook_placement TEXT NOT NULL,
                 hook_script TEXT NOT NULL,
                 hook_type TEXT NOT NULL,
+                show_on_frontpage BOOLEAN DEFAULT 0,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
             """,
@@ -142,12 +143,13 @@ class DatabaseManager:
         ]
 
     # Hook operations
-    def add_hook(self, hook_name: str, hook_placement: str, hook_script: str, hook_type: str) -> int:
+    def add_hook(self, hook_name: str, hook_placement: str, hook_script: str, hook_type: str,
+                 show_on_frontpage: bool = False) -> int:
         query = """
-        INSERT INTO flatpack_hooks (hook_name, hook_placement, hook_script, hook_type)
-        VALUES (?, ?, ?, ?)
+        INSERT INTO flatpack_hooks (hook_name, hook_placement, hook_script, hook_type, show_on_frontpage)
+        VALUES (?, ?, ?, ?, ?)
         """
-        self._execute_query(query, (hook_name, hook_placement, hook_script, hook_type))
+        self._execute_query(query, (hook_name, hook_placement, hook_script, hook_type, int(show_on_frontpage)))
         return self._fetch_one("SELECT last_insert_rowid()")[0]
 
     def delete_hook(self, hook_id: int) -> bool:
@@ -165,7 +167,7 @@ class DatabaseManager:
 
     def get_all_hooks(self) -> List[Dict[str, Any]]:
         query = """
-        SELECT id, hook_name, hook_placement, hook_script, hook_type, created_at
+        SELECT id, hook_name, hook_placement, hook_script, hook_type, show_on_frontpage, created_at
         FROM flatpack_hooks
         ORDER BY created_at DESC
         """
@@ -177,14 +179,15 @@ class DatabaseManager:
                 "hook_placement": row[2],
                 "hook_script": row[3],
                 "hook_type": row[4],
-                "created_at": row[5]
+                "show_on_frontpage": bool(row[5]),
+                "created_at": row[6]
             }
             for row in results
         ]
 
     def get_hook_by_name(self, hook_name: str) -> Optional[Dict[str, Any]]:
         query = """
-        SELECT id, hook_name, hook_placement, hook_script, hook_type, created_at
+        SELECT id, hook_name, hook_placement, hook_script, hook_type, show_on_frontpage, created_at
         FROM flatpack_hooks
         WHERE hook_name = ?
         """
@@ -196,7 +199,8 @@ class DatabaseManager:
                 "hook_placement": result[2],
                 "hook_script": result[3],
                 "hook_type": result[4],
-                "created_at": result[5]
+                "show_on_frontpage": bool(result[5]),
+                "created_at": result[6]
             }
         return None
 
@@ -205,14 +209,16 @@ class DatabaseManager:
         result = self._fetch_one(query, (hook_name,))
         return result[0] > 0 if result else False
 
-    def update_hook(self, hook_id: int, hook_name: str, hook_placement: str, hook_script: str, hook_type: str) -> bool:
+    def update_hook(self, hook_id: int, hook_name: str, hook_placement: str, hook_script: str, hook_type: str,
+                    show_on_frontpage: bool = False) -> bool:
         query = """
         UPDATE flatpack_hooks 
-        SET hook_name = ?, hook_placement = ?, hook_script = ?, hook_type = ?
+        SET hook_name = ?, hook_placement = ?, hook_script = ?, hook_type = ?, show_on_frontpage = ?
         WHERE id = ?
         """
         try:
-            self._execute_query(query, (hook_name, hook_placement, hook_script, hook_type, hook_id))
+            self._execute_query(query,
+                                (hook_name, hook_placement, hook_script, hook_type, int(show_on_frontpage), hook_id))
             return True
         except Exception as e:
             logger.error("Error updating hook with ID %s: %s", hook_id, str(e))
