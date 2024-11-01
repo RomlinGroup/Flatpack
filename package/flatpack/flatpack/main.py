@@ -222,6 +222,13 @@ class Hook(BaseModel):
     show_on_frontpage: bool = False
 
 
+class SourceHookMapping(BaseModel):
+    sourceId: str
+    targetId: str
+    sourceType: str
+    targetType: str
+
+
 csrf_cookie = APIKeyCookie(name="csrf_token")
 db_manager = None
 
@@ -3501,6 +3508,20 @@ def setup_routes(app):
         current_time = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
         return JSONResponse(content={"server_time": current_time}, status_code=200)
 
+    @app.get("/api/hook-mappings/{target_id}", dependencies=[Depends(csrf_protect)])
+    async def get_hook_mappings(target_id: str, token: str = Depends(authenticate_token)):
+        """Get all source mappings for a specific hook."""
+        ensure_database_initialized()
+        try:
+            mappings = db_manager.get_mappings_by_target(target_id)
+            return JSONResponse(content={"mappings": mappings})
+        except Exception as e:
+            logger.error("Error retrieving hook mappings: %s", e)
+            raise HTTPException(
+                status_code=500,
+                detail=f"An error occurred while retrieving the mappings: {e}"
+            )
+
     @app.post("/api/hooks", dependencies=[Depends(csrf_protect)])
     async def add_hook(hook: Hook, token: str = Depends(authenticate_token)):
         try:
@@ -3785,6 +3806,108 @@ def setup_routes(app):
             logger.error("An error occurred while deleting the schedule entry: %s", e)
             raise HTTPException(status_code=500,
                                 detail=f"An error occurred while deleting the schedule entry: {e}")
+
+    @app.post("/api/source-hook-mappings", dependencies=[Depends(csrf_protect)])
+    async def add_source_hook_mappings(
+            mappings: List[SourceHookMapping],
+            token: str = Depends(authenticate_token)
+    ):
+        """Add new source-to-hook mappings."""
+        ensure_database_initialized()
+
+        try:
+            results = []
+            for mapping in mappings:
+                try:
+                    # Delete any existing mappings for this source
+                    db_manager.delete_all_source_mappings(mapping.sourceId)
+
+                    # Add the new mapping
+                    mapping_id = db_manager.add_source_hook_mapping(
+                        mapping.sourceId,
+                        mapping.targetId,
+                        mapping.sourceType,
+                        mapping.targetType
+                    )
+
+                    results.append({
+                        "success": True,
+                        "mapping": {
+                            "source_id": mapping.sourceId,
+                            "target_id": mapping.targetId,
+                            "source_type": mapping.sourceType,
+                            "target_type": mapping.targetType,
+                            "id": mapping_id
+                        }
+                    })
+
+                except ValueError as e:
+                    results.append({
+                        "success": False,
+                        "mapping": mapping.dict(),
+                        "error": str(e)
+                    })
+
+            return JSONResponse(
+                content={"results": results},
+                status_code=200
+            )
+
+        except Exception as e:
+            logger.error("Error adding source-hook mappings: %s", e)
+            raise HTTPException(
+                status_code=500,
+                detail=f"An error occurred while adding the mappings: {e}"
+            )
+
+    @app.get("/api/source-hook-mappings", dependencies=[Depends(csrf_protect)])
+    async def get_all_source_hook_mappings(token: str = Depends(authenticate_token)):
+        """Get all source-to-hook mappings."""
+        ensure_database_initialized()
+        try:
+            mappings = db_manager.get_all_source_hook_mappings()
+            return JSONResponse(content={"mappings": mappings})
+        except Exception as e:
+            logger.error("Error retrieving all source-hook mappings: %s", e)
+            raise HTTPException(
+                status_code=500,
+                detail=f"An error occurred while retrieving the mappings: {e}"
+            )
+
+    @app.get("/api/source-hook-mappings/{source_id}", dependencies=[Depends(csrf_protect)])
+    async def get_source_mappings(source_id: str, token: str = Depends(authenticate_token)):
+        """Get all hook mappings for a specific source."""
+        ensure_database_initialized()
+        try:
+            mappings = db_manager.get_mappings_by_source(source_id)
+            return JSONResponse(content={"mappings": mappings})
+        except Exception as e:
+            logger.error("Error retrieving source mappings: %s", e)
+            raise HTTPException(
+                status_code=500,
+                detail=f"An error occurred while retrieving the mappings: {e}"
+            )
+
+    @app.delete("/api/source-hook-mappings/{source_id}/{target_id}", dependencies=[Depends(csrf_protect)])
+    async def delete_mapping(
+            source_id: str,
+            target_id: str,
+            token: str = Depends(authenticate_token)
+    ):
+        """Delete a specific source-to-hook mapping."""
+        ensure_database_initialized()
+        try:
+            if db_manager.delete_source_hook_mapping(source_id, target_id):
+                return JSONResponse(
+                    content={"message": "Mapping deleted successfully."}
+                )
+            raise HTTPException(status_code=404, detail="Mapping not found")
+        except Exception as e:
+            logger.error("Error deleting source-hook mapping: %s", e)
+            raise HTTPException(
+                status_code=500,
+                detail=f"An error occurred while deleting the mapping: {e}"
+            )
 
     @app.get("/api/user-status")
     async def user_status(auth: str = Depends(authenticate_token)):

@@ -93,6 +93,17 @@ class DatabaseManager:
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 last_run TIMESTAMP
             )
+            """,
+            """
+            CREATE TABLE IF NOT EXISTS flatpack_source_hook_mappings (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                source_id TEXT NOT NULL,
+                target_id TEXT NOT NULL,
+                source_type TEXT NOT NULL,
+                target_type TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(source_id, target_id)
+            )
             """
         ]
 
@@ -224,6 +235,25 @@ class DatabaseManager:
             logger.error("Error updating hook with ID %s: %s", hook_id, str(e))
             return False
 
+    # Metadata operations
+    def delete_metadata(self, key: str) -> bool:
+        query = "DELETE FROM flatpack_metadata WHERE key = ?"
+        self._execute_query(query, (key))
+        return True
+
+    def get_metadata(self, key: str) -> Optional[str]:
+        query = "SELECT value FROM flatpack_metadata WHERE key = ?"
+        result = self._fetch_one(query, (key))
+        return result[0] if result else None
+
+    def set_metadata(self, key: str, value: str) -> bool:
+        query = """
+        INSERT OR REPLACE INTO flatpack_metadata (key, value)
+        VALUES (?, ?)
+        """
+        self._execute_query(query, (key, value))
+        return True
+
     # Schedule operations
     def add_schedule(self, schedule_type: str, pattern: Optional[str], datetimes: Optional[List[str]]) -> int:
         query = """
@@ -296,21 +326,155 @@ class DatabaseManager:
         self._execute_query(query, (last_run.isoformat(), schedule_id))
         return True
 
-    # Metadata operations
-    def delete_metadata(self, key: str) -> bool:
-        query = "DELETE FROM flatpack_metadata WHERE key = ?"
-        self._execute_query(query, (key))
-        return True
+    # Source-Hook Mapping operations
+    def add_source_hook_mapping(self, source_id: str, target_id: str, source_type: str, target_type: str) -> int:
+        logger.info(
+            "Adding new source-hook mapping: source_id=%s, target_id=%s, source_type=%s, target_type=%s",
+            source_id, target_id, source_type, target_type
+        )
 
-    def get_metadata(self, key: str) -> Optional[str]:
-        query = "SELECT value FROM flatpack_metadata WHERE key = ?"
-        result = self._fetch_one(query, (key))
-        return result[0] if result else None
-
-    def set_metadata(self, key: str, value: str) -> bool:
         query = """
-        INSERT OR REPLACE INTO flatpack_metadata (key, value)
-        VALUES (?, ?)
+        INSERT INTO flatpack_source_hook_mappings 
+        (source_id, target_id, source_type, target_type)
+        VALUES (?, ?, ?, ?)
         """
-        self._execute_query(query, (key, value))
-        return True
+
+        try:
+            self._execute_query(query, (source_id, target_id, source_type, target_type))
+            mapping_id = self._fetch_one("SELECT last_insert_rowid()")[0]
+            logger.info("Successfully added source-hook mapping with ID: %s", mapping_id)
+            return mapping_id
+        except sqlite3.IntegrityError as e:
+            logger.error("Failed to add source-hook mapping - mapping already exists: %s", e)
+            raise ValueError("This source-hook mapping already exists")
+        except Exception as e:
+            logger.error("Error adding source-hook mapping: %s", e)
+            raise
+
+    def get_all_source_hook_mappings(self) -> List[Dict[str, Any]]:
+        logger.info("Retrieving all source-hook mappings")
+
+        query = """
+        SELECT id, source_id, target_id, source_type, target_type, created_at
+        FROM flatpack_source_hook_mappings
+        ORDER BY created_at DESC
+        """
+
+        try:
+            results = self._fetch_all(query)
+            mappings = [
+                {
+                    "id": row[0],
+                    "source_id": row[1],
+                    "target_id": row[2],
+                    "source_type": row[3],
+                    "target_type": row[4],
+                    "created_at": row[5]
+                }
+                for row in results
+            ]
+            logger.info("Successfully retrieved %d source-hook mappings", len(mappings))
+            return mappings
+        except Exception as e:
+            logger.error("Error retrieving source-hook mappings: %s", e)
+            raise
+
+    def get_mappings_by_source(self, source_id: str) -> List[Dict[str, Any]]:
+        logger.info("Retrieving mappings for source_id: %s", source_id)
+
+        query = """
+        SELECT id, source_id, target_id, source_type, target_type, created_at
+        FROM flatpack_source_hook_mappings
+        WHERE source_id = ?
+        ORDER BY created_at DESC
+        """
+
+        try:
+            results = self._fetch_all(query, (source_id,))
+            mappings = [
+                {
+                    "id": row[0],
+                    "source_id": row[1],
+                    "target_id": row[2],
+                    "source_type": row[3],
+                    "target_type": row[4],
+                    "created_at": row[5]
+                }
+                for row in results
+            ]
+            logger.info("Found %d mappings for source_id: %s", len(mappings), source_id)
+            return mappings
+        except Exception as e:
+            logger.error("Error retrieving mappings for source_id %s: %s", source_id, e)
+            raise
+
+    def get_mappings_by_target(self, target_id: str) -> List[Dict[str, Any]]:
+        logger.info("Retrieving mappings for target_id: %s", target_id)
+
+        query = """
+        SELECT id, source_id, target_id, source_type, target_type, created_at
+        FROM flatpack_source_hook_mappings
+        WHERE target_id = ?
+        ORDER BY created_at DESC
+        """
+
+        try:
+            results = self._fetch_all(query, (target_id,))
+            mappings = [
+                {
+                    "id": row[0],
+                    "source_id": row[1],
+                    "target_id": row[2],
+                    "source_type": row[3],
+                    "target_type": row[4],
+                    "created_at": row[5]
+                }
+                for row in results
+            ]
+            logger.info("Found %d mappings for target_id: %s", len(mappings), target_id)
+            return mappings
+        except Exception as e:
+            logger.error("Error retrieving mappings for target_id %s: %s", target_id, e)
+            raise
+
+    def delete_source_hook_mapping(self, source_id: str, target_id: str) -> bool:
+        logger.info("Attempting to delete source-hook mapping: source_id=%s, target_id=%s", source_id, target_id)
+
+        query = """
+        DELETE FROM flatpack_source_hook_mappings 
+        WHERE source_id = ? AND target_id = ?
+        """
+
+        try:
+            self._execute_query(query, (source_id, target_id))
+            logger.info("Successfully deleted source-hook mapping")
+            return True
+        except Exception as e:
+            logger.error("Error deleting source-hook mapping: %s", e)
+            return False
+
+    def delete_all_source_mappings(self, source_id: str) -> bool:
+        logger.info("Attempting to delete all mappings for source_id: %s", source_id)
+
+        query = "DELETE FROM flatpack_source_hook_mappings WHERE source_id = ?"
+
+        try:
+            self._execute_query(query, (source_id,))
+            logger.info("Successfully deleted all mappings for source_id: %s", source_id)
+            return True
+        except Exception as e:
+            logger.error("Error deleting mappings for source_id %s: %s", source_id, e)
+            return False
+
+    def delete_all_target_mappings(self, target_id: str) -> bool:
+        logger.info("Attempting to delete all mappings for target_id: %s", target_id)
+
+        query = "DELETE FROM flatpack_source_hook_mappings WHERE target_id = ?"
+
+        try:
+            self._execute_query(query, (target_id,))
+            logger.info("Successfully deleted all mappings for target_id: %s", target_id)
+            return True
+        except Exception as e:
+            logger.error("Error deleting mappings for target_id %s: %s", target_id, e)
+            return False
