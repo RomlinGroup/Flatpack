@@ -222,6 +222,10 @@ class Hook(BaseModel):
     show_on_frontpage: bool = False
 
 
+class MappingResults(BaseModel):
+    mappings: List[dict]
+
+
 class SourceHookMapping(BaseModel):
     sourceId: str
     targetId: str
@@ -3807,107 +3811,67 @@ def setup_routes(app):
             raise HTTPException(status_code=500,
                                 detail=f"An error occurred while deleting the schedule entry: {e}")
 
-    @app.post("/api/source-hook-mappings", dependencies=[Depends(csrf_protect)])
+    @app.post("/api/source-hook-mappings", response_model=MappingResults)
     async def add_source_hook_mappings(
             mappings: List[SourceHookMapping],
             token: str = Depends(authenticate_token)
-    ):
-        """Add new source-to-hook mappings."""
-        ensure_database_initialized()
-
+    ) -> JSONResponse:
         try:
+            logger.info(f"Raw request data: {mappings}")
+            logger.info(f"Data type: {type(mappings)}")
+            for mapping in mappings:
+                logger.info(f"Mapping data: {mapping.dict()}")
+
+            ensure_database_initialized()
+            if not db_manager.delete_all_source_hook_mappings():
+                raise HTTPException(status_code=500, detail="Failed to clear existing mappings")
+
+            if not mappings:
+                return JSONResponse(content={"mappings": []})
+
             results = []
             for mapping in mappings:
                 try:
-                    # Delete any existing mappings for this source
-                    db_manager.delete_all_source_mappings(mapping.sourceId)
+                    if not mapping.sourceId or not mapping.targetId:
+                        logger.error(f"Invalid mapping data: sourceId={mapping.sourceId}, targetId={mapping.targetId}")
+                        raise ValueError("Missing required sourceId or targetId")
 
-                    # Add the new mapping
                     mapping_id = db_manager.add_source_hook_mapping(
-                        mapping.sourceId,
-                        mapping.targetId,
-                        mapping.sourceType,
-                        mapping.targetType
+                        source_id=mapping.sourceId,
+                        target_id=mapping.targetId,
+                        source_type=mapping.sourceType,
+                        target_type=mapping.targetType
                     )
-
                     results.append({
-                        "success": True,
-                        "mapping": {
-                            "source_id": mapping.sourceId,
-                            "target_id": mapping.targetId,
-                            "source_type": mapping.sourceType,
-                            "target_type": mapping.targetType,
-                            "id": mapping_id
-                        }
+                        "id": mapping_id,
+                        "source_id": mapping.sourceId,
+                        "target_id": mapping.targetId,
+                        "source_type": mapping.sourceType,
+                        "target_type": mapping.targetType
                     })
-
                 except ValueError as e:
-                    results.append({
-                        "success": False,
-                        "mapping": mapping.dict(),
-                        "error": str(e)
-                    })
+                    logger.error(f"Validation error for mapping: {str(e)}")
+                    continue
+                except Exception as e:
+                    logger.error(f"Unexpected error processing mapping: {str(e)}")
+                    continue
 
-            return JSONResponse(
-                content={"results": results},
-                status_code=200
-            )
-
+            return JSONResponse(content={"mappings": results})
         except Exception as e:
-            logger.error("Error adding source-hook mappings: %s", e)
-            raise HTTPException(
-                status_code=500,
-                detail=f"An error occurred while adding the mappings: {e}"
-            )
+            logger.error(f"Error in add_source_hook_mappings: {str(e)}")
+            raise HTTPException(status_code=500, detail=str(e))
 
-    @app.get("/api/source-hook-mappings", dependencies=[Depends(csrf_protect)])
-    async def get_all_source_hook_mappings(token: str = Depends(authenticate_token)):
-        """Get all source-to-hook mappings."""
-        ensure_database_initialized()
-        try:
-            mappings = db_manager.get_all_source_hook_mappings()
-            return JSONResponse(content={"mappings": mappings})
-        except Exception as e:
-            logger.error("Error retrieving all source-hook mappings: %s", e)
-            raise HTTPException(
-                status_code=500,
-                detail=f"An error occurred while retrieving the mappings: {e}"
-            )
-
-    @app.get("/api/source-hook-mappings/{source_id}", dependencies=[Depends(csrf_protect)])
-    async def get_source_mappings(source_id: str, token: str = Depends(authenticate_token)):
-        """Get all hook mappings for a specific source."""
-        ensure_database_initialized()
-        try:
-            mappings = db_manager.get_mappings_by_source(source_id)
-            return JSONResponse(content={"mappings": mappings})
-        except Exception as e:
-            logger.error("Error retrieving source mappings: %s", e)
-            raise HTTPException(
-                status_code=500,
-                detail=f"An error occurred while retrieving the mappings: {e}"
-            )
-
-    @app.delete("/api/source-hook-mappings/{source_id}/{target_id}", dependencies=[Depends(csrf_protect)])
-    async def delete_mapping(
-            source_id: str,
-            target_id: str,
+    @app.get("/api/source-hook-mappings")
+    async def get_all_source_hook_mappings(
             token: str = Depends(authenticate_token)
-    ):
-        """Delete a specific source-to-hook mapping."""
-        ensure_database_initialized()
+    ) -> JSONResponse:
         try:
-            if db_manager.delete_source_hook_mapping(source_id, target_id):
-                return JSONResponse(
-                    content={"message": "Mapping deleted successfully."}
-                )
-            raise HTTPException(status_code=404, detail="Mapping not found")
+            ensure_database_initialized()
+            mappings = db_manager.get_all_source_hook_mappings()
+            return JSONResponse(content={"mappings": mappings if mappings else []})
         except Exception as e:
-            logger.error("Error deleting source-hook mapping: %s", e)
-            raise HTTPException(
-                status_code=500,
-                detail=f"An error occurred while deleting the mapping: {e}"
-            )
+            logger.error("Error retrieving source-hook mappings: %s", e)
+            raise HTTPException(status_code=500, detail=str(e))
 
     @app.get("/api/user-status")
     async def user_status(auth: str = Depends(authenticate_token)):
