@@ -139,6 +139,7 @@ HOME_DIR.mkdir(exist_ok=True)
 
 CONFIG_FILE_PATH = HOME_DIR / ".fpk_config.toml"
 GITHUB_CACHE = HOME_DIR / ".fpk_github.cache"
+CONNECTIONS_FILE = "build/connections.json"
 HOOKS_FILE = "build/hooks.json"
 
 BASE_URL = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse"
@@ -3124,6 +3125,63 @@ def fpk_cli_handle_list(args, session):
         logger.error("No directories found.")
 
 
+# Connections
+def save_connections_to_file_and_db(mappings: List[SourceHookMapping]) -> None:
+    """
+    Save the source-hook mappings to both the database and the connections file.
+
+    Args:
+        mappings (List[SourceHookMapping]): List of mapping objects containing source and target information
+    """
+    global flatpack_directory
+
+    if not flatpack_directory:
+        logger.error("Flatpack directory is not set")
+        raise ValueError("Flatpack directory is not set")
+
+    connections_file = os.path.join(flatpack_directory, CONNECTIONS_FILE)
+
+    os.makedirs(os.path.dirname(connections_file), exist_ok=True)
+
+    connections_data = {
+        "connections": [
+            {
+                "source_id": mapping.sourceId,
+                "target_id": mapping.targetId,
+                "source_type": mapping.sourceType,
+                "target_type": mapping.targetType
+            }
+            for mapping in mappings
+        ]
+    }
+
+    try:
+        with open(connections_file, 'w') as f:
+            json.dump(connections_data, f, indent=4)
+        logger.info("Saved connections to file: %s", connections_file)
+    except Exception as e:
+        logger.error("Failed to save connections to file: %s", e)
+        raise
+
+    ensure_database_initialized()
+
+    try:
+        if not db_manager.delete_all_source_hook_mappings():
+            raise Exception("Failed to clear existing mappings from database")
+
+        for mapping in mappings:
+            db_manager.add_source_hook_mapping(
+                source_id=mapping.sourceId,
+                target_id=mapping.targetId,
+                source_type=mapping.sourceType,
+                target_type=mapping.targetType
+            )
+        logger.info("Saved connections to database")
+    except Exception as e:
+        logger.error("Failed to save connections to database: %s", e)
+        raise
+
+
 # Hooks
 def load_and_get_hooks():
     hooks_file_path = os.path.join(flatpack_directory, HOOKS_FILE)
@@ -3822,28 +3880,20 @@ def setup_routes(app):
             for mapping in mappings:
                 logger.info(f"Mapping data: {mapping.dict()}")
 
-            ensure_database_initialized()
-            if not db_manager.delete_all_source_hook_mappings():
-                raise HTTPException(status_code=500, detail="Failed to clear existing mappings")
-
             if not mappings:
                 return JSONResponse(content={"mappings": []})
 
             results = []
+            valid_mappings = []
+
             for mapping in mappings:
                 try:
                     if not mapping.sourceId or not mapping.targetId:
                         logger.error(f"Invalid mapping data: sourceId={mapping.sourceId}, targetId={mapping.targetId}")
                         raise ValueError("Missing required sourceId or targetId")
 
-                    mapping_id = db_manager.add_source_hook_mapping(
-                        source_id=mapping.sourceId,
-                        target_id=mapping.targetId,
-                        source_type=mapping.sourceType,
-                        target_type=mapping.targetType
-                    )
+                    valid_mappings.append(mapping)
                     results.append({
-                        "id": mapping_id,
                         "source_id": mapping.sourceId,
                         "target_id": mapping.targetId,
                         "source_type": mapping.sourceType,
@@ -3855,6 +3905,9 @@ def setup_routes(app):
                 except Exception as e:
                     logger.error(f"Unexpected error processing mapping: {str(e)}")
                     continue
+
+            if valid_mappings:
+                save_connections_to_file_and_db(valid_mappings)
 
             return JSONResponse(content={"mappings": results})
         except Exception as e:
