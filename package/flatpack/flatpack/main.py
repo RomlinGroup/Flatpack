@@ -3924,10 +3924,10 @@ def setup_routes(app):
             token: str = Depends(authenticate_token)
     ) -> JSONResponse:
         try:
-            logger.info(f"Raw request data: {mappings}")
-            logger.info(f"Data type: {type(mappings)}")
+            logger.info("Raw request data: %s", mappings)
+            logger.info("Data type: %s", type(mappings))
             for mapping in mappings:
-                logger.info(f"Mapping data: {mapping.dict()}")
+                logger.info("Mapping data: %s", mapping.dict())
 
             if not mappings:
                 return JSONResponse(content={"mappings": []})
@@ -3938,7 +3938,8 @@ def setup_routes(app):
             for mapping in mappings:
                 try:
                     if not mapping.sourceId or not mapping.targetId:
-                        logger.error(f"Invalid mapping data: sourceId={mapping.sourceId}, targetId={mapping.targetId}")
+                        logger.error("Invalid mapping data: sourceId=%s, targetId=%s", mapping.sourceId,
+                                     mapping.targetId)
                         raise ValueError("Missing required sourceId or targetId")
 
                     valid_mappings.append(mapping)
@@ -3949,10 +3950,10 @@ def setup_routes(app):
                         "target_type": mapping.targetType
                     })
                 except ValueError as e:
-                    logger.error(f"Validation error for mapping: {str(e)}")
+                    logger.error("Validation error for mapping: %s", str(e))
                     continue
                 except Exception as e:
-                    logger.error(f"Unexpected error processing mapping: {str(e)}")
+                    logger.error("Unexpected error processing mapping: %s", str(e))
                     continue
 
             if valid_mappings:
@@ -3960,7 +3961,7 @@ def setup_routes(app):
 
             return JSONResponse(content={"mappings": results})
         except Exception as e:
-            logger.error(f"Error in add_source_hook_mappings: {str(e)}")
+            logger.error("Error in add_source_hook_mappings: %s", str(e))
             raise HTTPException(status_code=500, detail=str(e))
 
     @app.get("/api/source-hook-mappings")
