@@ -3964,6 +3964,50 @@ def setup_routes(app):
             logger.error("Error in add_source_hook_mappings: %s", str(e))
             raise HTTPException(status_code=500, detail=str(e))
 
+    @app.delete("/api/source-hook-mappings/{mapping_id}", dependencies=[Depends(csrf_protect)])
+    async def delete_source_hook_mapping(
+            mapping_id: int,
+            token: str = Depends(authenticate_token)
+    ) -> JSONResponse:
+        """Delete a specific source-hook mapping by its ID."""
+        try:
+            ensure_database_initialized()
+
+            mapping = db_manager.get_source_hook_mapping(mapping_id)
+
+            if not mapping:
+                raise HTTPException(status_code=404, detail="Mapping not found")
+
+            success = db_manager.delete_source_hook_mapping(mapping_id)
+
+            if not success:
+                raise HTTPException(status_code=500, detail="Failed to delete mapping")
+
+            remaining_mappings = db_manager.get_all_source_hook_mappings()
+
+            converted_mappings = [
+                SourceHookMapping(
+                    sourceId=m["source_id"],
+                    targetId=m["target_id"],
+                    sourceType=m["source_type"],
+                    targetType=m["target_type"]
+                )
+                for m in remaining_mappings
+            ]
+
+            save_connections_to_file_and_db(converted_mappings)
+
+            return JSONResponse(
+                content={"message": "Mapping deleted successfully"},
+                status_code=200
+            )
+
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error("Error deleting source-hook mapping: %s", str(e))
+            raise HTTPException(status_code=500, detail=str(e))
+
     @app.get("/api/source-hook-mappings")
     async def get_all_source_hook_mappings(
             token: str = Depends(authenticate_token)

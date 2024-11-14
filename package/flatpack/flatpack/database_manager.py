@@ -407,3 +407,53 @@ class DatabaseManager:
         except Exception as e:
             logger.error("Error retrieving source-hook mappings: %s", e)
             raise
+
+    def delete_source_hook_mapping(self, mapping_id: int) -> bool:
+        """Delete a specific source-hook mapping by its ID.
+
+        Args:
+            mapping_id (int): The ID of the mapping to delete.
+
+        Returns:
+            bool: True if deletion was successful, False otherwise.
+        """
+        logger.info("Attempting to delete source-hook mapping with ID: %s", mapping_id)
+
+        query = "DELETE FROM flatpack_source_hook_mappings WHERE id = ?"
+        try:
+            self._execute_query(query, (mapping_id,))
+            logger.info("Successfully deleted source-hook mapping with ID: %s", mapping_id)
+            return True
+        except Exception as e:
+            logger.error("Error deleting source-hook mapping with ID %s: %s", mapping_id, e)
+            return False
+
+    def get_source_hook_mapping(self, mapping_id: int) -> Optional[Dict[str, Any]]:
+        """Get a specific source-hook mapping by its ID.
+
+        Args:
+            mapping_id (int): The ID of the mapping to retrieve.
+
+        Returns:
+            Optional[Dict[str, Any]]: The mapping data if found, None otherwise.
+        """
+        query = """
+        SELECT id, source_id, target_id, source_type, target_type, created_at
+        FROM flatpack_source_hook_mappings
+        WHERE id = ?
+        """
+        try:
+            result = self._fetch_one(query, (mapping_id,))
+            if result:
+                return {
+                    "id": result[0],
+                    "source_id": result[1],
+                    "target_id": result[2],
+                    "source_type": result[3],
+                    "target_type": result[4],
+                    "created_at": result[5]
+                }
+            return None
+        except Exception as e:
+            logger.error("Error retrieving source-hook mapping with ID %s: %s", mapping_id, e)
+            raise
