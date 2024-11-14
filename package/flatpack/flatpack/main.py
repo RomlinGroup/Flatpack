@@ -1350,6 +1350,47 @@ def strip_html(script):
     return soup.get_text()
 
 
+def sync_connections_from_file():
+    """
+    Load connections from connections.json file and sync them to the database.
+    Similar to how hooks are synced on startup.
+    """
+    global flatpack_directory
+
+    try:
+        connections_file = os.path.join(flatpack_directory, CONNECTIONS_FILE)
+        if not os.path.exists(connections_file):
+            logger.info("No connections.json file found for initial sync")
+            return
+
+        with open(connections_file, 'r') as f:
+            data = json.load(f)
+
+        if not isinstance(data, dict) or "connections" not in data:
+            logger.warning("Invalid format in connections.json - expected {'connections': [...]}")
+            return
+
+        connections = []
+        for conn in data["connections"]:
+            try:
+                mapping = SourceHookMapping(
+                    sourceId=conn["source_id"],
+                    targetId=conn["target_id"],
+                    sourceType=conn["source_type"],
+                    targetType=conn["target_type"]
+                )
+                connections.append(mapping)
+            except Exception as e:
+                logger.warning(f"Invalid connection entry in connections.json: {e}")
+                continue
+
+        if connections:
+            save_connections_to_file_and_db(connections)
+            logger.info("Successfully synced %d connections from file to database", len(connections))
+    except Exception as e:
+        logger.error("Error syncing connections from file: %s", e)
+
+
 def unescape_content_parts(content: str) -> str:
     """Unescape special characters within content parts."""
     parts = content.split('part_')
@@ -1495,6 +1536,7 @@ async def fpk_build(directory: Union[str, None], use_euxo: bool = False):
         raise ValueError(f"The build directory '{build_dir}' does not exist.")
 
     sync_hooks_to_db_on_startup()
+    sync_connections_from_file()
 
     custom_json_path = build_dir / 'custom.json'
 
@@ -2128,9 +2170,13 @@ def fpk_unbox(directory_name: str, session: httpx.Client, local: bool = False) -
         }
 
         hooks_json_path = flatpack_dir / 'build' / 'hooks.json'
+        connections_json_path = flatpack_dir / 'build' / 'connections.json'
 
         if not hooks_json_path.exists():
             files_to_download['build'].append('hooks.json')
+
+        if not connections_json_path.exists():
+            files_to_download['build'].append('connections.json')
 
         for dir_name, files in files_to_download.items():
             target_dir = web_dir if dir_name == 'web' else build_dir
@@ -2243,6 +2289,9 @@ def fpk_unbox(directory_name: str, session: httpx.Client, local: bool = False) -
         logger.info("All done!")
 
         initialize_database_manager(str(flatpack_dir))
+
+        sync_hooks_to_db_on_startup()
+        sync_connections_from_file()
 
         fpk_cache_unbox(str(flatpack_dir))
 
