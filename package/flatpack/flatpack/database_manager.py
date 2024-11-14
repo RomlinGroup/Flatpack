@@ -164,17 +164,74 @@ class DatabaseManager:
         return self._fetch_one("SELECT last_insert_rowid()")[0]
 
     def delete_hook(self, hook_id: int) -> bool:
+        """Delete a hook and its related connections.
+
+        Args:
+            hook_id (int): The ID of the hook to delete.
+
+        Returns:
+            bool: True if deletion was successful, False otherwise.
+        """
         logger.info("Attempting to delete hook with ID: %s", hook_id)
         logger.info("Type of hook_id: %s", type(hook_id))
 
-        hook_name = self.get_hook_name_by_id(hook_id)
-        self.delete_mappings_by_target(hook_name.split('-')[0])
-
-        query = "DELETE FROM flatpack_hooks WHERE id = ?"
         try:
+            hook_name = self.get_hook_name_by_id(hook_id)
+
+            if not hook_name:
+                logger.error("Hook with ID %s not found", hook_id)
+                return False
+
+            base_hook_name = hook_name.split('-')[0]
+            self.delete_mappings_by_target(base_hook_name)
+
+            query = "DELETE FROM flatpack_hooks WHERE id = ?"
             self._execute_query(query, (hook_id,))
-            logger.info("Hook with ID %s deleted successfully", hook_id)
+
+            remaining_mappings = self.get_all_source_hook_mappings()
+            connections_data = {
+                "connections": [
+                    {
+                        "source_id": mapping["source_id"],
+                        "target_id": mapping["target_id"],
+                        "source_type": mapping["source_type"],
+                        "target_type": mapping["target_type"]
+                    }
+                    for mapping in remaining_mappings
+                ]
+            }
+
+            connections_file = os.path.join(os.path.dirname(self.db_path), 'connections.json')
+            os.makedirs(os.path.dirname(connections_file), exist_ok=True)
+
+            with open(connections_file, 'w') as f:
+                json.dump(connections_data, f, indent=4)
+
+            remaining_hooks = self.get_all_hooks()
+
+            hooks_data = {
+                "hooks": [
+                    {
+                        "hook_id": hook["id"],
+                        "hook_name": hook["hook_name"],
+                        "hook_placement": hook["hook_placement"],
+                        "hook_script": hook["hook_script"],
+                        "hook_type": hook["hook_type"],
+                        "show_on_frontpage": hook["show_on_frontpage"]
+                    }
+                    for hook in remaining_hooks
+                ]
+            }
+
+            hooks_file = os.path.join(os.path.dirname(self.db_path), 'hooks.json')
+            os.makedirs(os.path.dirname(hooks_file), exist_ok=True)
+
+            with open(hooks_file, 'w') as f:
+                json.dump(hooks_data, f, indent=4)
+
+            logger.info("Hook with ID %s, related connections, and hooks.json updated successfully", hook_id)
             return True
+
         except Exception as e:
             logger.error("Error deleting hook with ID %s: %s", hook_id, str(e))
             raise
