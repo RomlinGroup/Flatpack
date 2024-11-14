@@ -1381,7 +1381,7 @@ def sync_connections_from_file():
                 )
                 connections.append(mapping)
             except Exception as e:
-                logger.warning(f"Invalid connection entry in connections.json: {e}")
+                logger.warning("Invalid connection entry in connections.json: %s", e)
                 continue
 
         if connections:
