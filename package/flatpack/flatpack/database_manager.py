@@ -167,6 +167,9 @@ class DatabaseManager:
         logger.info("Attempting to delete hook with ID: %s", hook_id)
         logger.info("Type of hook_id: %s", type(hook_id))
 
+        hook_name = self.get_hook_name_by_id(hook_id)
+        self.delete_mappings_by_target(hook_name.split('-')[0])
+
         query = "DELETE FROM flatpack_hooks WHERE id = ?"
         try:
             self._execute_query(query, (hook_id,))
@@ -174,6 +177,19 @@ class DatabaseManager:
             return True
         except Exception as e:
             logger.error("Error deleting hook with ID %s: %s", hook_id, str(e))
+            raise
+
+    def delete_mappings_by_target(self, target_name: str) -> bool:
+        logger.info("Attempting to delete source-hook mappings with target name: %s", target_name)
+        logger.info("Type of target_name: %s", type(target_name))
+
+        query = "DELETE FROM flatpack_source_hook_mappings WHERE target_id LIKE ?"
+        try:
+            self._execute_query(query, (f"{target_name}-%",))
+            logger.info("Source-hook mappings with target name %s deleted successfully", target_name)
+            return True
+        except Exception as e:
+            logger.error("Error deleting source-hook mappings with target name %s: %s", target_name, str(e))
             raise
 
     def get_all_hooks(self) -> List[Dict[str, Any]]:
@@ -215,6 +231,13 @@ class DatabaseManager:
             }
         return None
 
+    def get_hook_name_by_id(self, hook_id: int) -> str:
+        query = "SELECT hook_name FROM flatpack_hooks WHERE id = ?"
+        result = self._fetch_one(query, (hook_id,))
+        if result:
+            return result[0]
+        return ""
+
     def hook_exists(self, hook_name: str) -> bool:
         query = "SELECT COUNT(*) FROM flatpack_hooks WHERE hook_name = ?"
         result = self._fetch_one(query, (hook_name,))
@@ -238,7 +261,7 @@ class DatabaseManager:
     # Metadata operations
     def delete_metadata(self, key: str) -> bool:
         query = "DELETE FROM flatpack_metadata WHERE key = ?"
-        self._execute_query(query, (key))
+        self._execute_query(query, (key,))
         return True
 
     def get_metadata(self, key: str) -> Optional[str]:
