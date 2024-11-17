@@ -287,7 +287,7 @@ global_log_file_path = HOME_DIR / ".fpk_logger.log"
 logger = setup_logging(global_log_file_path)
 os.chmod(global_log_file_path, 0o600)
 
-logger = logging.getLogger("schedule_logger")
+# logger = logging.getLogger("schedule_logger")
 schedule_lock = asyncio.Lock()
 
 uvicorn_server = None
@@ -425,7 +425,6 @@ def check_node_and_run_npm_install(web_dir):
     original_dir = os.getcwd()
 
     try:
-        console.print("")
         try:
             node_path = get_executable_path('node')
             npm_path = get_executable_path('npm')
@@ -436,6 +435,7 @@ def check_node_and_run_npm_install(web_dir):
             node_version = subprocess.run(
                 [node_path, "--version"], check=True, capture_output=True, text=True
             ).stdout.strip()
+            console.print("")
             console.print(f"[green]Node.js version:[/green] {node_version}")
             console.print("")
             console.print("[green]npm is assumed to be installed with Node.js[/green]")
@@ -486,25 +486,6 @@ def check_node_and_run_npm_install(web_dir):
         console.print("")
 
     return True
-
-
-def cleanup_and_shutdown():
-    """Perform cleanup operations."""
-    logger.info("Starting cleanup process...")
-
-    try:
-        files_to_delete = ["flatpack.sh"]
-        current_directory = Path.cwd()
-
-        for filename in files_to_delete:
-            file_path = current_directory / filename
-            if file_path.exists():
-                file_path.unlink()
-                logger.info("Deleted %s.", filename)
-    except Exception as e:
-        logger.error("Exception during file cleanup: %s", e)
-
-    logger.info("Cleanup complete.")
 
 
 def create_session(token):
@@ -2110,8 +2091,7 @@ def fpk_set_secure_file_permissions(file_path):
 
 
 def fpk_unbox(directory_name: str, session: httpx.Client, local: bool = False) -> bool:
-    """Unbox a flatpack from GitHub or a local directory."""
-    logger.info("Starting fpk_unbox with directory_name: '%s', local: %s", directory_name, local)
+    global flatpack_directory
 
     if directory_name is None or not isinstance(directory_name, str) or directory_name.strip() == "":
         logger.error("Invalid directory name: %s", directory_name)
@@ -2121,47 +2101,42 @@ def fpk_unbox(directory_name: str, session: httpx.Client, local: bool = False) -
         logger.error("Invalid directory name: '%s'", directory_name)
         return False
 
-    flatpack_dir = Path.cwd() / directory_name
-    logger.info("Flatpack directory: %s", flatpack_dir)
-
-    if not os.path.exists(CONFIG_FILE_PATH):
-        logger.info("Config file not found. Creating initial configuration.")
-        default_config = {}
-        save_config(default_config)
-
-    if local:
-        if not flatpack_dir.exists():
-            logger.error("Local directory '%s' does not exist.", directory_name)
-            return False
-        toml_path = flatpack_dir / 'flatpack.toml'
-        if not toml_path.exists():
-            logger.error("flatpack.toml not found in the specified directory: '%s'.", directory_name)
-            return False
-    else:
-        if flatpack_dir.exists():
-            logger.error("Directory '%s' already exists. Unboxing aborted to prevent conflicts.", directory_name)
-            return False
-        flatpack_dir.mkdir(parents=True, exist_ok=True)
-
-    web_dir = flatpack_dir / "web"
-    build_dir = flatpack_dir / "build"
-    output_dir = web_dir / "output"
-
     try:
-        web_dir.mkdir(parents=True, exist_ok=True)
-        logger.info("Created /web directory: %s", web_dir)
+        flatpack_dir = Path.cwd() / directory_name
+        flatpack_directory = str(flatpack_dir.resolve())
+        logger.info("Flatpack directory: %s", flatpack_dir)
 
-        build_dir.mkdir(parents=True, exist_ok=True)
-        logger.info("Created /build directory: %s", build_dir)
+        if not os.path.exists(CONFIG_FILE_PATH):
+            logger.info("Config file not found. Creating initial configuration.")
+            default_config = {}
+            save_config(default_config)
 
-        output_dir.mkdir(parents=True, exist_ok=True)
-        logger.info("Created /web/output directory: %s", output_dir)
+        if local:
+            if not flatpack_dir.exists():
+                logger.error("Local directory '%s' does not exist.", directory_name)
+                return False
+
+            toml_path = flatpack_dir / 'flatpack.toml'
+            if not toml_path.exists():
+                logger.error("flatpack.toml not found in the specified directory: '%s'.", directory_name)
+                return False
+        else:
+            if flatpack_dir.exists():
+                logger.error("Directory '%s' already exists. Unboxing aborted to prevent conflicts.", directory_name)
+                return False
+            flatpack_dir.mkdir(parents=True, exist_ok=True)
+
+        web_dir = flatpack_dir / "web"
+        build_dir = flatpack_dir / "build"
+        output_dir = web_dir / "output"
+
+        for directory in [web_dir, build_dir, output_dir]:
+            directory.mkdir(parents=True, exist_ok=True)
+            logger.info("Created directory: %s", directory)
 
         eval_data_path = output_dir / "eval_data.json"
-
         with open(eval_data_path, 'w') as f:
             json.dump([], f)
-
         logger.info("Created empty eval_data.json in %s", eval_data_path)
 
         files_to_download = {
@@ -2169,143 +2144,113 @@ def fpk_unbox(directory_name: str, session: httpx.Client, local: bool = False) -
             'web': ['app.css', 'app.js', 'index.html', 'package.json', 'robotomono.woff2']
         }
 
-        hooks_json_path = flatpack_dir / 'build' / 'hooks.json'
-        connections_json_path = flatpack_dir / 'build' / 'connections.json'
-
-        if not hooks_json_path.exists():
-            files_to_download['build'].append('hooks.json')
-
-        if not connections_json_path.exists():
-            files_to_download['build'].append('connections.json')
+        for json_file in ['hooks.json', 'connections.json']:
+            json_path = build_dir / json_file
+            if not json_path.exists():
+                files_to_download['build'].append(json_file)
 
         for dir_name, files in files_to_download.items():
             target_dir = web_dir if dir_name == 'web' else build_dir
             for file in files:
-                file_url = f"{TEMPLATE_REPO_URL}/contents/{file}"
-                response = session.get(file_url)
-                response.raise_for_status()
+                try:
+                    file_url = f"{TEMPLATE_REPO_URL}/contents/{file}"
+                    response = session.get(file_url)
+                    response.raise_for_status()
 
-                file_content = response.json()['content']
-                file_decoded = base64.b64decode(file_content)
+                    file_content = response.json()['content']
+                    file_decoded = base64.b64decode(file_content)
+                    file_path = target_dir / file
 
-                file_path = target_dir / file
+                    mode = 'wb' if file.endswith(".woff2") else 'w'
+                    encoding = None if file.endswith(".woff2") else 'utf-8'
 
-                if file.endswith(".woff2"):
-                    with open(file_path, 'wb') as f:
-                        f.write(file_decoded)
-                else:
-                    with open(file_path, 'w', encoding='utf-8') as f:
-                        f.write(file_decoded.decode('utf-8'))
+                    with open(file_path, mode, encoding=encoding) as f:
+                        if mode == 'wb':
+                            f.write(file_decoded)
+                        else:
+                            f.write(file_decoded.decode('utf-8'))
 
-                logger.info("Downloaded and saved %s to %s", file, file_path)
+                    logger.info("Downloaded and saved %s to %s", file, file_path)
+                except Exception as e:
+                    logger.error("Failed to download or save %s: %s", file, e)
+                    raise
 
         if not check_node_and_run_npm_install(web_dir):
-            console.print("[yellow]Cleaning up: Removing the flatpack directory due to failure.[/yellow]")
-
+            logger.warning("Cleaning up: Removing the flatpack directory due to npm install failure.")
             try:
                 shutil.rmtree(flatpack_dir)
-                console.print("[green]Cleanup successful: Flatpack directory removed.[/green]")
+                logger.info("Cleanup successful: Flatpack directory removed.")
             except Exception as e:
-                console.print(f"[red]Error during cleanup: {e}[/red]")
-
-            sys.exit(1)
-
-    except httpx.RequestError as e:
-        logger.error("Network error occurred while fetching files: %s", e)
-        return False
-    except KeyError as e:
-        logger.error("Unexpected response structure when fetching files: %s", e)
-        return False
-    except Exception as e:
-        logger.error("Failed to create directories or fetch files: %s", e)
-        return False
-
-    build_dir = flatpack_dir / "build"
-    build_dir.mkdir(parents=True, exist_ok=True)
-
-    db_path = build_dir / 'flatpack.db'
-    temp_toml_path = build_dir / 'temp_flatpack.toml'
-
-    if not local:
-        fpk_url = f"{BASE_URL}/{directory_name}/{directory_name}.fpk"
-        try:
-            response = session.head(fpk_url)
-            response.raise_for_status()
-            logger.info(".fpk file found at %s", fpk_url)
-        except httpx.HTTPStatusError:
-            logger.error(".fpk file does not exist at %s", fpk_url)
-            return False
-        except httpx.RequestError as e:
-            logger.error("Network error occurred while checking .fpk file: %s", e)
-
-            return False
-        except Exception as e:
-            logger.error("An unexpected error occurred: %s", e)
+                logger.error("Error during cleanup: %s", e)
             return False
 
-        fpk_path = build_dir / f"{directory_name}.fpk"
+        if not local:
+            fpk_url = f"{BASE_URL}/{directory_name}/{directory_name}.fpk"
+            fpk_path = build_dir / f"{directory_name}.fpk"
 
-        try:
-            download_response = session.get(fpk_url)
-            download_response.raise_for_status()
-            with open(fpk_path, "wb") as fpk_file:
-                fpk_file.write(download_response.content)
-            logger.info("Downloaded .fpk file to %s", fpk_path)
-        except httpx.RequestError as e:
-            logger.error("Failed to download the .fpk file: %s", e)
-            return False
-        except Exception as e:
-            logger.error("An unexpected error occurred during the .fpk download: %s", e)
-            return False
+            try:
+                response = session.head(fpk_url)
+                response.raise_for_status()
 
-        try:
-            decompress_data(fpk_path, build_dir)
-            logger.info("Decompressed .fpk file into %s", build_dir)
-        except Exception as e:
-            logger.error("Failed to decompress .fpk file: %s", e)
-            return False
+                download_response = session.get(fpk_url)
+                download_response.raise_for_status()
+                with open(fpk_path, "wb") as fpk_file:
+                    fpk_file.write(download_response.content)
+                logger.info("Downloaded .fpk file to %s", fpk_path)
 
-        toml_path = build_dir / 'flatpack.toml'
+                decompress_data(fpk_path, build_dir)
+                logger.info("Decompressed .fpk file into %s", build_dir)
+            except Exception as e:
+                logger.error("Failed to handle .fpk file: %s", e)
+                return False
+
+        toml_path = build_dir / 'flatpack.toml' if not local else flatpack_dir / 'flatpack.toml'
         if not toml_path.exists():
-            logger.error("flatpack.toml not found in %s", build_dir)
+            logger.error("flatpack.toml not found in %s", build_dir if not local else flatpack_dir)
             return False
 
-    try:
-        toml_content = toml_path.read_text()
-        temp_toml_path.write_text(toml_content)
-
-        bash_script_content = parse_toml_to_venv_script(str(temp_toml_path), env_name=flatpack_dir)
+        temp_toml_path = build_dir / 'temp_flatpack.toml'
         bash_script_path = build_dir / 'flatpack.sh'
-        bash_script_path.write_text(bash_script_content)
 
-        temp_toml_path.unlink()
+        try:
+            toml_content = toml_path.read_text()
+            temp_toml_path.write_text(toml_content)
 
-        logger.info("Unboxing %s...", directory_name)
+            bash_script_content = parse_toml_to_venv_script(str(temp_toml_path), env_name=str(flatpack_dir))
+            bash_script_path.write_text(bash_script_content)
 
-        safe_script_path = shlex.quote(str(bash_script_path.resolve()))
+            safe_script_path = shlex.quote(str(bash_script_path.resolve()))
+            subprocess.run(['/bin/bash', safe_script_path], check=True)
 
-        subprocess.run(['/bin/bash', safe_script_path], check=True)
+            logger.info("Bash script execution completed successfully")
+        finally:
+            if temp_toml_path.exists():
+                temp_toml_path.unlink()
 
-        logger.info("All done!")
+        try:
+            flatpack_dir_str = str(flatpack_dir.resolve())
+            logger.info("Initializing database manager with path: %s", flatpack_dir_str)
+            initialize_database_manager(flatpack_dir_str)
 
-        initialize_database_manager(str(flatpack_dir))
+            logger.info("Syncing hooks to database")
+            sync_hooks_to_db_on_startup()
 
-        sync_hooks_to_db_on_startup()
-        sync_connections_from_file()
+            logger.info("Syncing connections")
+            sync_connections_from_file()
 
-        fpk_cache_unbox(str(flatpack_dir))
+            logger.info("Running cache unbox")
+            fpk_cache_unbox(flatpack_dir_str)
 
-        return True
+            logger.info("All initialization steps completed successfully")
+            return True
 
-    except subprocess.CalledProcessError as e:
-        logger.error("Failed to execute the bash script: %s", e)
-        return False
+        except Exception as e:
+            logger.error("Failed during final initialization steps: %s", e)
+            return False
+
     except Exception as e:
-        logger.error("An unexpected error occurred: %s", e)
+        logger.error("An unexpected error occurred during unboxing: %s", e)
         return False
-    finally:
-        if bash_script_path.exists():
-            bash_script_path.unlink()
 
 
 def fpk_valid_directory_name(name: str) -> bool:
@@ -2872,8 +2817,6 @@ def fpk_cli_handle_build(args, session):
     except Exception as e:
         logger.error("An error occurred during the build process: %s", e)
         console.print(f"\nAn error occurred during the build process: {e}", style="bold red")
-    finally:
-        cleanup_and_shutdown()
 
 
 def fpk_cli_handle_create(args, session):
@@ -3231,6 +3174,9 @@ def save_connections_to_file_and_db(mappings: List[SourceHookMapping]) -> None:
         raise
 
 
+flatpack_directory = None
+
+
 # Hooks
 def load_and_get_hooks():
     hooks_file_path = os.path.join(flatpack_directory, HOOKS_FILE)
@@ -3286,9 +3232,6 @@ def update_hook_in_file(hook_id, updated_hook):
         if hook["hook_id"] == hook_id:
             hook.update(updated_hook.dict())
     save_hooks_to_file(hooks)
-
-
-flatpack_directory = None
 
 
 def setup_routes(app):
@@ -4292,12 +4235,15 @@ def fpk_cli_handle_unbox(args, session):
 
     while True:
         user_response = input().strip().upper()
+
         if user_response == "YES":
             break
+
         if user_response == "NO":
             console.print("")
             console.print("Installation aborted by user.", style="bold yellow")
             return
+
         logger.error("Invalid input from user. Expected 'YES' or 'NO'.")
         console.print("Invalid input. Please type 'YES' to accept or 'NO' to decline.", style="bold red")
 
@@ -4322,13 +4268,9 @@ def fpk_cli_handle_unbox(args, session):
         console.print("Invalid directory name", style="bold red")
         return
 
-    logger.info("Directory name resolved to: '%s'", directory_name)
-
-    console.print("")
-    console.print(f"Directory name resolved to: '{directory_name}'", style="bold green")
-
     try:
         unbox_result = fpk_unbox(directory_name, session, local=args.local)
+
         if unbox_result:
             logger.info("Unboxed flatpack '%s' successfully.", directory_name)
             console.print(f"Unboxed flatpack '{directory_name}' successfully.", style="bold green")
