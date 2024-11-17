@@ -88,9 +88,6 @@ Check out the [JLA - Compatibility Checker](https://joinup.ec.europa.eu/collecti
 - **[beautifulsoup4](https://pypi.org/project/beautifulsoup4/)**\
   MIT License (MIT License) ([LICENSE](https://pypi.org/project/beautifulsoup4/))
 
-- **[black](https://pypi.org/project/black/)**\
-  MIT License (MIT) ([LICENSE](https://github.com/psf/black/blob/main/LICENSE))
-
 - **[croniter](https://pypi.org/project/croniter/)**\
   MIT License (MIT License) ([LICENSE](https://github.com/kiorky/croniter/blob/master/LICENSE))
 
