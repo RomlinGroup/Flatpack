@@ -256,10 +256,10 @@ def initialize_database_manager(flatpack_db_directory):
 def setup_logging(log_path: Path):
     """Set up logging configuration."""
     new_logger = logging.getLogger(__name__)
-    new_logger.setLevel(logging.INFO)
+    new_logger.setLevel(logging.WARNING)
 
     console_handler = logging.StreamHandler()
-    console_handler.setLevel(logging.INFO)
+    console_handler.setLevel(logging.WARNING)
     console_formatter = logging.Formatter('%(asctime)s - %(message)s')
     console_handler.setFormatter(console_formatter)
 
@@ -268,7 +268,8 @@ def setup_logging(log_path: Path):
         maxBytes=5 * 1024 * 1024,
         backupCount=5
     )
-    file_handler.setLevel(logging.INFO)
+
+    file_handler.setLevel(logging.WARNING)
     file_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
     file_handler.setFormatter(file_formatter)
 
