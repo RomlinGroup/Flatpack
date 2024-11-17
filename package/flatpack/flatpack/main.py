@@ -8,7 +8,7 @@ from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.syntax import Syntax
 from rich.table import Table
 from rich.text import Text
-from textwrap import dedent, wrap
+from textwrap import dedent
 
 PACKAGE_DIR = Path(sys.modules['flatpack'].__file__).parent
 IMPORT_CACHE_FILE = PACKAGE_DIR / ".fpk_import_cache"
@@ -287,7 +287,6 @@ global_log_file_path = HOME_DIR / ".fpk_logger.log"
 logger = setup_logging(global_log_file_path)
 os.chmod(global_log_file_path, 0o600)
 
-# logger = logging.getLogger("schedule_logger")
 schedule_lock = asyncio.Lock()
 
 uvicorn_server = None
@@ -3532,29 +3531,6 @@ def setup_routes(app):
         except Exception as e:
             logger.error("An error occurred while retrieving comments: %s", e)
             raise HTTPException(status_code=500, detail=f"An error occurred while retrieving comments: {e}")
-
-    @app.post("/api/build", dependencies=[Depends(csrf_protect)])
-    async def build_flatpack(
-            request: Request,
-            background_tasks: BackgroundTasks,
-            token: str = Depends(authenticate_token)
-    ):
-        """Trigger the build process for the flatpack."""
-        if not flatpack_directory:
-            raise HTTPException(status_code=500, detail="Flatpack directory is not set")
-
-        try:
-            background_tasks.add_task(run_build_process, schedule_id=None)
-            logger.info("Started build process for flatpack located at %s", flatpack_directory)
-
-            return JSONResponse(
-                content={"flatpack": flatpack_directory, "message": "Build process started in background."},
-                status_code=200)
-        except Exception as e:
-            logger.error("Failed to start build process: %s", e)
-            return JSONResponse(
-                content={"flatpack": flatpack_directory, "message": f"Failed to start build process: {e}"},
-                status_code=500)
 
     @app.get("/api/heartbeat", dependencies=[Depends(csrf_protect)])
     async def heartbeat():
