@@ -238,13 +238,13 @@ csrf_cookie = APIKeyCookie(name="csrf_token")
 db_manager = None
 
 
-def initialize_database_manager(flatpack_directory):
+def initialize_database_manager(flatpack_db_directory):
     global db_manager
 
-    if flatpack_directory is None:
-        raise ValueError("flatpack_directory is not initialized.")
+    if flatpack_db_directory is None:
+        raise ValueError("flatpack_db_directory is not initialized.")
 
-    db_path = os.path.join(flatpack_directory, 'build', 'flatpack.db')
+    db_path = os.path.join(flatpack_db_directory, 'build', 'flatpack.db')
 
     if not os.path.exists(os.path.dirname(db_path)):
         os.makedirs(os.path.dirname(db_path))
