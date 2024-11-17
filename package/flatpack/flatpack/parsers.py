@@ -1,7 +1,7 @@
 import os
 import toml
 
-from textwrap import dedent, wrap
+from textwrap import dedent
 
 
 def is_valid_path(base_path, user_path):
