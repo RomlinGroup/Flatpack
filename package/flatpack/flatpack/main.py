@@ -4,6 +4,7 @@ import sys
 from pathlib import Path
 from rich.console import Console
 from rich.panel import Panel
+from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.syntax import Syntax
 from rich.table import Table
 from rich.text import Text
@@ -33,6 +34,7 @@ import json
 import logging
 import mimetypes
 import pty
+import random
 import re
 import secrets
 import select
@@ -64,8 +66,8 @@ import requests
 import toml
 import uvicorn
 
-from fastapi import Depends, FastAPI, Form, HTTPException, Request
-from fastapi.responses import JSONResponse
+from fastapi import Cookie, Depends, FastAPI, Form, Header, HTTPException, Request
+from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.security import APIKeyCookie
 from itsdangerous import BadSignature, SignatureExpired, TimestampSigner
 from libcst import matchers as m
