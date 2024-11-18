@@ -535,9 +535,9 @@ def create_temp_sh(build_dir, custom_json_path: Path, temp_sh_path: Path, use_eu
         temp_sh_path.parent.mkdir(parents=True, exist_ok=True)
         context_script_path = build_dir / "context_script.py"
 
-        with context_script_path.open('w') as context_file:
-            pass
-
+        all_imports = []
+        all_definitions = []
+        all_executions = []
         context_seen = set()
 
         ensure_database_initialized()
@@ -549,6 +549,8 @@ def create_temp_sh(build_dir, custom_json_path: Path, temp_sh_path: Path, use_eu
                 set -{'eux' if use_euxo else 'eu'}o pipefail
 
                 export SCRIPT_DIR="$(cd "$(dirname "${{BASH_SOURCE[0]}}")" && pwd)"
+                export PYTHONPATH="$(dirname "$SCRIPT_DIR"):${{PYTHONPATH:-}}"
+                
                 echo "Script is running in $SCRIPT_DIR"
 
                 if [ -n "${{VIRTUAL_ENV:-}}" ]; then
@@ -611,11 +613,32 @@ def create_temp_sh(build_dir, custom_json_path: Path, temp_sh_path: Path, use_eu
 
             outfile.write(header_script)
 
+            class FunctionCallFinder(cst.CSTVisitor):
+                def __init__(self):
+                    self.has_unknown_calls = False
+                    self.known_functions = set()
+                    super().__init__()
+
+                def visit_Call(self, node):
+                    if hasattr(node.func, 'value'):
+                        func_name = node.func.value
+                        if func_name not in self.known_functions:
+                            self.has_unknown_calls = True
+
             class TopLevelCodeVisitor(cst.CSTVisitor):
                 def __init__(self):
                     self.context_code = []
                     self.execution_code = []
                     self.depth = 0
+                    super().__init__()
+
+                def _has_unknown_function_call(self, node):
+                    if isinstance(node, cst.Call):
+                        if hasattr(node.func, 'value'):
+                            return False
+                        func_name = node.func.value if hasattr(node.func, 'value') else str(node.func)
+                        return func_name not in self.known_functions
+                    return False
 
                 def leave_ClassDef(self, node):
                     self.depth -= 1
@@ -640,7 +663,13 @@ def create_temp_sh(build_dir, custom_json_path: Path, temp_sh_path: Path, use_eu
 
                 def visit_Assign(self, node):
                     if self.depth == 0:
-                        self.context_code.append(node)
+                        finder = FunctionCallFinder()
+                        node.visit(finder)
+
+                        if finder.has_unknown_calls:
+                            self.execution_code.append(node)
+                        else:
+                            self.context_code.append(node)
 
                 def visit_ClassDef(self, node):
                     if self.depth == 0:
@@ -665,8 +694,13 @@ def create_temp_sh(build_dir, custom_json_path: Path, temp_sh_path: Path, use_eu
                     self.depth += 1
 
                 def visit_If(self, node):
-                    if self.depth == 0:
-                        self.execution_code.append(node)
+                    self.execution_code.append(node)
+
+                    for stmt in node.body.body:
+                        if isinstance(stmt, cst.Assign):
+                            for target in stmt.targets:
+                                if hasattr(target, 'value'):
+                                    self.execution_defined_names.add(target.value.value)
                     self.depth += 1
 
                 def visit_Import(self, node):
@@ -697,7 +731,19 @@ def create_temp_sh(build_dir, custom_json_path: Path, temp_sh_path: Path, use_eu
                 visitor = TopLevelCodeVisitor()
                 tree.visit(visitor)
 
-                context_code_str = [tree.code_for_node(stmt) for stmt in visitor.context_code]
+                imports = []
+                definitions = []
+                other_context = []
+
+                for stmt in visitor.context_code:
+                    if isinstance(stmt, (cst.Import, cst.ImportFrom)):
+                        imports.append(tree.code_for_node(stmt))
+                    elif isinstance(stmt, (cst.FunctionDef, cst.ClassDef, cst.Assign)):
+                        definitions.append(tree.code_for_node(stmt))
+                    else:
+                        other_context.append(tree.code_for_node(stmt))
+
+                context_code_str = imports + definitions + other_context
                 execution_code_str = [tree.code_for_node(stmt) for stmt in visitor.execution_code]
 
                 return context_code_str, execution_code_str
@@ -724,12 +770,25 @@ def create_temp_sh(build_dir, custom_json_path: Path, temp_sh_path: Path, use_eu
                     context_seen.update(unique_context)
 
                     if unique_context:
-                        with context_script_path.open('a') as context_file:
-                            context_file.write("\n".join(unique_context) + "\n")
+                        for line in unique_context:
+                            if line.lstrip().startswith(('import ', 'from ')):
+                                if line not in all_imports:
+                                    all_imports.append(line)
+                            elif line.lstrip().startswith(('def ', 'class ')):
+                                if line not in all_definitions:
+                                    all_definitions.append(line)
+                            else:
+                                if line not in all_executions:
+                                    all_executions.append(line)
 
                     exec_path = build_dir / f"execution_script_{block_index}.py"
                     with exec_path.open('w') as exec_file:
-                        exec_file.write(f"from context_script import *\n\n")
+
+                        exec_file.write("import sys\n")
+                        exec_file.write("from pathlib import Path\n")
+                        exec_file.write("sys.path.insert(0, str(Path(__file__).parent.parent))\n")
+                        exec_file.write("from context_script import *\n\n")
+
                         exec_file.write("\n".join(execution_code) + "\n")
 
                     outfile.write(f"$VENV_PYTHON {exec_path}\n((CURR++))\nlog_and_update \"$CURR\"\n")
@@ -739,6 +798,14 @@ def create_temp_sh(build_dir, custom_json_path: Path, temp_sh_path: Path, use_eu
             for hook_index, hook in enumerate(hooks):
                 if hook.get('hook_placement') == 'after':
                     process_hook(hook, outfile, context_script_path, context_seen, hook_index)
+
+        with context_script_path.open('w') as context_file:
+            if all_imports:
+                context_file.write("\n".join(all_imports) + "\n\n")
+            if all_definitions:
+                context_file.write("\n".join(all_definitions) + "\n\n")
+            if all_executions:
+                context_file.write("\n".join(all_executions) + "\n")
 
         logging.info("Temp script generated successfully at %s", temp_sh_path)
 

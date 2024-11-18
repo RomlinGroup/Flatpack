@@ -11,7 +11,6 @@ import time
 import warnings
 
 from bs4 import BeautifulSoup
-from contextlib import redirect_stdout
 from pypdf import PdfReader
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn
