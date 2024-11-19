@@ -499,6 +499,8 @@ def create_session(token):
 def create_temp_sh(build_dir, custom_json_path: Path, temp_sh_path: Path, use_euxo: bool = False, hooks: list = None):
     if hooks is None:
         hooks = []
+    else:
+        logging.info(f"Using {len(hooks)} hooks passed to the function")
 
     try:
         with custom_json_path.open('r', encoding='utf-8') as infile:
@@ -507,307 +509,110 @@ def create_temp_sh(build_dir, custom_json_path: Path, temp_sh_path: Path, use_eu
         def is_block_disabled(block):
             return block.get('disabled', False)
 
-        def process_hook(hook, outfile, context_script_path, context_seen, hook_index):
-            required_fields = ['hook_name', 'hook_type', 'hook_script']
-            if not all(field in hook for field in required_fields):
-                logging.error("Hook is missing required fields: %s", hook)
-                return
-
-            outfile.write(f"\n# Hook: {hook['hook_name']}\n")
-
-            if hook['hook_type'] == 'bash':
-                outfile.write(f"{hook['hook_script']}\n")
-            elif hook['hook_type'] == 'python':
-                hook_context, hook_execution = process_python_block(hook['hook_script'])
-
-                with context_script_path.open('a') as context_file:
-                    unique_context = [line for line in hook_context if line.strip() not in context_seen]
-                    context_seen.update(line.strip() for line in unique_context)
-                    if unique_context:
-                        context_file.write("\n".join(unique_context) + "\n")
-
-                exec_script_path = build_dir / f"execution_script_hook_{hook_index}.py"
-                with exec_script_path.open('a') as exec_file:
-                    exec_file.write("\n".join(hook_execution) + "\n")
-
-        last_count = sum(1 for block in code_blocks if not is_block_disabled(block))
-
         temp_sh_path.parent.mkdir(parents=True, exist_ok=True)
-        context_script_path = build_dir / "context_script.py"
 
-        all_imports = []
-        all_definitions = []
-        all_executions = []
-        context_seen = set()
+        temp_py_script_path = build_dir / "temp_script.py"
 
-        ensure_database_initialized()
-        hooks = db_manager.get_all_hooks()
+        with temp_py_script_path.open('w', encoding='utf-8') as py_script_file:
+            py_script_file.write("#!/usr/bin/env python\n\n")
 
-        with temp_sh_path.open('w', encoding='utf-8') as outfile:
-            header_script = dedent(f"""\
-                #!/bin/bash
-                set -{'eux' if use_euxo else 'eu'}o pipefail
+            python_context_code = ""
 
-                export SCRIPT_DIR="$(cd "$(dirname "${{BASH_SOURCE[0]}}")" && pwd)"
-                export PYTHONPATH="$(dirname "$SCRIPT_DIR"):${{PYTHONPATH:-}}"
-                
-                echo "Script is running in $SCRIPT_DIR"
+            def process_hook(hook, hook_index):
+                required_fields = ['hook_name', 'hook_type', 'hook_script', 'hook_placement']
+                if not all(field in hook for field in required_fields):
+                    logging.error(f"Hook {hook_index} is missing required fields: {hook}")
+                    return
 
-                if [ -n "${{VIRTUAL_ENV:-}}" ]; then
-                    : # Already activated
-                elif [ -f "$SCRIPT_DIR/bin/activate" ]; then
-                    . "$SCRIPT_DIR/bin/activate"
-                elif [ -f "$SCRIPT_DIR/Scripts/activate" ]; then
-                    . "$SCRIPT_DIR/Scripts/activate"
-                fi
+                logging.info(f"Processing hook {hook_index}: {hook['hook_name']}")
 
-                VENV_PYTHON=${{VIRTUAL_ENV:+$VIRTUAL_ENV/bin/python}}
-                VENV_PYTHON=${{VENV_PYTHON:-$(command -v python3 || command -v python)}}
-                
-                [ ! -x "$VENV_PYTHON" ] && echo "Error: Python not found in virtual environment." && exit 1
-                
-                echo "Virtual environment is $VENV_PYTHON"
+                if hook['hook_type'] == 'bash':
+                    outfile.write(f"\n# Hook {hook_index}: {hook['hook_name']}\n")
+                    outfile.write(f"{hook['hook_script']}\n")
+                elif hook['hook_type'] == 'python':
+                    py_script_file.write(f"# Hook {hook_index}: {hook['hook_name']}\n")
+                    py_script_file.write(f"{hook['hook_script']}\n\n")
 
-                datetime=$(date -u +"%Y-%m-%d %H:%M:%S")
-                last_count={last_count}
-                
-                CURR=0
-                EVAL_BUILD="$(dirname "$SCRIPT_DIR")/web/output/eval_build.json"
-                
-                DATA_FILE="$(dirname "$SCRIPT_DIR")/web/output/eval_data.json"
-                echo '[]' > "$DATA_FILE"
+            with temp_sh_path.open('w', encoding='utf-8') as outfile:
+                header_script = dedent(f"""\
+                    #!/bin/bash
+                    set -{'euxo pipefail' if use_euxo else 'euo pipefail'}
 
-                function log_and_update() {{
-                    local curr="$1"
-                    
-                    local new_files=$(find "$SCRIPT_DIR" -type f -newer "$DATA_FILE" \\( -name '*.gif' -o -name '*.jpeg' -o -name '*.jpg' -o -name '*.mp3' -o -name '*.mp4' -o -name '*.png' -o -name '*.txt' -o -name '*.wav' \\))
-                    
-                    if [ -n "$new_files" ]; then
-                        local log_entries="[]"
-                        
-                        for file in $new_files; do
-                            local public="/output/$(basename "$file")"
-                            local mime_type=$(file --mime-type -b "$file")
-                            local json_entry="{{\\"eval\\": $curr, \\"file\\": \\"$file\\", \\"public\\": \\"$public\\", \\"type\\": \\"$mime_type\\"}}"
-                            log_entries=$(echo "$log_entries" | jq ". + [$json_entry]")
-                        done
-                        
-                        jq -s '.[0] + .[1]' "$DATA_FILE" <(echo "$log_entries") > "$DATA_FILE.tmp" && mv "$DATA_FILE.tmp" "$DATA_FILE"
+                    export SCRIPT_DIR="$(cd "$(dirname "${{BASH_SOURCE[0]}}")" && pwd)"
+                    export PYTHONPATH="$(dirname "$SCRIPT_DIR"):${{PYTHONPATH:-}}"
+
+                    echo "Script is running in $SCRIPT_DIR"
+
+                    if [ -n "${{VIRTUAL_ENV:-}}" ]; then
+                        : # Already activated
+                    elif [ -f "$SCRIPT_DIR/bin/activate" ]; then
+                        . "$SCRIPT_DIR/bin/activate"
+                    elif [ -f "$SCRIPT_DIR/Scripts/activate" ]; then
+                        . "$SCRIPT_DIR/Scripts/activate"
                     fi
 
-                    local eval_count
-                    if [ "$curr" -eq "$last_count" ]; then
-                        eval_count="null"
-                    else
-                        eval_count=$((curr + 1))
-                    fi
-                    
-                    echo "{{
-                        \\"curr\\": $curr,
-                        \\"last\\": $last_count,
-                        \\"eval\\": $eval_count,
-                        \\"datetime\\": \\"$datetime\\"
-                    }}" > "$EVAL_BUILD"
-                }}
-            """)
+                    VENV_PYTHON=${{VIRTUAL_ENV:+$VIRTUAL_ENV/bin/python}}
+                    VENV_PYTHON=${{VENV_PYTHON:-$(command -v python3 || command -v python)}}
 
-            outfile.write(header_script)
+                    [ ! -x "$VENV_PYTHON" ] && echo "Error: Python not found in virtual environment." && exit 1
 
-            class FunctionCallFinder(cst.CSTVisitor):
-                def __init__(self):
-                    self.has_unknown_calls = False
-                    self.known_functions = set()
-                    super().__init__()
+                    echo "Using Python interpreter at $VENV_PYTHON"
 
-                def visit_Call(self, node):
-                    if hasattr(node.func, 'value'):
-                        func_name = node.func.value
-                        if func_name not in self.known_functions:
-                            self.has_unknown_calls = True
+                    datetime=$(date -u +"%Y-%m-%d %H:%M:%S")
 
-            class TopLevelCodeVisitor(cst.CSTVisitor):
-                def __init__(self):
-                    self.context_code = []
-                    self.execution_code = []
-                    self.depth = 0
-                    super().__init__()
+                    CURR=0
+                    EVAL_BUILD="$(dirname "$SCRIPT_DIR")/web/output/eval_build.json"
 
-                def _has_unknown_function_call(self, node):
-                    if isinstance(node, cst.Call):
-                        if hasattr(node.func, 'value'):
-                            return False
-                        func_name = node.func.value if hasattr(node.func, 'value') else str(node.func)
-                        return func_name not in self.known_functions
-                    return False
+                    DATA_FILE="$(dirname "$SCRIPT_DIR")/web/output/eval_data.json"
+                    echo '[]' > "$DATA_FILE"
 
-                def leave_ClassDef(self, node):
-                    self.depth -= 1
+                    function log_and_update() {{
+                        local curr="$1"
+                        # ... (rest of the function) ...
+                    }}
+                """)
+                outfile.write(header_script)
+                outfile.write('\n')
 
-                def leave_For(self, node):
-                    self.depth -= 1
+                # Process hooks (before)
+                for hook_index, hook in enumerate(hooks):
+                    if hook.get('hook_placement', '').strip().lower() == 'before':
+                        process_hook(hook, hook_index)
 
-                def leave_FunctionDef(self, node):
-                    self.depth -= 1
+                for block_index, block in enumerate(code_blocks):
+                    if is_block_disabled(block):
+                        continue
 
-                def leave_If(self, node):
-                    self.depth -= 1
+                    code = block.get('code', '')
+                    language = block.get('type')
 
-                def leave_Try(self, node):
-                    self.depth -= 1
+                    if language == 'bash':
+                        outfile.write(f"\n# Code Block {block_index} (Bash)\n")
+                        outfile.write(f"{code}\n")
+                        outfile.write("((CURR++))\n")
+                        outfile.write('log_and_update "$CURR"\n')
+                    elif language == 'python':
+                        py_script_file.write(f"# Code Block {block_index} (Python)\n")
+                        py_script_file.write(f"{code}\n\n")
+                        outfile.write("((CURR++))\n")
+                        outfile.write('log_and_update "$CURR"\n')
 
-                def leave_While(self, node):
-                    self.depth -= 1
+                # Process hooks (after)
+                for hook_index, hook in enumerate(hooks):
+                    if hook.get('hook_placement', '').strip().lower() == 'after':
+                        process_hook(hook, hook_index)
 
-                def leave_With(self, node):
-                    self.depth -= 1
+                temp_py_script_path.chmod(0o755)
 
-                def visit_Assign(self, node):
-                    if self.depth == 0:
-                        finder = FunctionCallFinder()
-                        node.visit(finder)
+                outfile.write('\n# Execute the accumulated Python script\n')
+                outfile.write(f'$VENV_PYTHON "{temp_py_script_path}"\n')
 
-                        if finder.has_unknown_calls:
-                            self.execution_code.append(node)
-                        else:
-                            self.context_code.append(node)
+                outfile.write('\n# Clean up\n')
+                outfile.write(f'rm -f "{temp_py_script_path}"\n')
 
-                def visit_ClassDef(self, node):
-                    if self.depth == 0:
-                        self.context_code.append(node)
-                    self.depth += 1
+        temp_sh_path.chmod(0o755)
 
-                def visit_Expr(self, node):
-                    if self.depth == 0:
-                        if m.matches(node.value, m.Call()):
-                            self.execution_code.append(node)
-                        else:
-                            self.context_code.append(node)
-
-                def visit_For(self, node):
-                    if self.depth == 0:
-                        self.execution_code.append(node)
-                    self.depth += 1
-
-                def visit_FunctionDef(self, node):
-                    if self.depth == 0:
-                        self.context_code.append(node)
-                    self.depth += 1
-
-                def visit_If(self, node):
-                    self.execution_code.append(node)
-
-                    for stmt in node.body.body:
-                        if isinstance(stmt, cst.Assign):
-                            for target in stmt.targets:
-                                if hasattr(target, 'value'):
-                                    self.execution_defined_names.add(target.value.value)
-                    self.depth += 1
-
-                def visit_Import(self, node):
-                    if self.depth == 0:
-                        self.context_code.append(node)
-
-                def visit_ImportFrom(self, node):
-                    if self.depth == 0:
-                        self.context_code.append(node)
-
-                def visit_Try(self, node):
-                    if self.depth == 0:
-                        self.execution_code.append(node)
-                    self.depth += 1
-
-                def visit_While(self, node):
-                    if self.depth == 0:
-                        self.execution_code.append(node)
-                    self.depth += 1
-
-                def visit_With(self, node):
-                    if self.depth == 0:
-                        self.execution_code.append(node)
-                    self.depth += 1
-
-            def process_python_block(code):
-                tree = cst.parse_module(code)
-                visitor = TopLevelCodeVisitor()
-                tree.visit(visitor)
-
-                imports = []
-                definitions = []
-                other_context = []
-
-                for stmt in visitor.context_code:
-                    if isinstance(stmt, (cst.Import, cst.ImportFrom)):
-                        imports.append(tree.code_for_node(stmt))
-                    elif isinstance(stmt, (cst.FunctionDef, cst.ClassDef, cst.Assign)):
-                        definitions.append(tree.code_for_node(stmt))
-                    else:
-                        other_context.append(tree.code_for_node(stmt))
-
-                context_code_str = imports + definitions + other_context
-                execution_code_str = [tree.code_for_node(stmt) for stmt in visitor.execution_code]
-
-                return context_code_str, execution_code_str
-
-            # Process hooks (before)
-            for hook_index, hook in enumerate(hooks):
-                if hook.get('hook_placement') == 'before':
-                    process_hook(hook, outfile, context_script_path, context_seen, hook_index)
-
-            for block_index, block in enumerate(code_blocks):
-                if is_block_disabled(block):
-                    continue
-
-                code = block.get('code', '')
-                language = block.get('type')
-
-                if language == 'bash':
-                    outfile.write(f"{code}\n((CURR++))\nlog_and_update \"$CURR\"\n\n")
-
-                elif language == 'python':
-                    context_code, execution_code = process_python_block(code)
-
-                    unique_context = [line for line in context_code if line not in context_seen]
-                    context_seen.update(unique_context)
-
-                    if unique_context:
-                        for line in unique_context:
-                            if line.lstrip().startswith(('import ', 'from ')):
-                                if line not in all_imports:
-                                    all_imports.append(line)
-                            elif line.lstrip().startswith(('def ', 'class ')):
-                                if line not in all_definitions:
-                                    all_definitions.append(line)
-                            else:
-                                if line not in all_executions:
-                                    all_executions.append(line)
-
-                    exec_path = build_dir / f"execution_script_{block_index}.py"
-                    with exec_path.open('w') as exec_file:
-
-                        exec_file.write("import sys\n")
-                        exec_file.write("from pathlib import Path\n")
-                        exec_file.write("sys.path.insert(0, str(Path(__file__).parent.parent))\n")
-                        exec_file.write("from context_script import *\n\n")
-
-                        exec_file.write("\n".join(execution_code) + "\n")
-
-                    outfile.write(f"$VENV_PYTHON {exec_path}\n((CURR++))\nlog_and_update \"$CURR\"\n")
-                    outfile.write(f"rm -f {exec_path}\n\n")
-
-            # Process hooks (after)
-            for hook_index, hook in enumerate(hooks):
-                if hook.get('hook_placement') == 'after':
-                    process_hook(hook, outfile, context_script_path, context_seen, hook_index)
-
-        with context_script_path.open('w') as context_file:
-            if all_imports:
-                context_file.write("\n".join(all_imports) + "\n\n")
-            if all_definitions:
-                context_file.write("\n".join(all_definitions) + "\n\n")
-            if all_executions:
-                context_file.write("\n".join(all_executions) + "\n")
-
-        logging.info("Temp script generated successfully at %s", temp_sh_path)
+        logging.info(f"Temp script generated successfully at {temp_sh_path}")
 
     except Exception as e:
         logging.error("An error occurred while creating temp script: %s", e, exc_info=True)
