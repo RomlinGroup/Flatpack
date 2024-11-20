@@ -36,11 +36,11 @@ opencv-python = "4.10.0.84"
 tiktoken = "0.8.0"
 tqdm = "4.67.0"
 
-[[git]]
-from_source = "https://github.com/google-ai-edge/mediapipe"
-to_destination = "mediapipe"
-branch = "master"
-requirements_file = "requirements.txt"
+# [[git]]
+# from_source = "{{git_source_url}}"
+# to_destination = "{{git_destination_dir}}"
+# branch = "{{branch_name}}"
+# requirements_file = "requirements.txt"
 # setup_commands = [
 #   "{{setup_command}}"
 # ]

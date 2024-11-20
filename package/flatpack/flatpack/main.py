@@ -509,6 +509,9 @@ def create_temp_sh(build_dir, custom_json_path: Path, temp_sh_path: Path, use_eu
         def is_block_disabled(block):
             return block.get('disabled', False)
 
+        last_count = sum(1 for block in code_blocks if not is_block_disabled(block))
+        logging.info(f"Total number of enabled code blocks: {last_count}")
+
         temp_sh_path.parent.mkdir(parents=True, exist_ok=True)
 
         temp_py_script_path = build_dir / "temp_script.py"
@@ -559,6 +562,7 @@ def create_temp_sh(build_dir, custom_json_path: Path, temp_sh_path: Path, use_eu
                     echo "Using Python interpreter at $VENV_PYTHON"
 
                     datetime=$(date -u +"%Y-%m-%d %H:%M:%S")
+                    last_count={last_count}  # Added back the last_count variable
 
                     CURR=0
                     EVAL_BUILD="$(dirname "$SCRIPT_DIR")/web/output/eval_build.json"
@@ -568,9 +572,39 @@ def create_temp_sh(build_dir, custom_json_path: Path, temp_sh_path: Path, use_eu
 
                     function log_and_update() {{
                         local curr="$1"
-                        # ... (rest of the function) ...
+
+                        local new_files=$(find "$SCRIPT_DIR" -type f -newer "$DATA_FILE" \\( -name '*.gif' -o -name '*.jpeg' -o -name '*.jpg' -o -name '*.mp3' -o -name '*.mp4' -o -name '*.png' -o -name '*.txt' -o -name '*.wav' \\))
+
+                        if [ -n "$new_files" ]; then
+                            local log_entries="[]"
+
+                            for file in $new_files; do
+                                local public="/output/$(basename "$file")"
+                                local mime_type=$(file --mime-type -b "$file")
+                                local json_entry="{{\\"eval\\": $curr, \\"file\\": \\"$file\\", \\"public\\": \\"$public\\", \\"type\\": \\"$mime_type\\"}}"
+                                log_entries=$(echo "$log_entries" | jq ". + [$json_entry]")
+                            done
+
+                            jq -s '.[0] + .[1]' "$DATA_FILE" <(echo "$log_entries") > "$DATA_FILE.tmp" && mv "$DATA_FILE.tmp" "$DATA_FILE"
+                        fi
+
+                        local eval_count
+
+                        if [ "$curr" -eq "$last_count" ]; then
+                            eval_count="null"
+                        else
+                            eval_count=$((curr + 1))
+                        fi
+
+                        echo "{{
+                            \\"curr\\": $curr,
+                            \\"last\\": $last_count,
+                            \\"eval\\": $eval_count,
+                            \\"datetime\\": \\"$datetime\\"
+                        }}" > "$EVAL_BUILD"
                     }}
                 """)
+
                 outfile.write(header_script)
                 outfile.write('\n')
 
