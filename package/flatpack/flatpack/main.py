@@ -500,7 +500,7 @@ def create_temp_sh(build_dir, custom_json_path: Path, temp_sh_path: Path, use_eu
     if hooks is None:
         hooks = []
     else:
-        logging.info(f"Using {len(hooks)} hooks passed to the function")
+        logging.info("Using %d hooks passed to the function", len(hooks))
 
     try:
         with custom_json_path.open('r', encoding='utf-8') as infile:
