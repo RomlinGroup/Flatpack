@@ -509,144 +509,141 @@ def create_temp_sh(build_dir, custom_json_path: Path, temp_sh_path: Path, use_eu
         def is_block_disabled(block):
             return block.get('disabled', False)
 
+        def process_hook(hook, hook_index):
+            required_fields = ['hook_name', 'hook_type', 'hook_script', 'hook_placement']
+
+            if not all(field in hook for field in required_fields):
+                return
+
+            if hook['hook_type'] == 'bash':
+                outfile.write(f"{hook['hook_script']}\n")
+            elif hook['hook_type'] == 'python':
+                outfile.write(send_code_to_python(hook['hook_script']))
+                outfile.write('\n')
+
         last_count = sum(1 for block in code_blocks if not is_block_disabled(block))
-        logging.info(f"Total number of enabled code blocks: {last_count}")
 
         temp_sh_path.parent.mkdir(parents=True, exist_ok=True)
 
-        temp_py_script_path = build_dir / "temp_script.py"
+        executor_path = temp_sh_path.parent / "python_executor.py"
 
-        with temp_py_script_path.open('w', encoding='utf-8') as py_script_file:
-            py_script_file.write("#!/usr/bin/env python\n\n")
+        with executor_path.open('w', encoding='utf-8') as exec_file:
+            exec_file.write(dedent("""\
+                import sys
+                import traceback
 
-            python_context_code = ""
+                # Create a global namespace that persists between executions
+                GLOBAL_NAMESPACE = {}
 
-            def process_hook(hook, hook_index):
-                required_fields = ['hook_name', 'hook_type', 'hook_script', 'hook_placement']
-                if not all(field in hook for field in required_fields):
-                    logging.error(f"Hook {hook_index} is missing required fields: {hook}")
-                    return
+                def execute_code(code):
+                    try:
+                        # Execute in the global namespace
+                        exec(code, GLOBAL_NAMESPACE)
+                    except Exception as e:
+                        print(f"Error executing code: {e}", file=sys.stderr)
+                        traceback.print_exc()
+                        sys.exit(1)
 
-                logging.info(f"Processing hook {hook_index}: {hook['hook_name']}")
+                if __name__ == "__main__":
+                    code_block = []
+                    for line in sys.stdin:
+                        if line.strip() == "__EXIT_PYTHON_EXECUTOR__":
+                            break
+                        code_block.append(line)
 
-                if hook['hook_type'] == 'bash':
-                    outfile.write(f"\n# Hook {hook_index}: {hook['hook_name']}\n")
-                    outfile.write(f"{hook['hook_script']}\n")
-                elif hook['hook_type'] == 'python':
-                    py_script_file.write(f"# Hook {hook_index}: {hook['hook_name']}\n")
-                    py_script_file.write(f"{hook['hook_script']}\n\n")
+                    if code_block:
+                        execute_code(''.join(code_block))
+            """))
 
-            with temp_sh_path.open('w', encoding='utf-8') as outfile:
-                header_script = dedent(f"""\
-                    #!/bin/bash
-                    set -{'euxo pipefail' if use_euxo else 'euo pipefail'}
+        executor_path.chmod(0o755)
 
-                    export SCRIPT_DIR="$(cd "$(dirname "${{BASH_SOURCE[0]}}")" && pwd)"
-                    export PYTHONPATH="$(dirname "$SCRIPT_DIR"):${{PYTHONPATH:-}}"
+        with temp_sh_path.open('w', encoding='utf-8') as outfile:
+            header_script = dedent(f"""\
+                #!/bin/bash
+                set -{'eux' if use_euxo else 'eu'}o pipefail
 
-                    echo "Script is running in $SCRIPT_DIR"
+                export SCRIPT_DIR="$(cd "$(dirname "${{BASH_SOURCE[0]}}")" && pwd)"
+                echo "Script is running in $SCRIPT_DIR"
 
-                    if [ -n "${{VIRTUAL_ENV:-}}" ]; then
-                        : # Already activated
-                    elif [ -f "$SCRIPT_DIR/bin/activate" ]; then
-                        . "$SCRIPT_DIR/bin/activate"
-                    elif [ -f "$SCRIPT_DIR/Scripts/activate" ]; then
-                        . "$SCRIPT_DIR/Scripts/activate"
-                    fi
+                if [ -n "${{VIRTUAL_ENV:-}}" ]; then
+                    : # Already activated
+                elif [ -f "$SCRIPT_DIR/bin/activate" ]; then
+                    . "$SCRIPT_DIR/bin/activate"
+                elif [ -f "$SCRIPT_DIR/Scripts/activate" ]; then
+                    . "$SCRIPT_DIR/Scripts/activate"
+                fi
 
-                    VENV_PYTHON=${{VIRTUAL_ENV:+$VIRTUAL_ENV/bin/python}}
-                    VENV_PYTHON=${{VENV_PYTHON:-$(command -v python3 || command -v python)}}
+                VENV_PYTHON=${{VIRTUAL_ENV:+$VIRTUAL_ENV/bin/python}}
+                VENV_PYTHON=${{VENV_PYTHON:-$(command -v python3 || command -v python)}}
 
-                    [ ! -x "$VENV_PYTHON" ] && echo "Error: Python not found in virtual environment." && exit 1
+                [ ! -x "$VENV_PYTHON" ] && echo "Error: Python not found in virtual environment." && exit 1
+                
+                PYTHONPATH=${{PYTHONPATH:-}}
+                export PYTHONPATH="$(dirname "$SCRIPT_DIR"):$PYTHONPATH"
 
-                    echo "Using Python interpreter at $VENV_PYTHON"
+                echo "Virtual environment is $VENV_PYTHON"
 
-                    datetime=$(date -u +"%Y-%m-%d %H:%M:%S")
-                    last_count={last_count}  # Added back the last_count variable
+                CURRENT_COUNT=0
+                LAST_COUNT={last_count}
+            """)
 
-                    CURR=0
-                    EVAL_BUILD="$(dirname "$SCRIPT_DIR")/web/output/eval_build.json"
+            outfile.write(header_script)
+            outfile.write('\n')
 
-                    DATA_FILE="$(dirname "$SCRIPT_DIR")/web/output/eval_data.json"
-                    echo '[]' > "$DATA_FILE"
+            pipe_setup = dedent("""\
+                PIPE_PATH="$SCRIPT_DIR/python_pipe"
+                rm -f "$PIPE_PATH"
+                mkfifo "$PIPE_PATH"
+                "$VENV_PYTHON" "$SCRIPT_DIR/python_executor.py" < "$PIPE_PATH" &
+                PYTHON_PID=$!
+                exec 3> "$PIPE_PATH"
+            """)
+            outfile.write(pipe_setup)
+            outfile.write('\n')
 
-                    function log_and_update() {{
-                        local curr="$1"
+            def send_code_to_python(code):
+                return dedent("""\
+                   cat << 'EOF' >&3
+                   {}
+                   EOF""").format(code)
 
-                        local new_files=$(find "$SCRIPT_DIR" -type f -newer "$DATA_FILE" \\( -name '*.gif' -o -name '*.jpeg' -o -name '*.jpg' -o -name '*.mp3' -o -name '*.mp4' -o -name '*.png' -o -name '*.txt' -o -name '*.wav' \\))
+            for hook_index, hook in enumerate(hooks):
+                if hook.get('hook_placement', '').strip().lower() == 'before':
+                    process_hook(hook, hook_index)
 
-                        if [ -n "$new_files" ]; then
-                            local log_entries="[]"
+            for block_index, block in enumerate(code_blocks):
+                if is_block_disabled(block):
+                    continue
 
-                            for file in $new_files; do
-                                local public="/output/$(basename "$file")"
-                                local mime_type=$(file --mime-type -b "$file")
-                                local json_entry="{{\\"eval\\": $curr, \\"file\\": \\"$file\\", \\"public\\": \\"$public\\", \\"type\\": \\"$mime_type\\"}}"
-                                log_entries=$(echo "$log_entries" | jq ". + [$json_entry]")
-                            done
+                code = block.get('code', '')
+                language = block.get('type')
 
-                            jq -s '.[0] + .[1]' "$DATA_FILE" <(echo "$log_entries") > "$DATA_FILE.tmp" && mv "$DATA_FILE.tmp" "$DATA_FILE"
-                        fi
+                if language == 'bash':
+                    outfile.write(f"\n# Code Block {block_index} (Bash)\n")
+                    outfile.write(f"{code}\n")
+                    outfile.write("((CURRENT_COUNT++))\n")
 
-                        local eval_count
+                elif language == 'python':
+                    outfile.write(f"\n# Code Block {block_index} (Python)\n")
+                    outfile.write(send_code_to_python(code))
+                    outfile.write('\n')
+                    outfile.write("((CURRENT_COUNT++))\n")
 
-                        if [ "$curr" -eq "$last_count" ]; then
-                            eval_count="null"
-                        else
-                            eval_count=$((curr + 1))
-                        fi
+            for hook_index, hook in enumerate(hooks):
+                if hook.get('hook_placement', '').strip().lower() == 'after':
+                    process_hook(hook, hook_index)
 
-                        echo "{{
-                            \\"curr\\": $curr,
-                            \\"last\\": $last_count,
-                            \\"eval\\": $eval_count,
-                            \\"datetime\\": \\"$datetime\\"
-                        }}" > "$EVAL_BUILD"
-                    }}
-                """)
-
-                outfile.write(header_script)
-                outfile.write('\n')
-
-                # Process hooks (before)
-                for hook_index, hook in enumerate(hooks):
-                    if hook.get('hook_placement', '').strip().lower() == 'before':
-                        process_hook(hook, hook_index)
-
-                for block_index, block in enumerate(code_blocks):
-                    if is_block_disabled(block):
-                        continue
-
-                    code = block.get('code', '')
-                    language = block.get('type')
-
-                    if language == 'bash':
-                        outfile.write(f"\n# Code Block {block_index} (Bash)\n")
-                        outfile.write(f"{code}\n")
-                        outfile.write("((CURR++))\n")
-                        outfile.write('log_and_update "$CURR"\n')
-                    elif language == 'python':
-                        py_script_file.write(f"# Code Block {block_index} (Python)\n")
-                        py_script_file.write(f"{code}\n\n")
-                        outfile.write("((CURR++))\n")
-                        outfile.write('log_and_update "$CURR"\n')
-
-                # Process hooks (after)
-                for hook_index, hook in enumerate(hooks):
-                    if hook.get('hook_placement', '').strip().lower() == 'after':
-                        process_hook(hook, hook_index)
-
-                temp_py_script_path.chmod(0o755)
-
-                outfile.write('\n# Execute the accumulated Python script\n')
-                outfile.write(f'$VENV_PYTHON "{temp_py_script_path}"\n')
-
-                outfile.write('\n# Clean up\n')
-                outfile.write(f'rm -f "{temp_py_script_path}"\n')
+            cleanup_script = dedent("""\
+                echo "__EXIT_PYTHON_EXECUTOR__" >&3
+                exec 3>&-
+                wait "$PYTHON_PID"
+                rm -f "$PIPE_PATH"
+                # rm -f "$SCRIPT_DIR/python_executor.py"
+                echo "Script completed."
+            """)
+            outfile.write(cleanup_script)
 
         temp_sh_path.chmod(0o755)
-
-        logging.info(f"Temp script generated successfully at {temp_sh_path}")
 
     except Exception as e:
         logging.error("An error occurred while creating temp script: %s", e, exc_info=True)
