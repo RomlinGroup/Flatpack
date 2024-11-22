@@ -33,6 +33,7 @@ import errno
 import json
 import logging
 import mimetypes
+import os
 import pty
 import random
 import re
@@ -46,6 +47,7 @@ import sqlite3
 import stat
 import string
 import subprocess
+import sys
 import tarfile
 import tempfile
 import time
@@ -56,25 +58,17 @@ from datetime import datetime, timedelta, timezone
 from importlib.metadata import version
 from io import BytesIO
 from logging.handlers import RotatingFileHandler
+from pathlib import Path
 from typing import List, Optional, Set, Union
 from zipfile import ZipFile
 
+from itsdangerous import BadSignature, SignatureExpired, TimestampSigner
+from pydantic import BaseModel
+
 import httpx
-import libcst as cst
 import psutil
 import requests
 import toml
-import uvicorn
-
-from fastapi import Cookie, Depends, FastAPI, Form, Header, HTTPException, Request
-from fastapi.responses import JSONResponse, RedirectResponse
-from fastapi.security import APIKeyCookie
-from itsdangerous import BadSignature, SignatureExpired, TimestampSigner
-from libcst import matchers as m
-from pydantic import BaseModel
-from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.middleware.sessions import SessionMiddleware
-from starlette.responses import JSONResponse
 
 from .database_manager import DatabaseManager
 from .error_handling import safe_exit, setup_exception_handling, setup_signal_handling
@@ -114,11 +108,14 @@ def lazy_import(module_name, package=None, callable_name=None):
 
 BackgroundTasks = lazy_import('fastapi', callable_name='BackgroundTasks')
 BeautifulSoup = lazy_import('bs4', callable_name='BeautifulSoup')
+Cookie = lazy_import('fastapi', callable_name='Cookie')
 CORSMiddleware = lazy_import('fastapi.middleware.cors', callable_name='CORSMiddleware')
 croniter = lazy_import('croniter', callable_name='croniter')
 Depends = lazy_import('fastapi', callable_name='Depends')
+FastAPI = lazy_import('fastapi', callable_name='FastAPI')
 FileResponse = lazy_import('fastapi.responses', callable_name='FileResponse')
 Form = lazy_import('fastapi', callable_name='Form')
+Header = lazy_import('fastapi', callable_name='Header')
 HTMLResponse = lazy_import('fastapi.responses', callable_name='HTMLResponse')
 HTTPException = lazy_import('fastapi', callable_name='HTTPException')
 JSONResponse = lazy_import('fastapi.responses', callable_name='JSONResponse')
@@ -126,9 +123,14 @@ ngrok = lazy_import('ngrok')
 NgrokError = lazy_import('ngrok.exceptions', callable_name='NgrokError')
 PrettyTable = lazy_import('prettytable', callable_name='PrettyTable')
 Request = lazy_import('fastapi', callable_name='Request')
+RedirectResponse = lazy_import('fastapi.responses', callable_name='RedirectResponse')
 Response = lazy_import('fastapi.responses', callable_name='Response')
-snapshot_download = lazy_import('huggingface_hub', callable_name='snapshot_download')
+SessionMiddleware = lazy_import('starlette.middleware.sessions', callable_name='SessionMiddleware')
+BaseHTTPMiddleware = lazy_import('starlette.middleware.base', callable_name='BaseHTTPMiddleware')
+APIKeyCookie = lazy_import('fastapi.security', callable_name='APIKeyCookie')
 StaticFiles = lazy_import('fastapi.staticfiles', callable_name='StaticFiles')
+snapshot_download = lazy_import('huggingface_hub', callable_name='snapshot_download')
+uvicorn = lazy_import('uvicorn')
 warnings = lazy_import('warnings')
 zstd = lazy_import('zstandard')
 
@@ -870,6 +872,10 @@ def get_token() -> Optional[str]:
 
 
 def initialize_fastapi_app(secret_key):
+    FastAPI = lazy_import('fastapi', callable_name='FastAPI')
+    SessionMiddleware = lazy_import('starlette.middleware.sessions', callable_name='SessionMiddleware')
+    CORSMiddleware = lazy_import('fastapi.middleware.cors', callable_name='CORSMiddleware')
+
     app = FastAPI(openapi_url=None)
 
     app.add_middleware(SessionMiddleware, secret_key=secret_key)
@@ -4029,6 +4035,12 @@ def fpk_cli_handle_run(args, session):
                 else:
                     console.print(f"[bold red]Error establishing ngrok ingress: {error_message}[/bold red]")
                 return
+
+    uvicorn = lazy_import('uvicorn')
+
+    if not uvicorn:
+        console.print("Failed to load uvicorn. Please check your installation.", style="bold red")
+        return
 
     config = uvicorn.Config(
         app,

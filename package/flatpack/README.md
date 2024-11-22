@@ -109,9 +109,6 @@ Check out the [JLA - Compatibility Checker](https://joinup.ec.europa.eu/collecti
 - **[itsdangerous](https://pypi.org/project/itsdangerous/)**\
   BSD License ([LICENSE](https://github.com/pallets/itsdangerous/blob/main/LICENSE.txt))
 
-- **[libcst](https://pypi.org/project/libcst/)**\
-   MIT License ([LICENSE](https://github.com/Instagram/LibCST/blob/main/LICENSE))
-
 - **[ngrok](https://pypi.org/project/ngrok/)**\
   MIT License (MIT OR Apache-2.0) ([LICENSE](https://github.com/ngrok/ngrok-python/blob/main/LICENSE-APACHE))
 
