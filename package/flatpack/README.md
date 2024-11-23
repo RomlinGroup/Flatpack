@@ -26,6 +26,9 @@ flatpacks (FPK)，将 AI 和 ML 集成到边缘计算、电子元件和机器人
 *Aglaonice, an ancient Greek astronomer from the 2nd or 1st century BC, was celebrated for her precise lunar eclipse
 predictions. Her mastery inspired the Greek proverb: "As the moon obeys Aglaonice," signifying unwavering certainty.*
 
+`3.11.0` (2024-11-24)\
+*Major core architecture refactoring for performance.*
+
 `3.10.0` (2024-10-21)\
 *Added dark mode support for a better user experience.*
 
@@ -148,4 +151,4 @@ Check out the [JLA - Compatibility Checker](https://joinup.ec.europa.eu/collecti
 - **[zstandard](https://pypi.org/project/zstandard/)**\
   BSD License (BSD) ([LICENSE](https://github.com/indygreg/python-zstandard/blob/main/LICENSE))
 
-Last updated: 2024-10-22
+Last updated: 2024-11-24
