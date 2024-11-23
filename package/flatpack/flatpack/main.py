@@ -534,12 +534,10 @@ def create_temp_sh(build_dir, custom_json_path: Path, temp_sh_path: Path, use_eu
                 import sys
                 import traceback
 
-                # Create a global namespace that persists between executions
                 GLOBAL_NAMESPACE = {}
 
                 def execute_code(code):
                     try:
-                        # Execute in the global namespace
                         exec(code, GLOBAL_NAMESPACE)
                     except Exception as e:
                         print(f"Error executing code: {e}", file=sys.stderr)
@@ -587,6 +585,29 @@ def create_temp_sh(build_dir, custom_json_path: Path, temp_sh_path: Path, use_eu
 
                 CURRENT_COUNT=0
                 LAST_COUNT={last_count}
+                
+                EVAL_BUILD="$(dirname "$SCRIPT_DIR")/web/output/eval_build.json"
+                EVAL_DATA="$(dirname "$SCRIPT_DIR")/web/output/eval_data.json"
+                echo '[]' > "$EVAL_DATA"
+                
+                function log_and_update() {{
+                     local CURRENT_COUNT="$1"
+                     
+                     files_since_last="$(find "${SCRIPT_DIR}" \
+                        -type f \
+                        -newer "${EVAL_DATA}" \
+                        \( \
+                            -name '*.gif' -o \
+                            -name '*.jpg' -o \
+                            -name '*.mp3' -o \
+                            -name '*.mp4' -o \
+                            -name '*.png' -o \
+                            -name '*.txt' -o \
+                            -name '*.wav' \
+                        \) \
+                        2>/dev/null
+                    )"
+                }}
             """)
 
             outfile.write(header_script)
@@ -640,7 +661,7 @@ def create_temp_sh(build_dir, custom_json_path: Path, temp_sh_path: Path, use_eu
                 exec 3>&-
                 wait "$PYTHON_PID"
                 rm -f "$PIPE_PATH"
-                # rm -f "$SCRIPT_DIR/python_executor.py"
+                rm -f "$SCRIPT_DIR/python_executor.py"
                 echo "Script completed."
             """)
             outfile.write(cleanup_script)
@@ -3534,7 +3555,7 @@ def setup_routes(app):
         if not flatpack_directory:
             raise HTTPException(status_code=500, detail="Flatpack directory is not set")
         output_folder = Path(flatpack_directory) / "web" / "output"
-        allowed_extensions = {'.gif', '.jpeg', '.jpg', '.mp3', '.mp4', '.png', '.wav'}
+        allowed_extensions = {'.gif', '.jpg', '.mp3', '.mp4', '.png', '.wav'}
         try:
             media_files = [
                 {
