@@ -582,6 +582,8 @@ def create_temp_sh(build_dir, custom_json_path: Path, temp_sh_path: Path, use_eu
                 export PYTHONPATH="$(dirname "$SCRIPT_DIR"):$PYTHONPATH"
 
                 echo "Virtual environment is $VENV_PYTHON"
+                
+                datetime=$(date -u +"%Y-%m-%d %H:%M:%S")
 
                 CURRENT_COUNT=0
                 LAST_COUNT={last_count}
@@ -609,12 +611,28 @@ def create_temp_sh(build_dir, custom_json_path: Path, temp_sh_path: Path, use_eu
                     )"
                     
                     if [ -n "$files_since_last" ]; then
-                        local log_entries="[]"
+                        local eval_data_json="[]"
 
                         for file in $files_since_last; do
                             local file_basename="/output/$(basename "$file")"
+                            local file_mime_type=$(file --mime-type -b "$file")
+                            local file_json="{{\\"eval\\": $CURRENT_COUNT, \\"file\\": \\"$file\\", \\"public\\": \\"$file_basename\\", \\"type\\": \\"$file_mime_type\\"}}"
+                            eval_data_json=$(echo "$eval_data_json" | jq ". + [$file_json]")
                         done
+                        
+                        jq -s '.[0] + .[1]' "$EVAL_DATA" <(echo "$eval_data_json") > "$EVAL_DATA.tmp" && mv "$EVAL_DATA.tmp" "$EVAL_DATA"
+                        
                     fi
+                    
+                    local eval_count
+                    
+                    if [ "$CURRENT_COUNT" -eq "$LAST_COUNT" ]; then
+                        eval_count="null"
+                    else
+                        eval_count=$((CURRENT_COUNT + 1))
+                    fi
+                    
+                    jq -nc --arg curr "$CURRENT_COUNT" --arg last "$LAST_COUNT" --arg eval "$eval_count" --arg dt "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" '{{curr: ($curr|tonumber), last: ($last|tonumber), eval: (if $eval == "null" then null else ($eval|tonumber) end), datetime: $dt }}' | jq '.' > "$EVAL_BUILD"
                 }}
             """)
 
