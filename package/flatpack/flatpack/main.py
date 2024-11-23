@@ -593,9 +593,9 @@ def create_temp_sh(build_dir, custom_json_path: Path, temp_sh_path: Path, use_eu
                 function log_and_update() {{
                      local CURRENT_COUNT="$1"
                      
-                     files_since_last="$(find "${SCRIPT_DIR}" \
+                     files_since_last="$(find "${{SCRIPT_DIR}}" \
                         -type f \
-                        -newer "${EVAL_DATA}" \
+                        -newer "${{EVAL_DATA}}" \
                         \( \
                             -name '*.gif' -o \
                             -name '*.jpg' -o \
