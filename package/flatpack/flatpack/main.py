@@ -590,7 +590,7 @@ def create_temp_sh(build_dir, custom_json_path: Path, temp_sh_path: Path, use_eu
                 EVAL_DATA="$(dirname "$SCRIPT_DIR")/web/output/eval_data.json"
                 echo '[]' > "$EVAL_DATA"
                 
-                function log_and_update() {{
+                function log_eval_data() {{
                      local CURRENT_COUNT="$1"
                      
                      files_since_last="$(find "${{SCRIPT_DIR}}" \
@@ -607,6 +607,14 @@ def create_temp_sh(build_dir, custom_json_path: Path, temp_sh_path: Path, use_eu
                         \) \
                         2>/dev/null
                     )"
+                    
+                    if [ -n "$files_since_last" ]; then
+                        local log_entries="[]"
+
+                        for file in $files_since_last; do
+                            local file_basename="/output/$(basename "$file")"
+                        done
+                    fi
                 }}
             """)
 
@@ -644,13 +652,14 @@ def create_temp_sh(build_dir, custom_json_path: Path, temp_sh_path: Path, use_eu
                 if language == 'bash':
                     outfile.write(f"\n# Code Block {block_index} (Bash)\n")
                     outfile.write(f"{code}\n")
-                    outfile.write("((CURRENT_COUNT++))\n")
 
                 elif language == 'python':
                     outfile.write(f"\n# Code Block {block_index} (Python)\n")
                     outfile.write(send_code_to_python(code))
-                    outfile.write('\n')
-                    outfile.write("((CURRENT_COUNT++))\n")
+                    outfile.write("\n")
+
+                outfile.write("((CURRENT_COUNT++))\n")
+                outfile.write("log_eval_data \"$CURRENT_COUNT\"\n")
 
             for hook_index, hook in enumerate(hooks):
                 if hook.get('hook_placement', '').strip().lower() == 'after':
