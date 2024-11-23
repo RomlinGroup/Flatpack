@@ -15,7 +15,7 @@ from pypdf import PdfReader
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from sentence_transformers import SentenceTransformer
-from typing import Dict, List
+from typing import Any, Dict, List
 
 warnings.filterwarnings('ignore', category=FutureWarning)
 
@@ -129,9 +129,15 @@ class VectorManager:
         if os.path.exists(self.index_file):
             self.index.load_index(self.index_file, max_elements=MAX_ELEMENTS)
         else:
-            self.index.init_index(max_elements=MAX_ELEMENTS, ef_construction=200, M=16)
+            self.index.init_index(
+                max_elements=100000,
+                ef_construction=400,
+                M=100
+            )
+
             if self.embeddings is not None and len(self.embeddings) > 0:
                 self.index.add_items(self.embeddings, self.ids)
+
         self.index.set_ef(200)
 
     def is_index_ready(self):
@@ -202,31 +208,35 @@ class VectorManager:
             self.metadata.update(new_entries)
             self._save_metadata_and_embeddings()
 
-    def search_vectors(self, query_text: str, top_k=5):
+    def search_vectors(self, query: str, top_k: int = 5) -> List[Dict[str, Any]]:
         if not self.is_index_ready():
             return []
 
-        start_time = time.time()
-        query_embedding = self.model.encode([query_text])[0]
+        query_embedding = self.model.encode([query], normalize_embeddings=True)
 
-        start_time = time.time()
-        labels, distances = self.index.knn_query(query_embedding, k=top_k)
-        print(f"Search completed in {time.time() - start_time:.2f} seconds")
+        try:
+            actual_k = min(top_k, self.index.get_current_count())
 
-        results = []
-        for label, distance in zip(labels[0], distances[0]):
-            entry = self.metadata.get(str(label))
-            if entry:
-                result = {
-                    "id": entry['hash'],
-                    "distance": float(distance),
-                    "source": entry['source'],
-                    "date": entry['date'],
-                    "text": entry['text']
-                }
-                results.append(result)
+            if actual_k < 1:
+                return []
 
-        return results
+            labels, distances = self.index.knn_query(query_embedding, k=actual_k)
+
+            results = []
+            for idx, distance in zip(labels[0], distances[0]):
+                str_idx = str(idx)
+
+                if str_idx in self.metadata:
+                    results.append({
+                        'id': int(idx),
+                        'text': self.metadata[str_idx]['text'],
+                        'source': self.metadata[str_idx]['source'],
+                        'distance': float(distance)
+                    })
+            return results
+        except RuntimeError as e:
+            print(f"Search failed, trying with lower k: {str(e)}")
+            return self.search_vectors(query, top_k=max(1, top_k // 2))
 
     def _process_text_and_add(self, text, source_reference):
         """Process the text into chunks and add to the index."""
