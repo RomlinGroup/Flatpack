@@ -195,6 +195,7 @@ flatpack compress <hf_model_name> --method llama.cpp --token <hf_token>
   - robotomono.woff2
   - flatpack.toml
   - README.md
+  - connections.json
   - custom.json
   - hooks.json
   - build.sh
