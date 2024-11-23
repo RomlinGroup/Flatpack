@@ -671,7 +671,6 @@ def create_temp_sh(build_dir, custom_json_path: Path, temp_sh_path: Path, use_eu
                 wait "$PYTHON_PID"
                 rm -f "$PIPE_PATH"
                 rm -f "$SCRIPT_DIR/python_executor.py"
-                echo "Script completed."
             """)
             outfile.write(cleanup_script)
 
