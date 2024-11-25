@@ -7,7 +7,7 @@
   {
     "type": "bash",
     "disabled": false,
-    "code": "./llama-cli \\\n    -m models/AMD-Llama-135m-Q4_K_M.gguf \\\n    -n 64 \\\n    -p \"What is the meaning of life?\" \\\n    > output.txt \\\n    2>log.txt"
+    "code": "./llama-cli \\\n    -m models/AMD-Llama-135m-Q4_K_M.gguf \\\n    -n 64 \\\n    --no-display-prompt \\\n    -p \"What is the meaning of life?\" \\\n    > output.txt \\\n    2>log.txt"
   },
   {
     "type": "bash",
