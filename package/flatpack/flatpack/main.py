@@ -2674,6 +2674,12 @@ def setup_arg_parser():
         help='Directory path for storing the vector database and metadata files'
     )
 
+    parser_search_text.add_argument(
+        '--json',
+        action='store_true',
+        help='Output results in JSON format'
+    )
+
     parser_search_text.set_defaults(
         func=fpk_cli_handle_vector_commands
     )
@@ -4247,16 +4253,25 @@ def fpk_cli_handle_vector_commands(args, session, vm):
 
     elif args.vector_command == 'search-text':
         results = vm.search_vectors(args.query)
-        if results:
-            console.print("[bold cyan]Search results:[/bold cyan]")
-            table = Table(show_header=True, header_style="bold magenta")
-            table.add_column("ID", style="dim", width=12)
-            table.add_column("Text")
-            for result in results:
-                table.add_row(str(result['id']), result['text'])
-            console.print(table)
+
+        if hasattr(args, 'json') and args.json:
+            json_results = [{"id": r['id'], "text": r['text']} for r in results]
+            print(json.dumps(json_results))
         else:
-            console.print("[yellow]No results found.[/yellow]")
+            if results:
+                console.print("[bold cyan]Search results:[/bold cyan]")
+
+                table = Table(show_header=True, header_style="bold magenta")
+                table.add_column("ID", style="dim", width=12)
+                table.add_column("Text")
+
+                for result in results:
+                    table.add_row(str(result['id']), result['text'])
+
+                console.print(table)
+
+            else:
+                console.print("[yellow]No results found.[/yellow]")
 
     elif args.vector_command == 'add-pdf':
         console.print(f"[bold blue]Adding PDF: {args.pdf_path}[/bold blue]")
