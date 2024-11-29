@@ -12,7 +12,7 @@
   {
     "type": "bash",
     "disabled": false,
-    "code": "mkdir -p build || { echo \"Failed to create build directory\"; exit 1; }\n\nOS_NAME=$(uname -s)\nif [[ \"$OS_NAME\" == \"Linux\" && -x \"$(command -v nvidia-smi)\" ]]; then\n    cmake -B build -DSD_CUBLAS=ON || { echo \"cmake configuration failed on Linux with CUDA\"; exit 1; }\nelif [[ \"$OS_NAME\" == \"Darwin\" ]]; then\n    cmake -B build -DSD_METAL=ON || { echo \"cmake configuration failed on macOS\"; exit 1; }\nelse\n    cmake -B build || { echo \"cmake configuration failed\"; exit 1; }\nfi\n\ncmake --build build --config Release || { echo \"Build failed\"; exit 1; }"
+    "code": "rm -rf build\nmkdir -p build || { echo \"Failed to create build directory\"; exit 1; }\n\ncd build\n\ncmake ..\ncmake --build . --config Release\n\ncd .."
   },
   {
     "type": "bash",
