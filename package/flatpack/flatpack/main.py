@@ -517,11 +517,11 @@ def create_temp_sh(build_dir, custom_json_path: Path, temp_sh_path: Path, use_eu
             if not all(field in hook for field in required_fields):
                 return
 
-            outfile.write(f"echo ''\n")
-
             if hook['hook_type'] == 'bash':
+                outfile.write(f"echo ''\n")
                 outfile.write(f"{hook['hook_script']}\n")
             elif hook['hook_type'] == 'python':
+                outfile.write(f"echo ''\n")
                 outfile.write(send_code_to_python(hook['hook_script']))
                 outfile.write('\n')
 
