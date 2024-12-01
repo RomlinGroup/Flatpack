@@ -517,8 +517,6 @@ def create_temp_sh(build_dir, custom_json_path: Path, temp_sh_path: Path, use_eu
             if not all(field in hook for field in required_fields):
                 return
 
-            outfile.write(f"echo ''\n")
-
             if hook['hook_type'] == 'bash':
                 outfile.write(f"{hook['hook_script']}\n")
             elif hook['hook_type'] == 'python':
@@ -541,12 +539,13 @@ def create_temp_sh(build_dir, custom_json_path: Path, temp_sh_path: Path, use_eu
                 def execute_code(code):
                     try:
                         exec(code, GLOBAL_NAMESPACE)
-                        sys.stdout.flush()
-                        sys.stderr.flush()
                     except Exception as e:
                         print(f"Error executing code: {e}", file=sys.stderr)
                         traceback.print_exc()
-                        sys.exit(1)
+                    finally:
+                        # Signal the end of the code block execution
+                        print("__CODE_BLOCK_END__")
+                        sys.stdout.flush()
 
                 if __name__ == "__main__":
                     while True:
@@ -554,12 +553,11 @@ def create_temp_sh(build_dir, custom_json_path: Path, temp_sh_path: Path, use_eu
                         for line in sys.stdin:
                             if line.strip() == "__EXIT_PYTHON_EXECUTOR__":
                                 sys.exit(0)
-                            if line.strip() == "__END_CODE_BLOCK__":
+                            elif line.strip() == "__END_CODE_BLOCK__":
                                 break
                             code_block.append(line)
                         if code_block:
-                            execute_code(''.join(code_block))
-                            print("EXECUTION_COMPLETE", flush=True)
+                            execute_code("".join(code_block))
             """))
 
         executor_path.chmod(0o755)
@@ -607,20 +605,18 @@ def create_temp_sh(build_dir, custom_json_path: Path, temp_sh_path: Path, use_eu
                 function log_eval_data() {{
                      local CURRENT_COUNT="$1"
 
-                     echo "[LOG] Running log_eval_data for block $CURRENT_COUNT"
-
-                     files_since_last="$(find "${{SCRIPT_DIR}}" \\
-                        -type f \\
-                        -newer "${{EVAL_DATA}}" \\
-                        \\( \\
-                            -name '*.gif' -o \\
-                            -name '*.jpg' -o \\
-                            -name '*.mp3' -o \\
-                            -name '*.mp4' -o \\
-                            -name '*.png' -o \\
-                            -name '*.txt' -o \\
-                            -name '*.wav' \\
-                        \\) \\
+                     files_since_last="$(find "${{SCRIPT_DIR}}" \
+                        -type f \
+                        -newer "${{EVAL_DATA}}" \
+                        \( \
+                            -name '*.gif' -o \
+                            -name '*.jpg' -o \
+                            -name '*.mp3' -o \
+                            -name '*.mp4' -o \
+                            -name '*.png' -o \
+                            -name '*.txt' -o \
+                            -name '*.wav' \
+                        \) \
                         2>/dev/null
                     )"
 
@@ -646,62 +642,38 @@ def create_temp_sh(build_dir, custom_json_path: Path, temp_sh_path: Path, use_eu
                         eval_count=$((CURRENT_COUNT + 1))
                     fi
 
-                    jq -nc --arg curr "$CURRENT_COUNT" --arg last "$LAST_COUNT" --arg eval "$eval_count" --arg dt "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" '{{"curr": ($curr|tonumber), "last": ($last|tonumber), "eval": (if $eval == "null" then null else ($eval|tonumber) end), "datetime": $dt }}' | jq '.' > "$EVAL_BUILD"
+                    jq -nc --arg curr "$CURRENT_COUNT" --arg last "$LAST_COUNT" --arg eval "$eval_count" --arg dt "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" '{{curr: ($curr|tonumber), last: ($last|tonumber), eval: (if $eval == "null" then null else ($eval|tonumber) end), datetime: $dt }}' | jq '.' > "$EVAL_BUILD"
                 }}
             """)
 
             outfile.write(header_script)
             outfile.write('\n')
 
-            # Add trap and cleanup function
-            trap_and_cleanup = dedent("""\
-                function cleanup() {
-                    echo "__EXIT_PYTHON_EXECUTOR__" >&3 2>/dev/null || true
-                    exec 3>&- 2>/dev/null || true
-                    exec 4<&- 2>/dev/null || true
-                    wait "${PYTHON_EXECUTOR_PID}" 2>/dev/null || true
-                    rm -f python_stdin python_stdout
-                }
-                trap cleanup EXIT
-            """)
-            outfile.write(trap_and_cleanup)
-            outfile.write('\n')
-
             pipe_setup = dedent("""\
-                rm -f python_stdin python_stdout
-                mkfifo python_stdin
-                mkfifo python_stdout
-
-                "$VENV_PYTHON" -u "$SCRIPT_DIR/python_executor.py" < python_stdin > python_stdout &
-                PYTHON_EXECUTOR_PID=$!
-
-                exec 3> python_stdin
-                exec 4< python_stdout
-
-                function send_code_to_python_and_wait() {
-                    cat >&3
-                    echo '__END_CODE_BLOCK__' >&3
-
-                    while read -r line <&4; do
-                        if [[ "$line" == "EXECUTION_COMPLETE" ]]; then
-                            break
-                        elif [[ "$line" == "Error executing code:"* ]]; then
-                            echo "$line" >&2
-                            exit 1
-                        else
-                            echo "$line"
-                        fi
-                    done
-                }
+                PIPE_PATH="$SCRIPT_DIR/python_pipe"
+                OUTPUT_PIPE="$SCRIPT_DIR/python_output_pipe"
+                rm -f "$PIPE_PATH" "$OUTPUT_PIPE"
+                mkfifo "$PIPE_PATH" "$OUTPUT_PIPE"
+                "$VENV_PYTHON" "$SCRIPT_DIR/python_executor.py" < "$PIPE_PATH" > "$OUTPUT_PIPE" &
+                PYTHON_PID=$!
+                exec 3> "$PIPE_PATH"
+                exec 4< "$OUTPUT_PIPE"
             """)
             outfile.write(pipe_setup)
             outfile.write('\n')
 
             def send_code_to_python(code):
                 return dedent("""\
-                    send_code_to_python_and_wait << 'EOF_CODE'
-                    {}
-                    EOF_CODE
+                   cat << 'EOF' >&3
+                   {}
+                   EOF
+                   echo "__END_CODE_BLOCK__" >&3
+                   while IFS= read -r line <&4; do
+                       if [[ "$line" == "__CODE_BLOCK_END__" ]]; then
+                           break
+                       fi
+                       echo "$line"
+                   done
                 """).format(code)
 
             for hook_index, hook in enumerate(hooks):
@@ -715,25 +687,31 @@ def create_temp_sh(build_dir, custom_json_path: Path, temp_sh_path: Path, use_eu
                 code = block.get('code', '')
                 language = block.get('type')
 
-                outfile.write(f"echo ''\n")
-
                 if language == 'bash':
-                    outfile.write(f"\necho '[BEGIN] Executing block {block_index} (Bash)'\n")
+                    outfile.write(f"\necho '💥 Executing code block {block_index} (Bash)'\n")
                     outfile.write(f"{code}\n")
-                    outfile.write(f"\necho '[END] Executing block {block_index} (Bash)'\n")
 
                 elif language == 'python':
-                    outfile.write(f"\necho '[BEGIN] Executing block {block_index} (Python)'\n")
+                    outfile.write(f"\necho '💥 Executing code block {block_index} (Python)'\n")
                     outfile.write(send_code_to_python(code))
-                    outfile.write(f"\necho '[END] Executing block {block_index} (Python)'\n")
                     outfile.write("\n")
 
-                outfile.write("log_eval_data \"$CURRENT_COUNT\"\n")
                 outfile.write("((CURRENT_COUNT++))\n")
+                outfile.write("log_eval_data \"$CURRENT_COUNT\"\n")
 
             for hook_index, hook in enumerate(hooks):
                 if hook.get('hook_placement', '').strip().lower() == 'after':
                     process_hook(hook, hook_index)
+
+            cleanup_script = dedent("""\
+                echo "__EXIT_PYTHON_EXECUTOR__" >&3
+                exec 3>&-
+                exec 4<&-
+                wait "$PYTHON_PID"
+                rm -f "$PIPE_PATH" "$OUTPUT_PIPE"
+                rm -f "$SCRIPT_DIR/python_executor.py"
+            """)
+            outfile.write(cleanup_script)
 
         temp_sh_path.chmod(0o755)
 
