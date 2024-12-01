@@ -518,10 +518,8 @@ def create_temp_sh(build_dir, custom_json_path: Path, temp_sh_path: Path, use_eu
                 return
 
             if hook['hook_type'] == 'bash':
-                outfile.write(f"echo ''\n")
                 outfile.write(f"{hook['hook_script']}\n")
             elif hook['hook_type'] == 'python':
-                outfile.write(f"echo ''\n")
                 outfile.write(send_code_to_python(hook['hook_script']))
                 outfile.write('\n')
 
@@ -592,7 +590,6 @@ def create_temp_sh(build_dir, custom_json_path: Path, temp_sh_path: Path, use_eu
 
                 datetime=$(date -u +"%Y-%m-%d %H:%M:%S")
 
-                CURRENT_COUNT=0
                 LAST_COUNT={last_count}
 
                 EVAL_BUILD="$(dirname "$SCRIPT_DIR")/web/output/eval_build.json"
@@ -605,9 +602,9 @@ def create_temp_sh(build_dir, custom_json_path: Path, temp_sh_path: Path, use_eu
                 touch "$EVAL_DATA"
 
                 function log_eval_data() {{
-                     local CURRENT_COUNT="$1"
+                     local block_index="$1"
 
-                     echo "[LOG] Running log_eval_data for block $CURRENT_COUNT"
+                     echo "[LOG] Running log_eval_data for block $block_index"
 
                      files_since_last="$(find "${{SCRIPT_DIR}}" \\
                         -type f \\
@@ -630,7 +627,7 @@ def create_temp_sh(build_dir, custom_json_path: Path, temp_sh_path: Path, use_eu
                         for file in $files_since_last; do
                             local file_basename="/output/$(basename "$file")"
                             local file_mime_type=$(file --mime-type -b "$file")
-                            local file_json="{{\\"eval\\": $CURRENT_COUNT, \\"file\\": \\"$file\\", \\"public\\": \\"$file_basename\\", \\"type\\": \\"$file_mime_type\\"}}"
+                            local file_json="{{\\"eval\\": $block_index, \\"file\\": \\"$file\\", \\"public\\": \\"$file_basename\\", \\"type\\": \\"$file_mime_type\\"}}"
                             eval_data_json=$(echo "$eval_data_json" | jq ". + [$file_json]")
                         done
 
@@ -640,20 +637,19 @@ def create_temp_sh(build_dir, custom_json_path: Path, temp_sh_path: Path, use_eu
 
                     local eval_count
 
-                    if [ "$CURRENT_COUNT" -eq "$LAST_COUNT" ]; then
+                    if [ "$block_index" -eq "$LAST_COUNT" ]; then
                         eval_count="null"
                     else
-                        eval_count=$((CURRENT_COUNT + 1))
+                        eval_count=$((block_index + 1))
                     fi
 
-                    jq -nc --arg curr "$CURRENT_COUNT" --arg last "$LAST_COUNT" --arg eval "$eval_count" --arg dt "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" '{{"curr": ($curr|tonumber), "last": ($last|tonumber), "eval": (if $eval == "null" then null else ($eval|tonumber) end), "datetime": $dt }}' | jq '.' > "$EVAL_BUILD"
+                    jq -nc --arg curr "$block_index" --arg last "$LAST_COUNT" --arg eval "$eval_count" --arg dt "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" '{{"curr": ($curr|tonumber), "last": ($last|tonumber), "eval": (if $eval == "null" then null else ($eval|tonumber) end), "datetime": $dt }}' | jq '.' > "$EVAL_BUILD"
                 }}
             """)
 
             outfile.write(header_script)
             outfile.write('\n')
 
-            # Add trap and cleanup function
             trap_and_cleanup = dedent("""\
                 function cleanup() {
                     echo "__EXIT_PYTHON_EXECUTOR__" >&3 2>/dev/null || true
@@ -715,8 +711,6 @@ def create_temp_sh(build_dir, custom_json_path: Path, temp_sh_path: Path, use_eu
                 code = block.get('code', '')
                 language = block.get('type')
 
-                outfile.write(f"echo ''\n")
-
                 if language == 'bash':
                     outfile.write(f"\necho '[BEGIN] Executing block {block_index} (Bash)'\n")
                     outfile.write(f"{code}\n")
@@ -728,8 +722,7 @@ def create_temp_sh(build_dir, custom_json_path: Path, temp_sh_path: Path, use_eu
                     outfile.write(f"\necho '[END] Executing block {block_index} (Python)'\n")
                     outfile.write("\n")
 
-                outfile.write("log_eval_data \"$CURRENT_COUNT\"\n")
-                outfile.write("((CURRENT_COUNT++))\n")
+                outfile.write(f"log_eval_data \"{block_index}\"\n")
 
             for hook_index, hook in enumerate(hooks):
                 if hook.get('hook_placement', '').strip().lower() == 'after':
