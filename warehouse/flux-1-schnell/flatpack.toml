@@ -43,8 +43,7 @@ branch = "master"
 requirements_file = "requirements.txt"
 setup_commands = [
     "git pull origin master",
-    "git submodule init",
-    "git submodule update"
+    "git submodule update --init --recursive"
 ]
 
 [[file]]
