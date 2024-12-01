@@ -36,15 +36,14 @@ tiktoken = "0.7.0"
 tqdm = "4.66.5"
 transformers = "4.45.2"
 
-[[git]]
-from_source = "https://github.com/leejet/stable-diffusion.cpp"
-to_destination = "stable-diffusion.cpp"
-branch = "master"
-requirements_file = "requirements.txt"
-setup_commands = [
-    "git pull origin master",
-    "git submodule update --init --recursive"
-]
+# [[git]]
+# from_source = "{{git_source_url}}"
+# to_destination = "{{git_destination_dir}}"
+# branch = "{{branch_name}}"
+# requirements_file = "requirements.txt"
+# setup_commands = [
+#   "{{setup_command}}"
+# ]
 
 [[file]]
 from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/flux-1-schnell/custom.json"
