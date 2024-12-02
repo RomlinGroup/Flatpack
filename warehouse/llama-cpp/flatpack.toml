@@ -40,7 +40,8 @@ to_destination = "llama.cpp"
 branch = "master"
 requirements_file = "requirements.txt"
 setup_commands = [
-    "make"
+    "cmake -B build",
+    "cmake --build build --config Release"
 ]
 
 [[file]]
