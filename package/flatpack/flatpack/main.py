@@ -2756,7 +2756,7 @@ def fpk_cli_handle_add_pdf(pdf_path, vm):
         return
 
     try:
-        vm.add_pdf(pdf_path, pdf_path)
+        vm.add_pdf(pdf_path)
         logger.info("Added text from PDF: '%s' to the vector database.", pdf_path)
     except Exception as e:
         logger.error("Failed to add PDF to the vector database: %s", e)
