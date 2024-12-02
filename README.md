@@ -30,7 +30,7 @@ Flatpack 通过微语言模型和模型压缩普及 AI 和 ML。我们的平台�
 
 ## Disclaimer
 
-While Flatpack empowers users to explore innovative AI integrations, it is designed specifically for educational, experimental, and low-risk applications. It is not intended for deployment in high-stakes or safety-critical environments without thorough compliance and risk assessments.
+Flatpack is a general-purpose generative AI platform that supports educational, experimental, and low-risk applications, offering flexible tools for innovation and research. Flatpack is not intended for deployment in high-stakes or regulated environments, such as critical infrastructure, healthcare, law enforcement, or other areas classified as high-risk under the EU AI Act (Regulation 2024/1689). Users are solely responsible for conducting thorough compliance assessments and ensuring that any use of Flatpack adheres to applicable laws, including the EU AI Act and related regulations.
 
 ## Micro language models
 
