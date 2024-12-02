@@ -7,11 +7,6 @@
   {
     "type": "bash",
     "disabled": false,
-    "code": "./llama-cli \\\n    -m models/Phi-3.5-mini-instruct-Q4_K_M.gguf \\\n    -n 128 \\\n    --no-display-prompt \\\n    -p $PROMPT \\\n    > output.txt \\\n    2>log.txt"
-  },
-  {
-    "type": "bash",
-    "disabled": false,
-    "code": "if [ -f \"output.txt\" ]; then\n    cat output.txt\nelse\n    echo \"Error: output.txt does not exist.\"\nfi"
+    "code": "./build/bin/llama-cli \\\n    -m models/Phi-3.5-mini-instruct-Q4_K_M.gguf \\\n    -n $TOKENS \\\n    --no-display-prompt \\\n    -p \"$PROMPT\" \\\n    > output.txt \\\n    2>log.txt"
   }
 ]
