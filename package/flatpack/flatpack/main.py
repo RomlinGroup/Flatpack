@@ -3532,7 +3532,7 @@ def setup_routes(app):
     @app.get("/api/heartbeat", dependencies=[Depends(csrf_protect)])
     async def heartbeat():
         """Endpoint to check the server heartbeat."""
-        current_time = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
+        current_time = datetime.utcnow().strftime('%Y-%m-%d %H:%M')
         return JSONResponse(content={"server_time": current_time}, status_code=200)
 
     @app.get("/api/hook-mappings/{target_id}", dependencies=[Depends(csrf_protect)])
