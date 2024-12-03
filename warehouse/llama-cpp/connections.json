@@ -1,10 +1,3 @@
 {
-  "connections": [
-    {
-      "source_id": "coming-soon",
-      "target_id": "prompt-prompt",
-      "source_type": "source",
-      "target_type": "hook"
-    }
-  ]
+  "connections": []
 }
