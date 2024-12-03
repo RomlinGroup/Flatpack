@@ -1,13 +1,13 @@
 {
   "hooks": [
     {
-      "id": 3,
+      "id": 1,
       "hook_name": "tokens",
       "hook_placement": "before",
-      "hook_script": "TOKENS=\"128\"",
+      "hook_script": "TOKENS=\"64\"",
       "hook_type": "bash",
       "show_on_frontpage": true,
-      "created_at": "2024-12-02 22:12:52"
+      "created_at": "2024-12-02 22:20:57"
     },
     {
       "id": 2,
@@ -16,7 +16,7 @@
       "hook_script": "PROMPT=\"What is the meaning of life?\"",
       "hook_type": "bash",
       "show_on_frontpage": true,
-      "created_at": "2024-12-02 21:00:36"
+      "created_at": "2024-12-02 22:20:57"
     }
   ]
 }

@@ -7,6 +7,26 @@
   {
     "type": "bash",
     "disabled": false,
-    "code": "./build/bin/llama-cli \\\n    -m models/Phi-3.5-mini-instruct-Q4_K_M.gguf \\\n    -n $TOKENS \\\n    --no-display-prompt \\\n    -p \"$PROMPT\" \\\n    > output.txt \\\n    2>log.txt"
+    "code": "./build/bin/llama-cli \\\n    -m models/Phi-3.5-mini-instruct-Q4_K_M.gguf \\\n    -n $TOKENS \\\n    --no-display-prompt \\\n    -p \"<|system|> You are a helpful assistant.<|end|><|user|> $PROMPT<|end|><|assistant|>\" \\\n    > output.txt \\\n    2>log.txt"
+  },
+  {
+    "type": "bash",
+    "disabled": false,
+    "code": "../bin/pip install \\\nonnxruntime==1.20.1 \\\nphonemizer==3.3.0 \\\npiper-phonemize-cross==1.2.1 \\\npiper-tts==1.2.0 --no-deps"
+  },
+  {
+    "type": "bash",
+    "disabled": false,
+    "code": "if [ ! -f en_GB-alba-medium.onnx ]; then\n    wget -nc -O en_GB-alba-medium.onnx \"https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_GB/alba/medium/en_GB-alba-medium.onnx\"\nelse\n    echo \"en_GB-alba-medium.onnx already exists.\"\nfi\n\nif [ ! -f en_GB-alba-medium.onnx.json ]; then\n    wget -nc -O en_GB-alba-medium.onnx.json \"https://huggingface.co/rhasspy/piper-voices/raw/main/en/en_GB/alba/medium/en_GB-alba-medium.onnx.json\"\nelse\n    echo \"en_GB-alba-medium.onnx.json already exists.\"\nfi"
+  },
+  {
+    "type": "bash",
+    "disabled": false,
+    "code": "cp -rp /opt/homebrew/Cellar/espeak-ng/1.51/share/espeak-ng-data ../lib/python3.12/site-packages/piper_phonemize/espeak-ng-data"
+  },
+  {
+    "type": "bash",
+    "disabled": false,
+    "code": "echo \"$(cat output.txt)\" | \"../bin/piper\" \\\n--model \"en_GB-alba-medium.onnx\" \\\n--output-file output.wav > /dev/null 2>&1"
   }
 ]
