@@ -209,6 +209,7 @@ class EndpointFilter(logging.Filter):
                 'GET /api/heartbeat',
                 'GET /api/build-status',
                 'GET /api/list-media-files',
+                'GET /api/source-hook-mappings',
                 'GET /csrf-token',
                 'POST /api/clear-build-status'
             ]
