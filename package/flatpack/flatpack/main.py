@@ -59,7 +59,7 @@ from importlib.metadata import version
 from io import BytesIO
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
-from typing import List, Optional, Set, Union
+from typing import Dict, List, Optional, Set, Union
 from zipfile import ZipFile
 
 from itsdangerous import BadSignature, SignatureExpired, TimestampSigner
@@ -226,6 +226,18 @@ class Hook(BaseModel):
 
 class MappingResults(BaseModel):
     mappings: List[dict]
+
+
+class Source(BaseModel):
+    source_name: str
+    source_type: str
+    source_details: Optional[dict] = None
+
+
+class SourceUpdate(BaseModel):
+    source_name: Optional[str]
+    source_type: Optional[str]
+    source_details: Optional[Dict[str, str]]
 
 
 class SourceHookMapping(BaseModel):
@@ -3236,6 +3248,7 @@ def setup_routes(app):
 
     @app.on_event("startup")
     async def startup_event():
+        """Handle startup tasks, including initializing server state and scheduling."""
         global SERVER_START_TIME
         SERVER_START_TIME = datetime.now(timezone.utc)
         app.state.csrf_token_base = secrets.token_urlsafe(32)
@@ -3245,6 +3258,7 @@ def setup_routes(app):
 
     @app.on_event("shutdown")
     async def shutdown_event():
+        """Handle shutdown tasks, including disconnecting ngrok ingress."""
         if hasattr(app.state, 'ngrok_listener'):
             try:
                 ngrok_module = lazy_import('ngrok')
@@ -3265,12 +3279,14 @@ def setup_routes(app):
 
     @app.middleware("http")
     async def csrf_middleware(request: Request, call_next):
+        """Enforces CSRF protection on non-GET requests, excluding exempt paths."""
         if request.method != "GET" and not any(request.url.path.startswith(path) for path in CSRF_EXEMPT_PATHS):
             await csrf_protect(request)
         return await call_next(request)
 
     @app.get("/csrf-token")
     async def get_csrf_token(request: Request, response: Response):
+        """Generate and return a CSRF token, setting it as an HTTP-only cookie."""
         csrf_token = secrets.token_urlsafe(32)
         timestamp = str(int(time.time()))
         token_with_timestamp = f"{timestamp}:{csrf_token}"
@@ -3288,6 +3304,7 @@ def setup_routes(app):
 
     @app.get("/favicon.ico", include_in_schema=False)
     async def favicon():
+        """Serve the favicon if it exists."""
         favicon_path = Path(flatpack_directory) / "build" / "favicon.ico"
         if favicon_path.exists():
             return FileResponse(favicon_path)
@@ -3295,10 +3312,12 @@ def setup_routes(app):
 
     @app.post("/test-csrf", dependencies=[Depends(csrf_protect)])
     async def test_csrf(request: Request):
+        """Test the CSRF protection mechanism."""
         return {"message": "CSRF check passed successfully!"}
 
     @app.get("/test-db")
     async def test_db():
+        """Test the database connection."""
         try:
             initialize_database_manager(str(flatpack_directory))
             db_manager._execute_query("SELECT 1")
@@ -3552,6 +3571,7 @@ def setup_routes(app):
 
     @app.post("/api/hooks", dependencies=[Depends(csrf_protect)])
     async def add_hook(hook: Hook, token: str = Depends(authenticate_token)):
+        """Add a new hook to the database."""
         try:
             response = add_hook_to_database(hook)
             if "existing_hook" in response:
@@ -3569,6 +3589,7 @@ def setup_routes(app):
 
     @app.delete("/api/hooks/{hook_id}", dependencies=[Depends(csrf_protect)])
     async def delete_hook(hook_id: int, token: str = Depends(authenticate_token)):
+        """Delete a specific hook by its ID."""
         ensure_database_initialized()
         try:
             if db_manager.delete_hook(hook_id):
@@ -3582,6 +3603,7 @@ def setup_routes(app):
 
     @app.get("/api/hooks", response_model=List[Hook], dependencies=[Depends(csrf_protect)])
     async def get_hooks(token: str = Depends(authenticate_token)):
+        """Retrieve all hooks from the database and synchronize with the hooks file."""
         try:
             hooks_from_file = load_hooks_from_file()
             for hook in hooks_from_file:
@@ -3597,6 +3619,7 @@ def setup_routes(app):
 
     @app.put("/api/hooks/{hook_id}", dependencies=[Depends(csrf_protect)])
     async def update_hook(hook_id: int, hook: Hook, token: str = Depends(authenticate_token)):
+        """Update an existing hook by its ID."""
         ensure_database_initialized()
         try:
             success = db_manager.update_hook(
@@ -3620,6 +3643,7 @@ def setup_routes(app):
 
     @app.get("/api/list-media-files", dependencies=[Depends(csrf_protect)])
     async def list_media_files(token: str = Depends(authenticate_token)):
+        """List all media files from the output directory."""
         global flatpack_directory
         if not flatpack_directory:
             raise HTTPException(status_code=500, detail="Flatpack directory is not set")
@@ -3645,6 +3669,7 @@ def setup_routes(app):
             filename: str,
             token: str = Depends(authenticate_token)
     ):
+        """Load a file from the flatpack build directory."""
         if not flatpack_directory:
             raise HTTPException(status_code=500, detail="Flatpack directory is not set")
 
@@ -3762,6 +3787,8 @@ def setup_routes(app):
             content: str = Form(...),
             token: str = Depends(authenticate_token)
     ):
+        """Save a file to the flatpack build directory."""
+
         if not flatpack_directory:
             raise HTTPException(status_code=500, detail="Flatpack directory is not set")
 
@@ -3787,6 +3814,7 @@ def setup_routes(app):
 
     @app.get("/api/schedule", dependencies=[Depends(csrf_protect)])
     async def get_schedule(token: str = Depends(authenticate_token)):
+        """Retrieve all schedules from the database."""
         ensure_database_initialized()
         try:
             schedules = db_manager.get_all_schedules()
@@ -3797,6 +3825,7 @@ def setup_routes(app):
 
     @app.post("/api/schedule", dependencies=[Depends(csrf_protect)])
     async def save_schedule(request: Request, token: str = Depends(authenticate_token)):
+        """Save a new schedule to the database."""
         ensure_database_initialized()
         try:
             data = await request.json()
@@ -3818,6 +3847,7 @@ def setup_routes(app):
     @app.delete("/api/schedule/{schedule_id}", dependencies=[Depends(csrf_protect)])
     async def delete_schedule_entry(schedule_id: int, datetime_index: Optional[int] = None,
                                     token: str = Depends(authenticate_token)):
+        """Delete a schedule or a specific datetime entry from the database."""
         ensure_database_initialized()
         try:
             if datetime_index is not None:
@@ -3840,6 +3870,7 @@ def setup_routes(app):
             mappings: List[SourceHookMapping],
             token: str = Depends(authenticate_token)
     ) -> JSONResponse:
+        """Add new source-hook mappings to the database."""
         try:
             logger.info("Raw request data: %s", mappings)
             logger.info("Data type: %s", type(mappings))
@@ -3929,6 +3960,7 @@ def setup_routes(app):
     async def get_all_source_hook_mappings(
             token: str = Depends(authenticate_token)
     ) -> JSONResponse:
+        """Fetch all source-hook mappings from the database."""
         try:
             ensure_database_initialized()
             mappings = db_manager.get_all_source_hook_mappings()
@@ -3936,6 +3968,71 @@ def setup_routes(app):
         except Exception as e:
             logger.error("Error retrieving source-hook mappings: %s", e)
             raise HTTPException(status_code=500, detail=str(e))
+
+    @app.post("/api/sources", dependencies=[Depends(csrf_protect)])
+    async def add_source(source: Source, token: str = Depends(authenticate_token)):
+        """Add a new source to the database."""
+        ensure_database_initialized()
+        try:
+            source_id = db_manager.add_source(source.source_name, source.source_type, source.source_details)
+            return JSONResponse(content={"message": "Source added successfully.", "id": source_id}, status_code=201)
+        except Exception as e:
+            logger.error("Error adding source: %s", str(e))
+            raise HTTPException(status_code=500, detail=f"Error adding source: {str(e)}")
+
+    @app.get("/api/sources", dependencies=[Depends(csrf_protect)])
+    async def get_all_sources(token: str = Depends(authenticate_token)):
+        """Retrieve all sources from the database."""
+        ensure_database_initialized()
+        try:
+            sources = db_manager.get_all_sources()
+            return JSONResponse(content={"sources": sources}, status_code=200)
+        except Exception as e:
+            logger.error("Error retrieving sources: %s", e)
+            raise HTTPException(status_code=500, detail=f"Error retrieving sources: {e}")
+
+    @app.get("/api/sources/{source_id}", dependencies=[Depends(csrf_protect)])
+    async def get_source_by_id(source_id: int, token: str = Depends(authenticate_token)):
+        """Retrieve a source by its ID."""
+        ensure_database_initialized()
+        try:
+            source = db_manager.get_source_by_id(source_id)
+            if source:
+                return JSONResponse(content={"source": source}, status_code=200)
+            raise HTTPException(status_code=404, detail="Source not found")
+        except Exception as e:
+            logger.error("Error retrieving source by ID: %s", e)
+            raise HTTPException(status_code=500, detail=f"Error retrieving source by ID: {e}")
+
+    @app.put("/api/sources/{source_id}", dependencies=[Depends(csrf_protect)])
+    async def update_source(source_id: int, source: SourceUpdate, token: str = Depends(authenticate_token)):
+        """Update an existing source."""
+        ensure_database_initialized()
+        try:
+            success = db_manager.update_source(
+                source_id,
+                source_name=source.source_name,
+                source_type=source.source_type,
+                source_details=source.source_details
+            )
+            if success:
+                return JSONResponse(content={"message": "Source updated successfully."}, status_code=200)
+            raise HTTPException(status_code=404, detail="Source not found")
+        except Exception as e:
+            logger.error("Error updating source: %s", str(e))
+            raise HTTPException(status_code=500, detail=f"Error updating source: {str(e)}")
+
+    @app.delete("/api/sources/{source_id}", dependencies=[Depends(csrf_protect)])
+    async def delete_source(source_id: int, token: str = Depends(authenticate_token)):
+        """Delete a source from the database by its ID."""
+        ensure_database_initialized()
+        try:
+            if db_manager.delete_source(source_id):
+                return JSONResponse(content={"message": "Source deleted successfully."}, status_code=200)
+            raise HTTPException(status_code=404, detail="Source not found")
+        except Exception as e:
+            logger.error("Error deleting source: %s", e)
+            raise HTTPException(status_code=500, detail=f"Error deleting source: {e}")
 
     @app.get("/api/user-status")
     async def user_status(auth: str = Depends(authenticate_token)):

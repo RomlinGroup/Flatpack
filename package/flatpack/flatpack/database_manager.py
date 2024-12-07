@@ -104,6 +104,15 @@ class DatabaseManager:
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 UNIQUE(source_id, target_id)
             )
+            """,
+            """
+            CREATE TABLE IF NOT EXISTS flatpack_sources (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                source_name TEXT NOT NULL,
+                source_type TEXT NOT NULL,
+                source_details TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
             """
         ]
 
@@ -513,4 +522,142 @@ class DatabaseManager:
             return None
         except Exception as e:
             logger.error("Error retrieving source-hook mapping with ID %s: %s", mapping_id, e)
+            raise
+
+    # Sources
+    def add_source(self, source_name: str, source_type: str, source_details: Optional[Dict[str, Any]] = None) -> int:
+        query = """
+        INSERT INTO flatpack_sources (source_name, source_type, source_details)
+        VALUES (?, ?, ?)
+        """
+        source_details_json = json.dumps(source_details) if source_details else None
+        self._execute_query(query, (source_name, source_type, source_details_json))
+        source_id = self._fetch_one("SELECT last_insert_rowid()")[0]
+
+        self._sync_sources_to_file()
+
+        return source_id
+
+    def get_all_sources(self) -> List[Dict[str, Any]]:
+        query = """
+        SELECT id, source_name, source_type, source_details, created_at
+        FROM flatpack_sources
+        ORDER BY created_at DESC
+        """
+        results = self._fetch_all(query)
+        return [
+            {
+                "id": row[0],
+                "source_name": row[1],
+                "source_type": row[2],
+                "source_details": json.loads(row[3]) if row[3] else None,
+                "created_at": row[4]
+            }
+            for row in results
+        ]
+
+    def get_source_by_id(self, source_id: int) -> Optional[Dict[str, Any]]:
+        query = """
+        SELECT id, source_name, source_type, source_details, created_at
+        FROM flatpack_sources
+        WHERE id = ?
+        """
+        result = self._fetch_one(query, (source_id,))
+        if result:
+            return {
+                "id": result[0],
+                "source_name": result[1],
+                "source_type": result[2],
+                "source_details": json.loads(result[3]) if result[3] else None,
+                "created_at": result[4]
+            }
+        return None
+
+    def delete_source(self, source_id: int) -> bool:
+        logger.info("Attempting to delete source with ID: %s", source_id)
+
+        try:
+            source = self.get_source_by_id(source_id)
+
+            if not source:
+                logger.error("Source with ID %s not found", source_id)
+                return False
+
+            source_name = source["source_name"].lower()
+            query_delete_mappings = "DELETE FROM flatpack_source_hook_mappings WHERE source_id = ?"
+            self._execute_query(query_delete_mappings, (source_name,))
+
+            query_delete_source = "DELETE FROM flatpack_sources WHERE id = ?"
+            self._execute_query(query_delete_source, (source_id,))
+
+            remaining_mappings = self.get_all_source_hook_mappings()
+            connections_data = {
+                "connections": [
+                    {
+                        "source_id": mapping["source_id"],
+                        "target_id": mapping["target_id"],
+                        "source_type": mapping["source_type"],
+                        "target_type": mapping["target_type"]
+                    }
+                    for mapping in remaining_mappings
+                ]
+            }
+
+            connections_file = os.path.join(os.path.dirname(self.db_path), 'connections.json')
+            os.makedirs(os.path.dirname(connections_file), exist_ok=True)
+
+            with open(connections_file, 'w') as f:
+                json.dump(connections_data, f, indent=4)
+
+            self._sync_sources_to_file()
+
+            logger.info("Source with ID %s, its mappings, and connections.json updated successfully", source_id)
+            return True
+        except Exception as e:
+            logger.error("Error deleting source with ID %s: %s", source_id, str(e))
+            return False
+
+    def update_source(self, source_id: int, source_name: str, source_type: str,
+                      source_details: Optional[Dict[str, Any]]) -> bool:
+        query = """
+        UPDATE flatpack_sources
+        SET source_name = ?, source_type = ?, source_details = ?
+        WHERE id = ?
+        """
+        source_details_json = json.dumps(source_details) if source_details else None
+        try:
+            self._execute_query(query, (source_name, source_type, source_details_json, source_id))
+            logger.info("Source with ID %s updated successfully", source_id)
+
+            self._sync_sources_to_file()
+
+            return True
+        except Exception as e:
+            logger.error("Error updating source with ID %s: %s", source_id, str(e))
+            return False
+
+    def _sync_sources_to_file(self):
+        """Sync current sources to sources.json file."""
+        try:
+            sources = self.get_all_sources()
+            sources_data = {
+                "sources": [
+                    {
+                        "source_name": source["source_name"],
+                        "source_type": source["source_type"],
+                        "source_details": source["source_details"]
+                    }
+                    for source in sources
+                ]
+            }
+
+            sources_file = os.path.join(os.path.dirname(self.db_path), 'sources.json')
+            os.makedirs(os.path.dirname(sources_file), exist_ok=True)
+
+            with open(sources_file, 'w') as f:
+                json.dump(sources_data, f, indent=4)
+
+            logger.info("sources.json updated successfully")
+        except Exception as e:
+            logger.error("Error updating sources.json: %s", str(e))
             raise
