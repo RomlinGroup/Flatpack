@@ -87,7 +87,7 @@ sudo apt-get install -y build-essential git pipx python3-dev python3.11 python3.
 ```
 
 ```bash
-pipx install flatpack && sudo reboot
+pipx install flatpack
 ```
 
 ### Install on Ubuntu 24.04.1 LTS
@@ -113,7 +113,7 @@ sudo apt-get install -y build-essential git pipx python3-dev python3.11 python3.
 ```
 
 ```bash
-pipx install flatpack && sudo reboot
+pipx install flatpack
 ```
 
 ### Getting started
