@@ -570,7 +570,6 @@ def create_temp_sh(build_dir, custom_json_path: Path, temp_sh_path: Path, use_eu
                             code_block.append(line)
                         if code_block:
                             execute_code(''.join(code_block))
-                            print("EXECUTION_COMPLETE", flush=True)
             """))
 
         executor_path.chmod(0o755)
