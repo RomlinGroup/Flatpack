@@ -21,6 +21,7 @@ scripts = "scripts"
 
 [packages.unix]
 build-essential = "*"
+cmake = "*"
 gcc = "*"
 git = "*"
 jq = "*"
