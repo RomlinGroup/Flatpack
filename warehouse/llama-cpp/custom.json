@@ -2,12 +2,17 @@
   {
     "type": "bash",
     "disabled": false,
-    "code": "if [ ! -f models/Phi-3.5-mini-instruct-Q4_K_M.gguf ]; then\n    wget -nc -O models/Phi-3.5-mini-instruct-Q4_K_M.gguf \"https://huggingface.co/bartowski/Phi-3.5-mini-instruct-GGUF/resolve/main/Phi-3.5-mini-instruct-Q4_K_M.gguf\"\nelse\n    echo \"Model already exist.\"\nfi"
+    "code": "# https://huggingface.co/microsoft/Phi-3-mini-4k-instruct-gguf (MIT)\nif [ ! -f models/Phi-3-mini-4k-instruct-q4.gguf ]; then\n    wget -nc -O models/Phi-3-mini-4k-instruct-q4.gguf \"https://huggingface.co/microsoft/Phi-3-mini-4k-instruct-gguf/resolve/main/Phi-3-mini-4k-instruct-q4.gguf\"\nelse\n    echo \"Model already exist.\"\nfi"
   },
   {
     "type": "bash",
     "disabled": false,
-    "code": "./build/bin/llama-cli \\\n    -m models/Phi-3.5-mini-instruct-Q4_K_M.gguf \\\n    -n $TOKENS \\\n    --no-display-prompt \\\n    -p \"<|system|> You are a helpful assistant.<|end|><|user|> $PROMPT<|end|><|assistant|>\" \\\n    > output.txt \\\n    2>log.txt"
+    "code": "JSON=$(flatpack vector search-text \"$QUESTION\" --data-dir \"vector\" --json)\nCONTEXT=$(echo \"$JSON\" | jq -r '.[].text' | awk 'NF{print $0 \"\\n\"}')"
+  },
+  {
+    "type": "bash",
+    "disabled": false,
+    "code": "./build/bin/llama-cli \\\n    -m models/Phi-3-mini-4k-instruct-q4.gguf \\\n    -n $TOKENS \\\n    --no-display-prompt \\\n    -p \"<|user|>\\nYou are $CHARACTER. Always refer to yourself in the first person and respond using language and tone appropriate to the historical period. Use only the information provided in the context below to answer the question. Do not break character or invent facts beyond the given context.\\nCONTEXT: $CONTEXT\\nQUESTION: $QUESTION\\n<|end|>\\n<|assistant|>\" \\\n    > output.txt \\\n    2>log.txt"
   },
   {
     "type": "bash",
@@ -17,16 +22,16 @@
   {
     "type": "bash",
     "disabled": false,
-    "code": "if [ ! -f en_GB-alba-medium.onnx ]; then\n    wget -nc -O en_GB-alba-medium.onnx \"https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_GB/alba/medium/en_GB-alba-medium.onnx\"\nelse\n    echo \"en_GB-alba-medium.onnx already exists.\"\nfi\n\nif [ ! -f en_GB-alba-medium.onnx.json ]; then\n    wget -nc -O en_GB-alba-medium.onnx.json \"https://huggingface.co/rhasspy/piper-voices/raw/main/en/en_GB/alba/medium/en_GB-alba-medium.onnx.json\"\nelse\n    echo \"en_GB-alba-medium.onnx.json already exists.\"\nfi"
+    "code": "if [ ! -f cori-high.onnx ]; then\n    wget -nc -O cori-high.onnx \"https://sfo3.digitaloceanspaces.com/bkmdls/cori-high.onnx\"\nelse\n    echo \"cori-high.onnx already exists.\"\nfi\n\nif [ ! -f cori-high.onnx.json ]; then\n    wget -nc -O cori-high.onnx.json \"https://sfo3.digitaloceanspaces.com/bkmdls/cori-high.onnx.json\"\nelse\n    echo \"cori-high.onnx.json already exists.\"\nfi"
   },
   {
     "type": "bash",
     "disabled": false,
-    "code": "cp -rp /opt/homebrew/Cellar/espeak-ng/1.51/share/espeak-ng-data ../lib/python3.12/site-packages/piper_phonemize/espeak-ng-data"
+    "code": "if [[ \"$OSTYPE\" == \"darwin\"* ]]; then\n    if [ -d \"/opt/homebrew/Cellar/espeak-ng/1.51/share/espeak-ng-data\" ]; then\n        cp -rp /opt/homebrew/Cellar/espeak-ng/1.51/share/espeak-ng-data ../lib/python3.12/site-packages/piper_phonemize/espeak-ng-data\n        echo \"Successfully copied espeak-ng-data directory\"\n    else\n        echo \"Error: Source espeak-ng-data directory not found\"\n        exit 1\n    fi\nelse\n    sudo apt-get update\n    sudo apt-get install -y espeak-ng\n    echo \"espeak-ng has been installed\"\nfi"
   },
   {
     "type": "bash",
     "disabled": false,
-    "code": "echo \"$(cat output.txt)\" | \"../bin/piper\" \\\n--model \"en_GB-alba-medium.onnx\" \\\n--output-file output.wav > /dev/null 2>&1"
+    "code": "echo \"$(cat output.txt)\" | \"../bin/piper\" \\\n--model \"cori-high.onnx\" \\\n--output-file output.wav > /dev/null 2>&1"
   }
 ]
