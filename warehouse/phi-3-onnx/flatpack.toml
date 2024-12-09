@@ -46,15 +46,15 @@ tqdm = "4.67.1"
 # ]
 
 [[file]]
-from_source = "custom.json"
+from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/llama-cpp/custom.json"
 to_destination = "custom.json"
 
 [[file]]
-from_source = "build.sh"
+from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/llama-cpp/build.sh"
 to_destination = "build.sh"
 
 [[file]]
-from_source = "device.sh"
+from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/llama-cpp/device.sh"
 to_destination = "device.sh"
 
 [[run]]
