@@ -1485,7 +1485,7 @@ def write_status_to_file(status_data):
 
 
 async def fpk_build(directory: Union[str, None], use_euxo: bool = False):
-    """Asynchronous function to build a flatpack."""
+    """Asynchronous function to build a flatpack with connection validation."""
     global flatpack_directory
     cache_file_path = HOME_DIR / ".fpk_unbox.cache"
 
@@ -1522,13 +1522,75 @@ async def fpk_build(directory: Union[str, None], use_euxo: bool = False):
     sync_hooks_to_db_on_startup()
     sync_connections_from_file()
 
+    console = Console()
+    connections_file = build_dir / 'connections.json'
+
+    if not connections_file.exists():
+        logger.error("connections.json not found in %s. Build process canceled.", flatpack_dir)
+        raise FileNotFoundError(f"connections.json not found in {flatpack_dir}. Build process canceled.")
+
+    try:
+        with open(connections_file, 'r') as f:
+            connections_data = json.load(f)
+
+        connections = connections_data.get('connections', [])
+        hooks = load_and_get_hooks()
+        hook_names = {hook['hook_name'] for hook in hooks}
+
+        if connections:  # Only proceed with table creation and display if there are connections
+            table = Table(title="Connections")
+            table.add_column("Source ID", style="cyan")
+            table.add_column("Source type", style="blue")
+            table.add_column("Target ID", style="green")
+
+            invalid_connections = []
+
+            for connection in connections:
+                source_id = connection.get('source_id')
+                source_type = connection.get('source_type', 'N/A')
+                target_id = connection.get('target_id')
+
+                matched_hook = None
+
+                for hook_name in hook_names:
+                    if target_id and target_id.startswith(hook_name + '-'):
+                        matched_hook = hook_name
+                        break
+
+                if not matched_hook:
+                    invalid_connections.append(connection)
+                    table.add_row(
+                        source_id,
+                        source_type,
+                        f"[red]{target_id}[/red]"
+                    )
+                else:
+                    table.add_row(
+                        source_id,
+                        source_type,
+                        target_id
+                    )
+
+            console.print(table)
+            console.print("")
+
+            if invalid_connections:
+                console.print("[red]Found invalid connections referencing non-existent hooks:[/red]")
+
+                for conn in invalid_connections:
+                    console.print(f"[red] - Source: {conn.get('source_id')}, Target: {conn.get('target_id')}[/red]")
+                raise ValueError("Invalid connections found. Build process canceled.")
+
+        logger.info("Successfully validated %d connections", len(connections))
+    except json.JSONDecodeError:
+        logger.error("Invalid JSON format in connections.json")
+        raise ValueError("Invalid JSON format in connections.json")
+
     custom_json_path = build_dir / 'custom.json'
 
     if not custom_json_path.exists() or not custom_json_path.is_file():
         logger.error("custom.json not found in %s. Build process canceled.", build_dir)
         raise FileNotFoundError(f"custom.json not found in {build_dir}. Build process canceled.")
-
-    hooks = load_and_get_hooks()
 
     temp_sh_path = build_dir / 'temp.sh'
 
@@ -1540,12 +1602,10 @@ async def fpk_build(directory: Union[str, None], use_euxo: bool = False):
     lines = temp_sh_path.read_text().splitlines()
 
     start = 0
-
     while start < len(lines) and not lines[start].strip():
         start += 1
 
     end = len(lines)
-
     while end > start and not lines[end - 1].strip():
         end -= 1
 
