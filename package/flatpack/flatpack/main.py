@@ -1537,7 +1537,7 @@ async def fpk_build(directory: Union[str, None], use_euxo: bool = False):
         hooks = load_and_get_hooks()
         hook_names = {hook['hook_name'] for hook in hooks}
 
-        if connections:  # Only proceed with table creation and display if there are connections
+        if connections:
             table = Table(title="Connections")
             table.add_column("Source ID", style="cyan")
             table.add_column("Source type", style="blue")
