@@ -147,6 +147,7 @@ sudo apt-get install -y build-essential git pipx python3-dev python3.11 python3.
 
 ```bash
 # This will take a while, just be patient
+# Dependencies and libraries are being built
 pipx install flatpack
 ```
 
