@@ -132,7 +132,6 @@ sudo apt-get install python3-dev
 ```bash
 pipx install flatpack
 ```
-```
 
 ### Install on Windows 11
 
