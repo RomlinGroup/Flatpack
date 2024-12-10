@@ -2206,7 +2206,7 @@ def fpk_unbox(directory_name: str, session: httpx.Client, local: bool = False) -
             'web': ['app.css', 'app.js', 'index.html', 'package.json', 'robotomono.woff2']
         }
 
-        for json_file in ['hooks.json', 'connections.json']:
+        for json_file in ['connections.json', 'hooks.json', 'sources.json']:
             json_path = build_dir / json_file
             if not json_path.exists():
                 files_to_download['build'].append(json_file)
