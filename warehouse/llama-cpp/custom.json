@@ -7,6 +7,11 @@
   {
     "type": "bash",
     "disabled": false,
+    "code": "if [ -d \"vector\" ]; then\n    echo \"Directory 'vector' already exists. Deleting it now.\"\n    rm -rf \"vector\"\n    echo \"Directory 'vector' has been deleted.\"\nfi\n\necho \"Creating 'vector' directory now.\"\n\nmkdir \"vector\"\n\necho \"Directory 'vector' created successfully.\"\n\nflatpack vector add-wikipedia \"Ada Lovelace\" --data-dir vector"
+  },
+  {
+    "type": "bash",
+    "disabled": false,
     "code": "JSON=$(flatpack vector search-text \"$QUESTION\" --data-dir \"vector\" --json)\nCONTEXT=$(echo \"$JSON\" | jq -r '.[].text' | awk 'NF{print $0 \"\\n\"}')"
   },
   {
@@ -27,7 +32,7 @@
   {
     "type": "bash",
     "disabled": false,
-    "code": "if [[ \"$OSTYPE\" == \"darwin\"* ]]; then\n    if [ -d \"/opt/homebrew/Cellar/espeak-ng/1.51/share/espeak-ng-data\" ]; then\n        cp -rp /opt/homebrew/Cellar/espeak-ng/1.51/share/espeak-ng-data ../lib/python3.12/site-packages/piper_phonemize/espeak-ng-data\n        echo \"Successfully copied espeak-ng-data directory\"\n    else\n        echo \"Error: Source espeak-ng-data directory not found\"\n        exit 1\n    fi\nelse\n    sudo apt-get update\n    sudo apt-get install -y espeak-ng\n    echo \"espeak-ng has been installed\"\nfi"
+    "code": "if [[ \"$OSTYPE\" == \"darwin\"* ]]; then\n    if [ -d \"/opt/homebrew/Cellar/espeak-ng/1.51/share/espeak-ng-data\" ]; then\n        cp -rp /opt/homebrew/Cellar/espeak-ng/1.51/share/espeak-ng-data ../lib/python3.11/site-packages/piper_phonemize/espeak-ng-data\n        echo \"Successfully copied espeak-ng-data directory\"\n    else\n        echo \"Error: Source espeak-ng-data directory not found\"\n        exit 1\n    fi\nelse\n    sudo apt-get update\n    sudo apt-get install -y espeak-ng\n    echo \"espeak-ng has been installed\"\nfi"
   },
   {
     "type": "bash",
