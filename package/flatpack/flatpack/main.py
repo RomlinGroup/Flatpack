@@ -554,6 +554,7 @@ def create_temp_sh(build_dir, custom_json_path: Path, temp_sh_path: Path, use_eu
                         exec(code, GLOBAL_NAMESPACE)
                         sys.stdout.flush()
                         sys.stderr.flush()
+                        print("EXECUTION_COMPLETE")
                     except Exception as e:
                         print(f"Error executing code: {e}", file=sys.stderr)
                         traceback.print_exc()
