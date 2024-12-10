@@ -82,6 +82,8 @@ pipx install --force .
 
 ### Install on Raspberry Pi OS Lite (64-bit)
 
+We recommend to use the [Raspberry Pi 5 with 8 GB RAM](https://www.raspberrypi.com/products/raspberry-pi-5).
+
 ```bash
 sudo apt-get install -y build-essential git pipx python3-dev python3.11 python3.11-dev
 ```
