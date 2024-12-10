@@ -1,22 +1,31 @@
 {
   "hooks": [
     {
-      "id": 1,
+      "id": 8,
       "hook_name": "tokens",
       "hook_placement": "before",
-      "hook_script": "TOKENS=\"64\"",
+      "hook_script": "TOKENS=128",
       "hook_type": "bash",
       "show_on_frontpage": true,
-      "created_at": "2024-12-02 22:20:57"
+      "created_at": "2024-12-09 10:11:19"
     },
     {
-      "id": 2,
-      "hook_name": "prompt",
+      "id": 7,
+      "hook_name": "question",
       "hook_placement": "before",
-      "hook_script": "PROMPT=\"What is the meaning of life?\"",
+      "hook_script": "QUESTION=\"Who are you?\"",
       "hook_type": "bash",
       "show_on_frontpage": true,
-      "created_at": "2024-12-02 22:20:57"
+      "created_at": "2024-12-09 10:11:13"
+    },
+    {
+      "id": 4,
+      "hook_name": "character",
+      "hook_placement": "before",
+      "hook_script": "CHARACTER=\"Ada Lovelace\"",
+      "hook_type": "bash",
+      "show_on_frontpage": true,
+      "created_at": "2024-12-09 10:06:38"
     }
   ]
 }
