@@ -3019,13 +3019,23 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
                 console.print("[bold blue]INFO:[/bold blue] Building llama.cpp...")
 
                 try:
-                    make_executable = shutil.which("make")
+                    cmake_executable = shutil.which("cmake")
 
-                    if not make_executable:
-                        console.print("[bold red]ERROR:[/bold red] 'make' executable not found in PATH.")
+                    if not cmake_executable:
+                        console.print("[bold red]ERROR:[/bold red] 'cmake' executable not found in PATH.")
                         return
 
-                    subprocess.run([make_executable], cwd=llama_cpp_dir, check=True)
+                    subprocess.run(
+                        [cmake_executable, "-B", "build"],
+                        cwd=llama_cpp_dir,
+                        check=True
+                    )
+
+                    subprocess.run(
+                        [cmake_executable, "--build", "build", "--config", "Release"],
+                        cwd=llama_cpp_dir,
+                        check=True
+                    )
 
                     console.print("[bold green]SUCCESS:[/bold green] Finished building llama.cpp")
 
@@ -3034,11 +3044,13 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
                         create_venv(venv_dir)
                     else:
                         console.print(
-                            f"[bold blue]INFO:[/bold blue] Virtual environment already exists in '{venv_dir}'")
+                            f"[bold blue]INFO:[/bold blue] Virtual environment already exists in '{venv_dir}'"
+                        )
 
                     console.print("[bold blue]INFO:[/bold blue] Installing llama.cpp dependencies...")
                     pip_command = [
-                        "/bin/bash", "-c",
+                        "/bin/bash",
+                        "-c",
                         (
                             f"source {shlex.quote(os.path.join(venv_dir, 'bin', 'activate'))} && "
                             f"pip install -r {shlex.quote(requirements_file)}"
@@ -3049,12 +3061,14 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
 
                     with open(ready_file, 'w') as f:
                         f.write("Ready")
+
                 except subprocess.CalledProcessError as e:
                     console.print(f"[bold red]ERROR:[/bold red] Failed to build llama.cpp. Error: {e}")
                     return
                 except Exception as e:
                     console.print(
-                        f"[bold red]ERROR:[/bold red] An error occurred during the setup of llama.cpp. Error: {e}")
+                        f"[bold red]ERROR:[/bold red] An error occurred during the setup of llama.cpp. Error: {e}"
+                    )
                     return
             else:
                 console.print("[bold blue]INFO:[/bold blue] llama.cpp is already built and ready.")
@@ -3101,7 +3115,7 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
 
                 try:
                     quantize_command = [
-                        os.path.join(llama_cpp_dir, 'llama-quantize'),
+                        os.path.join(llama_cpp_dir, 'build/bin/llama-quantize'),
                         output_file,
                         quantized_output_file,
                         "Q4_K_M"
