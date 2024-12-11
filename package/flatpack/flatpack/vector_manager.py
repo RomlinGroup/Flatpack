@@ -266,7 +266,7 @@ class VectorManager:
             del batch_embeddings, batch_ids, batch_entries
             gc.collect()
 
-    def search_vectors(self, query: str, top_k: int = 5) -> List[Dict[str, Any]]:
+    def search_vectors(self, query: str, top_k: int = 10) -> List[Dict[str, Any]]:
         if not self.is_index_ready():
             return []
 
