@@ -1,3 +1,10 @@
 {
-  "connections": []
+  "connections": [
+    {
+      "source_id": "4",
+      "target_id": "gpio-gpio",
+      "source_type": "source",
+      "target_type": "hook"
+    }
+  ]
 }
