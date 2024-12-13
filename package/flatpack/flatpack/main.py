@@ -2153,7 +2153,17 @@ def fpk_set_secure_file_permissions(file_path):
         logger.error("Failed to set secure file permissions for %s: %s", file_path, e)
 
 
-def fpk_unbox(directory_name: str, session: httpx.Client, local: bool = False) -> bool:
+def fpk_unbox(directory_name: str, session: httpx.Client, local: bool = False,
+              fpk_path: str | Path | None = None) -> bool:
+    """
+    Unbox a flatpack into a directory, either from a URL, local directory, or local .fpk file
+
+    Args:
+        directory_name: Target directory name for the flatpack
+        session: httpx.Client for downloading assets
+        local: If True, use existing local directory
+        fpk_path: Optional path to a local .fpk file to unbox
+    """
     global flatpack_directory
 
     if directory_name is None or not isinstance(directory_name, str) or directory_name.strip() == "":
@@ -2174,7 +2184,33 @@ def fpk_unbox(directory_name: str, session: httpx.Client, local: bool = False) -
             default_config = {}
             save_config(default_config)
 
-        if local:
+        if fpk_path is not None:
+            fpk_file = Path(fpk_path)
+
+            if not fpk_file.exists() or not fpk_file.is_file():
+                logger.error("Invalid .fpk file path: %s", fpk_file)
+                return False
+
+            if not fpk_file.suffix == '.fpk':
+                logger.error("File must have .fpk extension: %s", fpk_file)
+                return False
+
+            if flatpack_dir.exists():
+                logger.error("Directory '%s' already exists. Unboxing aborted to prevent conflicts.", directory_name)
+                return False
+
+            flatpack_dir.mkdir(parents=True, exist_ok=True)
+
+            local = False
+
+            try:
+                decompress_data(fpk_file, flatpack_dir)
+                logger.info("Decompressed .fpk file into %s", flatpack_dir)
+            except Exception as e:
+                logger.error("Failed to decompress .fpk file: %s", e)
+                return False
+
+        elif local:
             if not flatpack_dir.exists():
                 logger.error("Local directory '%s' does not exist.", directory_name)
                 return False
@@ -2432,6 +2468,7 @@ def fpk_verify(directory: Union[str, None]):
         return
 
     verification_script_path = Path(last_unboxed_flatpack) / 'build' / 'build.sh'
+
     if not verification_script_path.exists() or not verification_script_path.is_file():
         console.print(f"[red]Verification script not found in {last_unboxed_flatpack}.[/red]")
         return
@@ -4369,7 +4406,8 @@ def fpk_cli_handle_set_api_key(args, session):
 
 
 def fpk_cli_handle_unbox(args, session):
-    """Handle the 'unbox' command to unbox a flatpack from GitHub or a local directory.
+    """
+    Handle the 'unbox' command to unbox a flatpack from GitHub, a local directory, or a .fpk file.
 
     Args:
         args: The command-line arguments.
@@ -4381,33 +4419,34 @@ def fpk_cli_handle_unbox(args, session):
 
     directory_name = args.input
 
-    existing_dirs = fpk_fetch_github_dirs(session)
+    input_path = Path(args.input)
+    is_fpk = input_path.suffix == '.fpk' and input_path.exists() and input_path.is_file()
+
+    if is_fpk:
+        directory_name = input_path.stem
+    elif not args.local:
+        existing_dirs = fpk_fetch_github_dirs(session)
+        if directory_name not in existing_dirs:
+            console.print("")
+            console.print(f"The flatpack '{directory_name}' does not exist.", style="bold red")
+            return
+
     console.print("Running unbox process...", style="bold green")
 
-    if directory_name not in existing_dirs and not args.local:
-        console.print("")
-        console.print(f"The flatpack '{directory_name}' does not exist.", style="bold red")
-        return
-
-    fpk_display_disclaimer(directory_name, local=args.local)
-
+    fpk_display_disclaimer(directory_name, local=args.local or is_fpk)
     while True:
         user_response = input().strip().upper()
-
         if user_response == "YES":
             break
-
         if user_response == "NO":
             console.print("")
             console.print("Installation aborted by user.", style="bold yellow")
             return
-
         logger.error("Invalid input from user. Expected 'YES' or 'NO'.")
         console.print("Invalid input. Please type 'YES' to accept or 'NO' to decline.", style="bold red")
 
-    if args.local:
+    if args.local and not is_fpk:
         local_directory_path = Path(directory_name)
-
         if not local_directory_path.exists() or not local_directory_path.is_dir():
             logger.error("Local directory does not exist: '%s'.", directory_name)
             console.print(f"Local directory does not exist: '{directory_name}'.", style="bold red")
@@ -4415,7 +4454,6 @@ def fpk_cli_handle_unbox(args, session):
 
         directory_name = str(local_directory_path.resolve())
         toml_path = local_directory_path / 'flatpack.toml'
-
         if not toml_path.exists():
             logger.error("flatpack.toml not found in the specified directory: '%s'.", directory_name)
             console.print(f"flatpack.toml not found in '{directory_name}'.", style="bold red")
@@ -4427,7 +4465,10 @@ def fpk_cli_handle_unbox(args, session):
         return
 
     try:
-        unbox_result = fpk_unbox(directory_name, session, local=args.local)
+        if is_fpk:
+            unbox_result = fpk_unbox(directory_name, session, fpk_path=input_path)
+        else:
+            unbox_result = fpk_unbox(directory_name, session, local=args.local)
 
         if unbox_result:
             logger.info("Unboxed flatpack '%s' successfully.", directory_name)
