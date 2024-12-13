@@ -1,7 +1,7 @@
 {
   "hooks": [
     {
-      "id": 3,
+      "id": 4,
       "hook_name": "hugging_face_token",
       "hook_placement": "before",
       "hook_script": "HUGGING_FACE_TOKEN=\"hf_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"",
@@ -10,7 +10,7 @@
       "created_at": "2024-12-12 11:41:08"
     },
     {
-      "id": 2,
+      "id": 3,
       "hook_name": "gpio",
       "hook_placement": "before",
       "hook_script": "GPIO=true",
@@ -19,7 +19,7 @@
       "created_at": "2024-12-12 09:13:08"
     },
     {
-      "id": 1,
+      "id": 2,
       "hook_name": "tokens",
       "hook_placement": "before",
       "hook_script": "TOKENS=128",
