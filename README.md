@@ -99,7 +99,7 @@ sudo rpi-eeprom-config -e
 # Increase the swap memory size
 sudo swapoff -a &&
 sudo [ -f /swapfile ] && sudo rm /swapfile || true &&
-sudo fallocate -l 16G /swapfile &&
+sudo fallocate -l 8G /swapfile &&
 sudo chmod 600 /swapfile &&
 sudo mkswap /swapfile &&
 sudo swapon /swapfile &&

@@ -1375,6 +1375,60 @@ def sync_connections_from_file():
         logger.error("Error syncing connections from file: %s", e)
 
 
+def sync_sources_from_file():
+    """
+    Load sources from sources.json file and sync them to the database.
+    Similar to how hooks and connections are synced on startup.
+    """
+    global flatpack_directory
+
+    try:
+        sources_file = os.path.join(flatpack_directory, 'build/sources.json')
+        if not os.path.exists(sources_file):
+            logger.info("No sources.json file found for initial sync")
+            return
+
+        with open(sources_file, 'r') as f:
+            data = json.load(f)
+
+        if not isinstance(data, dict) or "sources" not in data:
+            logger.warning("Invalid format in sources.json - expected {'sources': [...]}")
+            return
+
+        sources = []
+        for source in data["sources"]:
+            try:
+                source_obj = Source(
+                    source_name=source["source_name"],
+                    source_type=source["source_type"],
+                    source_details=source.get("source_details")
+                )
+                sources.append(source_obj)
+            except Exception as e:
+                logger.warning("Invalid source entry in sources.json: %s", e)
+                continue
+
+        if sources:
+            ensure_database_initialized()
+            for source in sources:
+                try:
+                    db_manager.add_source(
+                        source.source_name,
+                        source.source_type,
+                        source.source_details
+                    )
+                except Exception as e:
+                    logger.warning(
+                        "Source %s might already exist in the database: %s",
+                        source.source_name,
+                        e
+                    )
+
+            logger.info("Successfully synced %d sources from file to database", len(sources))
+    except Exception as e:
+        logger.error("Error syncing sources from file: %s", e)
+
+
 def unescape_content_parts(content: str) -> str:
     """Unescape special characters within content parts."""
     parts = content.split('part_')
@@ -2336,6 +2390,9 @@ def fpk_unbox(directory_name: str, session: httpx.Client, local: bool = False,
 
             logger.info("Syncing connections")
             sync_connections_from_file()
+
+            logger.info("Syncing sources")
+            sync_sources_from_file()
 
             logger.info("Running cache unbox")
             fpk_cache_unbox(flatpack_dir_str)
