@@ -266,7 +266,8 @@ class VectorManager:
             del batch_embeddings, batch_ids, batch_entries
             gc.collect()
 
-    def search_vectors(self, query: str, top_k: int = 10) -> List[Dict[str, Any]]:
+    def search_vectors(self, query: str, top_k: int = 10, recency_weight: float = 0.5) -> List[Dict[str, Any]]:
+        """Search vectors with an optional bias toward recent results."""
         if not self.is_index_ready():
             return []
 
@@ -280,34 +281,34 @@ class VectorManager:
             show_progress_bar=False
         )
 
-        try:
-            actual_k = min(top_k, self.index.get_current_count())
-            if actual_k < 1:
-                return []
+        actual_k = min(top_k, self.index.get_current_count())
+        if actual_k < 1:
+            return []
 
-            labels, distances = self.index.knn_query(query_embedding, k=actual_k)
+        labels, distances = self.index.knn_query(query_embedding, k=actual_k)
 
-            results = []
-            batch_size = 100
+        results = []
+        now = datetime.datetime.now()
 
-            for i in range(0, len(labels[0]), batch_size):
-                batch_labels = labels[0][i:i + batch_size]
-                batch_distances = distances[0][i:i + batch_size]
+        for idx, distance in zip(labels[0], distances[0]):
+            str_idx = str(idx)
+            if str_idx in self.metadata:
+                meta = self.metadata[str_idx]
+                doc_date = datetime.datetime.strptime(meta['date'], "%Y-%m-%d %H:%M:%S")
+                recency_score = 1 / (1 + (now - doc_date).total_seconds() / 86400)
+                combined_score = recency_weight * recency_score + (1 - recency_weight) * (1 - distance)
 
-                for idx, distance in zip(batch_labels, batch_distances):
-                    str_idx = str(idx)
-                    if str_idx in self.metadata:
-                        results.append({
-                            'id': int(idx),
-                            'text': self.metadata[str_idx]['text'],
-                            'source': self.metadata[str_idx]['source'],
-                            'distance': float(distance)
-                        })
+                results.append({
+                    'id': int(idx),
+                    'text': meta['text'],
+                    'source': meta['source'],
+                    'distance': float(distance),
+                    'recency_score': recency_score,
+                    'combined_score': combined_score
+                })
 
-            return results
-        except RuntimeError as e:
-            print(f"Search failed, trying with lower k: {str(e)}")
-            return self.search_vectors(query, top_k=max(1, top_k // 2))
+        results = sorted(results, key=lambda x: x['combined_score'], reverse=True)
+        return results[:top_k]
 
     def _preprocess_text(self, text: str) -> str:
         """Clean and normalize text before processing."""

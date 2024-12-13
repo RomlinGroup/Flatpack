@@ -2789,6 +2789,13 @@ def setup_arg_parser():
         help='Output results in JSON format'
     )
 
+    parser_search_text.add_argument(
+        '--recency-weight',
+        type=float,
+        default=0.5,
+        help='Weight for recency in search results (0.0 to 1.0, default: 0.5)'
+    )
+
     parser_search_text.set_defaults(
         func=fpk_cli_handle_vector_commands
     )
@@ -4460,7 +4467,8 @@ def fpk_cli_handle_vector_commands(args, session, vm):
         console.print(f"[bold green]Added {len(args.texts)} texts to the database.[/bold green]")
 
     elif args.vector_command == 'search-text':
-        results = vm.search_vectors(args.query)
+        recency_weight = getattr(args, 'recency_weight', 0.5)
+        results = vm.search_vectors(args.query, recency_weight=recency_weight)
 
         if hasattr(args, 'json') and args.json:
             json_results = [{"id": r['id'], "text": r['text']} for r in results]
@@ -4477,7 +4485,6 @@ def fpk_cli_handle_vector_commands(args, session, vm):
                     table.add_row(str(result['id']), result['text'])
 
                 console.print(table)
-
             else:
                 console.print("[yellow]No results found.[/yellow]")
 
