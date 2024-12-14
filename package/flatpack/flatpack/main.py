@@ -2169,10 +2169,12 @@ def fpk_initialize_vector_manager(args):
         VectorManager: An instance of VectorManager.
     """
     data_dir = getattr(args, 'data_dir', '.')
+
     logger.info(
         "Initializing Vector Manager and data directory: %s",
         data_dir
     )
+
     return VectorManager(model_id='all-MiniLM-L6-v2', directory=data_dir)
 
 
