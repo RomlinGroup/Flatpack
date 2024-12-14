@@ -275,40 +275,46 @@ class VectorManager:
         if not query:
             return []
 
-        query_embedding = self.model.encode(
-            [query],
-            normalize_embeddings=True,
-            show_progress_bar=False
-        )
+        try:
+            query_embedding = self.model.encode(
+                [query],
+                normalize_embeddings=True,
+                show_progress_bar=False
+            )
 
-        actual_k = min(top_k, self.index.get_current_count())
-        if actual_k < 1:
+            actual_k = min(top_k, self.index.get_current_count())
+            if actual_k < 1:
+                return []
+
+            labels, distances = self.index.knn_query(query_embedding, k=actual_k)
+
+            if len(labels) == 0 or len(labels[0]) == 0:
+                return []
+
+            results = []
+            now = datetime.datetime.now()
+
+            for idx, distance in zip(labels[0], distances[0]):
+                str_idx = str(idx)
+                if str_idx in self.metadata:
+                    meta = self.metadata[str_idx]
+                    doc_date = datetime.datetime.strptime(meta['date'], "%Y-%m-%d %H:%M:%S")
+                    recency_score = 1 / (1 + (now - doc_date).total_seconds() / 86400)
+                    combined_score = recency_weight * recency_score + (1 - recency_weight) * (1 - distance)
+
+                    results.append({
+                        'id': int(idx),
+                        'text': meta['text'],
+                        'source': meta['source'],
+                        'distance': float(distance),
+                        'recency_score': recency_score,
+                        'combined_score': combined_score
+                    })
+
+            results = sorted(results, key=lambda x: x['combined_score'], reverse=True)
+            return results[:top_k]
+        except Exception:
             return []
-
-        labels, distances = self.index.knn_query(query_embedding, k=actual_k)
-
-        results = []
-        now = datetime.datetime.now()
-
-        for idx, distance in zip(labels[0], distances[0]):
-            str_idx = str(idx)
-            if str_idx in self.metadata:
-                meta = self.metadata[str_idx]
-                doc_date = datetime.datetime.strptime(meta['date'], "%Y-%m-%d %H:%M:%S")
-                recency_score = 1 / (1 + (now - doc_date).total_seconds() / 86400)
-                combined_score = recency_weight * recency_score + (1 - recency_weight) * (1 - distance)
-
-                results.append({
-                    'id': int(idx),
-                    'text': meta['text'],
-                    'source': meta['source'],
-                    'distance': float(distance),
-                    'recency_score': recency_score,
-                    'combined_score': combined_score
-                })
-
-        results = sorted(results, key=lambda x: x['combined_score'], reverse=True)
-        return results[:top_k]
 
     def _preprocess_text(self, text: str) -> str:
         """Clean and normalize text before processing."""
