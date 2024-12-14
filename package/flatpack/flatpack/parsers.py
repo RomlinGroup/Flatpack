@@ -158,6 +158,7 @@ def install_python_packages_script(package_list):
 
 def clone_git_repositories_script(git_repos, model_name, build_prefix):
     script = []
+
     for git in git_repos:
         from_source = git.get("from_source")
         to_destination = git.get("to_destination")
@@ -170,9 +171,12 @@ def clone_git_repositories_script(git_repos, model_name, build_prefix):
             git_clone = dedent(f"""\
                 echo "Cloning repository from: {from_source}"
                 git clone --depth=1 {from_source} -b {branch} {repo_path}
+                
                 if [ $? -eq 0 ]; then
                     echo "Git clone was successful."
-                    cd {repo_path}
+                    
+                    cd {repo_path} > /dev/null
+                    
                     current_branch=$(git rev-parse --abbrev-ref HEAD)
                     
                     if [ "$current_branch" = "{branch}" ]; then
@@ -181,7 +185,8 @@ def clone_git_repositories_script(git_repos, model_name, build_prefix):
                         echo "Warning: Cloned branch ($current_branch) does not match the intended branch ({branch})"
                         exit 1
                     fi
-                    cd -
+                    
+                    cd - > /dev/null
                 else
                     echo "Git clone failed."
                     exit 1
@@ -200,15 +205,19 @@ def clone_git_repositories_script(git_repos, model_name, build_prefix):
             for command in setup_commands:
                 setup_command_script = dedent(f"""\
                     echo "Running setup command: {command}"
+                    
                     pushd {repo_path}
+                    
                     {command}
+                    
                     if [ $? -eq 0 ]; then
                         echo "Setup command '{command}' executed successfully."
                     else
                         echo "Setup command '{command}' failed."
                         exit 1
                     fi
-                    popd
+                    
+                    popd > /dev/null
                     """).strip()
 
                 script.append(setup_command_script)

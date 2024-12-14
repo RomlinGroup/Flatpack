@@ -2311,6 +2311,7 @@ def fpk_unbox(directory_name: str, session: httpx.Client, local: bool = False,
         eval_data_path = output_dir / "eval_data.json"
         with open(eval_data_path, 'w') as f:
             json.dump([], f)
+
         logger.info("Created empty eval_data.json in %s", eval_data_path)
 
         files_to_download = {
@@ -2368,6 +2369,7 @@ def fpk_unbox(directory_name: str, session: httpx.Client, local: bool = False,
 
                 download_response = session.get(fpk_url)
                 download_response.raise_for_status()
+
                 with open(fpk_path, "wb") as fpk_file:
                     fpk_file.write(download_response.content)
                 logger.info("Downloaded .fpk file to %s", fpk_path)
