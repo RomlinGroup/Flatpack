@@ -118,28 +118,62 @@ VECTOR_DIMENSION = 384
 
 
 class VectorManager:
-    def __init__(self, model_id='all-MiniLM-L6-v2', directory='./data'):
-        self.directory = directory
+    def __init__(self, model_id='all-MiniLM-L6-v2', directory=None):
+        if directory is None:
+            if os.name == 'posix':
+                base_dir = os.path.expanduser('~/.local/share/vectormanager')
+            elif os.name == 'nt':
+                base_dir = os.path.join(os.getenv('APPDATA'), 'vectormanager')
+            else:
+                base_dir = os.path.expanduser('~/.vectormanager')
+            self.directory = base_dir
+        else:
+            self.directory = directory
+
         if not os.path.exists(self.directory):
-            os.makedirs(self.directory)
+            os.makedirs(self.directory, mode=0o700)
 
         self.index_file = os.path.join(self.directory, INDEX_FILE)
         self.metadata_file = os.path.join(self.directory, METADATA_FILE)
         self.embeddings_file = os.path.join(self.directory, EMBEDDINGS_FILE)
 
-        self.model = model_id if isinstance(
-            model_id,
-            SentenceTransformer
-        ) else SentenceTransformer(
-            model_id,
-            device='cpu'
-        )
+        try:
+            self.model = model_id if isinstance(
+                model_id,
+                SentenceTransformer
+            ) else SentenceTransformer(
+                model_id,
+                device='cpu',
+                cache_folder=os.path.join(self.directory, 'model_cache')
+            )
+        except Exception as e:
+            console.print(f"[yellow]Model load failed, clearing cache and retrying...[/yellow]")
+
+            model_cache_dir = os.path.join(self.directory, 'model_cache', model_id.replace('/', '_'))
+            if os.path.exists(model_cache_dir):
+                try:
+                    import shutil
+                    shutil.rmtree(model_cache_dir)
+                    Path(model_cache_dir).mkdir(parents=True, exist_ok=True)
+                except Exception as cache_e:
+                    console.print(f"[yellow]Warning: Could not clear model cache: {cache_e}[/yellow]")
+
+            try:
+                self.model = SentenceTransformer(
+                    model_id,
+                    device='cpu',
+                    cache_folder=os.path.join(self.directory, 'model_cache')
+                )
+            except Exception as retry_e:
+                console.print(f"[red]Error loading model even after cache clear: {retry_e}[/red]")
+                raise
 
         self.index = hnswlib.Index(space='cosine', dim=VECTOR_DIMENSION)
         self.metadata, self.hash_set, self.embeddings, self.ids = self._load_metadata_and_embeddings()
         self._initialize_index()
 
         self.nlp = nlp
+
         if 'sentencizer' not in self.nlp.pipe_names:
             self.nlp.add_pipe('sentencizer')
 
