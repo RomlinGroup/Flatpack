@@ -221,7 +221,7 @@ flatpack vector search-text "<search_query>" --data-dir <data_dir>
 
 ## Model Compression
 
-Compress [Hugging Face](https://huggingface.co) models compatible with [llama.cpp](https://github.com/ggerganov/llama.cpp) to Q4_K_M and GGUF.
+Compress [Hugging Face](https://huggingface.co) models compatible with [llama.cpp](https://github.com/ggerganov/llama.cpp) to Q4_K_S and GGUF.
 
 ```bash
 flatpack compress <hf_model_name> --method llama.cpp --token <hf_token>

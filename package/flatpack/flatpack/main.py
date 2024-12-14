@@ -3200,7 +3200,7 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
                 console.print("[bold blue]INFO:[/bold blue] llama.cpp is already built and ready.")
 
             output_file = os.path.join(local_dir, f"{repo_name}-fp16.bin")
-            quantized_output_file = os.path.join(local_dir, f"{repo_name}-Q4_K_M.gguf")
+            quantized_output_file = os.path.join(local_dir, f"{repo_name}-Q4_K_S.gguf")
             outtype = "f16"
 
             if not os.path.exists(convert_script):
@@ -3244,7 +3244,7 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
                         os.path.join(llama_cpp_dir, 'build/bin/llama-quantize'),
                         output_file,
                         quantized_output_file,
-                        "Q4_K_M"
+                        "Q4_K_S"
                     ]
                     subprocess.run(quantize_command, check=True)
                     console.print(
