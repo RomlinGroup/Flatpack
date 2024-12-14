@@ -1099,8 +1099,13 @@ class OutStream:
             lines[0] = self._buffer + lines[0]
 
         if output:
-            self._buffer = lines[-1]
-            finished_lines = lines[:-1]
+            last_line = lines[-1]
+            if b"You >" in last_line:
+                finished_lines = lines
+                self._buffer = b""
+            else:
+                self._buffer = lines[-1]
+                finished_lines = lines[:-1]
             readable = True
         else:
             self._buffer = b""
@@ -1152,6 +1157,7 @@ async def run_subprocess(command, log_file, timeout=21600):
     global shutdown_requested, abort_requested
     out_r, out_w = pty.openpty()
     err_r, err_w = pty.openpty()
+
     process = subprocess.Popen(
         command,
         stdout=out_w,
@@ -1159,6 +1165,7 @@ async def run_subprocess(command, log_file, timeout=21600):
         stdin=subprocess.PIPE,
         start_new_session=True
     )
+
     os.close(out_w)
     os.close(err_w)
     streams = [OutStream(out_r), OutStream(err_r)]
@@ -1169,6 +1176,12 @@ async def run_subprocess(command, log_file, timeout=21600):
             if sys.stdin in select.select([sys.stdin], [], [], 0)[0]:
                 line = sys.stdin.readline()
                 if line:
+                    filtered_line = line.strip()
+                    if filtered_line:
+                        timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
+                        log_entry = f"[{timestamp}] INPUT: {filtered_line}"
+                        log_file.write(log_entry + '\n')
+                        log_file.flush()
                     process.stdin.write(line.encode())
                     process.stdin.flush()
             await asyncio.sleep(0.1)
@@ -1179,29 +1192,36 @@ async def run_subprocess(command, log_file, timeout=21600):
         if time.time() - start_time > timeout:
             logger.warning("Timeout after %s seconds. Terminating the process.", timeout)
             break
+
         try:
             rlist, _, _ = select.select(streams, [], [], 1.0)
         except select.error as e:
             if e.args[0] != errno.EINTR:
                 raise
             continue
+
         for stream in rlist:
             try:
                 lines, readable, raw_output = stream.read_lines()
                 if raw_output:
                     sys.stdout.buffer.write(raw_output)
                     sys.stdout.buffer.flush()
+
                 for line in lines:
                     filtered_line = filter_log_line(line)
                     if filtered_line is not None:
-                        log_file.write(filtered_line + '\n')
+                        timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
+                        log_entry = f"[{timestamp}] OUTPUT: {filtered_line}"
+                        log_file.write(log_entry + '\n')
                         log_file.flush()
+
                 if not readable:
                     streams.remove(stream)
             except Exception as e:
                 logger.error("Error processing stream: %s", e)
                 logger.debug(traceback.format_exc())
                 streams.remove(stream)
+
         await asyncio.sleep(0)
 
     input_task.cancel()
@@ -1216,6 +1236,7 @@ async def run_subprocess(command, log_file, timeout=21600):
         else:
             logger.info("Terminating subprocess...")
         os.killpg(os.getpgid(process.pid), signal.SIGTERM)
+
         try:
             process.wait(timeout=5)
         except subprocess.TimeoutExpired:
