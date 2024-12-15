@@ -2984,10 +2984,28 @@ def fpk_cli_handle_add_url(url, vm):
         logger.error("Failed to access URL: '%s'. Error: %s", url, e)
 
 
+def get_python_processes():
+    """List all running Python processes except the current one."""
+    python_processes = []
+    current_pid = os.getpid()
+
+    for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
+        try:
+            if 'python' in proc.info['name'].lower() and proc.info['pid'] != current_pid:
+                cmd = ' '.join(proc.info['cmdline']) if proc.info['cmdline'] else 'Unknown'
+                python_processes.append({
+                    'pid': proc.info['pid'],
+                    'command': cmd
+                })
+        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+            pass
+    return python_processes
+
+
 @safe_exit
 def fpk_cli_handle_build(args, session):
     """
-    Handle the build command for the flatpack CLI.
+    Handle the build command for the flatpack CLI with enhanced process management.
 
     Args:
         args: The command-line arguments.
@@ -3000,19 +3018,43 @@ def fpk_cli_handle_build(args, session):
 
     if directory_name is None:
         logger.info("No directory name provided. Using cached directory if available.")
-        console.print("No directory name provided. Using cached directory if available.", style="bold yellow")
+        console.print("No directory name provided. Using cached directory if available.",
+                      style="bold yellow")
 
     console.print("Running build process...", style="bold green")
     console.print("")
 
     try:
         asyncio.run(fpk_build(directory_name, use_euxo=args.use_euxo))
+
     except KeyboardInterrupt:
         logger.info("Build process was interrupted by user.")
         console.print("\nBuild process was interrupted by user.", style="bold yellow")
+
+        processes = get_python_processes()
+
+        if processes:
+            console.print("\nRunning Python processes:", style="bold blue")
+
+            for proc in processes:
+                console.print(f"PID: {proc['pid']} - Command: {proc['command']}")
+        else:
+            console.print("\nNo other Python processes found running.", style="bold blue")
+
     except Exception as e:
         logger.error("An error occurred during the build process: %s", e)
         console.print(f"\nAn error occurred during the build process: {e}", style="bold red")
+
+        processes = get_python_processes()
+
+        if processes:
+            console.print("\nRunning Python processes:", style="bold blue")
+            for proc in processes:
+                console.print(f"PID: {proc['pid']} - Command: {proc['command']}")
+        else:
+            console.print("\nNo other Python processes found running.", style="bold blue")
+
+        sys.exit(1)
 
 
 def fpk_cli_handle_create(args, session):
