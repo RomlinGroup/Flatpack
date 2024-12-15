@@ -2,7 +2,7 @@
   {
     "type": "bash",
     "disabled": false,
-    "code": "# https://huggingface.co/ibm-granite/granite-3.0-2b-instruct (Apache 2.0)\nif [ ! -f granite-3.0-2b-instruct/granite-3.0-2b-instruct-Q4_K_S.gguf ]; then\n    flatpack compress ibm-granite/granite-3.0-2b-instruct --method llama.cpp --token $HUGGING_FACE_TOKEN\nelse\n    echo \"Model already exists.\"\nfi"
+    "code": "# https://huggingface.co/ibm-granite/granite-3.0-2b-instruct (Apache 2.0)\nif [ ! -f granite-3.0-2b-instruct/granite-3.0-2b-instruct-Q4_K_S.gguf ]; then\n    flatpack compress ibm-granite/granite-3.0-2b-instruct --method llama.cpp\nelse\n    echo \"Model already exists.\"\nfi"
   },
   {
     "type": "bash",
