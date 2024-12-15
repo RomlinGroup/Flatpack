@@ -622,6 +622,7 @@ def create_temp_sh(build_dir, custom_json_path: Path, temp_sh_path: Path, use_eu
                      files_since_last="$(find "${{SCRIPT_DIR}}" \\
                         -type f \\
                         -newer "${{EVAL_DATA}}" \\
+                        -not -path "*/venv/*" \\
                         \\( \\
                             -name '*.gif' -o \\
                             -name '*.jpg' -o \\
