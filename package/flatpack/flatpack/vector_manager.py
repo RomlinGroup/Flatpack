@@ -125,6 +125,7 @@ VECTOR_DIMENSION = 384
 class VectorManager:
     def __init__(self, model_id='all-MiniLM-L6-v2', directory='./data'):
         self.directory = directory
+
         if not os.path.exists(self.directory):
             os.makedirs(self.directory)
 
@@ -133,6 +134,15 @@ class VectorManager:
         self.embeddings_file = os.path.join(self.directory, EMBEDDINGS_FILE)
 
         (HOME_DIR / "cache").mkdir(parents=True, exist_ok=True)
+
+        locks_dir = HOME_DIR / "cache" / ".locks"
+
+        if locks_dir.exists():
+            for lock_file in locks_dir.glob("**/*.lock"):
+                try:
+                    lock_file.unlink()
+                except OSError:
+                    pass
 
         self.model = model_id if isinstance(
             model_id,
@@ -148,6 +158,7 @@ class VectorManager:
         self._initialize_index()
 
         self.nlp = nlp
+
         if 'sentencizer' not in self.nlp.pipe_names:
             self.nlp.add_pipe('sentencizer')
 
