@@ -3041,28 +3041,24 @@ def get_python_processes() -> List[Dict[str, any]]:
 
 def terminate_python_processes(processes: List[Dict[str, any]]) -> None:
     """Safely terminate the given Python processes."""
-    console.print("\nAttempting to terminate these processes:", style="bold yellow")
-
     for proc_info in processes:
         pid = proc_info['pid']
         try:
             process = proc_info['process']
-            console.print(f"→ Terminating PID {pid}...", style="bold yellow")
+            logger.info(f"Terminating PID {pid}...")
 
             process.terminate()
             try:
                 process.wait(timeout=3)
-                console.print(f"✓ PID {pid} terminated successfully", style="bold green")
+                logger.info(f"PID {pid} terminated successfully")
             except psutil.TimeoutExpired:
-                console.print(f"! PID {pid} didn't respond to SIGTERM, using SIGKILL", style="bold red")
+                logger.info(f"PID {pid} didn't respond to SIGTERM, using SIGKILL")
                 process.kill()
-                console.print(f"✓ PID {pid} killed successfully", style="bold green")
+                logger.info(f"PID {pid} killed successfully")
         except psutil.NoSuchProcess:
-            console.print(f"! PID {pid} no longer exists", style="bold yellow")
+            logger.info(f"PID {pid} no longer exists")
         except Exception as e:
-            console.print(f"✗ Error terminating PID {pid}: {e}", style="bold red")
-
-    console.print("\nProcess cleanup completed.", style="bold green")
+            logger.error(f"Error terminating PID {pid}: {e}")
 
 
 @safe_exit
@@ -3076,30 +3072,31 @@ def fpk_cli_handle_build(args, session):
         None
     """
     directory_name = args.directory
+
     if directory_name is None:
         logger.info("No directory name provided. Using cached directory if available.")
-        console.print("No directory name provided. Using cached directory if available.", style="bold yellow")
-
-    console.print("Running build process...", style="bold green")
-    console.print("")
 
     try:
         asyncio.run(fpk_build(directory_name, use_euxo=args.use_euxo))
     except (KeyboardInterrupt, Exception) as e:
-        error_msg = "Build process was interrupted by user." if isinstance(e,
-                                                                           KeyboardInterrupt) else f"An error occurred during the build process: {e}"
+        if isinstance(e, KeyboardInterrupt):
+            error_msg = "Build process was interrupted by user."
+        else:
+            error_msg = f"An error occurred during the build process: {e}"
+
         logger.info(error_msg)
-        console.print(f"\n{error_msg}", style="bold yellow" if isinstance(e, KeyboardInterrupt) else "bold red")
 
         processes = get_python_processes()
+
         if processes:
-            console.print("\nDetected running Python processes:", style="bold blue")
+            logger.info("Detected running Python processes")
+
             for proc in processes:
-                console.print(f"PID: {proc['pid']} - Command: {proc['command']}")
+                logger.info(f"PID: {proc['pid']} - Command: {proc['command']}")
 
             terminate_python_processes(processes)
         else:
-            console.print("\nNo other Python processes found running.", style="bold blue")
+            logger.info("No other Python processes found running")
 
         if not isinstance(e, KeyboardInterrupt):
             sys.exit(1)
