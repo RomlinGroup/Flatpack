@@ -82,7 +82,7 @@ pipx install --force .
 
 ### Install on Raspberry Pi 5 (8GB)
 
-Ubuntu Server 24.10 (64-bit)
+We recommend Ubuntu Server 24.10 (64-bit).
 
 ```bash
 sudo apt-get install python3-dev
