@@ -82,15 +82,14 @@ pipx install --force .
 
 ### Install on Raspberry Pi OS Lite (64-bit)
 
-We recommend to use the [Raspberry Pi 5 with 8 GB RAM](https://www.raspberrypi.com/products/raspberry-pi-5).
+We are running Ubuntu Server 24.10 (64-bit) on [Raspberry Pi 5 with 8 GB RAM](https://www.raspberrypi.com/products/raspberry-pi-5).
 
 ```bash
-sudo apt-get install -y build-essential git pipx python3-dev python3.11 python3.11-dev
+sudo apt-get install python3-dev
 ```
 
 ```bash
 # This will take a while, just be patient
-# Dependencies and libraries are being built
 pipx install flatpack
 ```
 
