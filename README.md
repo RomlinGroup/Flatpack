@@ -63,12 +63,11 @@ https://pypi.org/project/flatpack
 ### Install Node.js (required)
 
 ```bash
-# Install nvm (Node Version Manager)
+# Install nvm and restart your terminal
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
 ```
 
 ```bash
-# Download and install Node.js (remember to restart the terminal)
 nvm install 22
 ```
 
