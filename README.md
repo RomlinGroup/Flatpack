@@ -68,7 +68,7 @@ curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
 ```
 
 ```bash
-# Download and install Node.js (restart the terminal)
+# Download and install Node.js (you may need to restart the terminal)
 nvm install 22
 ```
 
