@@ -80,9 +80,9 @@ git clone https://github.com/RomlinGroup/Flatpack && cd Flatpack/package/flatpac
 pipx install --force .
 ```
 
-### Install on Raspberry Pi 5
+### Install on Raspberry Pi 5 (8GB)
 
-We are running Ubuntu Server 24.10 (64-bit) on [Raspberry Pi 5 with 8 GB RAM](https://www.raspberrypi.com/products/raspberry-pi-5).
+Ubuntu Server 24.10 (64-bit)
 
 ```bash
 sudo apt-get install python3-dev
