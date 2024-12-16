@@ -2984,77 +2984,125 @@ def fpk_cli_handle_add_url(url, vm):
         logger.error("Failed to access URL: '%s'. Error: %s", url, e)
 
 
-def get_python_processes():
-    """List all running Python processes except the current one."""
+def get_process_tree(pid: int) -> str:
+    """Get a string representation of the process tree leading to pid."""
+    try:
+        process = psutil.Process(pid)
+        tree = []
+        while process is not None and process.pid != 1:
+            try:
+                tree.append(f"{process.pid} ({process.name()})")
+                process = process.parent()
+            except (psutil.NoSuchProcess, psutil.AccessDenied):
+                break
+        return " -> ".join(reversed(tree))
+    except (psutil.NoSuchProcess, psutil.AccessDenied):
+        return f"Could not trace process {pid}"
+
+
+def get_python_processes() -> List[Dict[str, any]]:
+    """List Python processes spawned by our program."""
     python_processes = []
     current_pid = os.getpid()
+    parent_pid = os.getppid()
+
+    logger.info(f"Current process: {current_pid}, Parent process: {parent_pid}")
+    logger.info(f"Current process tree: {get_process_tree(current_pid)}")
+
+    def is_descendant_of_current_process(proc):
+        """Check if process is a descendant of our program."""
+        try:
+            while proc is not None and proc.pid != 1:
+                if proc.pid == current_pid or proc.pid == parent_pid:
+                    logger.info(f"Found descendant process {proc.pid}, full tree: {get_process_tree(proc.pid)}")
+                    return True
+                proc = proc.parent()
+            return False
+        except (psutil.NoSuchProcess, psutil.AccessDenied):
+            return False
 
     for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
         try:
-            if 'python' in proc.info['name'].lower() and proc.info['pid'] != current_pid:
+            if ('python' in proc.info['name'].lower() and
+                    proc.info['pid'] != current_pid and
+                    is_descendant_of_current_process(proc)):
                 cmd = ' '.join(proc.info['cmdline']) if proc.info['cmdline'] else 'Unknown'
                 python_processes.append({
                     'pid': proc.info['pid'],
-                    'command': cmd
+                    'command': cmd,
+                    'process': proc
                 })
+                logger.info(f"Adding process {proc.info['pid']} to termination list")
+                logger.info(f"Process details: {cmd}")
         except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
             pass
     return python_processes
+
+
+def terminate_python_processes(processes: List[Dict[str, any]]) -> None:
+    """Safely terminate the given Python processes."""
+    console.print("\nAttempting to terminate these processes:", style="bold yellow")
+
+    for proc_info in processes:
+        pid = proc_info['pid']
+        try:
+            process = proc_info['process']
+            console.print(f"→ Terminating PID {pid}...", style="bold yellow")
+
+            process.terminate()
+            try:
+                process.wait(timeout=3)
+                console.print(f"✓ PID {pid} terminated successfully", style="bold green")
+            except psutil.TimeoutExpired:
+                console.print(f"! PID {pid} didn't respond to SIGTERM, using SIGKILL", style="bold red")
+                process.kill()
+                console.print(f"✓ PID {pid} killed successfully", style="bold green")
+        except psutil.NoSuchProcess:
+            console.print(f"! PID {pid} no longer exists", style="bold yellow")
+        except Exception as e:
+            console.print(f"✗ Error terminating PID {pid}: {e}", style="bold red")
+
+    console.print("\nProcess cleanup completed.", style="bold green")
 
 
 @safe_exit
 def fpk_cli_handle_build(args, session):
     """
     Handle the build command for the flatpack CLI with enhanced process management.
-
     Args:
         args: The command-line arguments.
         session: The HTTP session.
-
     Returns:
         None
     """
     directory_name = args.directory
-
     if directory_name is None:
         logger.info("No directory name provided. Using cached directory if available.")
-        console.print("No directory name provided. Using cached directory if available.",
-                      style="bold yellow")
+        console.print("No directory name provided. Using cached directory if available.", style="bold yellow")
 
     console.print("Running build process...", style="bold green")
     console.print("")
 
     try:
         asyncio.run(fpk_build(directory_name, use_euxo=args.use_euxo))
-
-    except KeyboardInterrupt:
-        logger.info("Build process was interrupted by user.")
-        console.print("\nBuild process was interrupted by user.", style="bold yellow")
+    except (KeyboardInterrupt, Exception) as e:
+        error_msg = "Build process was interrupted by user." if isinstance(e,
+                                                                           KeyboardInterrupt) else f"An error occurred during the build process: {e}"
+        logger.info(error_msg)
+        console.print(f"\n{error_msg}", style="bold yellow" if isinstance(e, KeyboardInterrupt) else "bold red")
 
         processes = get_python_processes()
-
         if processes:
-            console.print("\nRunning Python processes:", style="bold blue")
-
+            console.print("\nDetected running Python processes:", style="bold blue")
             for proc in processes:
                 console.print(f"PID: {proc['pid']} - Command: {proc['command']}")
+
+            terminate_python_processes(processes)
         else:
             console.print("\nNo other Python processes found running.", style="bold blue")
 
-    except Exception as e:
-        logger.error("An error occurred during the build process: %s", e)
-        console.print(f"\nAn error occurred during the build process: {e}", style="bold red")
-
-        processes = get_python_processes()
-
-        if processes:
-            console.print("\nRunning Python processes:", style="bold blue")
-            for proc in processes:
-                console.print(f"PID: {proc['pid']} - Command: {proc['command']}")
-        else:
-            console.print("\nNo other Python processes found running.", style="bold blue")
-
-        sys.exit(1)
+        if not isinstance(e, KeyboardInterrupt):
+            sys.exit(1)
 
 
 def fpk_cli_handle_create(args, session):
