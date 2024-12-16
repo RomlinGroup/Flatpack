@@ -5,7 +5,7 @@ with open("README.md", "r") as f:
 
 setup(
     name="flatpack",
-    version="3.11.34",
+    version="3.11.35",
     license="Apache Software License (Apache-2.0)",
     packages=find_packages(),
     python_requires=">=3.10.0",
@@ -16,7 +16,7 @@ setup(
         "fastapi==0.115.6",
         "hnswlib==0.8.0",
         "httpx==0.28.1",
-        "huggingface-hub==0.26.5",
+        "huggingface-hub==0.27.0",
         "itsdangerous==2.2.0",
         "ngrok==1.4.0",
         "prettytable==3.12.0",
@@ -27,9 +27,9 @@ setup(
         "requests==2.32.3",
         "rich==13.9.4",
         "sentence-transformers==3.3.1",
-        "spacy==3.8.2",
+        "spacy==3.8.3",
         "toml==0.10.2",
-        "uvicorn==0.32.1",
+        "uvicorn==0.34.0",
         "zstandard==0.23.0"
     ],
     author="Romlin Group AB",
