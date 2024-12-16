@@ -60,7 +60,7 @@ https://pypi.org/project/flatpack
 
 **NOTE:** Flatpack is currently experimental. Please refrain from using it in production environments.
 
-## Install Node.js (required)
+### Install Node.js (required)
 
 ```bash
 # Install nvm (Node Version Manager)
