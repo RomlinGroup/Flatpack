@@ -11,7 +11,7 @@
 **Last tested on 2024-12-16:**
 - macOS Sonoma 15.1.1 (Apple M2 Pro)
 - Windows 11 with Ubuntu 24.04 LTS via WSL
-- Raspberry Pi OS Lite (64-bit) on RPi 5 (8GB)
+- Raspberry Pi OS Lite (64-bit)
 
 We have no official affiliation or association with Georgi Gerganov, nor are we authorised or endorsed by him. For the official Georgi Gerganov website, please visit [https://ggerganov.com](https://ggerganov.com).
 
