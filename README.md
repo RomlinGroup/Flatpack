@@ -85,35 +85,6 @@ pipx install --force .
 We recommend to use the [Raspberry Pi 5 with 8 GB RAM](https://www.raspberrypi.com/products/raspberry-pi-5).
 
 ```bash
-# Update the firmware 
-sudo rpi-update
-```
-
-```bash
-# Edit the bootloader config
-# Add the configuration SDRAM_BANKLOW=1
-sudo rpi-eeprom-config -e
-```
-
-```bash
-# Increase the swap memory size
-sudo swapoff -a &&
-sudo [ -f /swapfile ] && sudo rm /swapfile || true &&
-sudo fallocate -l 8G /swapfile &&
-sudo chmod 600 /swapfile &&
-sudo mkswap /swapfile &&
-sudo swapon /swapfile &&
-grep -qxF '/swapfile none swap sw,pri=10 0 0' /etc/fstab || \
-echo '/swapfile none swap sw,pri=10 0 0' | sudo tee -a /etc/fstab &&
-sudo grep -q '/var/swap' /proc/swaps && sudo swapoff /var/swap || true &&
-sudo systemctl stop dphys-swapfile &&
-sudo systemctl disable dphys-swapfile &&
-sudo [ -f /var/swap ] && sudo rm /var/swap || true &&
-sudo swapon --show &&
-echo "Please reboot your system for changes to take effect."
-```
-
-```bash
 sudo apt-get install -y build-essential git pipx python3-dev python3.11 python3.11-dev
 ```
 
