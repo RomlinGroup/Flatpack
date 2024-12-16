@@ -34,8 +34,6 @@ Flatpack is a general-purpose generative AI platform that supports educational, 
 
 Users are solely responsible for conducting thorough compliance assessments and ensuring that any use of Flatpack adheres to applicable laws, including the EU AI Act and related regulations.
 
-> If we identify or are informed of harmful, illegal, or unethical use of Flatpack, we may introduce breaking changes or restrict access to the platform to prevent further misuse.
-
 ## Micro language models
 
 [Micro language models](http://microlanguagemodels.com) (100M to 10B parameters) provide an efficient alternative to large language models, addressing deployment, reliability, and scalability challenges. Their compact size enables rapid pre-training and fine-tuning, allowing organisations to adapt swiftly to market shifts and specific needs. These models can be readily deployed in edge-adjacent environments such as laptops, microprocessors, and smartphones, offering accessibility and versatility.
