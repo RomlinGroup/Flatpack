@@ -1154,8 +1154,9 @@ def filter_log_line(line):
     return stripped_line
 
 
-async def run_subprocess(command, log_file, timeout=21600):
+async def run_subprocess(command, log_file):
     global shutdown_requested, abort_requested
+
     out_r, out_w = pty.openpty()
     err_r, err_w = pty.openpty()
 
@@ -1169,8 +1170,8 @@ async def run_subprocess(command, log_file, timeout=21600):
 
     os.close(out_w)
     os.close(err_w)
+
     streams = [OutStream(out_r), OutStream(err_r)]
-    start_time = time.time()
 
     async def handle_input():
         while not shutdown_requested and not abort_requested:
@@ -1190,12 +1191,8 @@ async def run_subprocess(command, log_file, timeout=21600):
     input_task = asyncio.create_task(handle_input())
 
     while streams and not shutdown_requested and not abort_requested:
-        if time.time() - start_time > timeout:
-            logger.warning("Timeout after %s seconds. Terminating the process.", timeout)
-            break
-
         try:
-            rlist, _, _ = select.select(streams, [], [], 1.0)
+            rlist, wlist, xlist = select.select(streams, [], [], 1.0)
         except select.error as e:
             if e.args[0] != errno.EINTR:
                 raise
@@ -1237,7 +1234,6 @@ async def run_subprocess(command, log_file, timeout=21600):
         else:
             logger.info("Terminating subprocess...")
         os.killpg(os.getpgid(process.pid), signal.SIGTERM)
-
         try:
             process.wait(timeout=5)
         except subprocess.TimeoutExpired:
