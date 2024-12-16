@@ -80,7 +80,7 @@ git clone https://github.com/RomlinGroup/Flatpack && cd Flatpack/package/flatpac
 pipx install --force .
 ```
 
-### Install on Raspberry Pi OS Lite (64-bit)
+### Install on Raspberry Pi 5
 
 We are running Ubuntu Server 24.10 (64-bit) on [Raspberry Pi 5 with 8 GB RAM](https://www.raspberrypi.com/products/raspberry-pi-5).
 
