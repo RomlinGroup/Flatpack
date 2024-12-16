@@ -5,7 +5,7 @@ with open("README.md", "r") as f:
 
 setup(
     name="flatpack",
-    version="3.11.32",
+    version="3.11.33",
     license="Apache Software License (Apache-2.0)",
     packages=find_packages(),
     python_requires=">=3.10.0",
@@ -14,7 +14,7 @@ setup(
         "croniter==5.0.1",
         "cryptography==44.0.0",
         "fastapi==0.115.6",
-        "hnswlib==0.8.0",
+        "prebuilt-hnsw==0.8.1",
         "httpx==0.28.1",
         "huggingface-hub==0.26.5",
         "itsdangerous==2.2.0",

@@ -100,7 +100,7 @@ Check out the [JLA - Compatibility Checker](https://joinup.ec.europa.eu/collecti
 - **[fastapi](https://pypi.org/project/fastapi/)**\
   MIT License ([LICENSE](https://github.com/tiangolo/fastapi/blob/master/LICENSE))
 
-- **[hnswlib](https://pypi.org/project/hnswlib/)**\
+- **[prebuilt-hnsw](https://pypi.org/project/prebuilt-hnsw/)**\
   Apache-2.0 license ([LICENSE](https://github.com/nmslib/hnswlib/blob/master/LICENSE))
 
 - **[httpx](https://pypi.org/project/httpx/)**\

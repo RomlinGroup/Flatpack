@@ -85,7 +85,7 @@ pipx install --force .
 We recommend Ubuntu Server 24.10 (64-bit).
 
 ```bash
-sudo apt-get install python3-dev
+sudo apt-get install -y build-essential python3-dev
 ```
 
 ```bash
@@ -96,7 +96,7 @@ pipx install flatpack
 ### Install on Ubuntu 24.04.1 LTS
 
 ```bash
-sudo apt-get install python3-dev
+sudo apt-get install -y build-essential python3-dev
 ```
 
 ```bash
