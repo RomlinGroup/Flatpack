@@ -9,6 +9,7 @@ import time
 import warnings
 
 from pathlib import Path
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 import hnswlib
 import numpy as np
@@ -19,8 +20,6 @@ from pypdf import PdfReader
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from sentence_transformers import SentenceTransformer
-
-from typing import Any, Dict, List, Optional, Set, Tuple
 
 warnings.filterwarnings('ignore', category=FutureWarning)
 
