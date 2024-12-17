@@ -1168,6 +1168,8 @@ async def run_subprocess(command, log_file):
         start_new_session=True
     )
 
+    build_pgid = os.getpgid(process.pid)
+
     os.close(out_w)
     os.close(err_w)
 
@@ -1223,6 +1225,7 @@ async def run_subprocess(command, log_file):
         await asyncio.sleep(0)
 
     input_task.cancel()
+
     try:
         await input_task
     except asyncio.CancelledError:
@@ -1233,12 +1236,19 @@ async def run_subprocess(command, log_file):
             logger.info("Aborting subprocess...")
         else:
             logger.info("Terminating subprocess...")
-        os.killpg(os.getpgid(process.pid), signal.SIGTERM)
+
         try:
-            process.wait(timeout=5)
-        except subprocess.TimeoutExpired:
-            logger.warning("Process did not terminate in time. Forcing termination.")
-            os.killpg(os.getpgid(process.pid), signal.SIGKILL)
+            os.killpg(build_pgid, signal.SIGTERM)
+
+            try:
+                process.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                logger.warning("Process did not terminate in time. Force killing...")
+                os.killpg(build_pgid, signal.SIGKILL)
+        except ProcessLookupError:
+            logger.info("Process group already terminated")
+        except Exception as e:
+            logger.error("Error during process cleanup: %s", e)
 
     return process.returncode
 
