@@ -1,4 +1,4 @@
-# flux-1-schnell
+# flux-schnell
 
 [![PyPI - Version](https://img.shields.io/pypi/v/flatpack)](https://pypi.org/project/flatpack/)
 
@@ -6,7 +6,7 @@
 
 > **免责声明:** 此存储库包含我们的研究。请核实信息并自行研究 (DYOR)。我们不对准确性或完整性承担任何责任。
 
-`flux-1-schnell` offers a Flatpack adaptation of [FLUX.1 [schnell]](https://huggingface.co/black-forest-labs/FLUX.1-schnell) by Black Forest Labs, licensed under the [Apache License 2.0](https://huggingface.co/black-forest-labs/FLUX.1-schnell).
+`flux-schnell` offers a Flatpack adaptation of [FLUX.1 [schnell]](https://huggingface.co/black-forest-labs/FLUX.1-schnell) by Black Forest Labs, licensed under the [Apache License 2.0](https://huggingface.co/black-forest-labs/FLUX.1-schnell).
 
 We have no official affiliation or association with Black Forest Labs, nor are we authorised or endorsed by them. For the official website of Black Forest Labs, please visit [https://blackforestlabs.ai](https://blackforestlabs.ai).
 
