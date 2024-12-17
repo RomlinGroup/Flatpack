@@ -35,12 +35,18 @@ def ensure_spacy_model():
     pip_path = [python_path, "-m", "pip"]
 
     try:
-        import spacy
         try:
+            import spacy
             nlp = spacy.load("en_core_web_sm")
 
+            if 'parser' in nlp.pipe_names:
+                nlp.remove_pipe('parser')
+
             if 'sentencizer' not in nlp.pipe_names:
-                nlp.add_pipe('sentencizer')
+                nlp.add_pipe('sentencizer', config={
+                    'punct_chars': None,
+                    'overwrite': True
+                })
             return nlp
         except OSError:
             pass
@@ -100,7 +106,10 @@ def ensure_spacy_model():
         nlp = spacy.load("en_core_web_sm")
 
         if 'sentencizer' not in nlp.pipe_names:
-            nlp.add_pipe('sentencizer')
+            nlp.add_pipe('sentencizer', config={
+                'punct_chars': None,
+                'overwrite': True
+            })
         return nlp
     except ImportError:
         console.print("[red]Failed to import spaCy after installation.[/red]")
@@ -160,7 +169,10 @@ class VectorManager:
         self.nlp = nlp
 
         if 'sentencizer' not in self.nlp.pipe_names:
-            self.nlp.add_pipe('sentencizer')
+            self.nlp.add_pipe('sentencizer', config={
+                'punct_chars': None,
+                'overwrite': True
+            })
 
         gc.collect()
 

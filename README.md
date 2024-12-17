@@ -178,6 +178,15 @@ flatpack run <flatpack_name> --domain=<custom_ngrok_domain> --share
 
 Hierarchical Navigable Small World (HNSW) graphs excel as indexes for vector similarity searches with leading-edge results through high recall rates and rapid search capabilities.
 
+### Acknowledgements
+
+Built with:
+* [hnswlib](https://github.com/nmslib/hnswlib) ([Apache 2.0](https://github.com/nmslib/hnswlib/blob/master/LICENSE)) - Fast approximate nearest neighbor search
+* [sentence-transformers](https://github.com/UKPLab/sentence-transformers) ([Apache 2.0](https://github.com/UKPLab/sentence-transformers/blob/master/LICENSE)) - Sentence embeddings
+* [spaCy](https://github.com/explosion/spaCy) ([MIT](https://github.com/explosion/spaCy/blob/master/LICENSE)) - Industrial-strength NLP 
+
+Special thanks to the teams behind these essential libraries.
+
 ```bash
 flatpack vector add-texts "<text_1>", "<text_2>" --data-dir <data_dir>
 ```
