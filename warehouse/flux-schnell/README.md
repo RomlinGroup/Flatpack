@@ -1,4 +1,4 @@
-# llama-cpp
+# flux-1-schnell
 
 [![PyPI - Version](https://img.shields.io/pypi/v/flatpack)](https://pypi.org/project/flatpack/)
 
@@ -6,14 +6,9 @@
 
 > **免责声明:** 此存储库包含我们的研究。请核实信息并自行研究 (DYOR)。我们不对准确性或完整性承担任何责任。
 
-`llama-cpp` offers a Flatpack adaptation of [llama.cpp](https://github.com/ggerganov/llama.cpp) by Georgi Gerganov, licensed under the [MIT License](https://github.com/ggerganov/llama.cpp/blob/master/LICENSE).
+`flux-1-schnell` offers a Flatpack adaptation of [FLUX.1 [schnell]](https://huggingface.co/black-forest-labs/FLUX.1-schnell) by Black Forest Labs, licensed under the [Apache License 2.0](https://huggingface.co/black-forest-labs/FLUX.1-schnell).
 
-**Last tested on 2024-12-17:**
-- macOS Sonoma 15.1.1 (Apple M2 Pro)
-- Windows 11 with Ubuntu 24.04 LTS via WSL
-- Raspberry Pi OS Lite (64-bit)
-
-We have no official affiliation or association with Georgi Gerganov, nor are we authorised or endorsed by him. For the official Georgi Gerganov website, please visit [https://ggerganov.com](https://ggerganov.com).
+We have no official affiliation or association with Black Forest Labs, nor are we authorised or endorsed by them. For the official website of Black Forest Labs, please visit [https://blackforestlabs.ai](https://blackforestlabs.ai).
 
 Flatpack is currently experimental. Please refrain from using it in production environments.
 
