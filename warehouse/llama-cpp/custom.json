@@ -2,7 +2,7 @@
   {
     "type": "bash",
     "disabled": false,
-    "code": "# https://huggingface.co/utter-project/EuroLLM-1.7B-Instruct (Apache 2.0)\nif [ ! -f EuroLLM-1.7B-Instruct/EuroLLM-1.7B-Instruct-Q4_K_S.gguf ]; then\n    flatpack compress utter-project/EuroLLM-1.7B-Instruct --method llama.cpp\nelse\n    echo \"Model already exists.\"\nfi"
+    "code": "# https://huggingface.co/utter-project/EuroLLM-1.7B-Instruct (Apache 2.0)\nif [ ! -f EuroLLM-1.7B-Instruct/EuroLLM-1.7B-Instruct-Q4_K_M.gguf ]; then\n    flatpack compress utter-project/EuroLLM-1.7B-Instruct --method llama.cpp\nelse\n    echo \"Model already exists.\"\nfi"
   },
   {
     "type": "bash",

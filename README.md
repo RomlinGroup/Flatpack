@@ -227,7 +227,7 @@ Special thanks to the teams behind these essential libraries.
 
 ## Model Compression
 
-Compress [Hugging Face](https://huggingface.co) models compatible with [llama.cpp](https://github.com/ggerganov/llama.cpp) to Q4_K_S and GGUF.
+Compress [Hugging Face](https://huggingface.co) models compatible with [llama.cpp](https://github.com/ggerganov/llama.cpp) to Q4_K_M and GGUF.
 
 ```bash
 flatpack compress <hf_model_name> --method llama.cpp --token <hf_token>
