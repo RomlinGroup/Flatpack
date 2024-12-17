@@ -198,12 +198,13 @@ flatpack vector add-wikipedia "<wikipedia_page_title>" --data-dir <data_dir>
 flatpack vector search-text "<search_query>" --data-dir <data_dir>
 ```
 
-### Acknowledgements
+### Acknowledgements 
 
-Built with:
+Our VectorManager was built with:
+
 * [hnswlib](https://github.com/nmslib/hnswlib) ([Apache 2.0](https://github.com/nmslib/hnswlib/blob/master/LICENSE)) - Fast approximate nearest neighbor search
 * [sentence-transformers](https://github.com/UKPLab/sentence-transformers) ([Apache 2.0](https://github.com/UKPLab/sentence-transformers/blob/master/LICENSE)) - Sentence embeddings
-* [spaCy](https://github.com/explosion/spaCy) ([MIT](https://github.com/explosion/spaCy/blob/master/LICENSE)) - Industrial-strength NLP 
+* [spaCy](https://github.com/explosion/spaCy) ([MIT](https://github.com/explosion/spaCy/blob/master/LICENSE)) - Industrial-strength NLP
 
 Special thanks to the teams behind these essential libraries.
 
