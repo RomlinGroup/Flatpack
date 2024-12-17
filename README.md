@@ -74,7 +74,7 @@ nvm install 22
 Use this method if you prefer to install flatpack using [pipx](https://pipx.pypa.io).
 
 ```bash
-pipx install flatpack
+pipx install flatpack --verbose
 ```
 
 ### Install from source
@@ -86,7 +86,7 @@ git clone https://github.com/RomlinGroup/Flatpack && cd Flatpack/package/flatpac
 ```
 
 ```bash
-pipx install --force .
+pipx install --force . --verbose
 ```
 
 ### Install on Raspberry Pi OS Lite (64-bit)
@@ -99,7 +99,7 @@ sudo apt-get install -y build-essential git pipx python3-dev python3.11 python3.
 
 ```bash
 # This will take a while
-pipx install flatpack
+pipx install flatpack --verbose
 ```
 
 ### Install on Ubuntu 24.04.1 LTS
@@ -109,7 +109,7 @@ sudo apt-get install -y build-essential python3-dev
 ```
 
 ```bash
-pipx install flatpack
+pipx install flatpack --verbose
 ```
 
 ### Install on Windows 11
@@ -125,7 +125,7 @@ sudo apt-get install -y build-essential git pipx python3-dev python3.11 python3.
 ```
 
 ```bash
-pipx install flatpack
+pipx install flatpack --verbose
 ```
 
 ### Getting started
