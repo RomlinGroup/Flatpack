@@ -200,7 +200,7 @@ flatpack vector search-text "<search_query>" --data-dir <data_dir>
 
 ### Acknowledgements 
 
-Our VectorManager was built with:
+Our [VectorManager](https://github.com/RomlinGroup/Flatpack/blob/main/package/flatpack/flatpack/vector_manager.py) was built with:
 
 * [hnswlib](https://github.com/nmslib/hnswlib) ([Apache 2.0](https://github.com/nmslib/hnswlib/blob/master/LICENSE)) - Fast approximate nearest neighbor search
 * [sentence-transformers](https://github.com/UKPLab/sentence-transformers) ([Apache 2.0](https://github.com/UKPLab/sentence-transformers/blob/master/LICENSE)) - Sentence embeddings
