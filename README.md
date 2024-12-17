@@ -119,12 +119,6 @@ pipx install --force . --verbose
 We recommend to use the [Raspberry Pi 5 with 8 GB RAM](https://www.raspberrypi.com/products/raspberry-pi-5).
 
 ```bash
-# Edit the bootloader config
-# Add the configuration SDRAM_BANKLOW=1
-sudo rpi-eeprom-config -e
-```
-
-```bash
 # Increase the swap memory size
 sudo swapoff -a && \
 sudo rm -f /swapfile && \
