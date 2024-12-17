@@ -116,7 +116,7 @@ pipx install --force . --verbose
 
 ### Install on Raspberry Pi OS Lite (64-bit)
 
-We recommend to use the [Raspberry Pi 5 with 8 GB RAM](https://www.raspberrypi.com/products/raspberry-pi-5).
+We recommend to use the [Raspberry Pi 5 with 8 GB RAM](https://www.raspberrypi.com/products/raspberry-pi-5/).
 
 ```bash
 # Increase the swap memory size
