@@ -44,6 +44,7 @@ tqdm = "4.67.1"
 #   "{{setup_command}}"
 # ]
 
+
 [[file]]
 from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/flux-schnell/custom.json"
 to_destination = "custom.json"
