@@ -346,7 +346,8 @@ class VectorManager:
         except Exception:
             return []
 
-    def _preprocess_text(self, text: str) -> str:
+    @staticmethod
+    def _preprocess_text(text: str) -> str:
         """Clean and normalize text before processing."""
         text = ' '.join(text.split())
 
