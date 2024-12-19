@@ -3049,7 +3049,11 @@ def get_python_processes() -> List[Dict[str, any]]:
         try:
             while proc is not None and proc.pid != 1:
                 if proc.pid in (current_pid, parent_pid):
-                    logger.info("Found descendant process %s, full tree: %s", proc.pid, get_process_tree(proc.pid))
+                    logger.info(
+                        "Found descendant process %s, full tree: %s",
+                        proc.pid,
+                        get_process_tree(proc.pid)
+                    )
                     return True
                 proc = proc.parent()
             return False
