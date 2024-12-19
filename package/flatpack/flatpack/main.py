@@ -3041,8 +3041,8 @@ def get_python_processes() -> List[Dict[str, any]]:
     current_pid = os.getpid()
     parent_pid = os.getppid()
 
-    logger.info(f"Current process: {current_pid}, Parent process: {parent_pid}")
-    logger.info(f"Current process tree: {get_process_tree(current_pid)}")
+    logger.info("Current process: %s, Parent process: %s", current_pid, parent_pid)
+    logger.info("Current process tree: %s", get_process_tree(current_pid))
 
     def is_descendant_of_current_process(proc):
         """Check if process is a descendant of our program."""
@@ -3067,8 +3067,8 @@ def get_python_processes() -> List[Dict[str, any]]:
                     'command': cmd,
                     'process': proc
                 })
-                logger.info(f"Adding process {proc.info['pid']} to termination list")
-                logger.info(f"Process details: {cmd}")
+                logger.info("Adding process %s to termination list", proc.info['pid'])
+                logger.info("Process details: %s", cmd)
         except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
             pass
     return python_processes
@@ -3087,13 +3087,13 @@ def terminate_python_processes(processes: List[Dict[str, any]]) -> None:
                 process.wait(timeout=3)
                 logger.info(f"PID {pid} terminated successfully")
             except psutil.TimeoutExpired:
-                logger.info(f"PID {pid} didn't respond to SIGTERM, using SIGKILL")
+                logger.info("PID %s didn't respond to SIGTERM, using SIGKILL", pid)
                 process.kill()
-                logger.info(f"PID {pid} killed successfully")
+                logger.info("PID %s killed successfully", pid)
         except psutil.NoSuchProcess:
-            logger.info(f"PID {pid} no longer exists")
+            logger.info("PID %s no longer exists", pid)
         except Exception as e:
-            logger.error(f"Error terminating PID {pid}: {e}")
+            logger.error("Error terminating PID %s: %s", pid, e)
 
 
 def fpk_cli_handle_build(args, session):
@@ -3126,7 +3126,7 @@ def fpk_cli_handle_build(args, session):
             logger.info("Detected running Python processes")
 
             for proc in processes:
-                logger.info(f"PID: {proc['pid']} - Command: {proc['command']}")
+                logger.info("PID: %s - Command: %s", proc['pid'], proc['command'])
 
             terminate_python_processes(processes)
         else:
