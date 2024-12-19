@@ -3048,7 +3048,7 @@ def get_python_processes() -> List[Dict[str, any]]:
         """Check if process is a descendant of our program."""
         try:
             while proc is not None and proc.pid != 1:
-                if proc.pid == current_pid or proc.pid == parent_pid:
+                if proc.pid in (current_pid, parent_pid):
                     logger.info(f"Found descendant process {proc.pid}, full tree: {get_process_tree(proc.pid)}")
                     return True
                 proc = proc.parent()
