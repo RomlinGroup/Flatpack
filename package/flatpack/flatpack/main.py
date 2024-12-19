@@ -3096,7 +3096,6 @@ def terminate_python_processes(processes: List[Dict[str, any]]) -> None:
             logger.error(f"Error terminating PID {pid}: {e}")
 
 
-@safe_exit
 def fpk_cli_handle_build(args, session):
     """
     Handle the build command for the flatpack CLI with enhanced process management.

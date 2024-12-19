@@ -94,9 +94,6 @@ Check out the [JLA - Compatibility Checker](https://joinup.ec.europa.eu/collecti
 - **[croniter](https://pypi.org/project/croniter/)**\
   MIT License (MIT License) ([LICENSE](https://github.com/kiorky/croniter/blob/master/LICENSE))
 
-- **[cryptography](https://pypi.org/project/cryptography/)**\
-  Apache Software License, BSD License (Apache-2.0 OR BSD-3-Clause) ([LICENSE](https://github.com/pyca/cryptography/blob/main/LICENSE))
-
 - **[fastapi](https://pypi.org/project/fastapi/)**\
   MIT License ([LICENSE](https://github.com/tiangolo/fastapi/blob/master/LICENSE))
 
