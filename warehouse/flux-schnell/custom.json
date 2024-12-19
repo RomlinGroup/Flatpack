@@ -2,11 +2,16 @@
   {
     "type": "bash",
     "disabled": false,
-    "code": "echo \"Hello from Bash!\""
+    "code": "CMAKE_ARGS=\"-DSD_METAL=ON\" ../bin/pip install stable-diffusion-cpp-python"
+  },
+  {
+    "type": "bash",
+    "disabled": false,
+    "code": "if [ ! -f flux1-schnell-q2_k.gguf ]; then\n    wget -nc -O flux1-schnell-q2_k.gguf \"https://huggingface.co/leejet/FLUX.1-schnell-gguf/resolve/main/flux1-schnell-q2_k.gguf\"\nelse\n    echo \"Model already exist.\"\nfi\n\nif [ ! -f clip_l.safetensors ]; then\n    wget -nc -O clip_l.safetensors \"https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/clip_l.safetensors\"\nelse\n    echo \"clip_l.safetensors exist.\"\nfi\n\nif [ ! -f t5xxl_fp16.safetensors ]; then\n    wget -nc -O t5xxl_fp16.safetensors \"https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/t5xxl_fp16.safetensors\"\nelse\n    echo \"t5xxl_fp16.safetensors exist.\"\nfi\n\nif [ ! -f ae.safetensors ]; then\n    wget -nc -O ae.safetensors \"https://huggingface.co/black-forest-labs/FLUX.1-dev/resolve/main/ae.safetensors\"\nelse\n    echo \"ae.safetensors exist.\"\nfi"
   },
   {
     "type": "python",
     "disabled": false,
-    "code": "print(\"Hello from Python!\")"
+    "code": "from stable_diffusion_cpp import StableDiffusion\n\nstable_diffusion = StableDiffusion(\n    diffusion_model_path=\"flux1-schnell-q2_k.gguf\",\n    clip_l_path=\"clip_l.safetensors\",\n    t5xxl_path=\"t5xxl_fp16.safetensors\",\n    vae_path=\"ae.safetensors\",\n    vae_decode_only=True\n)\n\noutput = stable_diffusion.txt_to_img(\n      prompt=\"a lovely cat holding a sign says 'flux.cpp'\",\n      width=128,\n      height=128,\n      sample_steps=4,\n      cfg_scale=1.0,\n      sample_method=\"euler\"\n)"
   }
 ]
