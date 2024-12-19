@@ -3049,7 +3049,7 @@ def get_python_processes() -> List[Dict[str, any]]:
         try:
             while proc is not None and proc.pid != 1:
                 if proc.pid in (current_pid, parent_pid):
-                    logger.info(f"Found descendant process {proc.pid}, full tree: {get_process_tree(proc.pid)}")
+                    logger.info("Found descendant process %s, full tree: %s", proc.pid, get_process_tree(proc.pid))
                     return True
                 proc = proc.parent()
             return False
@@ -3080,12 +3080,12 @@ def terminate_python_processes(processes: List[Dict[str, any]]) -> None:
         pid = proc_info['pid']
         try:
             process = proc_info['process']
-            logger.info(f"Terminating PID {pid}...")
+            logger.info("Terminating PID %s...", pid)
 
             process.terminate()
             try:
                 process.wait(timeout=3)
-                logger.info(f"PID {pid} terminated successfully")
+                logger.info("PID %s terminated successfully", pid)
             except psutil.TimeoutExpired:
                 logger.info("PID %s didn't respond to SIGTERM, using SIGKILL", pid)
                 process.kill()
