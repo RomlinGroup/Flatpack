@@ -1156,101 +1156,130 @@ def filter_log_line(line):
 
 async def run_subprocess(command, log_file):
     global shutdown_requested, abort_requested
+    current_dir = Path.cwd()
+
+    console.print(f"[bold blue]Build command run in:[/bold blue] {current_dir}")
+    console.print("")
+
+    if not isinstance(command, list) or not all(isinstance(c, str) for c in command):
+        raise ValueError("Command must be a list of strings.")
 
     out_r, out_w = pty.openpty()
     err_r, err_w = pty.openpty()
 
-    process = subprocess.Popen(
-        command,
-        stdout=out_w,
-        stderr=err_w,
-        stdin=subprocess.PIPE,
-        start_new_session=True
-    )
-
-    build_pgid = os.getpgid(process.pid)
-
-    os.close(out_w)
-    os.close(err_w)
-
-    streams = [OutStream(out_r), OutStream(err_r)]
-
-    async def handle_input():
-        while not shutdown_requested and not abort_requested:
-            if sys.stdin in select.select([sys.stdin], [], [], 0)[0]:
-                line = sys.stdin.readline()
-                if line:
-                    filtered_line = line.strip()
-                    if filtered_line:
-                        timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
-                        log_entry = f"[{timestamp}] INPUT: {filtered_line}"
-                        log_file.write(log_entry + '\n')
-                        log_file.flush()
-                    process.stdin.write(line.encode())
-                    process.stdin.flush()
-            await asyncio.sleep(0.1)
-
-    input_task = asyncio.create_task(handle_input())
-
-    while streams and not shutdown_requested and not abort_requested:
-        try:
-            rlist, wlist, xlist = select.select(streams, [], [], 1.0)
-        except select.error as e:
-            if e.args[0] != errno.EINTR:
-                raise
-            continue
-
-        for stream in rlist:
-            try:
-                lines, readable, raw_output = stream.read_lines()
-                if raw_output:
-                    sys.stdout.buffer.write(raw_output)
-                    sys.stdout.buffer.flush()
-
-                for line in lines:
-                    filtered_line = filter_log_line(line)
-                    if filtered_line is not None:
-                        timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
-                        log_entry = f"[{timestamp}] OUTPUT: {filtered_line}"
-                        log_file.write(log_entry + '\n')
-                        log_file.flush()
-
-                if not readable:
-                    streams.remove(stream)
-            except Exception as e:
-                logger.error("Error processing stream: %s", e)
-                logger.debug(traceback.format_exc())
-                streams.remove(stream)
-
-        await asyncio.sleep(0)
-
-    input_task.cancel()
+    process = None
 
     try:
-        await input_task
-    except asyncio.CancelledError:
-        pass
+        process = subprocess.Popen(
+            command,
+            stdout=out_w,
+            stderr=err_w,
+            stdin=subprocess.PIPE,
+            start_new_session=True,
+            shell=False,
+            cwd=str(current_dir)
+        )
 
-    if process.poll() is None:
-        if abort_requested:
-            logger.info("Aborting subprocess...")
-        else:
-            logger.info("Terminating subprocess...")
+        build_pgid = os.getpgid(process.pid)
+
+        os.close(out_w)
+        os.close(err_w)
+
+        streams = [OutStream(out_r), OutStream(err_r)]
+
+        async def handle_input():
+            while not shutdown_requested and not abort_requested:
+                if sys.stdin in select.select([sys.stdin], [], [], 0)[0]:
+                    line = sys.stdin.readline()
+
+                    if line:
+                        filtered_line = line.strip()
+
+                        if filtered_line:
+                            timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
+                            log_entry = f"[{timestamp}] INPUT: {filtered_line}"
+                            log_file.write(log_entry + '\n')
+                            log_file.flush()
+                        process.stdin.write(line.encode())
+                        process.stdin.flush()
+                await asyncio.sleep(0.1)
+
+        input_task = asyncio.create_task(handle_input())
+
+        while streams and not shutdown_requested and not abort_requested:
+            try:
+                rlist, wlist, xlist = select.select(streams, [], [], 1.0)
+            except select.error as e:
+                if e.args[0] != errno.EINTR:
+                    raise
+                continue
+
+            for stream in rlist:
+                try:
+                    lines, readable, raw_output = stream.read_lines()
+
+                    if raw_output:
+                        sys.stdout.buffer.write(raw_output)
+                        sys.stdout.buffer.flush()
+
+                    for line in lines:
+                        filtered_line = filter_log_line(line)
+
+                        if filtered_line is not None:
+                            timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
+                            log_entry = f"[{timestamp}] OUTPUT: {filtered_line}"
+                            log_file.write(log_entry + '\n')
+                            log_file.flush()
+
+                    if not readable:
+                        streams.remove(stream)
+                except Exception as e:
+                    logger.error("Error processing stream: %s", e)
+                    logger.debug(traceback.format_exc())
+                    streams.remove(stream)
+
+            await asyncio.sleep(0)
+
+        input_task.cancel()
 
         try:
-            os.killpg(build_pgid, signal.SIGTERM)
+            await input_task
+        except asyncio.CancelledError:
+            pass
+
+        if process.poll() is None:
+            if abort_requested:
+                logger.info("Aborting subprocess...")
+            else:
+                logger.info("Terminating subprocess...")
 
             try:
-                process.wait(timeout=5)
-            except subprocess.TimeoutExpired:
-                logger.warning("Process did not terminate in time. Force killing...")
-                os.killpg(build_pgid, signal.SIGKILL)
-        except ProcessLookupError:
-            logger.info("Process group already terminated")
-        except Exception as e:
-            logger.error("Error during process cleanup: %s", e)
+                os.killpg(build_pgid, signal.SIGTERM)
 
-    return process.returncode
+                try:
+                    process.wait(timeout=5)
+                except subprocess.TimeoutExpired:
+                    logger.warning("Process did not terminate in time. Force killing...")
+                    os.killpg(build_pgid, signal.SIGKILL)
+            except ProcessLookupError:
+                logger.info("Process group already terminated")
+            except Exception as e:
+                logger.error("Error during process cleanup: %s", e)
+
+        return process.returncode
+
+    finally:
+        if 'out_r' in locals():
+            os.close(out_r)
+        if 'err_r' in locals():
+            os.close(err_r)
+        if process and process.poll() is None:
+            try:
+                process.terminate()
+                process.wait(timeout=2)
+            except subprocess.TimeoutExpired:
+                process.kill()
+                process.wait()
 
 
 def save_config(config):
