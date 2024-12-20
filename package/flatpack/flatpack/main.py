@@ -1157,6 +1157,11 @@ def filter_log_line(line):
 async def run_subprocess(command, log_file):
     global shutdown_requested, abort_requested
 
+    current_dir = Path.cwd()
+
+    console.print(f"[bold blue]Build command run in:[/bold blue] {current_dir}")
+    console.print("")
+
     out_r, out_w = pty.openpty()
     err_r, err_w = pty.openpty()
 
@@ -1165,7 +1170,9 @@ async def run_subprocess(command, log_file):
         stdout=out_w,
         stderr=err_w,
         stdin=subprocess.PIPE,
-        start_new_session=True
+        start_new_session=True,
+        shell=False,
+        cwd=str(current_dir)
     )
 
     os.close(out_w)
