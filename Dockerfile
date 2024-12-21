@@ -12,6 +12,8 @@ LABEL authors="flatpack"
 RUN apt-get update && \
     apt-get upgrade -y && \
     apt-get install -y --no-install-recommends \
+    apparmor \
+    apparmor-utils \
     build-essential \
     curl \
     git \
