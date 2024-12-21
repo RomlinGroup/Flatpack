@@ -20,7 +20,9 @@ RUN apt-get update && \
         build-essential \
         cmake \
         curl \
+        file \
         git \
+        jq \
         procps \
         python3-dev \
         python3-full \
