@@ -58,16 +58,91 @@ https://pypi.org/project/flatpack
 
 **NOTE:** Flatpack is currently experimental. Please refrain from using it in production environments.
 
-### Run in Docker (recommended)
-
-**WARNING:** Running Flatpack outside Docker allows applications to execute unrestricted Bash and Python code with your user permissions. While Docker provides some isolation, it cannot guarantee complete security. Only use Flatpack if you understand and accept these security risks.
+### Install Node.js (required)
 
 ```bash
-docker build --progress=plain --no-cache -t flatpack-image .
+# Install nvm and restart your terminal
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
 ```
 
 ```bash
-docker run -it flatpack-image bash
+nvm install 22
+```
+
+### Install using pipx (recommended)
+
+Use this method if you prefer to install flatpack using [pipx](https://pipx.pypa.io).
+
+```bash
+pipx install flatpack --verbose
+```
+
+### Install from source
+
+Use this method if you want to install flatpack directly from the source code.
+
+```bash
+git clone https://github.com/RomlinGroup/Flatpack && cd Flatpack/package/flatpack
+```
+
+```bash
+pipx install --force . --verbose
+```
+
+### Install on Raspberry Pi OS Lite (64-bit)
+
+We recommend to use the [Raspberry Pi 5 with 8 GB RAM](https://www.raspberrypi.com/products/raspberry-pi-5/).
+
+```bash
+# Increase the swap memory size
+sudo swapoff -a && \
+sudo rm -f /swapfile && \
+sudo fallocate -l 8G /swapfile && \
+sudo chmod 600 /swapfile && \
+sudo mkswap /swapfile && \
+sudo swapon /swapfile && \
+grep -q '^/swapfile.*swap' /etc/fstab || \
+echo '/swapfile none swap sw,pri=10 0 0' | sudo tee -a /etc/fstab && \
+sudo systemctl stop dphys-swapfile && \
+sudo systemctl disable dphys-swapfile && \
+sudo rm -f /var/swap && \
+sudo swapon --show && \
+echo "Please reboot your system for changes to take effect."
+```
+
+```bash
+sudo apt-get install -y build-essential git pipx python3-dev python3.11 python3.11-dev
+```
+
+```bash
+# This will take a while
+pipx install flatpack --verbose
+```
+
+### Install on Ubuntu 24.04.1 LTS
+
+```bash
+sudo apt-get install -y build-essential python3-dev
+```
+
+```bash
+pipx install flatpack --verbose
+```
+
+### Install on Windows 11
+
+Install [Ubuntu 24.04 LTS](https://apps.microsoft.com/detail/9nz3klhxdjp5) using Windows Subsystem for Linux (WSL).
+
+```bash
+sudo add-apt-repository ppa:deadsnakes/ppa
+```
+
+```bash
+sudo apt-get install -y build-essential git pipx python3-dev python3.11 python3.11-dev
+```
+
+```bash
+pipx install flatpack --verbose
 ```
 
 ### Getting started
