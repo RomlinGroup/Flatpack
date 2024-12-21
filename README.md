@@ -69,17 +69,14 @@ Flatpack 目前仍处于实验阶段。请勿用于生产环境。
 Learn more about [Docker Engine security](https://docs.docker.com/engine/security/).
 
 ```bash
-# Pull the latest Flatpack image
 docker pull flatpackai/flatpack-image
 ```
 
 ```bash
-# Display the current version of Flatpack
 docker run -it flatpack-image flatpack version
 ```
 
 ```bash
-# Start an interactive bash session
 docker run -it flatpack-image bash
 ```
 
