@@ -56,7 +56,7 @@ https://pypi.org/project/flatpack
 
 ## How to use Flatpack
 
-> **NOTE:** Flatpack is currently experimental. Please refrain from using it in production environments.
+Flatpack is currently experimental. Please refrain from using it in production environments.
 
 ### Run in Docker (recommended)
 
