@@ -1,5 +1,5 @@
 # Ubuntu 24.04 LTS (Noble Numbat)
-# END OF LEGACY SUPPORT: April 2036
+# End Of Legacy Support: April 2036
 # https://ubuntu.com/about/release-cycle
 FROM ubuntu:24.04
 
