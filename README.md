@@ -81,7 +81,7 @@ docker build --progress=plain --no-cache -t flatpack-image .
 #### Running
 
 ```bash
-# Start an interactive bash session in the container
+# Start an interactive bash session
 docker run -it flatpack-image bash
 ```
 
