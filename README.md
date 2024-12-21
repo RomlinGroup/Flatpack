@@ -66,7 +66,7 @@ ONLY use Flatpack if you accept and understand these security risks.
 
 This tool is intended for expert users or controlled educational environments ONLY. If you do not fully understand the security implications, DO NOT PROCEED.
 
-¯_(ツ)_/¯ OK, you proceeded anyway... we will assume you read all that scary text above and know what you are doing.
+OK, you proceeded anyway... we will assume you read all that scary text above and know what you are doing.
 
 ```bash
 docker build --progress=plain --no-cache -t flatpack-image .
