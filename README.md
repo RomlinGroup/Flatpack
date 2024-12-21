@@ -56,17 +56,13 @@ https://pypi.org/project/flatpack
 
 ## How to use Flatpack
 
-**NOTE:** Flatpack is currently experimental. Please refrain from using it in production environments.
+> **NOTE:** Flatpack is currently experimental. Please refrain from using it in production environments.
 
 ### Run in Docker (recommended)
 
-**WARNING:** Running Flatpack outside Docker allows applications to execute unrestricted Bash and Python code with your user permissions. While Docker provides some isolation, it CANNOT guarantee complete security.
-
-This platform is currently intended for expert users or controlled educational environments ONLY. If you do not fully understand the security implications, DO NOT PROCEED.
+> **SECURITY NOTICE:** Running Flatpack outside Docker allows applications to execute unrestricted Bash and Python code with your user permissions. While Docker provides some isolation, it CANNOT guarantee complete security.
 
 #### Easy as 1-2-3
-
-OK, you proceeded anyway... we will assume you read all that scary text above and know what you are doing.
 
 ```bash
 # 1: Clone and enter the repository
@@ -122,7 +118,7 @@ flatpack run <flatpack_name>
 
 ### Share your environment online
 
-> **WARNING:** Sharing your environment online exposes it to the Internet and may result in the exposure of sensitive data. You are solely responsible for managing and understanding the security risks. We are not responsible for data breaches or unauthorised access from the --share option.
+> **SECURITY NOTICE:** Sharing your environment online exposes it to the Internet and may result in the exposure of sensitive data. You are solely responsible for managing and understanding the security risks. We are not responsible for data breaches or unauthorised access from the --share option.
 
 ```bash
 export NGROK_AUTHTOKEN=<your_ngrok_token>
