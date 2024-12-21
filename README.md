@@ -66,7 +66,7 @@ Flatpack 目前仍处于实验阶段。请勿用于生产环境。
 
 > **Docker Engine security:** "Docker containers are, by default, quite secure; especially if you run your processes as non-privileged users inside the container. You can add an extra layer of safety by enabling AppArmor, SELinux, GRSEC, or another appropriate hardening system." ([Docker 2024](https://docs.docker.com/engine/security/#conclusions))
 
-Learn more about [Docker Engine Security](https://docs.docker.com/engine/security/).
+Learn more about [Docker Engine security](https://docs.docker.com/engine/security/).
 
 #### Easy as 1-2-3
 
