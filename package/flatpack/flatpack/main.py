@@ -4520,11 +4520,12 @@ def fpk_cli_handle_run(args, session):
     config = uvicorn.Config(
         app,
         host=host,
-        port=port,
-        timeout_keep_alive=0,
-        timeout_graceful_shutdown=1,
+        http="auto",
+        lifespan="on",
         loop="asyncio",
-        lifespan="on"
+        port=port,
+        timeout_graceful_shutdown=1,
+        timeout_keep_alive=0
     )
 
     server = uvicorn.Server(config)
