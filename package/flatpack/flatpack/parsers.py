@@ -87,38 +87,22 @@ def generate_venv_setup_script(env_name, build_prefix, python_version=None):
     python_cmd = f"python{python_version}" if python_version else "python3"
     return dedent(f"""\
         echo "Checking for Python"
-       
-        if [[ "{python_version}" != "None" ]] && [[ -x "$(command -v python{python_version})" ]]; then
-            PYTHON_CMD=python{python_version}
-        elif [[ -x "$(command -v python3.12)" ]]; then
-            PYTHON_CMD=python3.12
-        elif [[ -x "$(command -v python3.11)" ]]; then
-            PYTHON_CMD=python3.11
-        elif [[ -x "$(command -v python3.10)" ]]; then
-            PYTHON_CMD=python3.10
-        elif [[ -x "$(command -v python3)" ]]; then
-            PYTHON_CMD=python3
-        else
-            PYTHON_CMD=python
-        fi
 
+        PYTHON_CMD={python_cmd}
         echo "Python command to be used: $PYTHON_CMD"
-        umask 022
-       
-        VENV_PATH="{env_name}/{build_prefix}"
-       
+
+        VENV_PATH="/{env_name}/{build_prefix}"
         echo "Creating the virtual environment at $VENV_PATH"
 
-        if ! $PYTHON_CMD -m venv --copies --without-pip "$VENV_PATH"; then
+        if ! $PYTHON_CMD -m venv "$VENV_PATH"; then
             echo "Failed to create the virtual environment using $PYTHON_CMD"
             exit 1
         else
             echo "Successfully created the virtual environment"
-            chmod -R go-w "$VENV_PATH"
         fi
 
         export VENV_PYTHON="$VENV_PATH/bin/python"
-       
+
         if [[ -f "$VENV_PYTHON" ]]; then
             echo "VENV_PYTHON is set correctly to $VENV_PYTHON"
             echo "Checking Python version in the virtual environment..."
@@ -130,11 +114,11 @@ def generate_venv_setup_script(env_name, build_prefix, python_version=None):
 
         echo "Installing pip within the virtual environment..."
         curl -sSL https://bootstrap.pypa.io/get-pip.py -o get-pip.py
-        
+
         $VENV_PYTHON get-pip.py
-       
+
         rm get-pip.py
-       
+
         export VENV_PIP="$VENV_PYTHON -m pip"
         """).strip()
 
@@ -274,67 +258,56 @@ def execute_run_commands_script(run_vec, model_name, build_prefix):
 
 def parse_toml_to_venv_script(file_path: str, env_name="myenv") -> str:
     """
-    Convert a TOML configuration to a bash script that sets up a python environment.
-
-    Parameters:
-    - file_path: Path to the TOML file (str)
-    - env_name: Name of the virtual environment (str, default="myenv")
-
-    Returns:
-    - str: Generated bash script
-
-    Raises:
-    - ValueError: If file_path is invalid or required fields are missing
+    Convert a TOML configuration to a bash script that sets up a python environment,
+    optimized for Docker environments.
     """
     if not file_path:
         raise ValueError("file_path cannot be None or empty")
+
     if not env_name:
         raise ValueError("env_name cannot be None or empty")
 
     config, model_name, python_version = load_toml_config(file_path)
     build_prefix = "build"
 
-    script = ["#!/bin/bash", f"mkdir -p {model_name}/{build_prefix}"]
-    script.extend(check_command_availability(["curl", "wget", "git"]))
+    script = ["#!/bin/bash", "set -e"]
+
+    script.append(f"mkdir -p /{model_name}/{build_prefix}")
 
     unix_packages = config.get("packages", {}).get("unix", {}) or {}
     package_list_unix = list(unix_packages.keys())
 
     if package_list_unix:
         apt_install = dedent(f"""\
-           OS=$(uname)
-           if [[ "$OS" = "Linux" && -f /etc/debian_version ]]; then
+           if [ -f /etc/debian_version ]; then
                echo "Installing required Unix packages..."
-               sudo apt update
-               sudo apt install -y {' '.join(package_list_unix)}
+               apt-get update
+               apt-get install -y {' '.join(package_list_unix)}
            fi
            """).strip()
 
         script.append(apt_install)
 
     script.append(generate_venv_setup_script(env_name, build_prefix, python_version))
-    script.extend(create_directories_script(model_name, build_prefix, config.get("directories", {})))
+
+    directories_map = config.get("directories", {})
+
+    if directories_map:
+        for directory_path in directories_map.values():
+            formatted_path = directory_path.lstrip('/').replace("home/content/", "")
+            script.append(f"mkdir -p /{model_name}/{build_prefix}/{formatted_path}")
+
     script.append(f"export model_name={model_name}")
 
     python_packages = config.get("packages", {}).get("python", {}) or {}
     package_list = [f"{package}=={version}" if version != "*" and version else package
                     for package, version in python_packages.items()]
-    script.extend(install_python_packages_script(package_list))
+    if package_list:
+        script.extend([f"$VENV_PIP install {' '.join(package_list)}"])
 
-    script.extend(clone_git_repositories_script(
-        config.get("git", []) or [], model_name, build_prefix
-    ))
-
-    script.extend(download_files_script(
-        config.get("dataset", []) or [], model_name, build_prefix
-    ))
-
-    script.extend(download_files_script(
-        config.get("file", []) or [], model_name, build_prefix
-    ))
-
-    script.extend(execute_run_commands_script(
-        config.get("run", []) or [], model_name, build_prefix
-    ))
+    script.extend([
+        f"export PYTHONPATH=/{model_name}/{build_prefix}:$PYTHONPATH",
+        f"export PATH=/{env_name}/{build_prefix}/bin:$PATH"
+    ])
 
     return "\n".join(script)
