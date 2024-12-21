@@ -15,6 +15,7 @@ RUN apt-get update && \
     apparmor \
     apparmor-utils \
     build-essential \
+    cmake \
     curl \
     git \
     procps \
