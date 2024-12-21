@@ -71,18 +71,18 @@ Learn more about [Docker Engine security](https://docs.docker.com/engine/securit
 #### Easy as 1-2-3
 
 ```bash
-# 1: Clone and enter the repository
-git clone https://github.com/RomlinGroup/Flatpack && cd Flatpack
+# Pull the latest Docker image
+docker pull flatpackai/flatpack-image
 ```
 
 ```bash
-# 2: Build the Docker image
-docker build --progress=plain --no-cache -t flatpack-image .
-```
-
-```bash
-# 3: Start an interactive bash session
+# Start an interactive bash session
 docker run -it flatpack-image bash
+```
+
+```bash
+# Display the current version of Flatpack
+docker run -it flatpack-image flatpack version
 ```
 
 ### Getting started
