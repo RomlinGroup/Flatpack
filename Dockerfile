@@ -1,5 +1,5 @@
-# Ubuntu 24.04 LTS
-# EOL: April 2036
+# Ubuntu 24.04 LTS (Noble Numbat)
+# END OF LEGACY SUPPORT: April 2036
 # https://ubuntu.com/about/release-cycle
 FROM ubuntu:24.04
 
