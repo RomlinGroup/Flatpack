@@ -62,7 +62,9 @@ Flatpack 目前仍处于实验阶段。请勿用于生产环境。
 
 ### Run in Docker (recommended)
 
-> **SECURITY NOTICE:** Running Flatpack outside Docker allows applications to execute unrestricted Bash and Python code with your user permissions. While Docker provides some isolation, it CANNOT guarantee complete security. ONLY use Flatpack if you accept and understand these security risks. Learn more about [Docker Engine Security](https://docs.docker.com/engine/security/).
+> **SECURITY NOTICE:** Running Flatpack outside Docker allows applications to execute unrestricted Bash and Python code with your user permissions. While Docker provides some isolation, it CANNOT guarantee complete security. ONLY use Flatpack if you accept and understand these security risks.
+
+Learn more about [Docker Engine Security](https://docs.docker.com/engine/security/).
 
 #### Easy as 1-2-3
 
