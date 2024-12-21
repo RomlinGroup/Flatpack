@@ -1,3 +1,6 @@
+# Ubuntu 24.04 LTS
+# EOL: April 2036
+# https://ubuntu.com/about/release-cycle
 FROM ubuntu:24.04
 
 ARG DEBIAN_FRONTEND=noninteractive
