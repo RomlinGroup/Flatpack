@@ -58,6 +58,8 @@ https://pypi.org/project/flatpack
 
 Flatpack is currently experimental. Please refrain from using it in production environments.
 
+Flatpack 目前仍处于实验阶段。请勿用于生产环境。
+
 ### Run in Docker (recommended)
 
 > **SECURITY NOTICE:** Running Flatpack outside Docker allows applications to execute unrestricted Bash and Python code with your user permissions. While Docker provides some isolation, it CANNOT guarantee complete security.
