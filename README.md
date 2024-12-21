@@ -64,7 +64,7 @@ https://pypi.org/project/flatpack
 
 This platform is intended for expert users or controlled educational environments ONLY. If you do not fully understand the security implications, DO NOT PROCEED.
 
-### Build the flatpack image
+#### Build the flatpack image
 
 OK, you proceeded anyway... we will assume you read all that scary text above and know what you are doing.
 
@@ -72,7 +72,7 @@ OK, you proceeded anyway... we will assume you read all that scary text above an
 docker build --progress=plain --no-cache -t flatpack-image .
 ```
 
-### Run the flatpack image
+#### Run the flatpack image
 
 ```bash
 docker run -it flatpack-image bash
