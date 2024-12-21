@@ -71,7 +71,7 @@ Learn more about [Docker Engine security](https://docs.docker.com/engine/securit
 #### Easy as 1-2-3
 
 ```bash
-# Pull the latest Docker image
+# Pull the latest Flatpack image
 docker pull flatpackai/flatpack-image
 ```
 
