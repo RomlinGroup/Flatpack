@@ -73,7 +73,7 @@ docker pull flatpackai/flatpack-image
 ```
 
 ```bash
-docker run -it flatpackai/flatpack-image bash
+docker run -it -p 8000:8000 flatpackai/flatpack-image bash
 ```
 
 ### Getting started

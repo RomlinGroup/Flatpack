@@ -52,5 +52,7 @@ source $HOME/.nvm/nvm.sh\n\
 exec "$@"' > /home/flatpackuser/docker-entrypoint.sh && \
 chmod +x /home/flatpackuser/docker-entrypoint.sh
 
+EXPOSE 8000
+
 ENTRYPOINT ["/home/flatpackuser/docker-entrypoint.sh"]
 CMD ["bash"]
