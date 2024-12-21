@@ -64,17 +64,24 @@ https://pypi.org/project/flatpack
 
 This platform is intended for expert users or controlled educational environments ONLY. If you do not fully understand the security implications, DO NOT PROCEED.
 
-#### Build the flatpack image
+#### Building
 
 OK, you proceeded anyway... we will assume you read all that scary text above and know what you are doing.
 
 ```bash
+# Clone and enter the repository
+git clone https://github.com/RomlinGroup/Flatpack && cd Flatpack
+```
+
+```bash
+# Build the Docker image
 docker build --progress=plain --no-cache -t flatpack-image .
 ```
 
-#### Run the flatpack image
+#### Running
 
 ```bash
+# Start an interactive bash session in the container
 docker run -it flatpack-image bash
 ```
 
