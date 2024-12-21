@@ -62,7 +62,11 @@ https://pypi.org/project/flatpack
 
 **WARNING:** Running Flatpack outside Docker allows applications to execute unrestricted Bash and Python code with your user permissions. While Docker provides some isolation, it CANNOT guarantee complete security.
 
+This platform is intended for expert users or controlled educational environments ONLY. If you do not fully understand the security implications, DO NOT PROCEED.
+
 #### Easy as 1-2-3
+
+OK, you proceeded anyway... we will assume you read all that scary text above and know what you are doing.
 
 ```bash
 # 1: Clone and enter the repository
