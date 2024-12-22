@@ -35,15 +35,14 @@ numpy = "2.2.0"
 tiktoken = "0.8.0"
 tqdm = "4.67.1"
 
-[[git]]
-from_source = "https://github.com/ggerganov/llama.cpp"
-to_destination = "llama.cpp"
-branch = "master"
-requirements_file = "requirements.txt"
-setup_commands = [
-    "cmake -B build",
-    "cmake --build build --config Release"
-]
+# [[git]]
+# from_source = "{{git_source_url}}"
+# to_destination = "{{git_destination_dir}}"
+# branch = "{{branch_name}}"
+# requirements_file = "requirements.txt"
+# setup_commands = [
+#   "{{setup_command}}"
+# ]
 
 [[file]]
 from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/llama-cpp/custom.json"
