@@ -1,21 +1,18 @@
 # Ubuntu 24.04 LTS (Noble Numbat)
 # End Of Legacy Support: April 2036
 # https://ubuntu.com/about/release-cycle
-FROM ubuntu:24.04
 
+FROM ubuntu:24.04
 ARG DEBIAN_FRONTEND=noninteractive
 ENV NVM_DIR=/home/flatpackuser/.nvm
 ENV NODE_VERSION=22
 ENV NODE_PATH=$NVM_DIR/v$NODE_VERSION/lib/node_modules
 ENV PATH=$NVM_DIR/versions/node/v$NODE_VERSION/bin:/home/flatpackuser/.local/bin:$PATH
-
 LABEL authors="flatpack"
 
 RUN apt-get update && \
     apt-get upgrade -y && \
     apt-get install -y --no-install-recommends \
-    apparmor \
-    apparmor-utils \
     build-essential \
     cmake \
     curl \
@@ -33,11 +30,9 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-RUN echo 'kernel.apparmor_restrict_unprivileged_userns=0' > /etc/sysctl.d/99-apparmor.conf && \
-    chmod 644 /etc/sysctl.d/99-apparmor.conf
-
 RUN useradd -m -s /bin/bash -u 1001 flatpackuser && \
-    chown -R flatpackuser:flatpackuser /home/flatpackuser
+    chown -R flatpackuser:flatpackuser /home/flatpackuser && \
+    chmod 755 /home/flatpackuser
 
 USER flatpackuser
 WORKDIR /home/flatpackuser
@@ -46,7 +41,8 @@ RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | b
     . $NVM_DIR/nvm.sh && \
     nvm install $NODE_VERSION && \
     nvm use $NODE_VERSION && \
-    nvm alias default $NODE_VERSION
+    nvm alias default $NODE_VERSION && \
+    chmod 700 $NVM_DIR
 
 RUN pipx install flatpack
 
