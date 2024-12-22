@@ -3129,9 +3129,24 @@ def fpk_cli_handle_create(args, session):
         console.print(f"[bold red]Error:[/bold red] An unexpected error occurred: {str(e)}")
 
 
+def is_running_in_docker():
+    """Check if code is running inside Docker container."""
+    try:
+        with open('/proc/1/cgroup', 'r') as f:
+            for line in f:
+                if 'docker' in line:
+                    return True
+        if os.path.exists('/.dockerenv'):
+            return True
+        return False
+    except:
+        return False
+
+
 def fpk_cli_handle_compress(args, session: httpx.Client):
     """
     Handle the model compression command for the Flatpack CLI.
+    Prevents execution inside Docker containers for security and compatibility.
 
     Args:
         args: The command-line arguments.
@@ -3140,6 +3155,15 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
     Returns:
         None
     """
+    if is_running_in_docker():
+        console.print(Panel(
+            "[bold red]Error:[/bold red] Model compression cannot be run inside Docker containers.\n"
+            "Please run compression operations on your host machine.",
+            title="Docker Environment Detected",
+            border_style="red"
+        ))
+        return
+
     model_id = args.model_id
     token = args.token
     method = getattr(args, 'method', 'llama.cpp')

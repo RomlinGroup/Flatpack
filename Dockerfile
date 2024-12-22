@@ -25,6 +25,7 @@ RUN apt-get update && \
     python3-full \
     python3-pip \
     pipx \
+    sox \
     unzip \
     wget && \
     apt-get clean && \
