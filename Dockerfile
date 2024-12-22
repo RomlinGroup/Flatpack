@@ -23,6 +23,7 @@ RUN apt-get update && \
         file \
         git \
         jq \
+        libcurl4-openssl-dev \
         procps \
         python3-dev \
         python3-full \
