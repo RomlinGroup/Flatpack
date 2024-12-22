@@ -4,7 +4,6 @@
 FROM ubuntu:24.04
 
 ARG DEBIAN_FRONTEND=noninteractive
-
 ENV NVM_DIR=/home/flatpackuser/.nvm
 ENV NODE_VERSION=22
 ENV NODE_PATH=$NVM_DIR/v$NODE_VERSION/lib/node_modules
@@ -15,23 +14,27 @@ LABEL authors="flatpack"
 RUN apt-get update && \
     apt-get upgrade -y && \
     apt-get install -y --no-install-recommends \
-        apparmor \
-        apparmor-utils \
-        build-essential \
-        cmake \
-        curl \
-        file \
-        git \
-        jq \
-        libcurl4-openssl-dev \
-        procps \
-        python3-dev \
-        python3-full \
-        python3-pip \
-        pipx \
-        wget && \
+    apparmor \
+    apparmor-utils \
+    build-essential \
+    cmake \
+    curl \
+    file \
+    git \
+    jq \
+    libcurl4-openssl-dev \
+    procps \
+    python3-dev \
+    python3-full \
+    python3-pip \
+    pipx \
+    unzip \
+    wget && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
+
+RUN echo 'kernel.apparmor_restrict_unprivileged_userns=0' > /etc/sysctl.d/99-apparmor.conf && \
+    chmod 644 /etc/sysctl.d/99-apparmor.conf
 
 RUN useradd -m -s /bin/bash -u 1001 flatpackuser && \
     chown -R flatpackuser:flatpackuser /home/flatpackuser
