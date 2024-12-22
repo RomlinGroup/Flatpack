@@ -1,13 +1,15 @@
 # Ubuntu 24.04 LTS (Noble Numbat)
 # End Of Legacy Support: April 2036
 # https://ubuntu.com/about/release-cycle
-
 FROM ubuntu:24.04
+
 ARG DEBIAN_FRONTEND=noninteractive
-ENV NVM_DIR=/home/flatpackuser/.nvm
-ENV NODE_VERSION=22
-ENV NODE_PATH=$NVM_DIR/v$NODE_VERSION/lib/node_modules
-ENV PATH=$NVM_DIR/versions/node/v$NODE_VERSION/bin:/home/flatpackuser/.local/bin:$PATH
+
+ENV NVM_DIR=/home/flatpackuser/.nvm \
+    NODE_VERSION=22 \
+    NODE_PATH=/home/flatpackuser/.nvm/v22/lib/node_modules \
+    PATH=/home/flatpackuser/.nvm/versions/node/v22/bin:/home/flatpackuser/.local/bin:${PATH}
+
 LABEL authors="flatpack"
 
 RUN apt-get update && \
@@ -39,16 +41,16 @@ USER flatpackuser
 WORKDIR /home/flatpackuser
 
 RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash && \
-    . $NVM_DIR/nvm.sh && \
-    nvm install $NODE_VERSION && \
-    nvm use $NODE_VERSION && \
-    nvm alias default $NODE_VERSION && \
-    chmod 700 $NVM_DIR
+    . ${NVM_DIR}/nvm.sh && \
+    nvm install ${NODE_VERSION} && \
+    nvm use ${NODE_VERSION} && \
+    nvm alias default ${NODE_VERSION} && \
+    chmod 700 ${NVM_DIR}
 
 RUN pipx install flatpack
 
 RUN echo '#!/bin/bash\n\
-source $HOME/.nvm/nvm.sh\n\
+source ${HOME}/.nvm/nvm.sh\n\
 exec "$@"' > /home/flatpackuser/docker-entrypoint.sh && \
     chmod +x /home/flatpackuser/docker-entrypoint.sh
 

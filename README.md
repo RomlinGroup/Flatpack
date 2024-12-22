@@ -156,6 +156,10 @@ Special thanks to the teams behind these essential libraries.
 
 Compress [Hugging Face](https://huggingface.co) models compatible with [llama.cpp](https://github.com/ggerganov/llama.cpp) to Q4_K_M and GGUF.
 
+Model compression cannot be run inside Docker containers.
+
+Please run compression operations on your host machine.
+
 ```bash
 flatpack compress <hf_model_name> --method llama.cpp --token <hf_token>
 ```
