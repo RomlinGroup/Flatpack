@@ -40,9 +40,10 @@ from_source = "https://github.com/ggerganov/llama.cpp"
 to_destination = "llama.cpp"
 branch = "master"
 requirements_file = "requirements.txt"
-# setup_commands = [
-#   "{{setup_command}}"
-# ]
+setup_commands = [
+    "cmake -B build",
+    "cmake --build build --config Release"
+]
 
 [[file]]
 from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/llama-cpp/custom.json"
