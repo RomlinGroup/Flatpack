@@ -56,6 +56,7 @@ LABEL authors="flatpack"
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     curl \
+    git \
     jq \
     procps \
     python3 \
