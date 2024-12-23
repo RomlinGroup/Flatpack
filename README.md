@@ -158,8 +158,6 @@ Compress [Hugging Face](https://huggingface.co) models compatible with [llama.cp
 
 Model compression cannot be run inside Docker containers.
 
-Please run compression operations on your host machine.
-
 ```bash
 flatpack compress <hf_model_name> --method llama.cpp --token <hf_token>
 ```
