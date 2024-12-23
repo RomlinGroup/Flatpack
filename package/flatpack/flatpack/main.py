@@ -4503,7 +4503,7 @@ def fpk_cli_handle_run(args, session):
         app = initialize_fastapi_app(secret_key)
         setup_static_directory(app, str(directory))
 
-    host = "127.0.0.1"
+    host = "0.0.0.0"
     port = 8000
 
     public_url = None
