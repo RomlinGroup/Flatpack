@@ -1,22 +1,31 @@
 {
   "hooks": [
     {
-      "id": 3,
+      "id": 4,
       "hook_name": "gpio",
       "hook_placement": "before",
       "hook_script": "GPIO=true",
       "hook_type": "bash",
       "show_on_frontpage": true,
-      "created_at": "2024-12-12 09:13:08"
+      "created_at": "2024-12-24 19:39:06"
+    },
+    {
+      "id": 3,
+      "hook_name": "prompt",
+      "hook_placement": "before",
+      "hook_script": "prompt = \"What is the meaning of life?\"",
+      "hook_type": "python",
+      "show_on_frontpage": true,
+      "created_at": "2024-12-24 19:38:48"
     },
     {
       "id": 2,
       "hook_name": "tokens",
       "hook_placement": "before",
-      "hook_script": "TOKENS=128",
-      "hook_type": "bash",
+      "hook_script": "tokens = 128",
+      "hook_type": "python",
       "show_on_frontpage": true,
-      "created_at": "2024-12-10 08:54:34"
+      "created_at": "2024-12-24 19:38:30"
     }
   ]
 }
