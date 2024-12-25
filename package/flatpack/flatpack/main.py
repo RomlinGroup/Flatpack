@@ -49,6 +49,7 @@ import subprocess
 import sys
 import tarfile
 import tempfile
+import threading
 import time
 import traceback
 import unicodedata
@@ -445,7 +446,10 @@ def check_node_and_run_npm_install(web_dir):
                 raise FileNotFoundError("Node.js or npm not found")
 
             node_version = subprocess.run(
-                [node_path, "--version"], check=True, capture_output=True, text=True
+                [node_path, "--version"],
+                check=True,
+                capture_output=True,
+                text=True
             ).stdout.strip()
             console.print("")
             console.print(f"[green]Node.js version:[/green] {node_version}")
@@ -460,8 +464,12 @@ def check_node_and_run_npm_install(web_dir):
 
             os.chdir(web_dir_path)
 
-            with console.status("[bold green]Running npm install..."):
-                subprocess.run([npm_path, "install"], check=True, capture_output=True)
+            with console.status("[bold green]Running npm install...", spinner="dots"):
+                subprocess.run(
+                    [npm_path, "install"],
+                    check=True,
+                    capture_output=True
+                )
 
             console.print("[bold green]Successfully ran 'npm install' in the web directory[/bold green]")
 
@@ -924,10 +932,12 @@ def get_executable_path(executable):
         system_root = os.environ.get('SystemRoot', 'C:\\Windows')
         where_cmd = os.path.join(system_root, 'System32', 'where.exe')
         try:
-            result = subprocess.run([where_cmd, executable],
-                                    check=True,
-                                    capture_output=True,
-                                    text=True)
+            result = subprocess.run(
+                [where_cmd, executable],
+                check=True,
+                capture_output=True,
+                text=True
+            )
             paths = result.stdout.strip().split('\n')
             return paths[0] if paths else None
         except subprocess.CalledProcessError:
@@ -938,10 +948,12 @@ def get_executable_path(executable):
             if not os.path.exists(which_cmd):
                 which_cmd = '/bin/which'
 
-            result = subprocess.run([which_cmd, executable],
-                                    check=True,
-                                    capture_output=True,
-                                    text=True)
+            result = subprocess.run(
+                [which_cmd, executable],
+                check=True,
+                capture_output=True,
+                text=True
+            )
             return result.stdout.strip()
         except subprocess.CalledProcessError:
             return None
@@ -1166,12 +1178,12 @@ async def run_subprocess(command, log_file):
 
     process = subprocess.Popen(
         command,
-        stdout=out_w,
+        cwd=str(current_dir),
+        shell=False,
+        start_new_session=True,
         stderr=err_w,
         stdin=subprocess.PIPE,
-        start_new_session=True,
-        shell=False,
-        cwd=str(current_dir)
+        stdout=out_w
     )
 
     os.close(out_w)
@@ -2305,8 +2317,10 @@ def fpk_unbox(directory_name: str, session: httpx.Client, local: bool = False,
                 return False
             flatpack_dir.mkdir(parents=True, exist_ok=True)
 
-        web_dir = flatpack_dir / "web"
         build_dir = flatpack_dir / "build"
+        web_dir = flatpack_dir / "web"
+
+        app_dir = web_dir / "app"
         output_dir = web_dir / "output"
 
         for directory in [web_dir, build_dir, output_dir]:
@@ -2364,6 +2378,40 @@ def fpk_unbox(directory_name: str, session: httpx.Client, local: bool = False,
                 logger.error("Error during cleanup: %s", e)
             return False
 
+        try:
+            if app_dir.exists():
+                shutil.rmtree(app_dir)
+
+            create_next_app_cmd = [
+                'npx',
+                'create-next-app@latest',
+                str(app_dir),
+                '--import-alias', '@/*',
+                '--js',
+                '--no-app',
+                '--no-eslint',
+                '--no-experimental-app',
+                '--no-src-dir',
+                '--no-tailwind',
+                '--no-turbopack',
+                '--no-typescript',
+                '--use-npm'
+            ]
+
+            with console.status("[bold green]Setting up a new Next.js project...", spinner="dots"):
+                subprocess.run(
+                    create_next_app_cmd,
+                    check=True,
+                    stderr=subprocess.DEVNULL,
+                    stdout=subprocess.DEVNULL
+                )
+
+            console.print("[bold green]Successfully set up a new Next.js project[/bold green]")
+            console.print("")
+
+        except subprocess.CalledProcessError:
+            return False
+
         if not local:
             fpk_url = f"{BASE_URL}/{directory_name}/{directory_name}.fpk"
             fpk_path = build_dir / f"{directory_name}.fpk"
@@ -2401,7 +2449,11 @@ def fpk_unbox(directory_name: str, session: httpx.Client, local: bool = False,
             bash_script_path.write_text(bash_script_content)
 
             safe_script_path = shlex.quote(str(bash_script_path.resolve()))
-            subprocess.run(['/bin/bash', safe_script_path], check=True)
+            subprocess.run(
+                ['/bin/bash',
+                 safe_script_path],
+                check=True
+            )
 
             logger.info("Bash script execution completed successfully")
         finally:
@@ -3299,7 +3351,10 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
                             f"pip install -r {shlex.quote(requirements_file)}"
                         )
                     ]
-                    subprocess.run(pip_command, check=True)
+                    subprocess.run(
+                        pip_command,
+                        check=True
+                    )
                     console.print("[bold green]SUCCESS:[/bold green] Finished installing llama.cpp dependencies")
 
                     with open(ready_file, 'w') as f:
@@ -3339,7 +3394,10 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
                     ]
                     console.print(Panel(Syntax(" ".join(convert_command), "bash", theme="monokai", line_numbers=True),
                                         title="Conversion Command", expand=False))
-                    subprocess.run(convert_command, check=True)
+                    subprocess.run(
+                        convert_command,
+                        check=True
+                    )
                     console.print(
                         f"[bold green]SUCCESS:[/bold green] Conversion complete. The model has been compressed and saved as '{output_file}'")
                 except subprocess.CalledProcessError as e:
@@ -3363,7 +3421,10 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
                         quantized_output_file,
                         "Q4_K_M"
                     ]
-                    subprocess.run(quantize_command, check=True)
+                    subprocess.run(
+                        quantize_command,
+                        check=True
+                    )
                     console.print(
                         f"[bold green]SUCCESS:[/bold green] Quantization complete. The quantized model has been saved as '{quantized_output_file}'.")
 
@@ -4504,30 +4565,56 @@ def fpk_cli_handle_run(args, session):
         setup_static_directory(app, str(directory))
 
     host = "0.0.0.0"
-    port = 8000
-
-    public_url = None
+    fastapi_port = 8000
+    nextjs_port = 3000
 
     if args.share:
         with console.status("[bold green]Establishing ngrok ingress...", spinner="dots"):
             try:
                 if args.domain:
-                    listener = ngrok.connect(f"{host}:{port}", authtoken_from_env=True, domain=args.domain)
+                    fastapi_listener = ngrok.connect(
+                        f"{host}:{fastapi_port}",
+                        authtoken_from_env=True,
+                        domain=args.domain
+                    )
                 else:
-                    listener = ngrok.connect(f"{host}:{port}", authtoken_from_env=True)
+                    fastapi_listener = ngrok.connect(
+                        f"{host}:{fastapi_port}",
+                        authtoken_from_env=True
+                    )
 
-                public_url = listener.url()
+                fastapi_url = fastapi_listener.url()
+                app.state.ngrok_listener = fastapi_listener
+                app.state.public_url = fastapi_url
 
-                app.state.ngrok_listener = listener
-                app.state.public_url = public_url
+                nextjs_domain = f"next-{args.domain}" if args.domain else None
 
-                logger.info("Ingress established at %s", public_url)
-                console.print(f"Ingress established at {public_url}", style="bold green")
+                if nextjs_domain:
+                    nextjs_listener = ngrok.connect(
+                        f"{host}:{nextjs_port}",
+                        authtoken_from_env=True,
+                        domain=nextjs_domain
+                    )
+                else:
+                    nextjs_listener = ngrok.connect(
+                        f"{host}:{nextjs_port}",
+                        authtoken_from_env=True
+                    )
+
+                nextjs_url = nextjs_listener.url()
+                app.state.nextjs_listener = nextjs_listener
+                app.state.nextjs_url = nextjs_url
+
+                logger.info("FastAPI ingress established at %s", fastapi_url)
+                logger.info("Next.js ingress established at %s", nextjs_url)
+                console.print(f"FastAPI ingress established at {fastapi_url}", style="bold green")
+                console.print(f"Next.js ingress established at {nextjs_url}", style="bold green")
                 console.print("")
+
             except ValueError as e:
                 error_message = str(e)
                 if "ERR_NGROK_319" in error_message:
-                    console.print("[bold red]Error: Custom domain not reserved[/bold red]", style="bold red")
+                    console.print("[bold red]Error: Custom domain not reserved[/bold red]")
                     console.print("You must reserve the custom domain in your ngrok dashboard before using it.")
                     console.print(f"Please visit: https://dashboard.ngrok.com/domains/new")
                     console.print("After reserving the domain, try running the command again.")
@@ -4547,7 +4634,7 @@ def fpk_cli_handle_run(args, session):
         http="auto",
         lifespan="on",
         loop="asyncio",
-        port=port,
+        port=fastapi_port,
         timeout_graceful_shutdown=1,
         timeout_keep_alive=0
     )
@@ -4557,7 +4644,62 @@ def fpk_cli_handle_run(args, session):
     background_tasks = BackgroundTasks()
     background_tasks.add_task(run_scheduler)
 
+    app_dir = web_dir / "app"
+    nextjs_process = None
+
+    def log_process_output(process, name):
+        while True:
+            line = process.stdout.readline()
+            if not line and process.poll() is not None:
+                break
+            if line:
+                console.print(f"[{name}] {line.strip()}")
+
+    if app_dir.exists():
+        try:
+            nextjs_process = subprocess.Popen(
+                ['npm', 'run', 'dev'],
+                bufsize=1,
+                cwd=str(app_dir),
+                stderr=subprocess.STDOUT,
+                stdout=subprocess.PIPE,
+                text=True,
+                universal_newlines=True
+            )
+
+            threading.Thread(
+                args=(nextjs_process, "Next.js"),
+                daemon=True,
+                target=log_process_output
+            ).start()
+
+            console.print("[bold green]Started Next.js development server[/bold green]")
+            console.print("")
+        except Exception as e:
+            console.print(f"[bold red]Failed to start Next.js server: {e}[/bold red]")
+            console.print("")
+            return
+
     def force_exit():
+        if nextjs_process:
+            nextjs_process.terminate()
+            try:
+                nextjs_process.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                nextjs_process.kill()
+
+        if hasattr(app.state, 'ngrok_listener'):
+            try:
+                ngrok.disconnect(app.state.ngrok_listener.url())
+            except:
+                pass
+
+        if hasattr(app.state, 'nextjs_listener'):
+            try:
+                ngrok.disconnect(app.state.nextjs_listener.url())
+            except:
+                pass
+
         os.kill(os.getpid(), signal.SIGKILL)
 
     def aggressive_handle_exit(sig, frame):
