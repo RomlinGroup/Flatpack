@@ -4657,8 +4657,14 @@ def fpk_cli_handle_run(args, session):
 
     if app_dir.exists():
         try:
+            npm_path = get_executable_path('npm')
+
+            if not npm_path:
+                logger.error("npm executable not found in PATH")
+                return None
+
             nextjs_process = subprocess.Popen(
-                ['npm', 'run', 'dev'],
+                [npm_path, 'run', 'dev'],
                 bufsize=1,
                 cwd=str(app_dir),
                 stderr=subprocess.STDOUT,
