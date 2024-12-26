@@ -2387,14 +2387,13 @@ def fpk_unbox(directory_name: str, session: httpx.Client, local: bool = False,
                 'create-next-app@latest',
                 str(app_dir),
                 '--import-alias', '@/*',
-                '--js',
+                '--typescript',
                 '--no-app',
                 '--no-eslint',
                 '--no-experimental-app',
                 '--no-src-dir',
                 '--no-tailwind',
                 '--no-turbopack',
-                '--no-typescript',
                 '--use-npm'
             ]
 
