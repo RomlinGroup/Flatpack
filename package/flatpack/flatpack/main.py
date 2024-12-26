@@ -468,35 +468,108 @@ def check_node_and_run_npm_install(web_dir):
                 subprocess.run(
                     [npm_path, "install"],
                     check=True,
-                    capture_output=True
+                    capture_output=True,
+                    text=True
                 )
 
-            console.print("[bold green]Successfully ran 'npm install' in the web directory[/bold green]")
+            console.print("[bold green]Successfully ran 'npm install'[/bold green]")
+
+            with console.status("[bold green]Installing Tailwind CSS...", spinner="dots"):
+                tailwind_install_result = subprocess.run(
+                    [npm_path, "install", "tailwindcss", "postcss", "autoprefixer"],
+                    check=True,
+                    capture_output=True,
+                    text=True
+                )
+
+                if tailwind_install_result.stdout:
+                    console.print(f"[green]Tailwind CSS installation output:[/green]\n{tailwind_install_result.stdout}")
+                if tailwind_install_result.stderr:
+                    console.print(
+                        f"[yellow]Tailwind CSS installation warnings/errors (if any):[/yellow]\n{tailwind_install_result.stderr}")
+
+            console.print("[bold green]Successfully installed Tailwind CSS[/bold green]")
+
+            tailwind_config = dedent("""\
+                /** @type {import('tailwindcss').Config} */
+                module.exports = {
+                  content: [
+                    './pages/**/*.{js,ts,jsx,tsx,mdx}',
+                    './components/**/*.{js,ts,jsx,tsx,mdx}',
+                  ],
+                  theme: {
+                    extend: {},
+                  },
+                  plugins: [],
+                }
+                """)
+
+            postcss_config = dedent("""\
+                module.exports = {
+                  plugins: {
+                    tailwindcss: {},
+                    autoprefixer: {},
+                  },
+                }
+                """)
+
+            globals_css = dedent("""\
+                @tailwind base;
+                @tailwind components;
+                @tailwind utilities;
+                """)
+
+            styles_dir = web_dir_path / 'styles'
+            styles_dir.mkdir(exist_ok=True)
+
+            with open(web_dir_path / 'tailwind.config.js', 'w') as f:
+                f.write(tailwind_config)
+
+            with open(web_dir_path / 'postcss.config.js', 'w') as f:
+                f.write(postcss_config)
+
+            with open(styles_dir / 'globals.css', 'w') as f:
+                f.write(globals_css)
+
+            console.print("[bold green]Created Tailwind configuration files[/bold green]")
 
         except FileNotFoundError as e:
             console.print(Panel(
-                f"[bold red]{str(e)}[/bold red]\n\n"
-                "To resolve this issue:\n"
-                "1. Download and install Node.js from [link=https://nodejs.org]https://nodejs.org[/link]\n"
-                "2. npm is included with Node.js installation\n"
-                "3. After installation, restart your terminal and run this script again\n\n"
-                "[yellow]Aborting further operations due to missing Node.js or npm.[/yellow]",
+                dedent(f"""\
+                    [bold red]{str(e)}[/bold red]
+
+                    To resolve this issue:
+                    1. Download and install Node.js from [link=https://nodejs.org]https://nodejs.org[/link]
+                    2. npm is included with Node.js installation
+                    3. After installation, restart your terminal and run this script again
+
+                    [yellow]Aborting further operations due to missing Node.js or npm.[/yellow]"""),
                 title="Error: Node.js or npm not found", expand=False
             ))
             return False
 
         except subprocess.CalledProcessError as e:
             console.print(Panel(
-                f"[bold red]An error occurred while running a command:[/bold red]\n\n{e}\n\n"
-                "[yellow]Aborting further operations due to this error.[/yellow]",
+                dedent(f"""\
+                    [bold red]An error occurred while running a command:[/bold red]
+
+                    {e}
+
+                    Stdout: {e.stdout}
+                    Stderr: {e.stderr}
+                    [yellow]Aborting further operations due to this error.[/yellow]"""),
                 title="Command Error", expand=False
             ))
             return False
 
         except Exception as e:
             console.print(Panel(
-                f"[bold red]An unexpected error occurred:[/bold red]\n\n{str(e)}\n\n"
-                "[yellow]Aborting further operations due to this error.[/yellow]",
+                dedent(f"""\
+                    [bold red]An unexpected error occurred:[/bold red]
+
+                    {str(e)}
+
+                    [yellow]Aborting further operations due to this error.[/yellow]"""),
                 title="Unexpected Error", expand=False
             ))
             return False
@@ -2387,12 +2460,12 @@ def fpk_unbox(directory_name: str, session: httpx.Client, local: bool = False,
                 'create-next-app@latest',
                 str(app_dir),
                 '--import-alias', '@/*',
+                '--tailwind',
                 '--typescript',
                 '--no-app',
                 '--no-eslint',
                 '--no-experimental-app',
                 '--no-src-dir',
-                '--no-tailwind',
                 '--no-turbopack',
                 '--use-npm'
             ]
