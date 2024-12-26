@@ -3110,20 +3110,14 @@ def fpk_cli_handle_add_url(url, vm):
         logger.error("Failed to access URL: '%s'. Error: %s", url, e)
 
 
-def get_process_tree(pid: int) -> str:
-    """Get a string representation of the process tree leading to pid."""
+def get_process_tree(pid: int) -> set[int]:
+    """Recursively get all child process IDs in the process tree."""
     try:
         process = psutil.Process(pid)
-        tree = []
-        while process is not None and process.pid != 1:
-            try:
-                tree.append(f"{process.pid} ({process.name()})")
-                process = process.parent()
-            except (psutil.NoSuchProcess, psutil.AccessDenied):
-                break
-        return " -> ".join(reversed(tree))
+        children = process.children(recursive=True)
+        return {pid} | {child.pid for child in children}
     except (psutil.NoSuchProcess, psutil.AccessDenied):
-        return f"Could not trace process {pid}"
+        return set()
 
 
 def get_python_processes() -> List[Dict[str, any]]:
@@ -3790,11 +3784,11 @@ def setup_routes(app):
                 )
 
             build_dir = Path(flatpack_directory) / 'build'
-
             build_processes = set()
+
             for proc in psutil.process_iter(['pid', 'cmdline', 'name']):
                 try:
-                    if any(str(build_dir) in str(arg) for arg in proc.cmdline()):
+                    if proc.cmdline() and any(str(build_dir) in str(arg) for arg in proc.cmdline()):
                         process_tree = get_process_tree(proc.pid)
                         build_processes.update(process_tree)
                 except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
@@ -3807,7 +3801,6 @@ def setup_routes(app):
                     continue
 
             await asyncio.sleep(5)
-
             remaining_processes = set()
 
             for pid in build_processes:
@@ -3848,7 +3841,6 @@ def setup_routes(app):
                         continue
 
             memory_released = 0
-
             try:
                 memory_released = sum(
                     psutil.Process(pid).memory_info().rss
@@ -3861,7 +3853,6 @@ def setup_routes(app):
             build_in_progress = False
             abort_requested = False
 
-            status_file = build_dir / 'build_status.json'
             status_data = {
                 "status": "aborted",
                 "timestamp": datetime.now().isoformat(),
@@ -3871,6 +3862,7 @@ def setup_routes(app):
                 "memory_released_bytes": memory_released
             }
 
+            status_file = build_dir / 'build_status.json'
             os.makedirs(status_file.parent, exist_ok=True)
             with open(status_file, 'w') as f:
                 json.dump(status_data, f)
@@ -4759,6 +4751,56 @@ def fpk_cli_handle_run(args, session):
             return
 
     def force_exit():
+        global abort_requested, build_in_progress, flatpack_directory
+
+        if build_in_progress:
+            try:
+                build_dir = Path(flatpack_directory) / 'build'
+                build_processes = set()
+
+                for proc in psutil.process_iter(['pid', 'cmdline', 'name']):
+                    try:
+                        if proc.cmdline() and any(str(build_dir) in str(arg) for arg in proc.cmdline()):
+                            process_tree = get_process_tree(proc.pid)
+                            build_processes.update(process_tree)
+                    except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+                        continue
+
+                for pid in build_processes:
+                    try:
+                        os.kill(pid, signal.SIGTERM)
+                    except ProcessLookupError:
+                        continue
+
+                temp_files = [
+                    'temp.sh',
+                    'execution_script_*.py',
+                    'context_script.py'
+                ]
+
+                for pattern in temp_files:
+                    for file in build_dir.glob(pattern):
+                        try:
+                            file.unlink()
+                        except (PermissionError, FileNotFoundError):
+                            continue
+
+                build_in_progress = False
+                abort_requested = False
+
+                status_data = {
+                    "status": "aborted",
+                    "timestamp": datetime.now().isoformat(),
+                    "error": "Build forcefully terminated"
+                }
+
+                status_file = build_dir / 'build_status.json'
+                os.makedirs(status_file.parent, exist_ok=True)
+                with open(status_file, 'w') as f:
+                    json.dump(status_data, f)
+            except Exception as e:
+                logger.error("Error in abort build cleanup during force exit: %s", str(e))
+
         if nextjs_process:
             nextjs_process.terminate()
             try:
@@ -4777,6 +4819,28 @@ def fpk_cli_handle_run(args, session):
                 ngrok.disconnect(app.state.nextjs_listener.url())
             except:
                 pass
+
+        python_processes = []
+        current_pid = os.getpid()
+
+        for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
+            try:
+                if 'python' in proc.info['name'].lower() and proc.info['pid'] != current_pid:
+                    cmd = ' '.join(proc.info['cmdline']) if proc.info['cmdline'] else 'Unknown'
+                    if 'uvicorn' in cmd.lower() or 'fastapi' in cmd.lower():
+                        python_processes.append(proc)
+            except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+                continue
+
+        for proc in python_processes:
+            try:
+                proc.terminate()
+                try:
+                    proc.wait(timeout=3)
+                except psutil.TimeoutExpired:
+                    proc.kill()
+            except psutil.NoSuchProcess:
+                continue
 
         os.kill(os.getpid(), signal.SIGKILL)
 
