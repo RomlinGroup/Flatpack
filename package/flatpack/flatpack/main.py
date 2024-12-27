@@ -4753,7 +4753,7 @@ def fpk_cli_handle_run(args, session):
                 build_dir = Path(flatpack_directory) / 'build'
                 build_processes = set()
 
-                for proc in psutil.process_iter(['pid', 'cmdline', 'name']):
+                for proc in psutil.process_iter(['cmdline', 'name', 'pid']):
                     try:
                         if proc.cmdline() and any(str(build_dir) in str(arg) for arg in proc.cmdline()):
                             process_tree = get_process_tree(proc.pid)
@@ -4763,28 +4763,17 @@ def fpk_cli_handle_run(args, session):
 
                 for pid in build_processes:
                     try:
-                        proc = psutil.Process(pid)
-
-                        for file in proc.open_files():
-                            try:
-                                if hasattr(file, 'fd') and file.fd is not None:
-                                    os.close(file.fd)
-                            except OSError as e:
-                                if e.errno != errno.EBADF:
-                                    logger.warning(f"Error closing file descriptor: {e}")
-
-                        for conn in proc.connections():
-                            try:
-                                if hasattr(conn, 'fd') and conn.fd is not None:
-                                    os.close(conn.fd)
-                            except OSError as e:
-                                if e.errno != errno.EBADF:
-                                    logger.warning(f"Error closing socket: {e}")
-
-                        os.kill(pid, signal.SIGTERM)
-                    except ProcessLookupError:
+                        process = psutil.Process(pid)
+                        process.terminate()
+                    except (ProcessLookupError, psutil.NoSuchProcess):
                         continue
-                    except psutil.NoSuchProcess:
+
+                alive, gone = psutil.wait_procs([psutil.Process(pid) for pid in build_processes], timeout=3)
+
+                for process in alive:
+                    try:
+                        process.kill()
+                    except (ProcessLookupError, psutil.NoSuchProcess):
                         continue
 
                 temp_files = [
@@ -4800,8 +4789,8 @@ def fpk_cli_handle_run(args, session):
                         except (PermissionError, FileNotFoundError):
                             continue
 
-                build_in_progress = False
                 abort_requested = False
+                build_in_progress = False
 
                 status_data = {
                     "status": "aborted",
@@ -4811,6 +4800,7 @@ def fpk_cli_handle_run(args, session):
 
                 status_file = build_dir / 'build_status.json'
                 os.makedirs(status_file.parent, exist_ok=True)
+
                 with open(status_file, 'w') as f:
                     json.dump(status_data, f)
 
