@@ -4768,8 +4768,28 @@ def fpk_cli_handle_run(args, session):
 
                 for pid in build_processes:
                     try:
+                        proc = psutil.Process(pid)
+
+                        for file in proc.open_files():
+                            try:
+                                if hasattr(file, 'fd') and file.fd is not None:
+                                    os.close(file.fd)
+                            except OSError as e:
+                                if e.errno != errno.EBADF:
+                                    logger.warning(f"Error closing file descriptor: {e}")
+
+                        for conn in proc.connections():
+                            try:
+                                if hasattr(conn, 'fd') and conn.fd is not None:
+                                    os.close(conn.fd)
+                            except OSError as e:
+                                if e.errno != errno.EBADF:
+                                    logger.warning(f"Error closing socket: {e}")
+
                         os.kill(pid, signal.SIGTERM)
                     except ProcessLookupError:
+                        continue
+                    except psutil.NoSuchProcess:
                         continue
 
                 temp_files = [
@@ -4798,51 +4818,9 @@ def fpk_cli_handle_run(args, session):
                 os.makedirs(status_file.parent, exist_ok=True)
                 with open(status_file, 'w') as f:
                     json.dump(status_data, f)
+
             except Exception as e:
                 logger.error("Error in abort build cleanup during force exit: %s", str(e))
-
-        if nextjs_process:
-            nextjs_process.terminate()
-            try:
-                nextjs_process.wait(timeout=5)
-            except subprocess.TimeoutExpired:
-                nextjs_process.kill()
-
-        if hasattr(app.state, 'ngrok_listener'):
-            try:
-                ngrok.disconnect(app.state.ngrok_listener.url())
-            except:
-                pass
-
-        if hasattr(app.state, 'nextjs_listener'):
-            try:
-                ngrok.disconnect(app.state.nextjs_listener.url())
-            except:
-                pass
-
-        python_processes = []
-        current_pid = os.getpid()
-
-        for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
-            try:
-                if 'python' in proc.info['name'].lower() and proc.info['pid'] != current_pid:
-                    cmd = ' '.join(proc.info['cmdline']) if proc.info['cmdline'] else 'Unknown'
-                    if 'uvicorn' in cmd.lower() or 'fastapi' in cmd.lower():
-                        python_processes.append(proc)
-            except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
-                continue
-
-        for proc in python_processes:
-            try:
-                proc.terminate()
-                try:
-                    proc.wait(timeout=3)
-                except psutil.TimeoutExpired:
-                    proc.kill()
-            except psutil.NoSuchProcess:
-                continue
-
-        os.kill(os.getpid(), signal.SIGKILL)
 
     def aggressive_handle_exit(sig, frame):
         server.should_exit = True
