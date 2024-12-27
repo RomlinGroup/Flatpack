@@ -306,19 +306,6 @@ schedule_lock = asyncio.Lock()
 uvicorn_server = None
 
 
-async def abort_build_process():
-    global build_in_progress, abort_requested
-    if build_in_progress:
-        abort_requested = True
-        logger.info("Build abort requested.")
-        while build_in_progress:
-            await asyncio.sleep(0.5)
-        abort_requested = False
-        logger.info("Build process aborted.")
-    else:
-        logger.info("No build in progress to abort.")
-
-
 def add_hook_to_database(hook: Hook):
     global db_manager
     ensure_database_initialized()
@@ -1109,7 +1096,7 @@ def load_config():
 
 
 async def run_build_process(schedule_id=None):
-    global build_in_progress, abort_requested
+    global abort_requested, build_in_progress
 
     build_in_progress = True
     logger.info("Running build process...")
@@ -1180,11 +1167,13 @@ class OutStream:
             output = b""
 
         lines = output.split(b"\n")
+
         if self._buffer:
             lines[0] = self._buffer + lines[0]
 
         if output:
             last_line = lines[-1]
+
             if b"You >" in last_line:
                 finished_lines = lines
                 self._buffer = b""
@@ -1194,11 +1183,20 @@ class OutStream:
             readable = True
         else:
             self._buffer = b""
+
             if len(lines) == 1 and not lines[0]:
                 lines = []
+
             finished_lines = lines
             readable = False
-            os.close(self._fileno)
+
+            try:
+                os.close(self._fileno)
+            except OSError as e:
+                if e.errno == errno.EBADF:
+                    print(f"File descriptor {self._fileno} was already closed.")
+                else:
+                    raise
 
         finished_lines = [line.decode(errors='replace') for line in finished_lines]
         return finished_lines, readable, output
@@ -1259,8 +1257,21 @@ async def run_subprocess(command, log_file):
         stdout=out_w
     )
 
-    os.close(out_w)
-    os.close(err_w)
+    try:
+        os.close(out_w)
+    except OSError as e:
+        if e.errno == errno.EBADF:
+            print(f"File descriptor out_w ({out_w}) was already closed or invalid.")
+        else:
+            raise
+
+    try:
+        os.close(err_w)
+    except OSError as e:
+        if e.errno == errno.EBADF:
+            print(f"File descriptor err_w ({err_w}) was already closed or invalid.")
+        else:
+            raise
 
     streams = [OutStream(out_r), OutStream(err_r)]
 
@@ -3771,17 +3782,27 @@ def setup_routes(app):
             logger.error("Database connection failed: %s", e)
             return {"message": f"Database connection failed: {e}"}
 
+    def kill_process_tree(pid):
+        try:
+            parent = psutil.Process(pid)
+            children = parent.children(recursive=True)
+            for child in children:
+                try:
+                    child.kill()
+                except psutil.NoSuchProcess:
+                    pass
+            parent.kill()
+        except psutil.NoSuchProcess:
+            pass
+
     @app.post("/api/abort-build", dependencies=[Depends(csrf_protect)])
     async def abort_build(request: Request, token: str = Depends(authenticate_token)):
-        """Force abort the current build process by killing all related processes and cleaning up resources."""
-        global build_in_progress, abort_requested, flatpack_directory
+        global abort_requested, build_in_progress, flatpack_directory
 
         try:
             if not flatpack_directory:
-                return JSONResponse(
-                    content={"message": "No active build directory."},
-                    status_code=400
-                )
+                console.print("[bold red]No active build directory.[/]")
+                return JSONResponse(content={"message": "No active build directory."}, status_code=400)
 
             build_dir = Path(flatpack_directory) / 'build'
             build_processes = set()
@@ -3789,19 +3810,12 @@ def setup_routes(app):
             for proc in psutil.process_iter(['pid', 'cmdline', 'name']):
                 try:
                     if proc.cmdline() and any(str(build_dir) in str(arg) for arg in proc.cmdline()):
-                        process_tree = get_process_tree(proc.pid)
-                        build_processes.update(process_tree)
+                        build_processes.add(proc.pid)
                 except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
                     continue
 
             for pid in build_processes:
-                try:
-                    os.kill(pid, signal.SIGTERM)
-                except ProcessLookupError:
-                    continue
-
-            await asyncio.sleep(5)
-            remaining_processes = set()
+                kill_process_tree(pid)
 
             for pid in build_processes:
                 try:
@@ -3810,20 +3824,16 @@ def setup_routes(app):
                             proc = psutil.Process(pid)
                             for file in proc.open_files():
                                 try:
-                                    os.close(file.fd)
+                                    file.close()
                                 except:
                                     pass
                             for conn in proc.connections():
                                 try:
-                                    socket = conn.fd
-                                    os.close(socket)
+                                    conn.socket.close()
                                 except:
                                     pass
                         except (psutil.NoSuchProcess, psutil.AccessDenied):
                             pass
-
-                        os.kill(pid, signal.SIGKILL)
-                        remaining_processes.add(pid)
                 except ProcessLookupError:
                     continue
 
@@ -3841,6 +3851,7 @@ def setup_routes(app):
                         continue
 
             memory_released = 0
+
             try:
                 memory_released = sum(
                     psutil.Process(pid).memory_info().rss
@@ -3850,42 +3861,41 @@ def setup_routes(app):
             except:
                 pass
 
-            build_in_progress = False
             abort_requested = False
+            build_in_progress = False
 
             status_data = {
-                "status": "aborted",
-                "timestamp": datetime.now().isoformat(),
                 "error": "Build forcefully terminated",
                 "killed_processes": len(build_processes),
-                "remaining_processes": len(remaining_processes),
-                "memory_released_bytes": memory_released
+                "memory_released_bytes": memory_released,
+                "remaining_processes": 0,
+                "status": "aborted",
+                "timestamp": datetime.now().isoformat(),
             }
 
             status_file = build_dir / 'build_status.json'
             os.makedirs(status_file.parent, exist_ok=True)
+
             with open(status_file, 'w') as f:
                 json.dump(status_data, f)
 
-            logger.info(
-                "Build forcefully terminated. Killed %d processes, %d required force kill. Memory released: %d bytes",
-                len(build_processes),
-                len(remaining_processes),
-                memory_released
-            )
+            console.print("")
+            console.print(
+                f"[bold red]Build forcefully terminated. Killed {len(build_processes)} processes. Memory released: {memory_released} bytes[/]")
+            console.print("")
 
             return JSONResponse(
                 content={
                     "message": "Build process forcefully terminated.",
                     "processes_terminated": len(build_processes),
-                    "processes_force_killed": len(remaining_processes),
+                    "processes_force_killed": len(build_processes),
                     "memory_released_bytes": memory_released
                 },
                 status_code=200
             )
 
         except Exception as e:
-            logger.error("Error in force abort: %s", str(e))
+            console.print(f"[bold red]Error in force abort: {str(e)}[/]")
             build_in_progress = False
             abort_requested = False
             return JSONResponse(
@@ -4746,7 +4756,18 @@ def fpk_cli_handle_run(args, session):
             return
 
     def force_exit():
-        global abort_requested, build_in_progress, flatpack_directory
+        global abort_requested, build_in_progress, flatpack_directory, server, nextjs_process
+
+        if 'server' not in globals():
+            return
+
+        if nextjs_process and nextjs_process.poll() is None:
+            try:
+                nextjs_process.terminate()
+                nextjs_process.wait(timeout=3)
+            except:
+                if nextjs_process.poll() is None:
+                    nextjs_process.kill()
 
         if build_in_progress:
             try:
@@ -4776,21 +4797,8 @@ def fpk_cli_handle_run(args, session):
                     except (ProcessLookupError, psutil.NoSuchProcess):
                         continue
 
-                temp_files = [
-                    'temp.sh',
-                    'execution_script_*.py',
-                    'context_script.py'
-                ]
-
-                for pattern in temp_files:
-                    for file in build_dir.glob(pattern):
-                        try:
-                            file.unlink()
-                        except (PermissionError, FileNotFoundError):
-                            continue
-
-                abort_requested = False
                 build_in_progress = False
+                abort_requested = False
 
                 status_data = {
                     "status": "aborted",
@@ -4800,23 +4808,30 @@ def fpk_cli_handle_run(args, session):
 
                 status_file = build_dir / 'build_status.json'
                 os.makedirs(status_file.parent, exist_ok=True)
-
                 with open(status_file, 'w') as f:
                     json.dump(status_data, f)
 
             except Exception as e:
                 logger.error("Error in abort build cleanup during force exit: %s", str(e))
 
+        if hasattr(server, 'should_exit'):
+            server.should_exit = True
+
     def aggressive_handle_exit(sig, frame):
-        server.should_exit = True
-        force_exit()
-
-    server.handle_exit = aggressive_handle_exit
-
-    signal.signal(signal.SIGINT, aggressive_handle_exit)
-    signal.signal(signal.SIGTERM, aggressive_handle_exit)
+        """Handle shutdown signal by first cleaning up processes then stopping server"""
+        try:
+            force_exit()
+            time.sleep(0.1)
+            os._exit(0)
+        except Exception as e:
+            logger.error("Error during aggressive shutdown: %s", str(e))
+            os._exit(1)
 
     try:
+        server.handle_exit = aggressive_handle_exit
+        signal.signal(signal.SIGINT, aggressive_handle_exit)
+        signal.signal(signal.SIGTERM, aggressive_handle_exit)
+
         server.run()
     except KeyboardInterrupt:
         force_exit()
