@@ -287,7 +287,7 @@ def setup_logging(log_path: Path):
     logger.addHandler(console_handler)
     logger.addHandler(file_handler)
 
-    logger.info(f"Logging initialized with output to console and file: {log_path}")
+    logger.info("Logging initialized with output to console and file: %s", log_path)
 
     return logger
 
@@ -4787,8 +4787,8 @@ def fpk_cli_handle_run(args, session):
     except KeyboardInterrupt:
         kill_everything()
     except Exception as e:
-        logger.error(f"Server error: {e}")
-        console.print(f"Server error: {e}", style="bold red")
+        logger.error("Server error: %s", e)
+        console.print("Server error: %s" % e, style="bold red")
         kill_everything()
 
     return 0
