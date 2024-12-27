@@ -4526,11 +4526,9 @@ def fpk_cli_handle_run(args, session):
         console.print("Please specify a flatpack for the run command.", style="bold red")
         return
 
-    security_message = create_security_notice()
-
     console.print(
         Panel(
-            security_message,
+            create_security_notice(),
             title="[bold yellow]SECURITY NOTICE[/bold yellow]",
             border_style="bold yellow",
             expand=False,
@@ -4540,7 +4538,6 @@ def fpk_cli_handle_run(args, session):
 
     while True:
         acknowledgment = console.input("[bold yellow]Do you agree to proceed? (YES/NO):[/bold yellow] ").strip().upper()
-
         if acknowledgment == "YES":
             break
         if acknowledgment == "NO":
@@ -4575,11 +4572,9 @@ def fpk_cli_handle_run(args, session):
     console.print("")
 
     if args.share:
-        warning_message = create_warning_message()
-
         console.print(
             Panel(
-                warning_message,
+                create_warning_message(),
                 title="[bold red]WARNING[/bold red]",
                 border_style="bold red",
                 expand=False,
@@ -4624,7 +4619,7 @@ def fpk_cli_handle_run(args, session):
 
     console.print("")
 
-    with console.status("[bold green]Initializing FastAPI server...", spinner="dots") as status:
+    with console.status("[bold green]Initializing FastAPI server...", spinner="dots"):
         app = initialize_fastapi_app(secret_key)
         setup_static_directory(app, str(directory))
 
