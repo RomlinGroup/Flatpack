@@ -607,13 +607,16 @@ def create_temp_sh(build_dir, custom_json_path: Path, temp_sh_path: Path, use_eu
 
         with executor_path.open('w', encoding='utf-8') as exec_file:
             exec_file.write(dedent("""\
+                import os
+                import signal
                 import sys
                 import traceback
-
+                
                 GLOBAL_NAMESPACE = {}
-
+                
                 def execute_code(code):
                     try:
+                        os.setpgrp() 
                         exec(code, GLOBAL_NAMESPACE)
                         sys.stdout.flush()
                         sys.stderr.flush()
@@ -622,8 +625,15 @@ def create_temp_sh(build_dir, custom_json_path: Path, temp_sh_path: Path, use_eu
                         print(f"Error executing code: {e}", file=sys.stderr)
                         traceback.print_exc()
                         sys.exit(1)
-
+                
+                def signal_handler(signum, frame):
+                    print(f"Python executor received signal {signum}. Exiting.")
+                    sys.exit(1)
+                
                 if __name__ == "__main__":
+                    signal.signal(signal.SIGTERM, signal_handler)
+                    signal.signal(signal.SIGINT, signal_handler)
+                
                     while True:
                         code_block = []
                         for line in sys.stdin:
@@ -727,15 +737,20 @@ def create_temp_sh(build_dir, custom_json_path: Path, temp_sh_path: Path, use_eu
             outfile.write(header_script)
             outfile.write('\n')
 
-            trap_and_cleanup = dedent("""\
-                function cleanup() {
+            trap_and_cleanup = dedent(f"""\
+                function cleanup() {{
                     echo "__EXIT_PYTHON_EXECUTOR__" >&3 2>/dev/null || true
                     exec 3>&- 2>/dev/null || true
                     exec 4<&- 2>/dev/null || true
-                    wait "${PYTHON_EXECUTOR_PID}" 2>/dev/null || true
+                    wait "${{PYTHON_EXECUTOR_PID}}" 2>/dev/null || true
+
+                    echo "Sending SIGTERM to process group: $- $$"
+                    kill -TERM -- -$$ 2>/dev/null || true
+
                     rm -f python_stdin python_stdout
-                }
-                trap cleanup EXIT
+                }}
+                
+                trap 'cleanup' EXIT INT TERM
             """)
             outfile.write(trap_and_cleanup)
             outfile.write('\n')
@@ -813,15 +828,7 @@ def create_temp_sh(build_dir, custom_json_path: Path, temp_sh_path: Path, use_eu
 
 
 def create_venv(venv_dir: str):
-    """
-    Create a virtual environment in the specified directory using the current Python version.
-
-    Args:
-        venv_dir (str): The directory where the virtual environment will be created.
-
-    Returns:
-        None
-    """
+    """Create a virtual environment in the specified directory using the current Python version."""
     python_executable = sys.executable
 
     try:
@@ -4510,11 +4517,18 @@ def setup_routes(app):
 
 
 def fpk_cli_handle_run(args, session):
-    global console
+    global console, server, app, nextjs_process, build_in_progress, flatpack_directory, abort_requested
 
     if not args.input:
         console.print("Please specify a flatpack for the run command.", style="bold red")
         return
+
+    app = None
+    abort_requested = False
+    build_in_progress = False
+    flatpack_directory = None
+    nextjs_process = None
+    server = None
 
     console.print(
         Panel(
@@ -4528,8 +4542,10 @@ def fpk_cli_handle_run(args, session):
 
     while True:
         acknowledgment = console.input("[bold yellow]Do you agree to proceed? (YES/NO):[/bold yellow] ").strip().upper()
+
         if acknowledgment == "YES":
             break
+
         if acknowledgment == "NO":
             console.print("")
             console.print("You must agree to proceed. Exiting.", style="bold red")
@@ -4539,6 +4555,7 @@ def fpk_cli_handle_run(args, session):
             console.print("Please answer YES or NO.", style="bold yellow")
 
     directory = Path(args.input).resolve()
+    flatpack_directory = directory
     allowed_directory = Path.cwd()
 
     if not directory.is_dir() or not directory.exists():
@@ -4576,6 +4593,7 @@ def fpk_cli_handle_run(args, session):
             user_response = console.input(
                 "[bold red]Do you accept these risks? (YES/NO):[/bold red] "
             ).strip().upper()
+
             if user_response == "YES":
                 console.print("")
                 try:
@@ -4583,6 +4601,7 @@ def fpk_cli_handle_run(args, session):
                 except EnvironmentError as e:
                     return
                 break
+
             if user_response == "NO":
                 console.print("")
                 console.print("[bold red]Sharing aborted. Exiting.[/bold red]")
@@ -4662,6 +4681,7 @@ def fpk_cli_handle_run(args, session):
 
             except ValueError as e:
                 error_message = str(e)
+
                 if "ERR_NGROK_319" in error_message:
                     console.print("[bold red]Error: Custom domain not reserved[/bold red]")
                     console.print("You must reserve the custom domain in your ngrok dashboard before using it.")
@@ -4707,7 +4727,6 @@ def fpk_cli_handle_run(args, session):
     if app_dir.exists():
         try:
             npm_path = get_executable_path('npm')
-
             if not npm_path:
                 logger.error("npm executable not found in PATH")
                 return None
@@ -4735,90 +4754,44 @@ def fpk_cli_handle_run(args, session):
             console.print("")
             return
 
-    def force_exit():
-        global abort_requested, build_in_progress, flatpack_directory, server, nextjs_process
-
-        if 'server' not in globals():
-            return
-
-        if nextjs_process and nextjs_process.poll() is None:
-            try:
-                nextjs_process.terminate()
-                nextjs_process.wait(timeout=3)
-            except:
-                if nextjs_process.poll() is None:
-                    nextjs_process.kill()
-
-        if build_in_progress:
-            try:
-                build_dir = Path(flatpack_directory) / 'build'
-                build_processes = set()
-
-                for proc in psutil.process_iter(['cmdline', 'name', 'pid']):
-                    try:
-                        if proc.cmdline() and any(str(build_dir) in str(arg) for arg in proc.cmdline()):
-                            process_tree = get_process_tree(proc.pid)
-                            build_processes.update(process_tree)
-                    except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
-                        continue
-
-                for pid in build_processes:
-                    try:
-                        process = psutil.Process(pid)
-                        process.terminate()
-                    except (ProcessLookupError, psutil.NoSuchProcess):
-                        continue
-
-                alive, gone = psutil.wait_procs([psutil.Process(pid) for pid in build_processes], timeout=3)
-
-                for process in alive:
-                    try:
-                        process.kill()
-                    except (ProcessLookupError, psutil.NoSuchProcess):
-                        continue
-
-                build_in_progress = False
-                abort_requested = False
-
-                status_data = {
-                    "status": "aborted",
-                    "timestamp": datetime.now().isoformat(),
-                    "error": "Build forcefully terminated"
-                }
-
-                status_file = build_dir / 'build_status.json'
-                os.makedirs(status_file.parent, exist_ok=True)
-                with open(status_file, 'w') as f:
-                    json.dump(status_data, f)
-
-            except Exception as e:
-                logger.error("Error in abort build cleanup during force exit: %s", str(e))
-
-        if hasattr(server, 'should_exit'):
-            server.should_exit = True
-
-    def aggressive_handle_exit(sig, frame):
-        """Handle shutdown signal by first cleaning up processes then stopping server"""
+    def kill_everything():
         try:
-            force_exit()
-            time.sleep(0.1)
-            os._exit(0)
-        except Exception as e:
-            logger.error("Error during aggressive shutdown: %s", str(e))
-            os._exit(1)
+            current_process = psutil.Process()
+
+            for proc in current_process.children(recursive=True):
+                try:
+                    proc.kill()
+                except:
+                    continue
+
+            if flatpack_directory is not None:
+                for proc in psutil.process_iter(['cmdline', 'ppid']):
+                    try:
+                        if proc.ppid() == 1 and any(str(flatpack_directory) in arg for arg in proc.cmdline()):
+                            proc.kill()
+                    except:
+                        continue
+        except:
+            pass
+
+        os._exit(1)
+
+    def signal_handler(sig, frame):
+        kill_everything()
+
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
 
     try:
-        server.handle_exit = aggressive_handle_exit
-        signal.signal(signal.SIGINT, aggressive_handle_exit)
-        signal.signal(signal.SIGTERM, aggressive_handle_exit)
-
         server.run()
     except KeyboardInterrupt:
-        force_exit()
+        kill_everything()
     except Exception as e:
-        logger.error("Server error: %s", e)
+        logger.error(f"Server error: {e}")
         console.print(f"Server error: {e}", style="bold red")
-        force_exit()
+        kill_everything()
+
+    return 0
 
 
 def fpk_cli_handle_set_api_key(args, session):
