@@ -4788,7 +4788,7 @@ def fpk_cli_handle_run(args, session):
         kill_everything()
     except Exception as e:
         logger.error("Server error: %s", e)
-        console.print("Server error: %s" % e, style="bold red")
+        console.print(f"Server error: {e}", style="bold red")
         kill_everything()
 
     return 0
