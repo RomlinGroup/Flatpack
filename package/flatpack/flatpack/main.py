@@ -62,6 +62,12 @@ from pathlib import Path
 from typing import Dict, List, Optional, Set, Union
 from zipfile import ZipFile
 
+from .database_manager import DatabaseManager
+from .error_handling import safe_exit, setup_exception_handling, setup_signal_handling
+from .parsers import parse_toml_to_venv_script
+from .session_manager import SessionManager
+from .vector_manager import VectorManager
+
 from itsdangerous import BadSignature, SignatureExpired, TimestampSigner
 from pydantic import BaseModel
 
@@ -70,17 +76,24 @@ import psutil
 import requests
 import toml
 
-from .database_manager import DatabaseManager
-from .error_handling import safe_exit, setup_exception_handling, setup_signal_handling
-from .parsers import parse_toml_to_venv_script
-from .session_manager import SessionManager
-from .vector_manager import VectorManager
-
 if not IMPORT_CACHE_FILE.exists():
     IMPORT_CACHE_FILE.touch()
     console.print("")
     console.print("[bold green]First-time initialisation complete! ✨[/bold green]")
     console.print("")
+
+
+def lazy_import(module_name, package=None, callable_name=None):
+    """Dynamically import module or callable."""
+    import importlib
+
+    try:
+        module = importlib.import_module(module_name, package)
+        if callable_name:
+            return getattr(module, callable_name)
+        return module
+    except ImportError:
+        return None
 
 
 def set_file_limits():
@@ -95,22 +108,12 @@ def set_file_limits():
         return False
 
 
-def lazy_import(module_name, package=None, callable_name=None):
-    import importlib
-    try:
-        module = importlib.import_module(module_name, package)
-        if callable_name:
-            return getattr(module, callable_name)
-        return module
-    except ImportError:
-        return None
-
-
+APIKeyCookie = lazy_import('fastapi.security', callable_name='APIKeyCookie')
 BackgroundTasks = lazy_import('fastapi', callable_name='BackgroundTasks')
+BaseHTTPMiddleware = lazy_import('starlette.middleware.base', callable_name='BaseHTTPMiddleware')
 BeautifulSoup = lazy_import('bs4', callable_name='BeautifulSoup')
 Cookie = lazy_import('fastapi', callable_name='Cookie')
 CORSMiddleware = lazy_import('fastapi.middleware.cors', callable_name='CORSMiddleware')
-croniter = lazy_import('croniter', callable_name='croniter')
 Depends = lazy_import('fastapi', callable_name='Depends')
 FastAPI = lazy_import('fastapi', callable_name='FastAPI')
 FileResponse = lazy_import('fastapi.responses', callable_name='FileResponse')
@@ -119,58 +122,50 @@ Header = lazy_import('fastapi', callable_name='Header')
 HTMLResponse = lazy_import('fastapi.responses', callable_name='HTMLResponse')
 HTTPException = lazy_import('fastapi', callable_name='HTTPException')
 JSONResponse = lazy_import('fastapi.responses', callable_name='JSONResponse')
-ngrok = lazy_import('ngrok')
 NgrokError = lazy_import('ngrok.exceptions', callable_name='NgrokError')
 PrettyTable = lazy_import('prettytable', callable_name='PrettyTable')
-Request = lazy_import('fastapi', callable_name='Request')
 RedirectResponse = lazy_import('fastapi.responses', callable_name='RedirectResponse')
+Request = lazy_import('fastapi', callable_name='Request')
 Response = lazy_import('fastapi.responses', callable_name='Response')
 SessionMiddleware = lazy_import('starlette.middleware.sessions', callable_name='SessionMiddleware')
-BaseHTTPMiddleware = lazy_import('starlette.middleware.base', callable_name='BaseHTTPMiddleware')
-APIKeyCookie = lazy_import('fastapi.security', callable_name='APIKeyCookie')
 StaticFiles = lazy_import('fastapi.staticfiles', callable_name='StaticFiles')
-snapshot_download = lazy_import('huggingface_hub', callable_name='snapshot_download')
+croniter = lazy_import('croniter', callable_name='croniter')
+ngrok = lazy_import('ngrok')
+shapshot_download = lazy_import('huggingface_hub', callable_name='snapshot_download')
 uvicorn = lazy_import('uvicorn')
 warnings = lazy_import('warnings')
 zstd = lazy_import('zstandard')
 
 HOME_DIR = Path.home() / ".fpk"
-HOME_DIR.mkdir(exist_ok=True)
-
-CONFIG_FILE_PATH = HOME_DIR / ".fpk_config.toml"
-GITHUB_CACHE = HOME_DIR / ".fpk_github.cache"
-CONNECTIONS_FILE = "build/connections.json"
-HOOKS_FILE = "build/hooks.json"
 
 BASE_URL = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse"
-GITHUB_REPO_URL = "https://api.github.com/repos/RomlinGroup/Flatpack"
-TEMPLATE_REPO_URL = "https://api.github.com/repos/RomlinGroup/template"
-
-VERSION = version("flatpack")
-
+CONNECTIONS_FILE = "build/connections.json"
 COOLDOWN_PERIOD = timedelta(minutes=1)
-GITHUB_CACHE_EXPIRY = timedelta(hours=1)
-SERVER_START_TIME = None
-
-MAX_ATTEMPTS = 5
-VALIDATION_ATTEMPTS = 0
-
+CONFIG_FILE_PATH = HOME_DIR / ".fpk_config.toml"
 CSRF_EXEMPT_PATHS = [
     "/",
     "/csrf-token",
     "/favicon.ico",
     "/static"
 ]
-
-active_sessions = {}
+GITHUB_CACHE = HOME_DIR / ".fpk_github.cache"
+GITHUB_CACHE_EXPIRY = timedelta(hours=1)
+GITHUB_REPO_URL = "https://api.github.com/repos/RomlinGroup/Flatpack"
+HOOKS_FILE = "build/hooks.json"
+HOME_DIR.mkdir(exist_ok=True)
+MAX_ATTEMPTS = 5
+SERVER_START_TIME = None
+TEMPLATE_REPO_URL = "https://api.github.com/repos/RomlinGroup/template"
+VALIDATION_ATTEMPTS = 0
+VERSION = version("flatpack")
 
 abort_requested = False
+active_sessions = {}
 build_in_progress = False
+console = Console()
 force_exit_timer = None
 shutdown_in_progress = False
 shutdown_requested = False
-
-console = Console()
 
 
 class Comment(BaseModel):
@@ -187,7 +182,6 @@ class ConnectionLimitMiddleware(BaseHTTPMiddleware):
 
     async def dispatch(self, request, call_next):
         client_ip = request.client.host
-
         async with self.lock:
             if self.connected_ip is None:
                 self.connected_ip = client_ip
@@ -234,12 +228,6 @@ class Source(BaseModel):
     source_details: Optional[dict] = None
 
 
-class SourceUpdate(BaseModel):
-    source_name: Optional[str]
-    source_type: Optional[str]
-    source_details: Optional[Dict[str, str]]
-
-
 class SourceHookMapping(BaseModel):
     sourceId: str
     targetId: str
@@ -247,11 +235,18 @@ class SourceHookMapping(BaseModel):
     targetType: str
 
 
+class SourceUpdate(BaseModel):
+    source_name: Optional[str]
+    source_type: Optional[str]
+    source_details: Optional[Dict[str, str]]
+
+
 csrf_cookie = APIKeyCookie(name="csrf_token")
 db_manager = None
 
 
 def initialize_database_manager(flatpack_db_directory):
+    """Initializes the database manager, creating the database file and directory if necessary."""
     global db_manager
 
     if flatpack_db_directory is None:
@@ -261,19 +256,19 @@ def initialize_database_manager(flatpack_db_directory):
 
     if not os.path.exists(os.path.dirname(db_path)):
         os.makedirs(os.path.dirname(db_path))
-
         console.print(
             f"[bold green]SUCCESS:[/bold green] Created directory for database at path: {os.path.dirname(db_path)}"
         )
 
     db_manager = DatabaseManager(db_path)
     db_manager.initialize_database()
+    console.print(f"[bold blue]INFO:[/bold blue] Database manager initialized with database at: {db_path}")
 
 
 def setup_logging(log_path: Path):
-    """Set up logging configuration."""
-    new_logger = logging.getLogger(__name__)
-    new_logger.setLevel(logging.WARNING)
+    """Sets up logging to console and a rotating file with specified log level (default WARNING)."""
+    logger = logging.getLogger("app_logger")
+    logger.setLevel(logging.WARNING)
 
     console_handler = logging.StreamHandler()
     console_handler.setLevel(logging.WARNING)
@@ -285,15 +280,16 @@ def setup_logging(log_path: Path):
         maxBytes=5 * 1024 * 1024,
         backupCount=5
     )
-
     file_handler.setLevel(logging.WARNING)
     file_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
     file_handler.setFormatter(file_formatter)
 
-    new_logger.addHandler(console_handler)
-    new_logger.addHandler(file_handler)
+    logger.addHandler(console_handler)
+    logger.addHandler(file_handler)
 
-    return new_logger
+    logger.info(f"Logging initialized with output to console and file: {log_path}")
+
+    return logger
 
 
 # Initialize the logger
@@ -1388,23 +1384,6 @@ def set_token(token: str):
         logger.info("Token set successfully.")
     except Exception as e:
         logger.error("Failed to set token: %s", str(e))
-
-
-def setup_signal_handlers(process=None):
-    def signal_handler(signum, frame):
-        global shutdown_requested
-        signame = signal.Signals(signum).name
-
-        if process:
-            try:
-                os.killpg(os.getpgid(process.pid), signal.SIGTERM)
-            except ProcessLookupError:
-                pass
-
-        shutdown_requested = True
-
-    signal.signal(signal.SIGINT, signal_handler)
-    signal.signal(signal.SIGTERM, signal_handler)
 
 
 def setup_static_directory(fastapi_app: FastAPI, directory: str):
@@ -3134,6 +3113,7 @@ def get_process_tree(pid: int) -> set[int]:
 def get_python_processes() -> List[Dict[str, any]]:
     """List Python processes spawned by our program."""
     python_processes = []
+
     current_pid = os.getpid()
     parent_pid = os.getppid()
 
@@ -5047,6 +5027,7 @@ def main():
         args = parser.parse_args()
 
         vm = None
+
         if args.command == 'vector':
             vm = fpk_initialize_vector_manager(args)
 
