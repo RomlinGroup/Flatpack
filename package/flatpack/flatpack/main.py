@@ -4517,7 +4517,7 @@ def setup_routes(app):
 
 
 def fpk_cli_handle_run(args, session):
-    global console, server, app, nextjs_process, build_in_progress, flatpack_directory, abort_requested
+    global abort_requested, app, build_in_progress, console, flatpack_directory, nextjs_process, server
 
     if not args.input:
         console.print("Please specify a flatpack for the run command.", style="bold red")
