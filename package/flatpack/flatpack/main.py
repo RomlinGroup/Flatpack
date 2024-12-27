@@ -4529,6 +4529,9 @@ def fpk_cli_handle_run(args, session):
     flatpack_directory = None
     nextjs_process = None
     server = None
+    host = "0.0.0.0"
+    fastapi_port = 8000
+    nextjs_port = 3000
 
     console.print(
         Panel(
@@ -4542,10 +4545,8 @@ def fpk_cli_handle_run(args, session):
 
     while True:
         acknowledgment = console.input("[bold yellow]Do you agree to proceed? (YES/NO):[/bold yellow] ").strip().upper()
-
         if acknowledgment == "YES":
             break
-
         if acknowledgment == "NO":
             console.print("")
             console.print("You must agree to proceed. Exiting.", style="bold red")
@@ -4625,16 +4626,11 @@ def fpk_cli_handle_run(args, session):
     console.print(f"Generated API token: {token}", style="bold bright_cyan")
 
     set_token(token)
-
     console.print("")
 
     with console.status("[bold green]Initializing FastAPI server...", spinner="dots"):
         app = initialize_fastapi_app(secret_key)
         setup_static_directory(app, str(directory))
-
-    host = "0.0.0.0"
-    fastapi_port = 8000
-    nextjs_port = 3000
 
     if args.share:
         with console.status("[bold green]Establishing ngrok ingress...", spinner="dots"):
@@ -4656,7 +4652,6 @@ def fpk_cli_handle_run(args, session):
                 app.state.public_url = fastapi_url
 
                 nextjs_domain = f"next-{args.domain}" if args.domain else None
-
                 if nextjs_domain:
                     nextjs_listener = ngrok.connect(
                         f"{host}:{nextjs_port}",
@@ -4681,18 +4676,16 @@ def fpk_cli_handle_run(args, session):
 
             except ValueError as e:
                 error_message = str(e)
-
                 if "ERR_NGROK_319" in error_message:
                     console.print("[bold red]Error: Custom domain not reserved[/bold red]")
                     console.print("You must reserve the custom domain in your ngrok dashboard before using it.")
-                    console.print(f"Please visit: https://dashboard.ngrok.com/domains/new")
+                    console.print("Please visit: https://dashboard.ngrok.com/domains/new")
                     console.print("After reserving the domain, try running the command again.")
                 else:
                     console.print(f"[bold red]Error establishing ngrok ingress: {error_message}[/bold red]")
                 return
 
     uvicorn = lazy_import('uvicorn')
-
     if not uvicorn:
         console.print("Failed to load uvicorn. Please check your installation.", style="bold red")
         return
@@ -4704,26 +4697,15 @@ def fpk_cli_handle_run(args, session):
         lifespan="on",
         loop="asyncio",
         port=fastapi_port,
-        timeout_graceful_shutdown=1,
+        timeout_graceful_shutdown=30,
         timeout_keep_alive=0
     )
 
     server = uvicorn.Server(config)
-
     background_tasks = BackgroundTasks()
-    background_tasks.add_task(run_scheduler)
+    scheduler_task = background_tasks.add_task(run_scheduler)
 
     app_dir = web_dir / "app"
-    nextjs_process = None
-
-    def log_process_output(process, name):
-        while True:
-            line = process.stdout.readline()
-            if not line and process.poll() is not None:
-                break
-            if line:
-                console.print(f"[{name}] {line.strip()}")
-
     if app_dir.exists():
         try:
             npm_path = get_executable_path('npm')
@@ -4741,43 +4723,110 @@ def fpk_cli_handle_run(args, session):
                 universal_newlines=True
             )
 
+            def log_process_output(process, name):
+                while True:
+                    try:
+                        line = process.stdout.readline()
+                        if not line and process.poll() is not None:
+                            break
+                        if line:
+                            console.print(f"[{name}] {line.strip()}")
+                    except Exception:
+                        break
+
             threading.Thread(
+                target=log_process_output,
                 args=(nextjs_process, "Next.js"),
-                daemon=True,
-                target=log_process_output
+                daemon=True
             ).start()
 
             console.print("[bold green]Started Next.js development server[/bold green]")
             console.print("")
         except Exception as e:
             console.print(f"[bold red]Failed to start Next.js server: {e}[/bold red]")
-            console.print("")
             return
 
-    def kill_everything():
+    async def cleanup():
+        try:
+            if hasattr(app.state, 'ngrok_listener'):
+                try:
+                    await asyncio.wait_for(
+                        asyncio.to_thread(ngrok.disconnect, app.state.ngrok_listener.url()),
+                        timeout=5.0
+                    )
+                except:
+                    pass
+
+            if nextjs_process:
+                try:
+                    nextjs_process.terminate()
+                    await asyncio.sleep(1)
+                    if nextjs_process.poll() is None:
+                        nextjs_process.kill()
+                except:
+                    pass
+
+            if server:
+                server.should_exit = True
+
+        except Exception as e:
+            logger.error(f"Error during cleanup: {e}")
+
         try:
             current_process = psutil.Process()
-
-            for proc in current_process.children(recursive=True):
+            children = current_process.children(recursive=True)
+            for child in children:
                 try:
-                    proc.kill()
+                    child.terminate()
                 except:
-                    continue
+                    pass
 
-            if flatpack_directory is not None:
-                for proc in psutil.process_iter(['cmdline', 'ppid']):
-                    try:
-                        if proc.ppid() == 1 and any(str(flatpack_directory) in arg for arg in proc.cmdline()):
-                            proc.kill()
-                    except:
-                        continue
+            gone, alive = psutil.wait_procs(children, timeout=3)
+            for process in alive:
+                try:
+                    process.kill()
+                except:
+                    pass
+
+        except Exception:
+            pass
+
+        finally:
+            if nextjs_process and nextjs_process.poll() is None:
+                os._exit(1)
+
+    def signal_handler(sig, frame):
+        if nextjs_process:
+            try:
+                nextjs_process.terminate()
+                time.sleep(1)
+                if nextjs_process.poll() is None:
+                    nextjs_process.kill()
+            except:
+                pass
+
+        if hasattr(app.state, 'ngrok_listener'):
+            try:
+                ngrok.disconnect(app.state.ngrok_listener.url())
+            except:
+                pass
+
+        if server:
+            server.should_exit = True
+
+        try:
+            current_process = psutil.Process()
+            children = current_process.children(recursive=True)
+            for child in children:
+                try:
+                    child.terminate()
+                except:
+                    pass
+            psutil.wait_procs(children, timeout=3)
         except:
             pass
 
         os._exit(1)
-
-    def signal_handler(sig, frame):
-        kill_everything()
 
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
@@ -4785,11 +4834,11 @@ def fpk_cli_handle_run(args, session):
     try:
         server.run()
     except KeyboardInterrupt:
-        kill_everything()
+        signal_handler(signal.SIGINT, None)
     except Exception as e:
-        logger.error("Server error: %s", e)
+        logger.error(f"Server error: {e}")
         console.print(f"Server error: {e}", style="bold red")
-        kill_everything()
+        signal_handler(signal.SIGTERM, None)
 
     return 0
 
