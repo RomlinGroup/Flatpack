@@ -456,6 +456,7 @@ def check_node_and_run_npm_install(web_dir):
                 )
 
             console.print("[bold green]Successfully ran 'npm install'[/bold green]")
+            console.print("")
 
             with console.status("[bold green]Installing Tailwind CSS...", spinner="dots"):
                 tailwind_install_result = subprocess.run(
@@ -513,8 +514,6 @@ def check_node_and_run_npm_install(web_dir):
 
             with open(styles_dir / 'globals.css', 'w') as f:
                 f.write(globals_css)
-
-            console.print("[bold green]Created Tailwind configuration files[/bold green]")
 
         except FileNotFoundError as e:
             console.print(Panel(
@@ -1590,21 +1589,7 @@ def validate_api_token(api_token: str) -> bool:
 
 
 def validate_file_path(path, is_input=True, allowed_dir=None):
-    """
-    Validate the file path to prevent directory traversal attacks.
-
-    Parameters:
-        path (str): The path to validate.
-        is_input (bool): Flag indicating if the path is for input. Defaults to True.
-        allowed_dir (str): The allowed directory for the path. Defaults to None.
-
-    Returns:
-        str: The absolute path if valid.
-
-    Raises:
-        ValueError: If the path is outside the allowed directory or invalid.
-        FileNotFoundError: If the path does not exist.
-    """
+    """Validate the file path to prevent directory traversal attacks."""
     absolute_path = os.path.abspath(path)
 
     if allowed_dir:
@@ -2464,7 +2449,8 @@ def fpk_unbox(directory_name: str, session: httpx.Client, local: bool = False,
                 '--no-experimental-app',
                 '--no-src-dir',
                 '--no-turbopack',
-                '--use-npm'
+                '--use-npm',
+                '--yes'
             ]
 
             with console.status("[bold green]Setting up a new Next.js project...", spinner="dots"):
@@ -4886,7 +4872,6 @@ def fpk_cli_handle_unbox(args, session):
     elif not args.local:
         existing_dirs = fpk_fetch_github_dirs(session)
         if directory_name not in existing_dirs:
-            console.print("")
             console.print(f"The flatpack '{directory_name}' does not exist.", style="bold red")
             return
 
