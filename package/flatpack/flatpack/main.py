@@ -743,7 +743,6 @@ def create_temp_sh(build_dir, custom_json_path: Path, temp_sh_path: Path, use_eu
                     exec 4<&- 2>/dev/null || true
                     wait "${{PYTHON_EXECUTOR_PID}}" 2>/dev/null || true
 
-                    echo "Sending SIGTERM to process group: $- $$"
                     kill -TERM -- -$$ 2>/dev/null || true
 
                     rm -f python_stdin python_stdout
