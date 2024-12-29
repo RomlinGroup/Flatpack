@@ -617,13 +617,16 @@ def create_temp_sh(build_dir, custom_json_path: Path, temp_sh_path: Path, use_eu
                 def setup_input_pipe():
                     script_dir = os.path.dirname(os.path.abspath(__file__))
                     input_pipe_path = os.path.join(script_dir, "python_input")
+                    
                     if not os.path.exists(input_pipe_path):
                         os.mkfifo(input_pipe_path)
+                    
                     return open(input_pipe_path, 'r')
 
                 def execute_code(code):
                     print("Received code block:")
                     print(code)
+                    
                     try:
                         old_stdout = sys.stdout
                         sys.stdout = sys.__stdout__ 
@@ -667,13 +670,16 @@ def create_temp_sh(build_dir, custom_json_path: Path, temp_sh_path: Path, use_eu
 
                     while True:
                         code_block = []
+                        
                         while True:
                             events = selector.select()
+                            
                             for event, mask in events:
                                 stream = event.fileobj
                                 stream_type = event.data
 
                                 line = stream.readline()
+                                
                                 if not line:
                                     continue
 
@@ -682,6 +688,7 @@ def create_temp_sh(build_dir, custom_json_path: Path, temp_sh_path: Path, use_eu
                                         print("Received exit signal. Cleaning up...")
                                         sys.stdout.flush()
                                         sys.exit(0)
+                                    
                                     if line.strip() == "__END_CODE_BLOCK__":
                                         if code_block:
                                             execute_code(''.join(code_block))
@@ -694,6 +701,7 @@ def create_temp_sh(build_dir, custom_json_path: Path, temp_sh_path: Path, use_eu
                                     if "input" in GLOBAL_NAMESPACE:
                                         input_line = line.strip()
                                         print(f"You entered: {input_line}")
+                                        
                                         try:
                                             GLOBAL_NAMESPACE["input"](input_line)
                                         except Exception as e:
@@ -4764,8 +4772,10 @@ def fpk_cli_handle_run(args, session):
                 while True:
                     try:
                         line = process.stdout.readline()
+
                         if not line and process.poll() is not None:
                             break
+
                         if line:
                             console.print(f"[{name}] {line.strip()}")
                     except Exception:
