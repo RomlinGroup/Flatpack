@@ -1143,6 +1143,7 @@ def get_token() -> Optional[str]:
 
 
 def initialize_fastapi_app(secret_key):
+    """Initialize and configure a FastAPI application."""
     FastAPI = lazy_import('fastapi', callable_name='FastAPI')
     SessionMiddleware = lazy_import('starlette.middleware.sessions', callable_name='SessionMiddleware')
     CORSMiddleware = lazy_import('fastapi.middleware.cors', callable_name='CORSMiddleware')
