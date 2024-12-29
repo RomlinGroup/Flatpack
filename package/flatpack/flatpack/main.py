@@ -1142,22 +1142,22 @@ def get_token() -> Optional[str]:
     return config.get('token')
 
 
-def initialize_fastapi_app(secret_key):
+def initialize_app(secret_key):
     FastAPI = lazy_import('fastapi', callable_name='FastAPI')
     SessionMiddleware = lazy_import('starlette.middleware.sessions', callable_name='SessionMiddleware')
     CORSMiddleware = lazy_import('fastapi.middleware.cors', callable_name='CORSMiddleware')
 
-    fastapi_app = FastAPI(openapi_url=None)
+    app = FastAPI(openapi_url=None)
 
-    fastapi_app.add_middleware(SessionMiddleware, secret_key=secret_key)
-    fastapi_app.state.signer = TimestampSigner(secret_key)
+    app.add_middleware(SessionMiddleware, secret_key=secret_key)
+    app.state.signer = TimestampSigner(secret_key)
 
     uvicorn_logger = logging.getLogger("uvicorn.access")
     uvicorn_logger.addFilter(EndpointFilter())
 
     origins = ["*"]
 
-    fastapi_app.add_middleware(
+    app.add_middleware(
         CORSMiddleware,
         allow_origins=origins,
         allow_credentials=True,
@@ -1165,9 +1165,9 @@ def initialize_fastapi_app(secret_key):
         allow_headers=["*"]
     )
 
-    setup_routes(fastapi_app)
+    setup_routes(app)
 
-    return fastapi_app
+    return app
 
 
 def is_user_logged_in(session_id: str) -> bool:
@@ -1460,7 +1460,7 @@ def set_token(token: str):
         logger.error("Failed to set token: %s", str(e))
 
 
-def setup_static_directory(fastapi_app: FastAPI, directory: str):
+def setup_static_directory(app: FastAPI, directory: str):
     """Setup the static directory for serving static files, excluding 'output' folder for unauthenticated users."""
     global flatpack_directory
     flatpack_directory = os.path.abspath(directory)
@@ -1468,7 +1468,7 @@ def setup_static_directory(fastapi_app: FastAPI, directory: str):
     if os.path.exists(flatpack_directory) and os.path.isdir(flatpack_directory):
         static_dir = os.path.join(flatpack_directory, 'web')
 
-        @fastapi_app.middleware("http")
+        @app.middleware("http")
         async def block_output_directory(request: Request, call_next):
             if request.url.path.startswith("/output/"):
                 session_id = request.cookies.get('session_id')
@@ -1478,7 +1478,7 @@ def setup_static_directory(fastapi_app: FastAPI, directory: str):
                     "detail": "Access to the /output directory is forbidden for unauthenticated users"})
             return await call_next(request)
 
-        fastapi_app.mount(
+        app.mount(
             "/",
             StaticFiles(directory=static_dir, html=True),
             name="static"
@@ -3729,10 +3729,10 @@ def update_hook_in_file(hook_id, updated_hook):
     save_hooks_to_file(hooks)
 
 
-def setup_routes(fastapi_app):
-    fastapi_app.add_middleware(ConnectionLimitMiddleware)
+def setup_routes(app):
+    app.add_middleware(ConnectionLimitMiddleware)
 
-    @fastapi_app.on_event("startup")
+    @app.on_event("startup")
     async def startup_event():
         """Handle startup tasks, including initializing server state and scheduling."""
         global SERVER_START_TIME
@@ -3742,7 +3742,7 @@ def setup_routes(fastapi_app):
         logger.info("CSRF token base generated for this session: %s", app.state.csrf_token_base)
         asyncio.create_task(run_scheduler())
 
-    @fastapi_app.on_event("shutdown")
+    @app.on_event("shutdown")
     async def shutdown_event():
         """Handle shutdown tasks, including disconnecting ngrok ingress."""
         if hasattr(app.state, 'ngrok_listener'):
@@ -3763,14 +3763,14 @@ def setup_routes(fastapi_app):
             finally:
                 app.state.ngrok_listener = None
 
-    @fastapi_app.middleware("http")
+    @app.middleware("http")
     async def csrf_middleware(request: Request, call_next):
         """Enforces CSRF protection on non-GET requests, excluding exempt paths."""
         if request.method != "GET" and not any(request.url.path.startswith(path) for path in CSRF_EXEMPT_PATHS):
             await csrf_protect(request)
         return await call_next(request)
 
-    @fastapi_app.get("/csrf-token")
+    @app.get("/csrf-token")
     async def get_csrf_token(request: Request, response: Response):
         """Generate and return a CSRF token, setting it as an HTTP-only cookie."""
         csrf_token = secrets.token_urlsafe(32)
@@ -3788,7 +3788,7 @@ def setup_routes(fastapi_app):
 
         return {"csrf_token": csrf_token}
 
-    @fastapi_app.get("/favicon.ico", include_in_schema=False)
+    @app.get("/favicon.ico", include_in_schema=False)
     async def favicon():
         """Serve the favicon if it exists."""
         favicon_path = Path(flatpack_directory) / "build" / "favicon.ico"
@@ -3796,12 +3796,12 @@ def setup_routes(fastapi_app):
             return FileResponse(favicon_path)
         return Response(status_code=204)
 
-    @fastapi_app.post("/test-csrf", dependencies=[Depends(csrf_protect)])
+    @app.post("/test-csrf", dependencies=[Depends(csrf_protect)])
     async def test_csrf(request: Request):
         """Test the CSRF protection mechanism."""
         return {"message": "CSRF check passed successfully!"}
 
-    @fastapi_app.get("/test-db")
+    @app.get("/test-db")
     async def test_db():
         """Test the database connection."""
         try:
@@ -3826,7 +3826,7 @@ def setup_routes(fastapi_app):
         except psutil.NoSuchProcess:
             pass
 
-    @fastapi_app.post("/api/abort-build", dependencies=[Depends(csrf_protect)])
+    @app.post("/api/abort-build", dependencies=[Depends(csrf_protect)])
     async def abort_build(request: Request, token: str = Depends(authenticate_token)):
         global abort_requested, build_in_progress, flatpack_directory
 
@@ -3937,7 +3937,7 @@ def setup_routes(fastapi_app):
                 status_code=500
             )
 
-    @fastapi_app.post("/api/build", dependencies=[Depends(csrf_protect)])
+    @app.post("/api/build", dependencies=[Depends(csrf_protect)])
     async def build_flatpack(
             request: Request,
             background_tasks: BackgroundTasks,
@@ -3969,7 +3969,7 @@ def setup_routes(fastapi_app):
                 content={"flatpack": flatpack_directory, "message": f"Failed to start build process: {e}"},
                 status_code=500)
 
-    @fastapi_app.get("/api/build-status", dependencies=[Depends(csrf_protect)])
+    @app.get("/api/build-status", dependencies=[Depends(csrf_protect)])
     async def get_build_status(token: str = Depends(authenticate_token)):
         """Get the current build status."""
         if not flatpack_directory:
@@ -3983,7 +3983,7 @@ def setup_routes(fastapi_app):
             return JSONResponse(content=status_data)
         return JSONResponse(content={"status": "no_builds"})
 
-    @fastapi_app.post("/api/clear-build-status", dependencies=[Depends(csrf_protect)])
+    @app.post("/api/clear-build-status", dependencies=[Depends(csrf_protect)])
     async def clear_build_status(token: str = Depends(authenticate_token)):
         """Clear the current build status."""
         if not flatpack_directory:
@@ -3999,7 +3999,7 @@ def setup_routes(fastapi_app):
             logger.error("Error clearing build status: %s", e)
             raise HTTPException(status_code=500, detail=f"Error clearing build status: {e}")
 
-    @fastapi_app.post("/api/comments", dependencies=[Depends(csrf_protect)])
+    @app.post("/api/comments", dependencies=[Depends(csrf_protect)])
     async def add_comment(comment: Comment, token: str = Depends(authenticate_token)):
         """Add a new comment to the database."""
         ensure_database_initialized()
@@ -4010,7 +4010,7 @@ def setup_routes(fastapi_app):
             logger.error("Error adding comment: %s", str(e), exc_info=True)
             raise HTTPException(status_code=500, detail=f"An error occurred while adding the comment: {str(e)}")
 
-    @fastapi_app.delete("/api/comments/{comment_id}", dependencies=[Depends(csrf_protect)])
+    @app.delete("/api/comments/{comment_id}", dependencies=[Depends(csrf_protect)])
     async def delete_comment(comment_id: int, token: str = Depends(authenticate_token)):
         """Delete a comment from the database by its ID."""
         ensure_database_initialized()
@@ -4022,7 +4022,7 @@ def setup_routes(fastapi_app):
             logger.error("An error occurred while deleting the comment: %s", e)
             raise HTTPException(status_code=500, detail=f"An error occurred while deleting the comment: {e}")
 
-    @fastapi_app.get("/api/comments", dependencies=[Depends(csrf_protect)])
+    @app.get("/api/comments", dependencies=[Depends(csrf_protect)])
     async def get_all_comments(token: str = Depends(authenticate_token)):
         """Retrieve all comments from the database."""
         ensure_database_initialized()
@@ -4032,13 +4032,13 @@ def setup_routes(fastapi_app):
             logger.error("An error occurred while retrieving comments: %s", e)
             raise HTTPException(status_code=500, detail=f"An error occurred while retrieving comments: {e}")
 
-    @fastapi_app.get("/api/heartbeat", dependencies=[Depends(csrf_protect)])
+    @app.get("/api/heartbeat", dependencies=[Depends(csrf_protect)])
     async def heartbeat():
         """Endpoint to check the server heartbeat."""
         current_time = datetime.utcnow().strftime('%Y-%m-%d %H:%M')
         return JSONResponse(content={"server_time": current_time}, status_code=200)
 
-    @fastapi_app.get("/api/hook-mappings/{target_id}", dependencies=[Depends(csrf_protect)])
+    @app.get("/api/hook-mappings/{target_id}", dependencies=[Depends(csrf_protect)])
     async def get_hook_mappings(target_id: str, token: str = Depends(authenticate_token)):
         """Get all source mappings for a specific hook."""
         ensure_database_initialized()
@@ -4052,7 +4052,7 @@ def setup_routes(fastapi_app):
                 detail=f"An error occurred while retrieving the mappings: {e}"
             )
 
-    @fastapi_app.post("/api/hooks", dependencies=[Depends(csrf_protect)])
+    @app.post("/api/hooks", dependencies=[Depends(csrf_protect)])
     async def add_hook(hook: Hook, token: str = Depends(authenticate_token)):
         """Add a new hook to the database."""
         try:
@@ -4070,7 +4070,7 @@ def setup_routes(fastapi_app):
             logger.error("Failed to add hook: %s", e)
             raise HTTPException(status_code=500, detail="Failed to add hook.")
 
-    @fastapi_app.delete("/api/hooks/{hook_id}", dependencies=[Depends(csrf_protect)])
+    @app.delete("/api/hooks/{hook_id}", dependencies=[Depends(csrf_protect)])
     async def delete_hook(hook_id: int, token: str = Depends(authenticate_token)):
         """Delete a specific hook by its ID."""
         ensure_database_initialized()
@@ -4084,7 +4084,7 @@ def setup_routes(fastapi_app):
             logger.error("An error occurred while deleting the hook: %s", e)
             raise HTTPException(status_code=500, detail=f"An error occurred while deleting the hook: {e}")
 
-    @fastapi_app.get("/api/hooks", response_model=List[Hook], dependencies=[Depends(csrf_protect)])
+    @app.get("/api/hooks", response_model=List[Hook], dependencies=[Depends(csrf_protect)])
     async def get_hooks(token: str = Depends(authenticate_token)):
         """Retrieve all hooks from the database and synchronize with the hooks file."""
         try:
@@ -4100,7 +4100,7 @@ def setup_routes(fastapi_app):
             logger.error("Failed to retrieve hooks: %s", e)
             raise HTTPException(status_code=500, detail="Failed to retrieve hooks.")
 
-    @fastapi_app.put("/api/hooks/{hook_id}", dependencies=[Depends(csrf_protect)])
+    @app.put("/api/hooks/{hook_id}", dependencies=[Depends(csrf_protect)])
     async def update_hook(hook_id: int, hook: Hook, token: str = Depends(authenticate_token)):
         """Update an existing hook by its ID."""
         ensure_database_initialized()
@@ -4124,7 +4124,7 @@ def setup_routes(fastapi_app):
             logger.error("An error occurred while updating the hook: %s", e)
             raise HTTPException(status_code=500, detail=f"An error occurred while updating the hook: {e}")
 
-    @fastapi_app.get("/api/list-media-files", dependencies=[Depends(csrf_protect)])
+    @app.get("/api/list-media-files", dependencies=[Depends(csrf_protect)])
     async def list_media_files(token: str = Depends(authenticate_token)):
         """List all media files from the output directory."""
         global flatpack_directory
@@ -4147,7 +4147,7 @@ def setup_routes(fastapi_app):
             logger.error("Error listing media files: %s", str(e))
             raise HTTPException(status_code=500, detail=f"Error listing media files: {str(e)}")
 
-    @fastapi_app.get("/api/load-file")
+    @app.get("/api/load-file")
     async def load_file(
             filename: str,
             token: str = Depends(authenticate_token)
@@ -4195,7 +4195,7 @@ def setup_routes(fastapi_app):
             logger.error("Error reading file '%s': %s", sanitized_filename, str(e))
             raise HTTPException(status_code=500, detail="Error reading file")
 
-    @fastapi_app.get("/api/logs", dependencies=[Depends(csrf_protect)])
+    @app.get("/api/logs", dependencies=[Depends(csrf_protect)])
     async def get_all_logs(request: Request, token: str = Depends(authenticate_token)):
         """Get a list of all available logs ordered by date."""
         global flatpack_directory
@@ -4231,7 +4231,7 @@ def setup_routes(fastapi_app):
             logger.error("Failed to list log files: %s", e)
             raise HTTPException(status_code=500, detail=f"Failed to list log files: {e}")
 
-    @fastapi_app.get("/api/logs/{log_filename}", dependencies=[Depends(csrf_protect)])
+    @app.get("/api/logs/{log_filename}", dependencies=[Depends(csrf_protect)])
     async def get_log_file(request: Request, log_filename: str, token: str = Depends(authenticate_token)):
         """Get the content of a specific log file."""
         global flatpack_directory
@@ -4263,7 +4263,7 @@ def setup_routes(fastapi_app):
         else:
             raise HTTPException(status_code=404, detail="Log file not found")
 
-    @fastapi_app.post("/api/save-file", dependencies=[Depends(csrf_protect)])
+    @app.post("/api/save-file", dependencies=[Depends(csrf_protect)])
     async def save_file(
             request: Request,
             filename: str = Form(...),
@@ -4295,7 +4295,7 @@ def setup_routes(fastapi_app):
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Failed to save file: {e}")
 
-    @fastapi_app.get("/api/schedule", dependencies=[Depends(csrf_protect)])
+    @app.get("/api/schedule", dependencies=[Depends(csrf_protect)])
     async def get_schedule(token: str = Depends(authenticate_token)):
         """Retrieve all schedules from the database."""
         ensure_database_initialized()
@@ -4306,7 +4306,7 @@ def setup_routes(fastapi_app):
             logger.error("An error occurred while retrieving the schedules: %s", e)
             raise HTTPException(status_code=500, detail=f"An error occurred while retrieving the schedules: {e}")
 
-    @fastapi_app.post("/api/schedule", dependencies=[Depends(csrf_protect)])
+    @app.post("/api/schedule", dependencies=[Depends(csrf_protect)])
     async def save_schedule(request: Request, token: str = Depends(authenticate_token)):
         """Save a new schedule to the database."""
         ensure_database_initialized()
@@ -4327,7 +4327,7 @@ def setup_routes(fastapi_app):
             logger.error("An error occurred while saving the schedule: %s", e)
             raise HTTPException(status_code=500, detail=f"An error occurred while saving the schedule: {e}")
 
-    @fastapi_app.delete("/api/schedule/{schedule_id}", dependencies=[Depends(csrf_protect)])
+    @app.delete("/api/schedule/{schedule_id}", dependencies=[Depends(csrf_protect)])
     async def delete_schedule_entry(schedule_id: int, datetime_index: Optional[int] = None,
                                     token: str = Depends(authenticate_token)):
         """Delete a schedule or a specific datetime entry from the database."""
@@ -4348,7 +4348,7 @@ def setup_routes(fastapi_app):
             raise HTTPException(status_code=500,
                                 detail=f"An error occurred while deleting the schedule entry: {e}")
 
-    @fastapi_app.post("/api/source-hook-mappings", response_model=MappingResults)
+    @app.post("/api/source-hook-mappings", response_model=MappingResults)
     async def add_source_hook_mappings(
             mappings: List[SourceHookMapping],
             token: str = Depends(authenticate_token)
@@ -4395,7 +4395,7 @@ def setup_routes(fastapi_app):
             logger.error("Error in add_source_hook_mappings: %s", str(e))
             raise HTTPException(status_code=500, detail=str(e))
 
-    @fastapi_app.delete("/api/source-hook-mappings/{mapping_id}", dependencies=[Depends(csrf_protect)])
+    @app.delete("/api/source-hook-mappings/{mapping_id}", dependencies=[Depends(csrf_protect)])
     async def delete_source_hook_mapping(
             mapping_id: int,
             token: str = Depends(authenticate_token)
@@ -4439,7 +4439,7 @@ def setup_routes(fastapi_app):
             logger.error("Error deleting source-hook mapping: %s", str(e))
             raise HTTPException(status_code=500, detail=str(e))
 
-    @fastapi_app.get("/api/source-hook-mappings")
+    @app.get("/api/source-hook-mappings")
     async def get_all_source_hook_mappings(
             token: str = Depends(authenticate_token)
     ) -> JSONResponse:
@@ -4452,7 +4452,7 @@ def setup_routes(fastapi_app):
             logger.error("Error retrieving source-hook mappings: %s", e)
             raise HTTPException(status_code=500, detail=str(e))
 
-    @fastapi_app.post("/api/sources", dependencies=[Depends(csrf_protect)])
+    @app.post("/api/sources", dependencies=[Depends(csrf_protect)])
     async def add_source(source: Source, token: str = Depends(authenticate_token)):
         """Add a new source to the database."""
         ensure_database_initialized()
@@ -4463,7 +4463,7 @@ def setup_routes(fastapi_app):
             logger.error("Error adding source: %s", str(e))
             raise HTTPException(status_code=500, detail=f"Error adding source: {str(e)}")
 
-    @fastapi_app.get("/api/sources", dependencies=[Depends(csrf_protect)])
+    @app.get("/api/sources", dependencies=[Depends(csrf_protect)])
     async def get_all_sources(token: str = Depends(authenticate_token)):
         """Retrieve all sources from the database."""
         ensure_database_initialized()
@@ -4474,7 +4474,7 @@ def setup_routes(fastapi_app):
             logger.error("Error retrieving sources: %s", e)
             raise HTTPException(status_code=500, detail=f"Error retrieving sources: {e}")
 
-    @fastapi_app.get("/api/sources/{source_id}", dependencies=[Depends(csrf_protect)])
+    @app.get("/api/sources/{source_id}", dependencies=[Depends(csrf_protect)])
     async def get_source_by_id(source_id: int, token: str = Depends(authenticate_token)):
         """Retrieve a source by its ID."""
         ensure_database_initialized()
@@ -4487,7 +4487,7 @@ def setup_routes(fastapi_app):
             logger.error("Error retrieving source by ID: %s", e)
             raise HTTPException(status_code=500, detail=f"Error retrieving source by ID: {e}")
 
-    @fastapi_app.put("/api/sources/{source_id}", dependencies=[Depends(csrf_protect)])
+    @app.put("/api/sources/{source_id}", dependencies=[Depends(csrf_protect)])
     async def update_source(source_id: int, source: SourceUpdate, token: str = Depends(authenticate_token)):
         """Update an existing source."""
         ensure_database_initialized()
@@ -4505,7 +4505,7 @@ def setup_routes(fastapi_app):
             logger.error("Error updating source: %s", str(e))
             raise HTTPException(status_code=500, detail=f"Error updating source: {str(e)}")
 
-    @fastapi_app.delete("/api/sources/{source_id}", dependencies=[Depends(csrf_protect)])
+    @app.delete("/api/sources/{source_id}", dependencies=[Depends(csrf_protect)])
     async def delete_source(source_id: int, token: str = Depends(authenticate_token)):
         """Delete a source from the database by its ID."""
         ensure_database_initialized()
@@ -4517,12 +4517,12 @@ def setup_routes(fastapi_app):
             logger.error("Error deleting source: %s", e)
             raise HTTPException(status_code=500, detail=f"Error deleting source: {e}")
 
-    @fastapi_app.get("/api/user-status")
+    @app.get("/api/user-status")
     async def user_status(auth: str = Depends(authenticate_token)):
         """Check if the user is authenticated."""
         return JSONResponse(content={"authenticated": True}, status_code=200)
 
-    @fastapi_app.post("/api/validate-token")
+    @app.post("/api/validate-token")
     async def validate_token(request: Request, api_token: str = Form(...)):
         """Validate the provided API token and create a session."""
         global VALIDATION_ATTEMPTS
@@ -4541,7 +4541,7 @@ def setup_routes(fastapi_app):
             shutdown_server()
         return JSONResponse(content={"message": "Invalid API token."}, status_code=401)
 
-    @fastapi_app.post("/api/verify", dependencies=[Depends(csrf_protect)])
+    @app.post("/api/verify", dependencies=[Depends(csrf_protect)])
     async def verify_flatpack(
             request: Request,
             token: str = Depends(authenticate_token)
@@ -4557,7 +4557,7 @@ def setup_routes(fastapi_app):
             logger.error("Verification process failed: %s", e)
             return JSONResponse(content={"message": f"Verification process failed: {e}"}, status_code=500)
 
-    return fastapi_app
+    return app
 
 
 def fpk_cli_handle_run(args, session):
@@ -4673,7 +4673,7 @@ def fpk_cli_handle_run(args, session):
     console.print("")
 
     with console.status("[bold green]Initializing FastAPI server...", spinner="dots"):
-        app = initialize_fastapi_app(secret_key)
+        app = initialize_app(secret_key)
         setup_static_directory(app, str(directory))
 
     if args.share:
