@@ -4807,7 +4807,7 @@ def fpk_cli_handle_run(args, session):
                 server.should_exit = True
 
         except Exception as e:
-            logger.error(f"Error during cleanup: {e}")
+            logger.error("Error during cleanup: %s", e)
 
         try:
             current_process = psutil.Process()
@@ -4873,7 +4873,7 @@ def fpk_cli_handle_run(args, session):
     except KeyboardInterrupt:
         signal_handler(signal.SIGINT, None)
     except Exception as e:
-        logger.error(f"Server error: {e}")
+        logger.error("Server error: %s", e)
         console.print(f"Server error: {e}", style="bold red")
         signal_handler(signal.SIGTERM, None)
 
