@@ -637,7 +637,7 @@ def create_temp_sh(build_dir, custom_json_path: Path, temp_sh_path: Path, use_eu
                         def my_input(prompt=""): 
                             print("READY_FOR_INPUT")
                             sys.stdout.flush()
-                            print(prompt, end="", flush=True)
+                            # print(prompt, end="", flush=True)
                             line = input_pipe.readline().strip()
                             return line
 
@@ -704,7 +704,6 @@ def create_temp_sh(build_dir, custom_json_path: Path, temp_sh_path: Path, use_eu
                                 elif stream_type == "input":
                                     if "input" in GLOBAL_NAMESPACE:
                                         input_line = line.strip()
-                                        print(f"You entered: {input_line}")
                                         
                                         try:
                                             GLOBAL_NAMESPACE["input"](input_line)
@@ -831,27 +830,27 @@ def create_temp_sh(build_dir, custom_json_path: Path, temp_sh_path: Path, use_eu
             outfile.write('\n')
 
             pipe_setup = dedent("""\
-                echo "Creating pipes..."
+                # echo "Creating pipes..."
                 rm -f "$SCRIPT_DIR/python_stdin" "$SCRIPT_DIR/python_stdout" "$SCRIPT_DIR/python_input"
                 mkfifo -m 666 "$SCRIPT_DIR/python_stdin" "$SCRIPT_DIR/python_stdout" "$SCRIPT_DIR/python_input"
-                echo "Pipes created."
+                # echo "Pipes created."
                 
-                echo "Starting Python executor..."
+                # echo "Starting Python executor..."
                 "$VENV_PYTHON" -u "$SCRIPT_DIR/python_executor.py" < "$SCRIPT_DIR/python_stdin" > "$SCRIPT_DIR/python_stdout" 2>&1 &
                 PYTHON_EXECUTOR_PID=$!
-                echo "Python executor started with PID: $PYTHON_EXECUTOR_PID"
+                # echo "Python executor started with PID: $PYTHON_EXECUTOR_PID"
                 
                 exec 3> "$SCRIPT_DIR/python_stdin"
                 exec 4< "$SCRIPT_DIR/python_stdout"
                 exec 5> "$SCRIPT_DIR/python_input"
-                echo "File descriptors set up."
+                # echo "File descriptors set up."
             """)
             outfile.write(pipe_setup)
             outfile.write('\n')
 
             helper_functions = dedent("""\
                 function send_input_to_python() {
-                    echo "Sending input to Python: '$1'"
+                    # echo "Sending input to Python: '$1'"
                     echo "$1" >&5
                 }
 
@@ -861,7 +860,7 @@ def create_temp_sh(build_dir, custom_json_path: Path, temp_sh_path: Path, use_eu
                     output=""
 
                     while IFS= read -r line <&4; do
-                        if [[ ! "$line" == *"EXECUTION_COMPLETE"* && ! "$line" == *"READY_FOR_INPUT"* ]]; then
+                        if [[ ! "$line" == *"EXECUTION_COMPLETE"* ]]; then
                             echo "$line"
                         fi
                         
