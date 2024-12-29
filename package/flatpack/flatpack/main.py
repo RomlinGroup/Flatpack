@@ -607,42 +607,103 @@ def create_temp_sh(build_dir, custom_json_path: Path, temp_sh_path: Path, use_eu
         with executor_path.open('w', encoding='utf-8') as exec_file:
             exec_file.write(dedent("""\
                 import os
+                import selectors
                 import signal
                 import sys
                 import traceback
-                
+
                 GLOBAL_NAMESPACE = {}
-                
+
+                def setup_input_pipe():
+                    script_dir = os.path.dirname(os.path.abspath(__file__))
+                    input_pipe_path = os.path.join(script_dir, "python_input")
+                    if not os.path.exists(input_pipe_path):
+                        os.mkfifo(input_pipe_path)
+                    return open(input_pipe_path, 'r')
+
                 def execute_code(code):
+                    print("Received code block:")
+                    print(code)
                     try:
-                        os.setpgrp() 
+                        old_stdout = sys.stdout
+                        sys.stdout = sys.__stdout__ 
+                        old_stdin = sys.stdin
+                        sys.stdin = sys.__stdin__
+                        os.setpgrp()
+
+                        def my_input(prompt=""): 
+                            print("READY_FOR_INPUT")
+                            sys.stdout.flush()
+                            print(prompt, end="", flush=True)
+                            line = input_pipe.readline().strip()
+                            return line
+
+                        GLOBAL_NAMESPACE["input"] = my_input
                         exec(code, GLOBAL_NAMESPACE)
                         sys.stdout.flush()
                         sys.stderr.flush()
+                        sys.stdout = old_stdout
+                        sys.stdin = old_stdin
                         print("EXECUTION_COMPLETE")
                     except Exception as e:
+                        sys.stdout = old_stdout
+                        sys.stdin = old_stdin
                         print(f"Error executing code: {e}", file=sys.stderr)
                         traceback.print_exc()
                         sys.exit(1)
-                
+
                 def signal_handler(signum, frame):
                     print(f"Python executor received signal {signum}. Exiting.")
                     sys.exit(1)
-                
+
                 if __name__ == "__main__":
                     signal.signal(signal.SIGTERM, signal_handler)
                     signal.signal(signal.SIGINT, signal_handler)
-                
+
+                    input_pipe = setup_input_pipe()
+                    selector = selectors.DefaultSelector()
+                    selector.register(sys.stdin, selectors.EVENT_READ, "code")
+                    selector.register(input_pipe, selectors.EVENT_READ, "input")
+
                     while True:
                         code_block = []
-                        for line in sys.stdin:
-                            if line.strip() == "__EXIT_PYTHON_EXECUTOR__":
-                                sys.exit(0)
-                            if line.strip() == "__END_CODE_BLOCK__":
-                                break
-                            code_block.append(line)
-                        if code_block:
-                            execute_code(''.join(code_block))
+                        while True:
+                            events = selector.select()
+                            for event, mask in events:
+                                stream = event.fileobj
+                                stream_type = event.data
+
+                                line = stream.readline()
+                                if not line:
+                                    continue
+
+                                if stream_type == "code":
+                                    if line.strip() == "__EXIT_PYTHON_EXECUTOR__":
+                                        print("Received exit signal. Cleaning up...")
+                                        sys.stdout.flush()
+                                        sys.exit(0)
+                                    if line.strip() == "__END_CODE_BLOCK__":
+                                        if code_block:
+                                            execute_code(''.join(code_block))
+                                        break
+                                    elif line.strip() == "READY_FOR_INPUT":
+                                        pass
+                                    else:
+                                        code_block.append(line)
+                                elif stream_type == "input":
+                                    if "input" in GLOBAL_NAMESPACE:
+                                        input_line = line.strip()
+                                        print(f"You entered: {input_line}")
+                                        try:
+                                            GLOBAL_NAMESPACE["input"](input_line)
+                                        except Exception as e:
+                                            print(f"Error calling input handler: {e}", file=sys.stderr)
+                                            traceback.print_exc()
+                                    else:
+                                        print("No input handler available")
+                            else:
+                                continue
+                            break
             """))
 
         executor_path.chmod(0o755)
@@ -685,15 +746,20 @@ def create_temp_sh(build_dir, custom_json_path: Path, temp_sh_path: Path, use_eu
 
                 echo '[]' > "$EVAL_DATA"
                 touch "$EVAL_DATA"
+            """)
 
-                function log_eval_data() {{
-                     local block_index="$1"
+            outfile.write(header_script)
+            outfile.write('\n')
 
-                     echo "[LOG] Running log_eval_data for block $block_index"
+            log_eval_data_func = dedent("""\
+                function log_eval_data() {
+                    local block_index="$1"
 
-                     files_since_last="$(find "${{SCRIPT_DIR}}" \\
+                    echo "[LOG] Running log_eval_data for block $block_index"
+
+                    files_since_last="$(find "${SCRIPT_DIR}" \\
                         -type f \\
-                        -newer "${{EVAL_DATA}}" \\
+                        -newer "${EVAL_DATA}" \\
                         -not -path "*/venv/*" \\
                         \\( \\
                             -name '*.gif' -o \\
@@ -713,12 +779,11 @@ def create_temp_sh(build_dir, custom_json_path: Path, temp_sh_path: Path, use_eu
                         for file in $files_since_last; do
                             local file_basename="/output/$(basename "$file")"
                             local file_mime_type=$(file --mime-type -b "$file")
-                            local file_json="{{\\"eval\\": $block_index, \\"file\\": \\"$file\\", \\"public\\": \\"$file_basename\\", \\"type\\": \\"$file_mime_type\\"}}"
+                            local file_json="{\\\"eval\\\": $block_index, \\\"file\\\": \\\"$file\\\", \\\"public\\\": \\\"$file_basename\\\", \\\"type\\\": \\\"$file_mime_type\\\"}"
                             eval_data_json=$(echo "$eval_data_json" | jq ". + [$file_json]")
                         done
 
                         jq -s '.[0] + .[1]' "$EVAL_DATA" <(echo "$eval_data_json") > "$EVAL_DATA.tmp" && mv "$EVAL_DATA.tmp" "$EVAL_DATA"
-
                     fi
 
                     local eval_count
@@ -729,58 +794,80 @@ def create_temp_sh(build_dir, custom_json_path: Path, temp_sh_path: Path, use_eu
                         eval_count=$((block_index + 1))
                     fi
 
-                    jq -nc --arg curr "$block_index" --arg last "$LAST_COUNT" --arg eval "$eval_count" --arg dt "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" '{{"curr": ($curr|tonumber), "last": ($last|tonumber), "eval": (if $eval == "null" then null else ($eval|tonumber) end), "datetime": $dt }}' | jq '.' > "$EVAL_BUILD"
-                }}
+                    jq -nc --arg curr "$block_index" --arg last "$LAST_COUNT" --arg eval "$eval_count" --arg dt "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" '{\"curr\": ($curr|tonumber), \"last\": ($last|tonumber), \"eval\": (if $eval == \"null\" then null else ($eval|tonumber) end), \"datetime\": $dt }' | jq '.' > "$EVAL_BUILD"
+                }
             """)
-
-            outfile.write(header_script)
+            outfile.write(log_eval_data_func)
             outfile.write('\n')
 
-            trap_and_cleanup = dedent(f"""\
-                function cleanup() {{
+            cleanup_script = dedent("""\
+                function cleanup() {
                     echo "__EXIT_PYTHON_EXECUTOR__" >&3 2>/dev/null || true
                     exec 3>&- 2>/dev/null || true
                     exec 4<&- 2>/dev/null || true
-                    wait "${{PYTHON_EXECUTOR_PID}}" 2>/dev/null || true
+                    exec 5>&- 2>/dev/null || true
+                    wait "${PYTHON_EXECUTOR_PID}" 2>/dev/null || true
 
                     kill -TERM -- -$$ 2>/dev/null || true
 
-                    rm -f python_stdin python_stdout
-                }}
-                
+                    rm -f "$SCRIPT_DIR/python_stdin" "$SCRIPT_DIR/python_stdout" "$SCRIPT_DIR/python_input"
+                }
+
                 trap 'cleanup' EXIT INT TERM
             """)
-            outfile.write(trap_and_cleanup)
+            outfile.write(cleanup_script)
             outfile.write('\n')
 
             pipe_setup = dedent("""\
-                rm -f python_stdin python_stdout
-                mkfifo python_stdin
-                mkfifo python_stdout
-
-                "$VENV_PYTHON" -u "$SCRIPT_DIR/python_executor.py" < python_stdin > python_stdout &
+                echo "Creating pipes..."
+                rm -f "$SCRIPT_DIR/python_stdin" "$SCRIPT_DIR/python_stdout" "$SCRIPT_DIR/python_input"
+                mkfifo -m 666 "$SCRIPT_DIR/python_stdin" "$SCRIPT_DIR/python_stdout" "$SCRIPT_DIR/python_input"
+                echo "Pipes created."
+                
+                echo "Starting Python executor..."
+                "$VENV_PYTHON" -u "$SCRIPT_DIR/python_executor.py" < "$SCRIPT_DIR/python_stdin" > "$SCRIPT_DIR/python_stdout" 2>&1 &
                 PYTHON_EXECUTOR_PID=$!
+                echo "Python executor started with PID: $PYTHON_EXECUTOR_PID"
+                
+                exec 3> "$SCRIPT_DIR/python_stdin"
+                exec 4< "$SCRIPT_DIR/python_stdout"
+                exec 5> "$SCRIPT_DIR/python_input"
+                echo "File descriptors set up."
+            """)
+            outfile.write(pipe_setup)
+            outfile.write('\n')
 
-                exec 3> python_stdin
-                exec 4< python_stdout
+            helper_functions = dedent("""\
+                function send_input_to_python() {
+                    echo "Sending input to Python: '$1'"
+                    echo "$1" >&5
+                }
 
                 function send_code_to_python_and_wait() {
                     cat >&3
                     echo '__END_CODE_BLOCK__' >&3
 
-                    while read -r line <&4; do
-                        if [[ "$line" == "EXECUTION_COMPLETE" ]]; then
+                    output=""
+                    while IFS= read -r line <&4; do
+                        if [[ -z "$line" ]]; then
+                            continue
+                        fi
+                        output+="$line"$'\\n'
+
+                        if [[ "$output" == *"READY_FOR_INPUT"* ]]; then
+                            read -r user_input < /dev/tty
+                            send_input_to_python "$user_input"
+                            output=""
+                        elif [[ "$output" == *"EXECUTION_COMPLETE"* ]]; then
                             break
-                        elif [[ "$line" == "Error executing code:"* ]]; then
-                            echo "$line" >&2
+                        elif [[ "$output" == *"Error executing code:"* ]]; then
+                            echo "$output" >&2
                             exit 1
-                        else
-                            echo "$line"
                         fi
                     done
                 }
             """)
-            outfile.write(pipe_setup)
+            outfile.write(helper_functions)
             outfile.write('\n')
 
             def send_code_to_python(code):
@@ -805,12 +892,10 @@ def create_temp_sh(build_dir, custom_json_path: Path, temp_sh_path: Path, use_eu
                     outfile.write(f"\necho '[BEGIN] Executing block {block_index} (Bash)'\n")
                     outfile.write(f"{code}\n")
                     outfile.write(f"\necho '[END] Executing block {block_index} (Bash)'\n")
-
                 elif language == 'python':
                     outfile.write(f"\necho '[BEGIN] Executing block {block_index} (Python)'\n")
                     outfile.write(send_code_to_python(code))
                     outfile.write(f"\necho '[END] Executing block {block_index} (Python)'\n")
-                    outfile.write("\n")
 
                 outfile.write(f"log_eval_data \"{block_index}\"\n")
 
@@ -818,7 +903,7 @@ def create_temp_sh(build_dir, custom_json_path: Path, temp_sh_path: Path, use_eu
                 if hook.get('hook_placement', '').strip().lower() == 'after':
                     process_hook(hook, hook_index)
 
-        temp_sh_path.chmod(0o755)
+            temp_sh_path.chmod(0o755)
 
     except Exception as e:
         logging.error("An error occurred while creating temp script: %s", e, exc_info=True)
@@ -1238,110 +1323,77 @@ def filter_log_line(line):
 
 
 async def run_subprocess(command, log_file):
-    global shutdown_requested, abort_requested
-
     current_dir = Path.cwd()
-
     console.print(f"[bold blue]Build command run in:[/bold blue] {current_dir}")
     console.print("")
 
-    out_r, out_w = pty.openpty()
-    err_r, err_w = pty.openpty()
+    master_fd, slave_fd = pty.openpty()
 
     process = subprocess.Popen(
         command,
         cwd=str(current_dir),
         shell=False,
-        start_new_session=True,
-        stderr=err_w,
-        stdin=subprocess.PIPE,
-        stdout=out_w
+        stdin=slave_fd,
+        stdout=slave_fd,
+        stderr=slave_fd,
+        start_new_session=True
     )
 
-    try:
-        os.close(out_w)
-    except OSError as e:
-        if e.errno == errno.EBADF:
-            print(f"File descriptor out_w ({out_w}) was already closed or invalid.")
-        else:
-            raise
+    os.close(slave_fd)
+    output = []
 
     try:
-        os.close(err_w)
-    except OSError as e:
-        if e.errno == errno.EBADF:
-            print(f"File descriptor err_w ({err_w}) was already closed or invalid.")
-        else:
-            raise
+        while True:
+            r, w, e = select.select([sys.stdin, master_fd], [], [], 0.1)
 
-    streams = [OutStream(out_r), OutStream(err_r)]
+            for fd in r:
+                if fd == sys.stdin:
+                    try:
+                        input_data = os.read(sys.stdin.fileno(), 1024)
+                        if input_data:
+                            os.write(master_fd, input_data)
+                    except OSError:
+                        break
+                else:
+                    try:
+                        data = os.read(master_fd, 1024)
+                        if not data:
+                            break
+                        decoded_data = data.decode(errors='replace')
+                        output.append(decoded_data)
+                        sys.stdout.buffer.write(data)
+                        sys.stdout.buffer.flush()
 
-    async def handle_input():
-        while not shutdown_requested and not abort_requested:
-            if sys.stdin in select.select([sys.stdin], [], [], 0)[0]:
-                line = sys.stdin.readline()
-                if line:
-                    filtered_line = line.strip()
-                    if filtered_line:
                         timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
-                        log_entry = f"[{timestamp}] INPUT: {filtered_line}"
-                        log_file.write(log_entry + '\n')
+                        log_file.write(f"[{timestamp}] {decoded_data}")
                         log_file.flush()
-                    process.stdin.write(line.encode())
-                    process.stdin.flush()
-            await asyncio.sleep(0.1)
 
-    input_task = asyncio.create_task(handle_input())
+                        if "Python executor finished" in decoded_data:
+                            return process.returncode
+                    except OSError:
+                        break
 
-    while streams and not shutdown_requested and not abort_requested:
-        try:
-            rlist, wlist, xlist = select.select(streams, [], [], 1.0)
-        except select.error as e:
-            if e.args[0] != errno.EINTR:
-                raise
-            continue
+            if process.poll() is not None:
+                break
 
-        for stream in rlist:
+    finally:
+        os.close(master_fd)
+
+        while True:
             try:
-                lines, readable, raw_output = stream.read_lines()
-                if raw_output:
-                    sys.stdout.buffer.write(raw_output)
-                    sys.stdout.buffer.flush()
+                process.wait(timeout=1)
+                break
+            except subprocess.TimeoutExpired:
+                continue
+            except Exception:
+                break
 
-                for line in lines:
-                    filtered_line = filter_log_line(line)
-                    if filtered_line is not None:
-                        timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
-                        log_entry = f"[{timestamp}] OUTPUT: {filtered_line}"
-                        log_file.write(log_entry + '\n')
-                        log_file.flush()
-
-                if not readable:
-                    streams.remove(stream)
-            except Exception as e:
-                logger.error("Error processing stream: %s", e)
-                logger.debug(traceback.format_exc())
-                streams.remove(stream)
-
-        await asyncio.sleep(0)
-
-    input_task.cancel()
-    try:
-        await input_task
-    except asyncio.CancelledError:
-        pass
-
-    if process.poll() is None:
-        if abort_requested:
-            logger.info("Aborting subprocess...")
-        else:
-            logger.info("Terminating subprocess...")
-        os.killpg(os.getpgid(process.pid), signal.SIGTERM)
-        try:
-            process.wait(timeout=5)
-        except subprocess.TimeoutExpired:
-            logger.warning("Process did not terminate in time. Forcing termination.")
-            os.killpg(os.getpgid(process.pid), signal.SIGKILL)
+        if process.poll() is None:
+            process.terminate()
+            try:
+                process.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                process.kill()
 
     return process.returncode
 
