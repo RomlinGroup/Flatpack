@@ -32,6 +32,6 @@
   {
     "type": "python",
     "disabled": false,
-    "code": "chat = LlamaChatNotebook(\n    model_path=\"gemma-2-2b-it-Q4_K_M.gguf\",\n    vector_dir=\"vector\",\n    piper_model=\"cori-med.onnx\"\n)\n\nresponse = chat.chat(\n    prompt,\n    use_memory=True,\n    generate_audio=True\n)"
+    "code": "chat = LlamaChatNotebook(\n    model_path=\"gemma-2-2b-it-Q4_K_M.gguf\",\n    vector_dir=\"vector\",\n    piper_model=\"cori-med.onnx\"\n)\n\nprint(\"Starting interactive chat (type 'quit' to exit)\")\nprint(\"-\" * 50)\n\nwhile True:\n    user_input = input(\"\\nYou: \").strip()\n    \n    if user_input.lower() in ['exit', 'q', 'quit']:\n        print(\"\\nEnding chat session...\")\n        break\n        \n    if not user_input:\n        continue\n        \n    try:\n        response = chat.chat(\n            user_input,\n            use_memory=True,\n            generate_audio=True\n        )\n        \n    except Exception as e:\n        print(f\"\\nError occurred: {str(e)}\")\n        print(\"Please try again.\")"
   }
 ]
