@@ -26,6 +26,9 @@ flatpacks (FPK)，将 AI 和 ML 集成到边缘计算、电子元件和机器人
 *Aglaonice, an ancient Greek astronomer from the 2nd or 1st century BC, was celebrated for her precise lunar eclipse
 predictions. Her mastery inspired the Greek proverb: "As the moon obeys Aglaonice," signifying unwavering certainty.*
 
+`3.12.0` (2024-12-29)\
+*Introduced [Next.js](https://github.com/vercel/next.js) for flatpack interfaces.*
+
 `3.11.0` (2024-11-24)\
 *Major core architecture refactoring for performance.*
 
@@ -36,13 +39,13 @@ predictions. Her mastery inspired the Greek proverb: "As the moon obeys Aglaonic
 *Added [Monaco Editor](https://github.com/microsoft/monaco-editor) and custom hooks support.*
 
 `3.8.0` (2024-09-24)\
-*Improved package setup and deprecated agent spawning.*
+*Deprecated agent spawning and improved package setup.*
 
 `3.7.0` (2024-09-04)\
 *Added cron and manual scheduling for builds.*
 
 `3.6.0` (2024-07-28)\
-*Introduced SQLite database support for each flatpack.*
+*Introduced [SQLite](https://github.com/sqlite/sqlite) database support for each flatpack.*
 
 `3.5.0` (2024-05-27)\
 *Initial support for model compression in GGUF using [llama.cpp](https://github.com/ggerganov/llama.cpp).*
@@ -148,4 +151,4 @@ Check out the [JLA - Compatibility Checker](https://joinup.ec.europa.eu/collecti
 - **[zstandard](https://pypi.org/project/zstandard/)**\
   BSD License (BSD) ([LICENSE](https://github.com/indygreg/python-zstandard/blob/main/LICENSE))
 
-Last updated: 2024-12-16
+Last updated: 2024-12-29
