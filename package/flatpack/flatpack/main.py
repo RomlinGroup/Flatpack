@@ -861,7 +861,7 @@ def create_temp_sh(build_dir, custom_json_path: Path, temp_sh_path: Path, use_eu
                     output=""
                     
                     while IFS= read -r line <&4; do
-                        if [[ ! "$line" == *"EXECUTION_COMPLETE"* && ! "$line" == *"READY_FOR_INPUT"* ]]; then
+                        if [[ ! "$line" == *"EXECUTION_COMPLETE"* && ! "$line" == *"READY_FOR_INPUT"* ]]; then 
                             echo "$line"
                         fi
                         
@@ -1147,17 +1147,17 @@ def initialize_fastapi_app(secret_key):
     SessionMiddleware = lazy_import('starlette.middleware.sessions', callable_name='SessionMiddleware')
     CORSMiddleware = lazy_import('fastapi.middleware.cors', callable_name='CORSMiddleware')
 
-    app = FastAPI(openapi_url=None)
+    fastapi_app = FastAPI(openapi_url=None)
 
-    app.add_middleware(SessionMiddleware, secret_key=secret_key)
-    app.state.signer = TimestampSigner(secret_key)
+    fastapi_app.add_middleware(SessionMiddleware, secret_key=secret_key)
+    fastapi_app.state.signer = TimestampSigner(secret_key)
 
     uvicorn_logger = logging.getLogger("uvicorn.access")
     uvicorn_logger.addFilter(EndpointFilter())
 
     origins = ["*"]
 
-    app.add_middleware(
+    fastapi_app.add_middleware(
         CORSMiddleware,
         allow_origins=origins,
         allow_credentials=True,
@@ -1165,9 +1165,9 @@ def initialize_fastapi_app(secret_key):
         allow_headers=["*"]
     )
 
-    app = setup_routes(app)
+    setup_routes(fastapi_app)
 
-    return app
+    return fastapi_app
 
 
 def is_user_logged_in(session_id: str) -> bool:
@@ -3159,16 +3159,6 @@ def fpk_cli_handle_add_url(url, vm):
             logger.error("URL is not accessible: '%s'. HTTP Status Code: %d", url, response.status_code)
     except requests.RequestException as e:
         logger.error("Failed to access URL: '%s'. Error: %s", url, e)
-
-
-def get_process_tree(pid: int) -> set[int]:
-    """Recursively get all child process IDs in the process tree."""
-    try:
-        process = psutil.Process(pid)
-        children = process.children(recursive=True)
-        return {pid} | {child.pid for child in children}
-    except (psutil.NoSuchProcess, psutil.AccessDenied):
-        return set()
 
 
 def get_python_processes() -> List[Dict[str, any]]:
