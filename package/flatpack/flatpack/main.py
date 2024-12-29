@@ -1408,6 +1408,7 @@ async def run_subprocess(command, log_file):
 
         if process.poll() is None:
             process.terminate()
+
             try:
                 process.wait(timeout=5)
             except subprocess.TimeoutExpired:
