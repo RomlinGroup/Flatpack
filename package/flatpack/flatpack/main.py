@@ -643,15 +643,19 @@ def create_temp_sh(build_dir, custom_json_path: Path, temp_sh_path: Path, use_eu
 
                         GLOBAL_NAMESPACE["input"] = my_input
                         exec(code, GLOBAL_NAMESPACE)
+                        
                         sys.stdout.flush()
                         sys.stderr.flush()
                         sys.stdout = old_stdout
                         sys.stdin = old_stdin
+                        
                         print("EXECUTION_COMPLETE")
                     except Exception as e:
                         sys.stdout = old_stdout
                         sys.stdin = old_stdin
+                        
                         print(f"Error executing code: {e}", file=sys.stderr)
+                        
                         traceback.print_exc()
                         sys.exit(1)
 
