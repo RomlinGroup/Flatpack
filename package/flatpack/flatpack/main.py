@@ -624,8 +624,8 @@ def create_temp_sh(build_dir, custom_json_path: Path, temp_sh_path: Path, use_eu
                     return open(input_pipe_path, 'r')
 
                 def execute_code(code):
-                    print("Received code block:")
-                    print(code)
+                    # print("Received code block:")
+                    # print(code)
                     
                     try:
                         old_stdout = sys.stdout
@@ -858,12 +858,17 @@ def create_temp_sh(build_dir, custom_json_path: Path, temp_sh_path: Path, use_eu
                 function send_code_to_python_and_wait() {
                     cat >&3
                     echo '__END_CODE_BLOCK__' >&3
-
                     output=""
+                    
                     while IFS= read -r line <&4; do
+                        if [[ ! "$line" == *"EXECUTION_COMPLETE"* && ! "$line" == *"READY_FOR_INPUT"* ]]; then
+                            echo "$line"
+                        fi
+                        
                         if [[ -z "$line" ]]; then
                             continue
                         fi
+                        
                         output+="$line"$'\\n'
 
                         if [[ "$output" == *"READY_FOR_INPUT"* ]]; then
