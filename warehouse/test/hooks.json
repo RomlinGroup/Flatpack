@@ -5,7 +5,7 @@
       "hook_name": "hook_python_test",
       "hook_placement": "before",
       "hook_script": "hook_python_test = \"Hello, World!\"",
-      "hook_type": "bash",
+      "hook_type": "python",
       "show_on_frontpage": false,
       "created_at": "2024-12-30 12:34:28"
     },
