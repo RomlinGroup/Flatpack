@@ -119,28 +119,44 @@ def set_file_limits():
 
 APIKeyCookie = lazy_import('fastapi.security', callable_name='APIKeyCookie')
 BackgroundTasks = lazy_import('fastapi', callable_name='BackgroundTasks')
-BaseHTTPMiddleware = lazy_import('starlette.middleware.base',
-                                 callable_name='BaseHTTPMiddleware')
+BaseHTTPMiddleware = lazy_import(
+    'starlette.middleware.base', callable_name='BaseHTTPMiddleware'
+)
 BeautifulSoup = lazy_import('bs4', callable_name='BeautifulSoup')
 Cookie = lazy_import('fastapi', callable_name='Cookie')
+CORSMiddleware = lazy_import(
+    'fastapi.middleware.cors', callable_name='CORSMiddleware'
+)
 Depends = lazy_import('fastapi', callable_name='Depends')
-FileResponse = lazy_import('fastapi.responses', callable_name='FileResponse')
+FastAPI = lazy_import('fastapi', callable_name='FastAPI')
+FileResponse = lazy_import(
+    'fastapi.responses', callable_name='FileResponse'
+)
 Form = lazy_import('fastapi', callable_name='Form')
 Header = lazy_import('fastapi', callable_name='Header')
-HTMLResponse = lazy_import('fastapi.responses', callable_name='HTMLResponse')
+HTMLResponse = lazy_import(
+    'fastapi.responses', callable_name='HTMLResponse'
+)
 HTTPException = lazy_import('fastapi', callable_name='HTTPException')
-JSONResponse = lazy_import('fastapi.responses', callable_name='JSONResponse')
+JSONResponse = lazy_import(
+    'fastapi.responses', callable_name='JSONResponse'
+)
 NgrokError = lazy_import('ngrok.exceptions', callable_name='NgrokError')
 PrettyTable = lazy_import('prettytable', callable_name='PrettyTable')
-RedirectResponse = lazy_import('fastapi.responses',
-                               callable_name='RedirectResponse')
+RedirectResponse = lazy_import(
+    'fastapi.responses', callable_name='RedirectResponse'
+)
 Request = lazy_import('fastapi', callable_name='Request')
 Response = lazy_import('fastapi.responses', callable_name='Response')
+SessionMiddleware = lazy_import(
+    'starlette.middleware.sessions', callable_name='SessionMiddleware'
+)
 StaticFiles = lazy_import('fastapi.staticfiles', callable_name='StaticFiles')
 croniter = lazy_import('croniter', callable_name='croniter')
 ngrok = lazy_import('ngrok')
-snapshot_download = lazy_import('huggingface_hub',
-                                callable_name='snapshot_download')
+snapshot_download = lazy_import(
+    'huggingface_hub', callable_name='snapshot_download'
+)
 warnings = lazy_import('warnings')
 zstd = lazy_import('zstandard')
 
@@ -1254,8 +1270,10 @@ async def csrf_protect(request: Request):
         raise HTTPException(status_code=403, detail="CSRF token missing")
 
     try:
-        unsigned_token = request.app.state.signer.unsign(csrf_token_cookie,
-                                                         max_age=3600)
+        unsigned_token = request.app.state.signer.unsign(
+            csrf_token_cookie,
+            max_age=3600
+        )
         timestamp, token = unsigned_token.decode().split(':')
 
         if not secrets.compare_digest(token, csrf_token_header):
@@ -1268,16 +1286,22 @@ async def csrf_protect(request: Request):
 
 def decompress_data(input_path, output_path, allowed_dir=None):
     try:
-        abs_input_path = validate_file_path(input_path,
-                                            allowed_dir=allowed_dir)
-        abs_output_path = validate_file_path(output_path, is_input=False,
-                                             allowed_dir=allowed_dir)
+        abs_input_path = validate_file_path(
+            input_path,
+            allowed_dir=allowed_dir
+        )
+
+        abs_output_path = validate_file_path(
+            output_path, is_input=False,
+            allowed_dir=allowed_dir
+        )
 
         with open(abs_input_path, 'rb') as f:
             compressed_data = f.read()
 
-        decompressed_data = lazy_import('zstandard').decompress(
-            compressed_data)
+        decompressed_data = zstd.decompress(
+            compressed_data
+        )
 
         try:
             with tempfile.NamedTemporaryFile() as tmp_file:
@@ -1432,12 +1456,6 @@ def get_token() -> Optional[str]:
 
 def initialize_fastapi_app(secret_key):
     """Initialize and configure a FastAPI application."""
-    FastAPI = lazy_import('fastapi', callable_name='FastAPI')
-    SessionMiddleware = lazy_import('starlette.middleware.sessions',
-                                    callable_name='SessionMiddleware')
-    CORSMiddleware = lazy_import('fastapi.middleware.cors',
-                                 callable_name='CORSMiddleware')
-
     fastapi_app = FastAPI(openapi_url=None)
 
     fastapi_app.add_middleware(SessionMiddleware, secret_key=secret_key)
@@ -1815,18 +1833,17 @@ def shutdown_server():
 
 
 def strip_html(script):
-    MarkupResemblesLocatorWarning = lazy_import('bs4',
-                                                callable_name='MarkupResemblesLocatorWarning')
+    MarkupResemblesLocatorWarning = lazy_import(
+        'bs4',
+        callable_name='MarkupResemblesLocatorWarning'
+    )
     warnings.filterwarnings("ignore", category=MarkupResemblesLocatorWarning)
     soup = BeautifulSoup(script, "html.parser")
     return soup.get_text()
 
 
 def sync_connections_from_file():
-    """
-    Load connections from connections.json file and sync them to the database.
-    Similar to how hooks are synced on startup.
-    """
+    """Load connections from connections.json file and sync them to the database."""
     global flatpack_directory
 
     try:
@@ -1868,10 +1885,7 @@ def sync_connections_from_file():
 
 
 def sync_sources_from_file():
-    """
-    Load sources from sources.json file and sync them to the database.
-    Similar to how hooks and connections are synced on startup.
-    """
+    """Load sources from sources.json file and sync them to the database."""
     global flatpack_directory
 
     try:
@@ -4223,8 +4237,9 @@ def setup_routes(fastapi_app):
         csrf_token = secrets.token_urlsafe(32)
         timestamp = str(int(time.time()))
         token_with_timestamp = f"{timestamp}:{csrf_token}"
-        signed_token = request.fastapi_app.state.signer.sign(
-            token_with_timestamp).decode()
+        signed_token = request.app.state.signer.sign(
+            token_with_timestamp
+        ).decode()
 
         response.set_cookie(
             key="csrf_token",
