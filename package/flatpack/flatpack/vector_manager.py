@@ -334,8 +334,6 @@ class VectorManager:
                     self.metadata.update(batch_entries)
 
                     self._save_metadata_and_embeddings()
-
-            del batch_embeddings, batch_ids, batch_entries
             gc.collect()
 
     def search_vectors(self, query: str, top_k: int = 10,
@@ -443,8 +441,6 @@ class VectorManager:
             chunk_text = ' '.join(current_chunk)
             if len(chunk_text.split()) >= 10:
                 self.add_texts([chunk_text], source_reference)
-
-        del doc
         gc.collect()
 
     def add_pdf(self, pdf_path: str):
@@ -490,7 +486,6 @@ class VectorManager:
                             text = soup.get_text(separator=' ', strip=True)
                             self._process_text_and_add(text, url)
                             content = b''
-                            del soup, text
                             gc.collect()
 
                 if content:
