@@ -1,7 +1,7 @@
 {
     "hooks": [
         {
-            "id": 4,
+            "id": 3,
             "hook_name": "hook_python_test",
             "hook_placement": "before",
             "hook_script": "hook_python_test = \"Hello, World!\"",
@@ -10,7 +10,7 @@
             "created_at": "2024-12-30 12:43:18"
         },
         {
-            "id": 3,
+            "id": 2,
             "hook_name": "hook_bash_test",
             "hook_placement": "before",
             "hook_script": "hook_bash_test=\"Hello, World!\"",
@@ -19,7 +19,7 @@
             "created_at": "2024-12-30 12:41:28"
         },
         {
-            "id": 2,
+            "id": 1,
             "hook_name": "hello_world",
             "hook_placement": "before",
             "hook_script": "echo \"Hello, World!\"",
