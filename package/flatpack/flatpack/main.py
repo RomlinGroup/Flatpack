@@ -2999,7 +2999,7 @@ def fpk_unbox(
                 logger.error("Invalid .fpk file path: %s", fpk_file)
                 return False
 
-            if not fpk_file.suffix == '.fpk':
+            if fpk_file.suffix != '.fpk':
                 logger.error("File must have .fpk extension: %s", fpk_file)
                 return False
 
