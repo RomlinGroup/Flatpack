@@ -6042,14 +6042,14 @@ def fpk_cli_handle_run(args, session):
                 if target_path.exists():
                     os.unlink(target_path)
                     console.print(
-                        f"[bold yellow]Removed existing symlink at '{target_path}'[/bold yellow]"
+                        f"[bold yellow]Removed existing symlink[/bold yellow]"
                     )
 
                     console.print("")
 
                 os.symlink(source_path, target_path)
                 console.print(
-                    f"[bold green]Created symlink from '{source_path}' to '{target_path}'[/bold green]"
+                    f"[bold green]Created symlink[/bold green]"
                 )
 
                 console.print("")
