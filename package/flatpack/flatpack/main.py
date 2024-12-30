@@ -1601,7 +1601,7 @@ async def run_subprocess(command, log_file):
                     logger.error("Process health check failed")
                     break
 
-                r, e = select.select([sys.stdin, master_fd], [], [], 0.1)
+                r, _, _ = select.select([sys.stdin, master_fd], [], [], 0.1)
 
                 for fd in r:
                     if fd == sys.stdin:
