@@ -1,0 +1,12 @@
+{
+  "hooks": [
+    {
+      "id": 1,
+      "hook_name": "hello_world",
+      "hook_placement": "before",
+      "hook_script": "echo \"Hello, World!\"",
+      "hook_type": "bash",
+      "created_at": "1970-01-01 00:00:00"
+    }
+  ]
+}

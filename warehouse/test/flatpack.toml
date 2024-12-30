@@ -4,7 +4,7 @@
 version = "0.0.1"
 
 [environment]
-model_name = "llama-cpp"
+model_name = "test"
 python_version = "3.12"
 
 [[port]]
@@ -45,15 +45,15 @@ tqdm = "4.67.1"
 # ]
 
 [[file]]
-from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/llama-cpp/custom.json"
+from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/test/custom.json"
 to_destination = "custom.json"
 
 [[file]]
-from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/llama-cpp/build.sh"
+from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/test/build.sh"
 to_destination = "build.sh"
 
 [[file]]
-from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/llama-cpp/device.sh"
+from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/test/device.sh"
 to_destination = "device.sh"
 
 [[run]]
