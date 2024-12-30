@@ -5796,9 +5796,8 @@ def fpk_cli_handle_run(args, session):
                 style="bold red"
             )
             return
-        else:
-            console.print("")
-            console.print("Please answer YES or NO.", style="bold yellow")
+        console.print("")
+        console.print("Please answer YES or NO.", style="bold yellow")
 
     directory = Path(args.input).resolve()
     flatpack_directory = directory
@@ -5861,9 +5860,8 @@ def fpk_cli_handle_run(args, session):
                 console.print("")
                 console.print("[bold red]Sharing aborted. Exiting.[/bold red]")
                 return
-            else:
-                console.print("")
-                console.print("[bold red]Please answer YES or NO.[/bold red]")
+            console.print("")
+            console.print("[bold red]Please answer YES or NO.[/bold red]")
 
     secret_key = get_secret_key()
     logger.info("[CSRF] New secret key generated for this session.")
