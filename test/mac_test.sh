@@ -46,22 +46,22 @@ else
   echo_failure "flatpack list execution"
 fi
 
-echo_stage "Testing flatpack unbox llama-cpp..."
-echo "YES" | flatpack unbox llama-cpp
-echo "flatpack unbox llama-cpp executed successfully."
+echo_stage "Testing flatpack unbox test..."
+echo "YES" | flatpack unbox test
+echo "flatpack unbox test executed successfully."
 
-echo_stage "Checking for llama-cpp folder and build..."
-if [[ -d "llama-cpp" && -d "llama-cpp/build" && $(ls -A "llama-cpp/build") ]]; then
-  echo "llama-cpp folder and non-empty build directory exist."
+echo_stage "Checking for test folder and build..."
+if [[ -d "test" && -d "test/build" && $(ls -A "test/build") ]]; then
+  echo "test folder and non-empty build directory exist."
 else
-  echo_failure "llama-cpp folder or build directory not found or empty"
+  echo_failure "test folder or build directory not found or empty"
 fi
 
-# echo_stage "Deleting llama-cpp (if it exists)..."
-# if flatpack delete llama-cpp &>/dev/null; then
-#   echo "Deleted llama-cpp."
+# echo_stage "Deleting test (if it exists)..."
+# if flatpack delete test &>/dev/null; then
+#   echo "Deleted test."
 # else
-#   echo "llama-cpp not found, skipping delete..."
+#   echo "test not found, skipping delete..."
 # fi
 
 echo "All stages completed successfully."
