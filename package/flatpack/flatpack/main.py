@@ -22,7 +22,7 @@ _cache_lock = threading.RLock()
 _runtime_cache = {}
 
 if not IMPORT_CACHE_FILE.exists():
-    ascii_art = dedent(f"""\
+    ascii_art = dedent("""\
          _____ __    _____ _____ _____ _____ _____ _____ 
         |   __|  |  |  _  |_   _|  _  |  _  |     |  |  |
         |   __|  |__|     | | | |   __|     |   --|    -|
@@ -980,18 +980,18 @@ def create_temp_sh(
                     import signal
                     import sys
                     import traceback
-    
+
                     GLOBAL_NAMESPACE = {}
-    
+
                     def setup_input_pipe():
                         script_dir = os.path.dirname(os.path.abspath(__file__))
                         input_pipe_path = os.path.join(script_dir, "python_input")
-                        
+
                         if not os.path.exists(input_pipe_path):
                             os.mkfifo(input_pipe_path)
-                        
+
                         return open(input_pipe_path, 'r')
-    
+
                     def execute_code(code):
                         try:
                             old_stdout = sys.stdout
@@ -999,66 +999,66 @@ def create_temp_sh(
                             old_stdin = sys.stdin
                             sys.stdin = sys.__stdin__
                             os.setpgrp()
-    
+
                             def my_input(prompt=""):
                                 print("READY_FOR_INPUT")
                                 sys.stdout.flush()
                                 print(prompt, end="", flush=True)
                                 line = input_pipe.readline().strip()
                                 return line
-    
+
                             GLOBAL_NAMESPACE["input"] = my_input
                             exec(code, GLOBAL_NAMESPACE)
-                            
+
                             sys.stdout.flush()
                             sys.stderr.flush()
                             sys.stdout = old_stdout
                             sys.stdin = old_stdin
-                            
+
                             print("EXECUTION_COMPLETE")
                         except Exception as e:
                             sys.stdout = old_stdout
                             sys.stdin = old_stdin
-                            
+
                             print(f"Error executing code: {e}", file=sys.stderr)
-                            
+
                             traceback.print_exc()
                             sys.exit(1)
-    
+
                     def signal_handler(signum, frame):
                         print(f"Python executor received signal {signum}. Exiting.")
                         sys.exit(1)
-    
+
                     if __name__ == "__main__":
                         signal.signal(signal.SIGTERM, signal_handler)
                         signal.signal(signal.SIGINT, signal_handler)
-    
+
                         input_pipe = setup_input_pipe()
                         selector = selectors.DefaultSelector()
                         selector.register(sys.stdin, selectors.EVENT_READ, "code")
                         selector.register(input_pipe, selectors.EVENT_READ, "input")
-    
+
                         while True:
                             code_block = []
-                            
+
                             while True:
                                 events = selector.select()
-                                
+
                                 for event, mask in events:
                                     stream = event.fileobj
                                     stream_type = event.data
-    
+
                                     line = stream.readline()
-                                    
+
                                     if not line:
                                         continue
-    
+
                                     if stream_type == "code":
                                         if line.strip() == "__EXIT_PYTHON_EXECUTOR__":
                                             print("Received exit signal. Cleaning up...")
                                             sys.stdout.flush()
                                             sys.exit(0)
-                                        
+
                                         if line.strip() == "__END_CODE_BLOCK__":
                                             if code_block:
                                                 execute_code(''.join(code_block))
@@ -1070,7 +1070,7 @@ def create_temp_sh(
                                     elif stream_type == "input":
                                         if "input" in GLOBAL_NAMESPACE:
                                             input_line = line.strip()
-                                            
+
                                             try:
                                                 GLOBAL_NAMESPACE["input"](input_line)
                                             except Exception as e:
@@ -1201,12 +1201,12 @@ def create_temp_sh(
                 rm -f "$SCRIPT_DIR/python_stdin" "$SCRIPT_DIR/python_stdout" "$SCRIPT_DIR/python_input"
                 mkfifo -m 666 "$SCRIPT_DIR/python_stdin" "$SCRIPT_DIR/python_stdout" "$SCRIPT_DIR/python_input"
                 echo "Pipes created."
-                
+
                 echo "Starting Python executor..."
                 "$VENV_PYTHON" -u "$SCRIPT_DIR/python_executor.py" < "$SCRIPT_DIR/python_stdin" > "$SCRIPT_DIR/python_stdout" 2>&1 &
                 PYTHON_EXECUTOR_PID=$!
                 echo "Python executor started with PID: $PYTHON_EXECUTOR_PID"
-                
+
                 exec 3> "$SCRIPT_DIR/python_stdin"
                 exec 4< "$SCRIPT_DIR/python_stdout"
                 exec 5> "$SCRIPT_DIR/python_input"
@@ -1230,11 +1230,11 @@ def create_temp_sh(
                         if [[ ! "$line" == *"EXECUTION_COMPLETE"* ]]; then
                             echo "$line"
                         fi
-                        
+
                         if [[ -z "$line" ]]; then
                             continue
                         fi
-                        
+
                         output+="$line"$'\\n'
 
                         if [[ "$output" == *"READY_FOR_INPUT"* ]]; then
@@ -2999,7 +2999,7 @@ def fpk_unbox(
                 logger.error("Invalid .fpk file path: %s", fpk_file)
                 return False
 
-            if not fpk_file.suffix == '.fpk':
+            if fpk_file.suffix != '.fpk':
                 logger.error("File must have .fpk extension: %s", fpk_file)
                 return False
 
@@ -4127,7 +4127,7 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
                         return
                 else:
                     console.print(
-                        f"[bold blue]INFO:[/bold blue] llama.cpp directory already exists. Skipping setup."
+                        "[bold blue]INFO:[/bold blue] llama.cpp directory already exists. Skipping setup."
                     )
 
             ready_file = os.path.join(llama_cpp_dir, "ready")
@@ -5275,7 +5275,6 @@ def setup_routes(fastapi_app):
             token: str = Depends(authenticate_token)
     ):
         """Save a file to the flatpack build directory."""
-
         if not flatpack_directory:
             raise HTTPException(
                 status_code=500,
@@ -5796,9 +5795,8 @@ def fpk_cli_handle_run(args, session):
                 style="bold red"
             )
             return
-        else:
-            console.print("")
-            console.print("Please answer YES or NO.", style="bold yellow")
+        console.print("")
+        console.print("Please answer YES or NO.", style="bold yellow")
 
     directory = Path(args.input).resolve()
     flatpack_directory = directory
@@ -5861,9 +5859,8 @@ def fpk_cli_handle_run(args, session):
                 console.print("")
                 console.print("[bold red]Sharing aborted. Exiting.[/bold red]")
                 return
-            else:
-                console.print("")
-                console.print("[bold red]Please answer YES or NO.[/bold red]")
+            console.print("")
+            console.print("[bold red]Please answer YES or NO.[/bold red]")
 
     secret_key = get_secret_key()
     logger.info("[CSRF] New secret key generated for this session.")
