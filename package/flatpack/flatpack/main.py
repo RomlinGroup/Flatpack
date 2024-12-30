@@ -4799,7 +4799,7 @@ def setup_routes(fastapi_app):
 
 
 def fpk_cli_handle_run(args, session):
-    global abort_requested, app, build_in_progress, console, flatpack_directory, nextjs_process, server
+    global abort_requested, build_in_progress, console, flatpack_directory
 
     if not args.input:
         console.print("Please specify a flatpack for the run command.", style="bold red")
