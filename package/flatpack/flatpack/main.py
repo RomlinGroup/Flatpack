@@ -90,11 +90,12 @@ if not IMPORT_CACHE_FILE.exists():
 
 def lazy_import(module_name, package=None, callable_name=None):
     """Dynamically import module or callable with thread-safe runtime caching."""
+    global _cache_lock, _runtime_cache
     cache_key = (module_name, package, callable_name)
 
-    with cache_lock:
-        if cache_key in runtime_cache:
-            return runtime_cache[cache_key]
+    with _cache_lock:
+        if cache_key in _runtime_cache:
+            return _runtime_cache[cache_key]
 
         try:
             module = importlib.import_module(module_name, package)
@@ -105,11 +106,11 @@ def lazy_import(module_name, package=None, callable_name=None):
                 else module
             )
 
-            runtime_cache[cache_key] = result
+            _runtime_cache[cache_key] = result
             return result
 
         except (ImportError, AttributeError):
-            runtime_cache[cache_key] = None
+            _runtime_cache[cache_key] = None
             return None
 
 
