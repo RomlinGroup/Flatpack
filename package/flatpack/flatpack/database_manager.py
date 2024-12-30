@@ -24,8 +24,7 @@ class DatabaseManager:
                 affected_rows = cursor.rowcount
                 conn.commit()
                 logger.info(
-                    "Query executed successfully. Affected rows: %s",
-                    affected_rows
+                    "Query executed successfully. Affected rows: %s", affected_rows
                 )
         except Error as e:
             logger.error("Database error in _execute_query: %s", e)
@@ -116,7 +115,7 @@ class DatabaseManager:
                 source_details TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
-            """
+            """,
         ]
 
         for query in queries:
@@ -126,8 +125,7 @@ class DatabaseManager:
         conn.close()
 
     # Comment operations
-    def add_comment(self, block_id: str, selected_text: str,
-                    comment: str) -> int:
+    def add_comment(self, block_id: str, selected_text: str, comment: str) -> int:
         query = """
         INSERT INTO flatpack_comments (block_id, selected_text, comment)
         VALUES (?, ?, ?)
@@ -141,13 +139,13 @@ class DatabaseManager:
 
         query = "DELETE FROM flatpack_comments WHERE id = ?"
         try:
-            self._execute_query(query, (
-                comment_id,))  # Note the comma to make it a tuple
+            self._execute_query(
+                query, (comment_id,)
+            )  # Note the comma to make it a tuple
             logger.info("Comment with ID %s deleted successfully", comment_id)
             return True
         except Exception as e:
-            logger.error("Error deleting comment with ID %s: %s", comment_id,
-                         str(e))
+            logger.error("Error deleting comment with ID %s: %s", comment_id, str(e))
             raise
 
     def get_all_comments(self) -> List[Dict[str, Any]]:
@@ -163,22 +161,28 @@ class DatabaseManager:
                 "block_id": row[1],
                 "selected_text": row[2],
                 "comment": row[3],
-                "created_at": row[4]
+                "created_at": row[4],
             }
             for row in results
         ]
 
     # Hook operations
-    def add_hook(self, hook_name: str, hook_placement: str, hook_script: str,
-                 hook_type: str,
-                 show_on_frontpage: bool = False) -> int:
+    def add_hook(
+        self,
+        hook_name: str,
+        hook_placement: str,
+        hook_script: str,
+        hook_type: str,
+        show_on_frontpage: bool = False,
+    ) -> int:
         query = """
         INSERT INTO flatpack_hooks (hook_name, hook_placement, hook_script, hook_type, show_on_frontpage)
         VALUES (?, ?, ?, ?, ?)
         """
-        self._execute_query(query, (
-            hook_name, hook_placement, hook_script, hook_type,
-            int(show_on_frontpage)))
+        self._execute_query(
+            query,
+            (hook_name, hook_placement, hook_script, hook_type, int(show_on_frontpage)),
+        )
         return self._fetch_one("SELECT last_insert_rowid()")[0]
 
     def delete_hook(self, hook_id: int) -> bool:
@@ -200,7 +204,7 @@ class DatabaseManager:
                 logger.error("Hook with ID %s not found", hook_id)
                 return False
 
-            base_hook_name = hook_name.split('-')[0]
+            base_hook_name = hook_name.split("-")[0]
             self.delete_mappings_by_target(base_hook_name)
 
             query = "DELETE FROM flatpack_hooks WHERE id = ?"
@@ -213,20 +217,18 @@ class DatabaseManager:
                         "source_id": mapping["source_id"],
                         "target_id": mapping["target_id"],
                         "source_type": mapping["source_type"],
-                        "target_type": mapping["target_type"]
+                        "target_type": mapping["target_type"],
                     }
-
                     for mapping in remaining_mappings
                 ]
             }
 
             connections_file = os.path.join(
-                os.path.dirname(self.db_path),
-                'connections.json'
+                os.path.dirname(self.db_path), "connections.json"
             )
             os.makedirs(os.path.dirname(connections_file), exist_ok=True)
 
-            with open(connections_file, 'w') as f:
+            with open(connections_file, "w") as f:
                 json.dump(connections_data, f, indent=4)
 
             remaining_hooks = self.get_all_hooks()
@@ -239,24 +241,21 @@ class DatabaseManager:
                         "hook_placement": hook["hook_placement"],
                         "hook_script": hook["hook_script"],
                         "hook_type": hook["hook_type"],
-                        "show_on_frontpage": hook["show_on_frontpage"]
+                        "show_on_frontpage": hook["show_on_frontpage"],
                     }
                     for hook in remaining_hooks
                 ]
             }
 
-            hooks_file = os.path.join(
-                os.path.dirname(self.db_path),
-                'hooks.json'
-            )
+            hooks_file = os.path.join(os.path.dirname(self.db_path), "hooks.json")
             os.makedirs(os.path.dirname(hooks_file), exist_ok=True)
 
-            with open(hooks_file, 'w') as f:
+            with open(hooks_file, "w") as f:
                 json.dump(hooks_data, f, indent=4)
 
             logger.info(
                 "Hook with ID %s, related connections, and hooks.json updated successfully",
-                hook_id
+                hook_id,
             )
             return True
 
@@ -267,7 +266,7 @@ class DatabaseManager:
     def delete_mappings_by_target(self, target_name: str) -> bool:
         logger.info(
             "Attempting to delete source-hook mappings with target name: %s",
-            target_name
+            target_name,
         )
         logger.info("Type of target_name: %s", type(target_name))
 
@@ -277,13 +276,14 @@ class DatabaseManager:
             self._execute_query(query, (f"{target_name}-%",))
             logger.info(
                 "Source-hook mappings with target name %s deleted successfully",
-                target_name
+                target_name,
             )
             return True
         except Exception as e:
             logger.error(
                 "Error deleting source-hook mappings with target name %s: %s",
-                target_name, str(e)
+                target_name,
+                str(e),
             )
             raise
 
@@ -302,7 +302,7 @@ class DatabaseManager:
                 "hook_script": row[3],
                 "hook_type": row[4],
                 "show_on_frontpage": bool(row[5]),
-                "created_at": row[6]
+                "created_at": row[6],
             }
             for row in results
         ]
@@ -322,7 +322,7 @@ class DatabaseManager:
                 "hook_script": result[3],
                 "hook_type": result[4],
                 "show_on_frontpage": bool(result[5]),
-                "created_at": result[6]
+                "created_at": result[6],
             }
         return None
 
@@ -339,22 +339,31 @@ class DatabaseManager:
         return result[0] > 0 if result else False
 
     def update_hook(
-            self,
-            hook_id: int,
-            hook_name: str,
-            hook_placement: str,
-            hook_script: str,
-            hook_type: str,
-            show_on_frontpage: bool = False) -> bool:
+        self,
+        hook_id: int,
+        hook_name: str,
+        hook_placement: str,
+        hook_script: str,
+        hook_type: str,
+        show_on_frontpage: bool = False,
+    ) -> bool:
         query = """
         UPDATE flatpack_hooks
         SET hook_name = ?, hook_placement = ?, hook_script = ?, hook_type = ?, show_on_frontpage = ?
         WHERE id = ?
         """
         try:
-            self._execute_query(query,
-                                (hook_name, hook_placement, hook_script,
-                                 hook_type, int(show_on_frontpage), hook_id))
+            self._execute_query(
+                query,
+                (
+                    hook_name,
+                    hook_placement,
+                    hook_script,
+                    hook_type,
+                    int(show_on_frontpage),
+                    hook_id,
+                ),
+            )
             return True
         except Exception as e:
             logger.error("Error updating hook with ID %s: %s", hook_id, str(e))
@@ -381,10 +390,8 @@ class DatabaseManager:
 
     # Schedule operations
     def add_schedule(
-            self,
-            schedule_type: str,
-            pattern: Optional[str],
-            datetimes: Optional[List[str]]) -> int:
+        self, schedule_type: str, pattern: Optional[str], datetimes: Optional[List[str]]
+    ) -> int:
         query = """
         INSERT INTO flatpack_schedule (type, pattern, datetimes)
         VALUES (?, ?, ?)
@@ -401,41 +408,33 @@ class DatabaseManager:
 
         try:
             self._execute_query(query, (schedule_id,))
-            logger.info(
-                "Schedule with ID %s deleted successfully",
-                schedule_id
-            )
+            logger.info("Schedule with ID %s deleted successfully", schedule_id)
             return True
         except Exception as e:
-            logger.error(
-                "Error deleting schedule with ID %s: %s", schedule_id,
-                str(e)
-            )
+            logger.error("Error deleting schedule with ID %s: %s", schedule_id, str(e))
             raise
 
-    def delete_schedule_datetime(
-            self, schedule_id: int,
-            datetime_index: int) -> bool:
+    def delete_schedule_datetime(self, schedule_id: int, datetime_index: int) -> bool:
         logger.info(
             "Attempting to delete datetime from schedule. Schedule ID: %s, Datetime index: %s",
             schedule_id,
-            datetime_index
+            datetime_index,
         )
         logger.info(
             "Type of schedule_id: %s, Type of datetime_index: %s",
             type(schedule_id),
-            type(datetime_index)
+            type(datetime_index),
         )
 
         try:
             schedule = self._fetch_one(
                 "SELECT type, datetimes FROM flatpack_schedule WHERE id = ?",
-                (schedule_id,)
+                (schedule_id,),
             )
-            if not schedule or schedule[0] != 'manual':
+            if not schedule or schedule[0] != "manual":
                 logger.warning(
                     "Schedule not found or not of type 'manual'. Schedule ID: %s",
-                    schedule_id
+                    schedule_id,
                 )
                 return False
 
@@ -443,19 +442,15 @@ class DatabaseManager:
             if 0 <= datetime_index < len(datetimes):
                 del datetimes[datetime_index]
                 query = "UPDATE flatpack_schedule SET datetimes = ? WHERE id = ?"
-                self._execute_query(
-                    query,
-                    (json.dumps(datetimes), schedule_id)
-                )
+                self._execute_query(query, (json.dumps(datetimes), schedule_id))
                 logger.info(
                     "Datetime at index %s deleted from schedule %s",
-                    datetime_index, schedule_id
+                    datetime_index,
+                    schedule_id,
                 )
                 return True
             logger.warning(
-                "Invalid datetime index %s for schedule %s",
-                datetime_index,
-                schedule_id
+                "Invalid datetime index %s for schedule %s", datetime_index, schedule_id
             )
             return False
         except Exception as e:
@@ -463,7 +458,7 @@ class DatabaseManager:
                 "Error deleting datetime from schedule. Schedule ID: %s, Datetime index: %s. Error: %s",
                 schedule_id,
                 datetime_index,
-                str(e)
+                str(e),
             )
             raise
 
@@ -481,32 +476,27 @@ class DatabaseManager:
                 "pattern": row[2],
                 "datetimes": json.loads(row[3]) if row[3] else None,
                 "created_at": row[4],
-                "last_run": row[5]
+                "last_run": row[5],
             }
             for row in results
         ]
 
-    def update_schedule_last_run(
-            self,
-            schedule_id: int,
-            last_run: datetime) -> bool:
+    def update_schedule_last_run(self, schedule_id: int, last_run: datetime) -> bool:
         query = "UPDATE flatpack_schedule SET last_run = ? WHERE id = ?"
         self._execute_query(query, (last_run.isoformat(), schedule_id))
         return True
 
     # Source-hook mapping operations
     def add_source_hook_mapping(
-            self, source_id: str,
-            target_id: str,
-            source_type: str,
-            target_type: str) -> int:
+        self, source_id: str, target_id: str, source_type: str, target_type: str
+    ) -> int:
 
         logger.info(
             "Adding source-hook mapping: source_id=%s, target_id=%s, source_type=%s, target_type=%s",
             source_id,
             target_id,
             source_type,
-            target_type
+            target_type,
         )
 
         query = """
@@ -516,18 +506,10 @@ class DatabaseManager:
         """
 
         try:
-            self._execute_query(
-                query, (
-                    source_id,
-                    target_id,
-                    source_type,
-                    target_type
-                )
-            )
+            self._execute_query(query, (source_id, target_id, source_type, target_type))
             mapping_id = self._fetch_one("SELECT last_insert_rowid()")[0]
             logger.info(
-                "Successfully added/updated source-hook mapping with ID: %s",
-                mapping_id
+                "Successfully added/updated source-hook mapping with ID: %s", mapping_id
             )
             return mapping_id
         except Exception as e:
@@ -561,16 +543,12 @@ class DatabaseManager:
                     "target_id": row[2],
                     "source_type": row[3],
                     "target_type": row[4],
-                    "created_at": row[5]
+                    "created_at": row[5],
                 }
-
                 for row in results
             ]
 
-            logger.info(
-                "Successfully retrieved %d source-hook mappings",
-                len(mappings)
-            )
+            logger.info("Successfully retrieved %d source-hook mappings", len(mappings))
 
             return mappings
         except Exception as e:
@@ -586,32 +564,22 @@ class DatabaseManager:
         Returns:
             bool: True if deletion was successful, False otherwise.
         """
-        logger.info(
-            "Attempting to delete source-hook mapping with ID: %s",
-            mapping_id
-        )
+        logger.info("Attempting to delete source-hook mapping with ID: %s", mapping_id)
 
         query = "DELETE FROM flatpack_source_hook_mappings WHERE id = ?"
         try:
-            self._execute_query(
-                query,
-                (mapping_id,)
-            )
+            self._execute_query(query, (mapping_id,))
             logger.info(
-                "Successfully deleted source-hook mapping with ID: %s",
-                mapping_id
+                "Successfully deleted source-hook mapping with ID: %s", mapping_id
             )
             return True
         except Exception as e:
             logger.error(
-                "Error deleting source-hook mapping with ID %s: %s",
-                mapping_id,
-                e
+                "Error deleting source-hook mapping with ID %s: %s", mapping_id, e
             )
             return False
 
-    def get_source_hook_mapping(self, mapping_id: int) -> Optional[
-        Dict[str, Any]]:
+    def get_source_hook_mapping(self, mapping_id: int) -> Optional[Dict[str, Any]]:
         """Get a specific source-hook mapping by its ID.
 
         Args:
@@ -635,35 +603,29 @@ class DatabaseManager:
                     "target_id": result[2],
                     "source_type": result[3],
                     "target_type": result[4],
-                    "created_at": result[5]
+                    "created_at": result[5],
                 }
             return None
         except Exception as e:
             logger.error(
-                "Error retrieving source-hook mapping with ID %s: %s",
-                mapping_id,
-                e
+                "Error retrieving source-hook mapping with ID %s: %s", mapping_id, e
             )
             raise
 
     # Sources
     def add_source(
-            self,
-            source_name: str,
-            source_type: str,
-            source_details: Optional[Dict[str, Any]] = None) -> int:
+        self,
+        source_name: str,
+        source_type: str,
+        source_details: Optional[Dict[str, Any]] = None,
+    ) -> int:
         query = """
         INSERT INTO flatpack_sources (source_name, source_type, source_details)
         VALUES (?, ?, ?)
         """
-        source_details_json = json.dumps(
-            source_details
-        ) if source_details else None
+        source_details_json = json.dumps(source_details) if source_details else None
 
-        self._execute_query(
-            query,
-            (source_name, source_type, source_details_json)
-        )
+        self._execute_query(query, (source_name, source_type, source_details_json))
 
         source_id = self._fetch_one("SELECT last_insert_rowid()")[0]
 
@@ -684,9 +646,8 @@ class DatabaseManager:
                 "source_name": row[1],
                 "source_type": row[2],
                 "source_details": json.loads(row[3]) if row[3] else None,
-                "created_at": row[4]
+                "created_at": row[4],
             }
-
             for row in results
         ]
 
@@ -704,7 +665,7 @@ class DatabaseManager:
                 "source_name": result[1],
                 "source_type": result[2],
                 "source_details": json.loads(result[3]) if result[3] else None,
-                "created_at": result[4]
+                "created_at": result[4],
             }
         return None
 
@@ -719,11 +680,10 @@ class DatabaseManager:
                 return False
 
             source_name = source["source_name"].lower()
-            query_delete_mappings = "DELETE FROM flatpack_source_hook_mappings WHERE source_id = ?"
-            self._execute_query(
-                query_delete_mappings,
-                (source_name,)
+            query_delete_mappings = (
+                "DELETE FROM flatpack_source_hook_mappings WHERE source_id = ?"
             )
+            self._execute_query(query_delete_mappings, (source_name,))
 
             query_delete_source = "DELETE FROM flatpack_sources WHERE id = ?"
             self._execute_query(query_delete_source, (source_id,))
@@ -735,55 +695,48 @@ class DatabaseManager:
                         "source_id": mapping["source_id"],
                         "target_id": mapping["target_id"],
                         "source_type": mapping["source_type"],
-                        "target_type": mapping["target_type"]
+                        "target_type": mapping["target_type"],
                     }
-
                     for mapping in remaining_mappings
                 ]
             }
 
             connections_file = os.path.join(
-                os.path.dirname(self.db_path),
-                'connections.json'
+                os.path.dirname(self.db_path), "connections.json"
             )
 
             os.makedirs(os.path.dirname(connections_file), exist_ok=True)
 
-            with open(connections_file, 'w') as f:
+            with open(connections_file, "w") as f:
                 json.dump(connections_data, f, indent=4)
 
             self._sync_sources_to_file()
 
             logger.info(
                 "Source with ID %s, its mappings, and connections.json updated successfully",
-                source_id)
+                source_id,
+            )
             return True
         except Exception as e:
-            logger.error(
-                "Error deleting source with ID %s: %s",
-                source_id,
-                str(e)
-            )
+            logger.error("Error deleting source with ID %s: %s", source_id, str(e))
             return False
 
-    def update_source(self, source_id: int, source_name: str, source_type: str,
-                      source_details: Optional[Dict[str, Any]]) -> bool:
+    def update_source(
+        self,
+        source_id: int,
+        source_name: str,
+        source_type: str,
+        source_details: Optional[Dict[str, Any]],
+    ) -> bool:
         query = """
         UPDATE flatpack_sources
         SET source_name = ?, source_type = ?, source_details = ?
         WHERE id = ?
         """
-        source_details_json = json.dumps(
-            source_details
-        ) if source_details else None
+        source_details_json = json.dumps(source_details) if source_details else None
         try:
             self._execute_query(
-                query, (
-                    source_name,
-                    source_type,
-                    source_details_json,
-                    source_id
-                )
+                query, (source_name, source_type, source_details_json, source_id)
             )
             logger.info("Source with ID %s updated successfully", source_id)
 
@@ -791,11 +744,7 @@ class DatabaseManager:
 
             return True
         except Exception as e:
-            logger.error(
-                "Error updating source with ID %s: %s",
-                source_id,
-                str(e)
-            )
+            logger.error("Error updating source with ID %s: %s", source_id, str(e))
             return False
 
     def _sync_sources_to_file(self):
@@ -807,20 +756,17 @@ class DatabaseManager:
                     {
                         "source_name": source["source_name"],
                         "source_type": source["source_type"],
-                        "source_details": source["source_details"]
+                        "source_details": source["source_details"],
                     }
                     for source in sources
                 ]
             }
 
-            sources_file = os.path.join(
-                os.path.dirname(self.db_path),
-                'sources.json'
-            )
+            sources_file = os.path.join(os.path.dirname(self.db_path), "sources.json")
 
             os.makedirs(os.path.dirname(sources_file), exist_ok=True)
 
-            with open(sources_file, 'w') as f:
+            with open(sources_file, "w") as f:
                 json.dump(sources_data, f, indent=4)
 
             logger.info("sources.json updated successfully")

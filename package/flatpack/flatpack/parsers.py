@@ -28,18 +28,21 @@ def is_valid_path(base_path, user_path):
 
 def is_url(s):
     """Check if a string is a URL."""
-    return s.startswith('http://') or s.startswith('https://')
+    return s.startswith("http://") or s.startswith("https://")
 
 
 def check_command_availability(commands):
     """Generate bash snippets to check if each command in the provided list is available."""
     checks = [
-        dedent(f"""\
+        dedent(
+            f"""\
             if ! command -v {cmd} >/dev/null; then
                 echo "{cmd} not found. Please install {cmd}."
                 exit 1
             fi
-        """).strip() for cmd in commands
+        """
+        ).strip()
+        for cmd in commands
     ]
 
     return checks
@@ -70,7 +73,7 @@ def load_toml_config(file_path):
     if not is_valid_path(base_dir, file_path):
         raise ValueError(f"Invalid file path: {file_path}")
 
-    with open(file_path, 'r') as f:
+    with open(file_path, "r") as f:
         config = toml.load(f)
 
     if "environment" not in config:
@@ -87,7 +90,8 @@ def load_toml_config(file_path):
 
 def generate_venv_setup_script(env_name, build_prefix, python_version=None):
     python_cmd = f"python{python_version}" if python_version else "python3"
-    return dedent(f"""\
+    return dedent(
+        f"""\
         echo "Checking for Python"
 
         if [[ "{python_version}" != "None" ]] && [[ -x "$(command -v python{python_version})" ]]; then
@@ -138,7 +142,8 @@ def generate_venv_setup_script(env_name, build_prefix, python_version=None):
         rm get-pip.py
 
         export VENV_PIP="$VENV_PYTHON -m pip"
-        """).strip()
+        """
+    ).strip()
 
 
 def create_directories_script(model_name, build_prefix, directories_map):
@@ -147,13 +152,9 @@ def create_directories_script(model_name, build_prefix, directories_map):
 
     if directories_map:
         for directory_path in directories_map.values():
-            formatted_path = directory_path.lstrip('/').replace(
-                "home/content/", ""
-            )
+            formatted_path = directory_path.lstrip("/").replace("home/content/", "")
 
-            script.append(
-                f"mkdir -p {model_name}/{build_prefix}/{formatted_path}"
-            )
+            script.append(f"mkdir -p {model_name}/{build_prefix}/{formatted_path}")
     return script
 
 
@@ -176,7 +177,8 @@ def clone_git_repositories_script(git_repos, model_name, build_prefix):
 
         if from_source and to_destination and branch:
             repo_path = f"{model_name}/{build_prefix}/{to_destination}"
-            git_clone = dedent(f"""\
+            git_clone = dedent(
+                f"""\
                 echo "Cloning repository from: {from_source}"
                 git clone --depth=1 {from_source} -b {branch} {repo_path}
 
@@ -206,12 +208,14 @@ def clone_git_repositories_script(git_repos, model_name, build_prefix):
                 else
                     echo "No {requirements_file} found."
                 fi
-                """).strip()
+                """
+            ).strip()
 
             script.append(git_clone)
 
             for command in setup_commands:
-                setup_command_script = dedent(f"""\
+                setup_command_script = dedent(
+                    f"""\
                     echo "Running setup command: {command}"
 
                     pushd {repo_path}
@@ -226,7 +230,8 @@ def clone_git_repositories_script(git_repos, model_name, build_prefix):
                     fi
 
                     popd > /dev/null
-                    """).strip()
+                    """
+                ).strip()
 
                 script.append(setup_command_script)
 
@@ -246,8 +251,7 @@ def download_files_script(items, model_name, build_prefix):
     - list: Shell commands to execute
     """
     if not model_name or not build_prefix:
-        raise ValueError(
-            "model_name and build_prefix must not be None or empty")
+        raise ValueError("model_name and build_prefix must not be None or empty")
 
     script = []
     for item in items or []:
@@ -258,7 +262,8 @@ def download_files_script(items, model_name, build_prefix):
             continue
 
         destination_dir = os.path.dirname(
-            f"./{model_name}/{build_prefix}/{to_destination}")
+            f"./{model_name}/{build_prefix}/{to_destination}"
+        )
 
         if destination_dir:
             script.append(f"mkdir -p {destination_dir}")
@@ -315,25 +320,24 @@ def parse_toml_to_venv_script(file_path: str, env_name="myenv") -> str:
     package_list_unix = list(unix_packages.keys())
 
     if package_list_unix:
-        apt_install = dedent(f"""\
+        apt_install = dedent(
+            f"""\
            OS=$(uname)
            if [[ "$OS" = "Linux" && -f /etc/debian_version ]]; then
                echo "Installing required Unix packages..."
                sudo apt update
                sudo apt install -y {' '.join(package_list_unix)}
            fi
-           """).strip()
+           """
+        ).strip()
 
         script.append(apt_install)
 
-    script.append(
-        generate_venv_setup_script(env_name, build_prefix, python_version)
-    )
+    script.append(generate_venv_setup_script(env_name, build_prefix, python_version))
 
     script.extend(
         create_directories_script(
-            model_name, build_prefix,
-            config.get("directories", {})
+            model_name, build_prefix, config.get("directories", {})
         )
     )
 
@@ -346,9 +350,7 @@ def parse_toml_to_venv_script(file_path: str, env_name="myenv") -> str:
         for package, version in python_packages.items()
     ]
 
-    script.extend(
-        install_python_packages_script(package_list)
-    )
+    script.extend(install_python_packages_script(package_list))
 
     script.extend(
         clone_git_repositories_script(
@@ -357,15 +359,11 @@ def parse_toml_to_venv_script(file_path: str, env_name="myenv") -> str:
     )
 
     script.extend(
-        download_files_script(
-            config.get("dataset", []) or [], model_name, build_prefix
-        )
+        download_files_script(config.get("dataset", []) or [], model_name, build_prefix)
     )
 
     script.extend(
-        download_files_script(
-            config.get("file", []) or [], model_name, build_prefix
-        )
+        download_files_script(config.get("file", []) or [], model_name, build_prefix)
     )
 
     script.extend(
