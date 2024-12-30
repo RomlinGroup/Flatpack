@@ -63,6 +63,7 @@ def load_toml_config(file_path):
         raise ValueError("File path cannot be None or empty")
 
     base_dir = os.path.dirname(file_path)
+
     if not os.path.exists(file_path):
         raise FileNotFoundError(f"Config file not found: {file_path}")
 
@@ -76,6 +77,7 @@ def load_toml_config(file_path):
         raise ValueError("Missing 'environment' section in flatpack.toml")
 
     model_name = config["environment"].get("model_name")
+
     if not model_name:
         raise ValueError("Missing model_name in flatpack.toml")
 
@@ -142,10 +144,16 @@ def generate_venv_setup_script(env_name, build_prefix, python_version=None):
 def create_directories_script(model_name, build_prefix, directories_map):
     """Generate the script to create directories."""
     script = []
+
     if directories_map:
         for directory_path in directories_map.values():
-            formatted_path = directory_path.lstrip('/').replace("home/content/", "")
-            script.append(f"mkdir -p {model_name}/{build_prefix}/{formatted_path}")
+            formatted_path = directory_path.lstrip('/').replace(
+                "home/content/", ""
+            )
+
+            script.append(
+                f"mkdir -p {model_name}/{build_prefix}/{formatted_path}"
+            )
     return script
 
 
@@ -238,7 +246,8 @@ def download_files_script(items, model_name, build_prefix):
     - list: Shell commands to execute
     """
     if not model_name or not build_prefix:
-        raise ValueError("model_name and build_prefix must not be None or empty")
+        raise ValueError(
+            "model_name and build_prefix must not be None or empty")
 
     script = []
     for item in items or []:
@@ -248,7 +257,9 @@ def download_files_script(items, model_name, build_prefix):
         if not from_source or not to_destination:
             continue
 
-        destination_dir = os.path.dirname(f"./{model_name}/{build_prefix}/{to_destination}")
+        destination_dir = os.path.dirname(
+            f"./{model_name}/{build_prefix}/{to_destination}")
+
         if destination_dir:
             script.append(f"mkdir -p {destination_dir}")
 
@@ -264,8 +275,10 @@ def download_files_script(items, model_name, build_prefix):
 def execute_run_commands_script(run_vec, model_name, build_prefix):
     """Generate the script to execute specified run commands."""
     script = []
+
     for run in run_vec:
         command, file = run.get("command"), run.get("file")
+
         if command and file:
             prepended_file = f"./{model_name}/{build_prefix}/" + file
             script.append(f"{command} {prepended_file}")
@@ -288,6 +301,7 @@ def parse_toml_to_venv_script(file_path: str, env_name="myenv") -> str:
     """
     if not file_path:
         raise ValueError("file_path cannot be None or empty")
+
     if not env_name:
         raise ValueError("env_name cannot be None or empty")
 
@@ -312,29 +326,52 @@ def parse_toml_to_venv_script(file_path: str, env_name="myenv") -> str:
 
         script.append(apt_install)
 
-    script.append(generate_venv_setup_script(env_name, build_prefix, python_version))
-    script.extend(create_directories_script(model_name, build_prefix, config.get("directories", {})))
+    script.append(
+        generate_venv_setup_script(env_name, build_prefix, python_version)
+    )
+
+    script.extend(
+        create_directories_script(
+            model_name, build_prefix,
+            config.get("directories", {})
+        )
+    )
+
     script.append(f"export model_name={model_name}")
 
     python_packages = config.get("packages", {}).get("python", {}) or {}
-    package_list = [f"{package}=={version}" if version != "*" and version else package
-                    for package, version in python_packages.items()]
-    script.extend(install_python_packages_script(package_list))
 
-    script.extend(clone_git_repositories_script(
-        config.get("git", []) or [], model_name, build_prefix
-    ))
+    package_list = [
+        f"{package}=={version}" if version != "*" and version else package
+        for package, version in python_packages.items()
+    ]
 
-    script.extend(download_files_script(
-        config.get("dataset", []) or [], model_name, build_prefix
-    ))
+    script.extend(
+        install_python_packages_script(package_list)
+    )
 
-    script.extend(download_files_script(
-        config.get("file", []) or [], model_name, build_prefix
-    ))
+    script.extend(
+        clone_git_repositories_script(
+            config.get("git", []) or [], model_name, build_prefix
+        )
+    )
 
-    script.extend(execute_run_commands_script(
-        config.get("run", []) or [], model_name, build_prefix
-    ))
+    script.extend(
+        download_files_script(
+            config.get("dataset", []) or [], model_name, build_prefix
+        )
+    )
+
+    script.extend(
+        download_files_script(
+            config.get("file", []) or [], model_name, build_prefix
+        )
+    )
+
+    script.extend(
+        execute_run_commands_script(
+            config.get("run", []) or [], model_name, build_prefix
+        )
+    )
 
     return "\n".join(script)

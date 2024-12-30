@@ -31,7 +31,11 @@ HOME_DIR.mkdir(exist_ok=True)
 
 def ensure_spacy_model():
     python_path = sys.executable
-    pip_path = [python_path, "-m", "pip"]
+    pip_path = [
+        python_path,
+        "-m",
+        "pip"
+    ]
 
     try:
         try:
@@ -42,10 +46,13 @@ def ensure_spacy_model():
                 nlp.remove_pipe('parser')
 
             if 'sentencizer' not in nlp.pipe_names:
-                nlp.add_pipe('sentencizer', config={
-                    'punct_chars': None,
-                    'overwrite': True
-                })
+                nlp.add_pipe(
+                    'sentencizer',
+                    config={
+                        'punct_chars': None,
+                        'overwrite': True
+                    }
+                )
             return nlp
         except OSError:
             pass
@@ -71,21 +78,39 @@ def ensure_spacy_model():
             )
             for line in process.stdout:
                 if "Installing collected packages" in line:
-                    progress.update(install_task, description="Installing packages...")
+                    progress.update(
+                        install_task,
+                        description="Installing packages..."
+                    )
                 elif "Successfully installed" in line:
-                    progress.update(install_task, description="SpaCy installed successfully!")
+                    progress.update(
+                        install_task,
+                        description="SpaCy installed successfully!"
+                    )
             process.wait()
             if process.returncode != 0:
-                raise subprocess.CalledProcessError(process.returncode, pip_path)
+                raise subprocess.CalledProcessError(
+                    process.returncode,
+                    pip_path
+                )
         except (subprocess.CalledProcessError, FileNotFoundError) as e:
             console.print(f"[red]Error installing spaCy: {e}[/red]")
             return None
 
-        download_task = progress.add_task("Downloading spaCy model...", total=None)
+        download_task = progress.add_task(
+            "Downloading spaCy model...",
+            total=None
+        )
 
         try:
             process = subprocess.Popen(
-                [python_path, '-m', 'spacy', 'download', 'en_core_web_sm'],
+                [
+                    python_path,
+                    '-m',
+                    'spacy',
+                    'download',
+                    'en_core_web_sm'
+                ],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 universal_newlines=True
@@ -94,8 +119,16 @@ def ensure_spacy_model():
             process.wait()
 
             if process.returncode != 0:
-                raise subprocess.CalledProcessError(process.returncode,
-                                                    [python_path, '-m', 'spacy', 'download', 'en_core_web_sm'])
+                raise subprocess.CalledProcessError(
+                    process.returncode,
+                    [
+                        python_path,
+                        '-m',
+                        'spacy',
+                        'download',
+                        'en_core_web_sm'
+                    ]
+                )
         except (subprocess.CalledProcessError, FileNotFoundError) as e:
             console.print(f"[red]Error downloading spaCy model: {e}[/red]")
             return None
@@ -105,20 +138,27 @@ def ensure_spacy_model():
         nlp = spacy.load("en_core_web_sm")
 
         if 'sentencizer' not in nlp.pipe_names:
-            nlp.add_pipe('sentencizer', config={
-                'punct_chars': None,
-                'overwrite': True
-            })
+            nlp.add_pipe(
+                'sentencizer',
+                config={
+                    'punct_chars': None,
+                    'overwrite': True
+                }
+            )
         return nlp
     except ImportError:
-        console.print("[red]Failed to import spaCy after installation.[/red]")
+        console.print(
+            "[red]Failed to import spaCy after installation.[/red]"
+        )
         return None
 
 
 nlp = ensure_spacy_model()
 
 if nlp is None:
-    console.print("[red]Failed to initialize spaCy. Please check your installation and try again.[/red]")
+    console.print(
+        "[red]Failed to initialize spaCy. Please check your installation and try again.[/red]"
+    )
     sys.exit(1)
 
 BATCH_SIZE = 32
@@ -258,7 +298,8 @@ class VectorManager:
             batch_ids = []
             batch_entries = {}
 
-            hashes = [self._generate_positive_hash(text) for text in batch_texts]
+            hashes = [self._generate_positive_hash(text) for text in
+                      batch_texts]
             new_texts = [(h, text) for h, text in zip(hashes, batch_texts)
                          if h not in self.hash_set]
 
@@ -286,7 +327,8 @@ class VectorManager:
                     if self.embeddings is None:
                         self.embeddings = batch_embeddings
                     else:
-                        self.embeddings = np.vstack((self.embeddings, batch_embeddings))
+                        self.embeddings = np.vstack(
+                            (self.embeddings, batch_embeddings))
 
                     self.index.add_items(batch_embeddings, batch_ids)
                     self.metadata.update(batch_entries)
@@ -296,7 +338,8 @@ class VectorManager:
             del batch_embeddings, batch_ids, batch_entries
             gc.collect()
 
-    def search_vectors(self, query: str, top_k: int = 10, recency_weight: float = 0.5) -> List[Dict[str, Any]]:
+    def search_vectors(self, query: str, top_k: int = 10,
+                       recency_weight: float = 0.5) -> List[Dict[str, Any]]:
         """Search vectors with an optional bias toward recent results."""
         if not self.is_index_ready():
             return []
@@ -316,7 +359,8 @@ class VectorManager:
             if actual_k < 1:
                 return []
 
-            labels, distances = self.index.knn_query(query_embedding, k=actual_k)
+            labels, distances = self.index.knn_query(query_embedding,
+                                                     k=actual_k)
 
             if len(labels) == 0 or len(labels[0]) == 0:
                 return []
@@ -328,9 +372,12 @@ class VectorManager:
                 str_idx = str(idx)
                 if str_idx in self.metadata:
                     meta = self.metadata[str_idx]
-                    doc_date = datetime.datetime.strptime(meta['date'], "%Y-%m-%d %H:%M:%S")
-                    recency_score = 1 / (1 + (now - doc_date).total_seconds() / 86400)
-                    combined_score = recency_weight * recency_score + (1 - recency_weight) * (1 - distance)
+                    doc_date = datetime.datetime.strptime(meta['date'],
+                                                          "%Y-%m-%d %H:%M:%S")
+                    recency_score = 1 / (
+                            1 + (now - doc_date).total_seconds() / 86400)
+                    combined_score = recency_weight * recency_score + (
+                            1 - recency_weight) * (1 - distance)
 
                     results.append({
                         'id': int(idx),
@@ -341,7 +388,8 @@ class VectorManager:
                         'combined_score': combined_score
                     })
 
-            results = sorted(results, key=lambda x: x['combined_score'], reverse=True)
+            results = sorted(results, key=lambda x: x['combined_score'],
+                             reverse=True)
             return results[:top_k]
         except Exception:
             return []
@@ -374,7 +422,8 @@ class VectorManager:
             if not clean_sent or len(clean_sent.split()) < 3:
                 continue
 
-            if (clean_sent.endswith(('.', '!', '?', '"', "'", ')', ']', '}')) or
+            if (clean_sent.endswith(
+                    ('.', '!', '?', '"', "'", ')', ']', '}')) or
                     clean_sent.endswith((':", "."', '."', '!"', '?"'))):
 
                 current_chunk.append(clean_sent)
@@ -400,7 +449,8 @@ class VectorManager:
 
     def add_pdf(self, pdf_path: str):
         """Extract text from PDF with improved text handling."""
-        if not os.path.isfile(pdf_path) or not pdf_path.lower().endswith('.pdf'):
+        if not os.path.isfile(pdf_path) or not pdf_path.lower().endswith(
+                '.pdf'):
             return
 
         with open(pdf_path, 'rb') as file:
