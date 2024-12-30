@@ -38,6 +38,14 @@ fi
 # echo_stage "Installing flatpack using pipx..."
 # pipx install flatpack || echo_failure "Installing flatpack"
 
+echo_stage "Deleting test folder (if it exists)..."
+if [ -d "test" ]; then
+  rm -rf test
+  echo "Deleted test folder."
+else
+  echo "test folder not found, skipping deletion."
+fi
+
 echo_stage "Testing flatpack list..."
 output=$(flatpack list)
 if [[ "$output" == *"Directory Name"* ]]; then
@@ -64,11 +72,17 @@ else
   echo_failure "flatpack build test execution"
 fi
 
-# echo_stage "Deleting test (if it exists)..."
-# if flatpack delete test &>/dev/null; then
-#   echo "Deleted test."
-# else
-#   echo "test not found, skipping delete..."
-# fi
+echo_stage "Testing flatpack build test..."
+if flatpack build test &>/dev/null; then
+  echo "flatpack build test executed successfully."
+  if [ -f "test/build/test/test_pass" ]; then
+    echo "Test pass file found - verification complete."
+  else
+    echo_failure "Test pass file not found in test/build/test/"
+    exit 1
+  fi
+else
+  echo_failure "flatpack build test execution"
+fi
 
 echo "All stages completed successfully."

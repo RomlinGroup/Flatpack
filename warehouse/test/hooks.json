@@ -1,12 +1,31 @@
 {
   "hooks": [
     {
+      "id": 3,
+      "hook_name": "hook_python_test",
+      "hook_placement": "before",
+      "hook_script": "hook_python_test = \"Hello, World!\"",
+      "hook_type": "bash",
+      "show_on_frontpage": false,
+      "created_at": "2024-12-30 12:34:28"
+    },
+    {
+      "id": 2,
+      "hook_name": "hook_bash_test",
+      "hook_placement": "before",
+      "hook_script": "hook_bash_test=\"Hello, World!\"",
+      "hook_type": "bash",
+      "show_on_frontpage": false,
+      "created_at": "2024-12-30 12:34:20"
+    },
+    {
       "id": 1,
       "hook_name": "hello_world",
       "hook_placement": "before",
       "hook_script": "echo \"Hello, World!\"",
       "hook_type": "bash",
-      "created_at": "1970-01-01 00:00:00"
+      "show_on_frontpage": false,
+      "created_at": "2024-12-30 12:30:24"
     }
   ]
 }
