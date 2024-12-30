@@ -351,7 +351,7 @@ class ProcessManager:
                         logger.debug("Note: pipe %s was already closed", pipe)
 
         except Exception as e:
-            logger.error(f"Error during cleanup: {e}")
+            logger.error("Error during cleanup: %s", e)
             self._last_error = str(e)
         finally:
             self.reset_state()
@@ -4080,7 +4080,7 @@ def setup_routes(fastapi_app):
                 build_in_progress = False
 
                 initial_status = process_manager.get_status() if process_manager else "no_process_manager"
-                logger.info(f"Starting build abort from status: {initial_status}")
+                logger.info("Starting build abort from status: %s", initial_status)
 
                 cleanup_success = True
                 memory_before = 0
@@ -4099,7 +4099,7 @@ def setup_routes(fastapi_app):
                             cleanup_success = True
                             break
                         except Exception as e:
-                            logger.error(f"Termination attempt {attempt + 1} failed: {e}")
+                            logger.error("Termination attempt %s failed: %s", attempt + 1, e)
                             if attempt == MAX_TERMINATION_ATTEMPTS - 1:
                                 cleanup_success = False
                             await asyncio.sleep(1)
