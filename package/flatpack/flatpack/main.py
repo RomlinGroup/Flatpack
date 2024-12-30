@@ -137,7 +137,6 @@ StaticFiles = lazy_import('fastapi.staticfiles', callable_name='StaticFiles')
 croniter = lazy_import('croniter', callable_name='croniter')
 ngrok = lazy_import('ngrok')
 snapshot_download = lazy_import('huggingface_hub', callable_name='snapshot_download')
-uvicorn = lazy_import('uvicorn')
 warnings = lazy_import('warnings')
 zstd = lazy_import('zstandard')
 
@@ -4972,6 +4971,7 @@ def fpk_cli_handle_run(args, session):
                 return
 
     uvicorn = lazy_import('uvicorn')
+
     if not uvicorn:
         console.print("Failed to load uvicorn. Please check your installation.", style="bold red")
         return
