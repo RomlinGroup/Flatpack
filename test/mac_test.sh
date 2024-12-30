@@ -57,6 +57,13 @@ else
   echo_failure "test folder or build directory not found or empty"
 fi
 
+echo_stage "Testing flatpack build test..."
+if flatpack build test &>/dev/null; then
+  echo "flatpack build test executed successfully."
+else
+  echo_failure "flatpack build test execution"
+fi
+
 # echo_stage "Deleting test (if it exists)..."
 # if flatpack delete test &>/dev/null; then
 #   echo "Deleted test."
