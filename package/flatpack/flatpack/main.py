@@ -26,7 +26,7 @@ if not IMPORT_CACHE_FILE.exists():
          _____ __    _____ _____ _____ _____ _____ _____ 
         |   __|  |  |  _  |_   _|  _  |  _  |     |  |  |
         |   __|  |__|     | | | |   __|     |   --|    -|
-        |__|  |_____|__|__| |_| |__|  |__|__|_____|__|__|                                                                                                       
+        |__|  |_____|__|__| |_| |__|  |__|__|_____|__|__|                                      
     """)
 
     console.print(f"[bold green]{ascii_art}[/bold green]")
@@ -911,15 +911,15 @@ def create_temp_sh(build_dir, custom_json_path: Path, temp_sh_path: Path,
                     
                     return open(input_pipe_path, 'r')
 
-                def execute_code(code):                    
+                def execute_code(code):
                     try:
                         old_stdout = sys.stdout
-                        sys.stdout = sys.__stdout__ 
+                        sys.stdout = sys.__stdout__
                         old_stdin = sys.stdin
                         sys.stdin = sys.__stdin__
                         os.setpgrp()
 
-                        def my_input(prompt=""): 
+                        def my_input(prompt=""):
                             print("READY_FOR_INPUT")
                             sys.stdout.flush()
                             print(prompt, end="", flush=True)

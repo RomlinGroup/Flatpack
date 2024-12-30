@@ -312,7 +312,7 @@ class DatabaseManager:
     def update_hook(self, hook_id: int, hook_name: str, hook_placement: str, hook_script: str, hook_type: str,
                     show_on_frontpage: bool = False) -> bool:
         query = """
-        UPDATE flatpack_hooks 
+        UPDATE flatpack_hooks
         SET hook_name = ?, hook_placement = ?, hook_script = ?, hook_type = ?, show_on_frontpage = ?
         WHERE id = ?
         """
@@ -423,7 +423,7 @@ class DatabaseManager:
         )
 
         query = """
-        INSERT OR REPLACE INTO flatpack_source_hook_mappings 
+        INSERT OR REPLACE INTO flatpack_source_hook_mappings
         (source_id, target_id, source_type, target_type)
         VALUES (?, ?, ?, ?)
         """
