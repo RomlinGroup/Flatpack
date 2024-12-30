@@ -21,15 +21,16 @@ jobs:
           pip install pipx
 
       - name: Make script executable
-        run: chmod +x test.sh
+        run: chmod +x test/test.sh
 
       - name: Run test script
         id: run_test
+        working-directory: test
         run: |
           ./test.sh
           
           # Check for test_pass file
-          if [ -f "test/build/test/test_pass" ]; then
+          if [ -f "build/test/test_pass" ]; then
             echo "Test passed successfully"
             exit 0
           else
