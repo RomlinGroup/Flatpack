@@ -9,7 +9,6 @@ from textwrap import dedent
 
 from rich.console import Console
 from rich.panel import Panel
-from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.syntax import Syntax
 from rich.table import Table
 from rich.text import Text
@@ -41,7 +40,6 @@ import json
 import logging
 import mimetypes
 import pty
-import random
 import re
 import secrets
 import select
@@ -54,8 +52,6 @@ import string
 import subprocess
 import tarfile
 import tempfile
-import time
-import traceback
 import unicodedata
 
 from datetime import datetime, timedelta, timezone
