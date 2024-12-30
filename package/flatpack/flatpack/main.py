@@ -5275,7 +5275,6 @@ def setup_routes(fastapi_app):
             token: str = Depends(authenticate_token)
     ):
         """Save a file to the flatpack build directory."""
-
         if not flatpack_directory:
             raise HTTPException(
                 status_code=500,
