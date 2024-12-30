@@ -293,7 +293,7 @@ class ProcessManager:
             os.kill(self.pid, 0)
             return True
         except OSError as e:
-            logger.warning(f"Health check failed: {e}")
+            logger.warning("Health check failed: %s", e)
             self._last_error = str(e)
             return False
 
@@ -314,11 +314,11 @@ class ProcessManager:
         self.pid = process.pid if process else None
         self._status = "process_set"
 
-        logger.info(f"Process set with PID: {self.pid}")
+        logger.info("Process set with PID: %s", self.pid)
 
     def clear(self) -> None:
         initial_status = self.get_status()
-        logger.info(f"Starting cleanup from status: {initial_status}")
+        logger.info("Starting cleanup from status: %s", initial_status)
 
         try:
             if self.slave_fd is not None:
@@ -339,16 +339,16 @@ class ProcessManager:
                 try:
                     self.terminate_with_cleanup()
                 except Exception as e:
-                    logger.error(f"Error during process termination: {e}")
+                    logger.error("Error during process termination: %s", e)
                     self._last_error = str(e)
 
             for pipe in (self.input_pipe, self.output_pipe):
                 if pipe is not None:
                     try:
                         os.close(pipe)
-                        logger.debug(f"Closed pipe {pipe}")
+                        logger.debug("Closed pipe %s", pipe)
                     except OSError:
-                        logger.debug(f"Note: pipe {pipe} was already closed")
+                        logger.debug("Note: pipe %s was already closed", pipe)
 
         except Exception as e:
             logger.error(f"Error during cleanup: {e}")
@@ -356,7 +356,7 @@ class ProcessManager:
         finally:
             self.reset_state()
             final_status = self.get_status()
-            logger.info(f"Process manager cleared: {initial_status} -> {final_status}")
+            logger.info("Process manager cleared: %s -> %s", initial_status, final_status)
 
     def terminate_with_cleanup(self, timeout: int = 5) -> None:
         """Graceful termination with resource cleanup."""
@@ -369,7 +369,7 @@ class ProcessManager:
         try:
             self.process.terminate()
             try:
-                logger.debug(f"Waiting up to {timeout} seconds for process to terminate")
+                logger.debug("Waiting up to %s seconds for process to terminate", timeout)
                 self.process.wait(timeout=timeout)
                 logger.info("Process terminated gracefully")
             except subprocess.TimeoutExpired:
@@ -378,7 +378,7 @@ class ProcessManager:
                 self.process.wait()
                 logger.info("Process killed")
         except Exception as e:
-            logger.error(f"Error during termination: {e}")
+            logger.error("Error during termination: %s", e)
             self._last_error = str(e)
             raise
         finally:
@@ -404,7 +404,7 @@ class ProcessManager:
                     'num_fds': process.num_fds() if hasattr(process, 'num_fds') else None
                 }
         except Exception as e:
-            logger.error(f"Error getting resource usage: {e}")
+            logger.error("Error getting resource usage: %s", e)
             self._last_error = str(e)
             return {}
 
@@ -419,7 +419,7 @@ class ProcessManager:
 
         try:
             current_dir = Path.cwd()
-            logger.info(f"Running command in directory: {current_dir}")
+            logger.info("Running command in directory: %s", current_dir)
 
             process = subprocess.Popen(
                 cmd,
@@ -433,12 +433,12 @@ class ProcessManager:
                 logger.info("Process completed with return code: %s", return_code)
                 return return_code
             except subprocess.TimeoutExpired:
-                logger.warning(f"Process timed out after {timeout} seconds")
+                logger.warning("Process timed out after %s seconds", timeout)
                 process.kill()
                 return -1
 
         except Exception as e:
-            logger.error(f"Error running command: {e}")
+            logger.error("Error running command: %s", e)
             self._last_error = str(e)
             return -1
 
@@ -1578,7 +1578,7 @@ async def run_subprocess(command, log_file):
             raise RuntimeError("Another process is already running")
 
         current_dir = Path.cwd()
-        logger.info(f"Running command in directory: {current_dir}")
+        logger.info("Running command in directory: %s", current_dir)
 
         master_fd, slave_fd = pty.openpty()
 
@@ -1613,7 +1613,7 @@ async def run_subprocess(command, log_file):
                             if input_data:
                                 os.write(master_fd, input_data)
                         except OSError as e:
-                            logger.error(f"Error handling stdin: {e}")
+                            logger.error("Error handling stdin: %s", e)
                             break
                     else:
                         try:
@@ -1634,17 +1634,17 @@ async def run_subprocess(command, log_file):
                                 logger.info("Python executor finished, cleaning up")
                                 return process.returncode
                         except OSError as e:
-                            logger.error(f"Error reading from master_fd: {e}")
+                            logger.error("Error reading from master_fd: %s", e)
                             break
 
                 if process.poll() is not None:
-                    logger.info(f"Process terminated with return code: {process.returncode}")
+                    logger.info("Process terminated with return code: %s", process.returncode)
                     break
 
                 usage = process_manager.get_resource_usage()
 
                 if usage:
-                    logger.debug(f"Process resource usage: {usage}")
+                    logger.debug("Process resource usage: %s", usage)
 
         except Exception as e:
             logger.error("Error in process I/O loop: %s", e)
@@ -1656,7 +1656,7 @@ async def run_subprocess(command, log_file):
         return process.returncode
 
     except Exception as e:
-        logger.error(f"Error in run_subprocess: {e}")
+        logger.error("Error in run_subprocess: %s", e)
         if process_manager.is_active():
             process_manager.clear()
         raise
