@@ -1733,11 +1733,6 @@ def setup_static_directory(fastapi_app, directory: str):
         raise ValueError(f"The directory '{directory}' does not exist or is not a directory.")
 
 
-async def shutdown(sig, loop):
-    await asyncio.sleep(0.1)
-    graceful_shutdown(loop)
-
-
 def shutdown_server():
     """Shutdown the FastAPI server."""
     logging.getLogger("uvicorn.error").info("Shutting down the server after maximum validation attempts.")
