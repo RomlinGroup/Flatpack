@@ -22,7 +22,7 @@ _cache_lock = threading.RLock()
 _runtime_cache = {}
 
 if not IMPORT_CACHE_FILE.exists():
-    ascii_art = dedent(f"""\
+    ascii_art = dedent("""\
          _____ __    _____ _____ _____ _____ _____ _____ 
         |   __|  |  |  _  |_   _|  _  |  _  |     |  |  |
         |   __|  |__|     | | | |   __|     |   --|    -|
@@ -4127,7 +4127,7 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
                         return
                 else:
                     console.print(
-                        f"[bold blue]INFO:[/bold blue] llama.cpp directory already exists. Skipping setup."
+                        "[bold blue]INFO:[/bold blue] llama.cpp directory already exists. Skipping setup."
                     )
 
             ready_file = os.path.join(llama_cpp_dir, "ready")
