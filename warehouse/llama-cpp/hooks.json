@@ -10,15 +10,6 @@
       "created_at": "2024-12-24 19:39:06"
     },
     {
-      "id": 3,
-      "hook_name": "prompt",
-      "hook_placement": "before",
-      "hook_script": "prompt = \"What is the meaning of life?\"",
-      "hook_type": "python",
-      "show_on_frontpage": true,
-      "created_at": "2024-12-24 19:38:48"
-    },
-    {
       "id": 2,
       "hook_name": "tokens",
       "hook_placement": "before",
