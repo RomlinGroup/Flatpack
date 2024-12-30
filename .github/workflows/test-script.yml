@@ -1,0 +1,44 @@
+name: Test Flatpack Script
+
+on: [ push, pull_request ]
+
+jobs:
+  test-script:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pipx
+
+      - name: Make script executable
+        run: chmod +x test.sh
+
+      - name: Run test script
+        id: run_test
+        run: |
+          ./test.sh
+          
+          # Check for test_pass file
+          if [ -f "test/build/test/test_pass" ]; then
+            echo "Test passed successfully"
+            exit 0
+          else
+            echo "Test pass file not found"
+            exit 1
+          fi
+
+      - name: Test result
+        if: steps.run_test.outcome == 'failure'
+        run: |
+          echo "❌ Test failed"
+          exit 1
