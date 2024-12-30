@@ -188,6 +188,7 @@ active_sessions = {}
 build_in_progress = False
 console = Console()
 force_exit_timer = None
+nextjs_process = None
 shutdown_in_progress = False
 shutdown_requested = False
 
@@ -1826,9 +1827,19 @@ def setup_static_directory(fastapi_app, directory: str):
 
 
 def shutdown_server():
-    """Shutdown the FastAPI server."""
+    """Shutdown the FastAPI server and Next.js process."""
+    global nextjs_process
+
     logging.getLogger("uvicorn.error").info(
         "Shutting down the server after maximum validation attempts.")
+
+    if nextjs_process:
+        try:
+            nextjs_process.terminate()
+            nextjs_process.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            nextjs_process.kill()
+
     os._exit(0)
 
 
@@ -5148,7 +5159,7 @@ def setup_routes(fastapi_app):
 
 
 def fpk_cli_handle_run(args, session):
-    global abort_requested, build_in_progress, console, flatpack_directory
+    global abort_requested, build_in_progress, console, flatpack_directory, nextjs_process
 
     if not args.input:
         console.print("Please specify a flatpack for the run command.",
