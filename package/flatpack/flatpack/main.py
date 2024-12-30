@@ -365,7 +365,7 @@ class ProcessManager:
             logger.debug("No active process to terminate")
             return
 
-        logger.info(f"Attempting graceful termination of process {self.pid}")
+        logger.info("Attempting graceful termination of process %s", self.pid)
 
         try:
             self.process.terminate()
@@ -431,7 +431,7 @@ class ProcessManager:
 
             try:
                 return_code = process.wait(timeout=timeout)
-                logger.info(f"Process completed with return code: {return_code}")
+                logger.info("Process completed with return code: %s", return_code)
                 return return_code
             except subprocess.TimeoutExpired:
                 logger.warning(f"Process timed out after {timeout} seconds")
@@ -1594,7 +1594,7 @@ async def run_subprocess(command, log_file):
         )
 
         process_manager.set_process(process, master_fd, slave_fd)
-        logger.info(f"Started process with PID: {process.pid}")
+        logger.info("Started process with PID: %s", process.pid)
 
         os.close(slave_fd)
         output = []
@@ -1648,7 +1648,7 @@ async def run_subprocess(command, log_file):
                     logger.debug(f"Process resource usage: {usage}")
 
         except Exception as e:
-            logger.error(f"Error in process I/O loop: {e}")
+            logger.error("Error in process I/O loop: %s", e)
             raise
         finally:
             logger.info("Cleaning up process manager")
@@ -4124,9 +4124,9 @@ def setup_routes(fastapi_app):
                             temp_path = build_dir / temp_file
                             if temp_path.exists():
                                 temp_path.unlink()
-                                logger.debug(f"Removed temp file: {temp_file}")
+                                logger.debug("Removed temp file: %s", temp_file)
                         except Exception as e:
-                            logger.warning(f"Could not remove temp file {temp_file}: {e}")
+                            logger.warning("Could not remove temp file %s: %s", temp_file, e)
                             cleanup_success = cleanup_success and False
 
                 status_data = BuildStatusData(
@@ -4146,7 +4146,7 @@ def setup_routes(fastapi_app):
                     with open(status_file, 'w') as f:
                         json.dump(status_data.dict(), f)
 
-                logger.info(f"Build aborted. Process status: {initial_status} -> {final_status}")
+                logger.info("Build aborted. Process status: %s -> %s", initial_status, final_status)
 
                 return JSONResponse(
                     content={
@@ -4161,7 +4161,7 @@ def setup_routes(fastapi_app):
                 )
 
             except Exception as e:
-                logger.error(f"Error in abort_build: {str(e)}", exc_info=True)
+                logger.error("Error in abort_build: %s", str(e), exc_info=True)
 
                 abort_requested = False
                 build_in_progress = False
@@ -4170,7 +4170,7 @@ def setup_routes(fastapi_app):
                     if process_manager and process_manager.is_active():
                         process_manager.terminate_with_cleanup(timeout=3)
                 except Exception as cleanup_error:
-                    logger.error(f"Emergency cleanup failed: {cleanup_error}")
+                    logger.error("Emergency cleanup failed: %s", cleanup_error)
 
                 return JSONResponse(
                     content={
