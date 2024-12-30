@@ -1708,7 +1708,7 @@ def set_token(token: str):
         logger.error("Failed to set token: %s", str(e))
 
 
-def setup_static_directory(fastapi_app: FastAPI, directory: str):
+def setup_static_directory(fastapi_app, directory: str):
     """Setup the static directory for serving static files, excluding 'output' folder for unauthenticated users."""
     global flatpack_directory
     flatpack_directory = os.path.abspath(directory)
