@@ -4128,9 +4128,6 @@ def save_connections_to_file_and_db(mappings: List[SourceHookMapping]) -> None:
         raise
 
 
-flatpack_directory = None
-
-
 # Hooks
 def load_and_get_hooks():
     hooks_file_path = os.path.join(flatpack_directory, HOOKS_FILE)
@@ -5167,11 +5164,9 @@ def fpk_cli_handle_run(args, session):
         return
 
     app = None
-    abort_requested = False
-    build_in_progress = False
-    flatpack_directory = None
-    nextjs_process = None
     server = None
+    nextjs_process = None
+
     host = "0.0.0.0"
     fastapi_port = 8000
     nextjs_port = 3000
@@ -5409,6 +5404,32 @@ def fpk_cli_handle_run(args, session):
             console.print(
                 "[bold green]Started Next.js development server[/bold green]")
             console.print("")
+
+            source_path = directory / 'web' / 'output'
+            target_path = app_dir / 'public' / 'output'
+
+            try:
+                if target_path.exists():
+                    os.unlink(target_path)
+                    console.print(
+                        f"[bold yellow]Removed existing symlink at '{target_path}'[/bold yellow]"
+                    )
+
+                    console.print("")
+
+                os.symlink(source_path, target_path)
+                console.print(
+                    f"[bold green]Created symlink from '{source_path}' to '{target_path}'[/bold green]"
+                )
+
+                console.print("")
+
+            except OSError as e:
+                console.print(
+                    f"[bold red]Error creating symlink: {e}[/bold red]"
+                )
+
+                console.print("")
         except Exception as e:
             console.print(
                 f"[bold red]Failed to start Next.js server: {e}[/bold red]")
