@@ -36,7 +36,6 @@ if not IMPORT_CACHE_FILE.exists():
 import argparse
 import asyncio
 import base64
-import concurrent.futures
 import errno
 import json
 import logging
@@ -400,7 +399,6 @@ class ProcessManager:
             return {}
 
         try:
-            import psutil
             process = psutil.Process(self.pid)
             with process.oneshot():
                 return {
@@ -1610,7 +1608,7 @@ async def run_subprocess(command, log_file):
                     logger.error("Process health check failed")
                     break
 
-                r, w, e = select.select([sys.stdin, master_fd], [], [], 0.1)
+                r, e = select.select([sys.stdin, master_fd], [], [], 0.1)
 
                 for fd in r:
                     if fd == sys.stdin:
@@ -4065,19 +4063,6 @@ def setup_routes(fastapi_app):
         except sqlite3.Error as e:
             logger.error("Database connection failed: %s", e)
             return {"message": f"Database connection failed: {e}"}
-
-    def kill_process_tree(pid):
-        try:
-            parent = psutil.Process(pid)
-            children = parent.children(recursive=True)
-            for child in children:
-                try:
-                    child.kill()
-                except psutil.NoSuchProcess:
-                    pass
-            parent.kill()
-        except psutil.NoSuchProcess:
-            pass
 
     @fastapi_app.post("/api/abort-build", dependencies=[Depends(csrf_protect)])
     async def abort_build(
