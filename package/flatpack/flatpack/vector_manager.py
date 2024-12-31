@@ -36,6 +36,7 @@ def ensure_spacy_model():
     try:
         try:
             import spacy
+
             spacy_nlp = spacy.load("en_core_web_sm")
 
             if "parser" in spacy_nlp.pipe_names:
@@ -43,8 +44,7 @@ def ensure_spacy_model():
 
             if "sentencizer" not in spacy_nlp.pipe_names:
                 spacy_nlp.add_pipe(
-                    "sentencizer",
-                    config={"punct_chars": None, "overwrite": True}
+                    "sentencizer", config={"punct_chars": None, "overwrite": True}
                 )
             return spacy_nlp
 
@@ -57,9 +57,9 @@ def ensure_spacy_model():
     console.print("Installing spaCy (MIT) and downloading model...")
 
     with Progress(
-            SpinnerColumn(),
-            TextColumn("[progress.description]{task.description}"),
-            transient=True,
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        transient=True,
     ) as progress:
         install_task = progress.add_task("Installing spaCy...", total=None)
 
@@ -72,23 +72,19 @@ def ensure_spacy_model():
             )
             for line in process.stdout:
                 if "Installing collected packages" in line:
-                    progress.update(install_task,
-                                    description="Installing packages...")
+                    progress.update(install_task, description="Installing packages...")
                 elif "Successfully installed" in line:
                     progress.update(
-                        install_task,
-                        description="SpaCy installed successfully!"
+                        install_task, description="SpaCy installed successfully!"
                     )
             process.wait()
             if process.returncode != 0:
-                raise subprocess.CalledProcessError(process.returncode,
-                                                    pip_path)
+                raise subprocess.CalledProcessError(process.returncode, pip_path)
         except (subprocess.CalledProcessError, FileNotFoundError) as e:
             console.print(f"[red]Error installing spaCy: {e}[/red]")
             return None
 
-        download_task = progress.add_task("Downloading spaCy model...",
-                                          total=None)
+        download_task = progress.add_task("Downloading spaCy model...", total=None)
 
         try:
             process = subprocess.Popen(
@@ -116,8 +112,7 @@ def ensure_spacy_model():
 
         if "sentencizer" not in spacy_nlp.pipe_names:
             spacy_nlp.add_pipe(
-                "sentencizer",
-                config={"punct_chars": None, "overwrite": True}
+                "sentencizer", config={"punct_chars": None, "overwrite": True}
             )
         return spacy_nlp
     except ImportError:
@@ -191,8 +186,7 @@ class VectorManager:
         if os.path.exists(self.index_file):
             self.index.load_index(self.index_file, max_elements=MAX_ELEMENTS)
         else:
-            self.index.init_index(max_elements=MAX_ELEMENTS,
-                                  ef_construction=200, M=64)
+            self.index.init_index(max_elements=MAX_ELEMENTS, ef_construction=200, M=64)
 
             if self.embeddings is not None and len(self.embeddings) > 0:
                 batch_size = 1000
@@ -261,13 +255,12 @@ class VectorManager:
         batch_size = 32
 
         for i in range(0, len(texts), batch_size):
-            batch_texts = texts[i: i + batch_size]
+            batch_texts = texts[i : i + batch_size]
             batch_embeddings = []
             batch_ids = []
             batch_entries = {}
 
-            hashes = [self._generate_positive_hash(text) for text in
-                      batch_texts]
+            hashes = [self._generate_positive_hash(text) for text in batch_texts]
             new_texts = [
                 (h, text)
                 for h, text in zip(hashes, batch_texts)
@@ -298,8 +291,7 @@ class VectorManager:
                     if self.embeddings is None:
                         self.embeddings = batch_embeddings
                     else:
-                        self.embeddings = np.vstack(
-                            (self.embeddings, batch_embeddings))
+                        self.embeddings = np.vstack((self.embeddings, batch_embeddings))
 
                     self.index.add_items(batch_embeddings, batch_ids)
                     self.metadata.update(batch_entries)
@@ -308,7 +300,7 @@ class VectorManager:
             gc.collect()
 
     def search_vectors(
-            self, query: str, top_k: int = 10, recency_weight: float = 0.5
+        self, query: str, top_k: int = 10, recency_weight: float = 0.5
     ) -> List[Dict[str, Any]]:
         """Search vectors with an optional bias toward recent results."""
         if not self.is_index_ready():
@@ -327,8 +319,7 @@ class VectorManager:
             if actual_k < 1:
                 return []
 
-            labels, distances = self.index.knn_query(query_embedding,
-                                                     k=actual_k)
+            labels, distances = self.index.knn_query(query_embedding, k=actual_k)
 
             if len(labels) == 0 or len(labels[0]) == 0:
                 return []
@@ -343,10 +334,9 @@ class VectorManager:
                     doc_date = datetime.datetime.strptime(
                         meta["date"], "%Y-%m-%d %H:%M:%S"
                     )
-                    recency_score = 1 / (
-                            1 + (now - doc_date).total_seconds() / 86400)
+                    recency_score = 1 / (1 + (now - doc_date).total_seconds() / 86400)
                     combined_score = recency_weight * recency_score + (
-                            1 - recency_weight
+                        1 - recency_weight
                     ) * (1 - distance)
 
                     results.append(
@@ -360,8 +350,7 @@ class VectorManager:
                         }
                     )
 
-            results = sorted(results, key=lambda x: x["combined_score"],
-                             reverse=True)
+            results = sorted(results, key=lambda x: x["combined_score"], reverse=True)
             return results[:top_k]
         except Exception:
             return []
@@ -395,7 +384,7 @@ class VectorManager:
                 continue
 
             if clean_sent.endswith(
-                    (".", "!", "?", '"', "'", ")", "]", "}")
+                (".", "!", "?", '"', "'", ")", "]", "}")
             ) or clean_sent.endswith((':", "."', '."', '!"', '?"')):
 
                 current_chunk.append(clean_sent)
@@ -419,8 +408,7 @@ class VectorManager:
 
     def add_pdf(self, pdf_path: str):
         """Extract text from PDF with improved text handling."""
-        if not os.path.isfile(pdf_path) or not pdf_path.lower().endswith(
-                ".pdf"):
+        if not os.path.isfile(pdf_path) or not pdf_path.lower().endswith(".pdf"):
             return
 
         with open(pdf_path, "rb") as file:
