@@ -3812,7 +3812,7 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
                         return
                 else:
                     console.print(
-                        f"[bold blue]INFO:[/bold blue] llama.cpp directory already exists. Skipping setup."
+                        "[bold blue]INFO:[/bold blue] llama.cpp directory already exists. Skipping setup."
                     )
 
             ready_file = os.path.join(llama_cpp_dir, "ready")
