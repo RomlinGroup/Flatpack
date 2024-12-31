@@ -1053,7 +1053,6 @@ def create_temp_sh(
                 #!/bin/bash
                 set -{'eux' if use_euxo else 'eu'}o pipefail
 
-                # Change to the build directory to ensure correct context
                 cd "{build_dir}" || exit 1
 
                 export SCRIPT_DIR="$(cd "$(dirname "${{BASH_SOURCE[0]}}")" && pwd)"
@@ -2794,11 +2793,13 @@ def fpk_unbox(
 
         for json_file in ["connections.json", "hooks.json", "sources.json"]:
             json_path = build_dir / json_file
+
             if not json_path.exists():
                 files_to_download["build"].append(json_file)
 
         for dir_name, files in files_to_download.items():
             target_dir = web_dir if dir_name == "web" else build_dir
+
             for file in files:
                 try:
                     file_url = f"{TEMPLATE_REPO_URL}/contents/{file}"
@@ -2899,6 +2900,7 @@ def fpk_unbox(
         toml_path = (
             build_dir / "flatpack.toml" if not local else flatpack_dir / "flatpack.toml"
         )
+
         if not toml_path.exists():
             logger.error(
                 "flatpack.toml not found in %s",
@@ -2918,12 +2920,7 @@ def fpk_unbox(
             )
             bash_script_path.write_text(bash_script_content)
 
-            # safe_script_path = shlex.quote(str(bash_script_path.resolve()))
-            # subprocess.run(["/bin/bash", safe_script_path], check=True)
-
-            os.system(
-                f"{'set -euxo' if use_euxo else 'set -euo'} pipefail && source {build_script_path}"
-            )
+            os.system(f"set -euo pipefail && source {bash_script_path}")
 
             logger.info("Bash script execution completed successfully")
         finally:
