@@ -8,9 +8,7 @@ from functools import wraps
 
 def handle_exception(exc_type, exc_value, exc_traceback):
     if issubclass(exc_type, KeyboardInterrupt):
-        sys.__stderr__.write(
-            "\nProgram interrupted by user. Exiting gracefully...\n"
-        )
+        sys.__stderr__.write("\nProgram interrupted by user. Exiting gracefully...\n")
     else:
         sys.__stderr__.write("An unexpected error occurred:\n")
         traceback.print_exception(exc_type, exc_value, exc_traceback)
@@ -40,7 +38,8 @@ def safe_exit(func):
             sys.exit(0)
         except KeyboardInterrupt:
             sys.__stderr__.write(
-                "\nProgram interrupted by user. Exiting gracefully...\n")
+                "\nProgram interrupted by user. Exiting gracefully...\n"
+            )
             sys.exit(0)
         except Exception as e:
             sys.__stderr__.write(f"An unexpected error occurred: {str(e)}\n")
@@ -52,8 +51,7 @@ def safe_exit(func):
 
 async def shutdown(signal, loop):
     """Cleanup tasks tied to the service's shutdown."""
-    sys.__stderr__.write(
-        f"Received exit signal {signal.name}. Shutting down...\n")
+    sys.__stderr__.write(f"Received exit signal {signal.name}. Shutting down...\n")
 
     tasks = [t for t in asyncio.all_tasks() if t is not asyncio.current_task()]
     if tasks:
@@ -75,11 +73,7 @@ async def main():
     loop = asyncio.get_running_loop()
 
     for sig in (signal.SIGTERM, signal.SIGINT):
-        loop.add_signal_handler(
-            sig, lambda: asyncio.create_task(
-                shutdown(sig, loop)
-            )
-        )
+        loop.add_signal_handler(sig, lambda: asyncio.create_task(shutdown(sig, loop)))
 
     loop.set_exception_handler(handle_asyncio_exception)
 
