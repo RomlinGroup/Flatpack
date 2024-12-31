@@ -40,7 +40,7 @@ import argparse  # noqa: E402
 import asyncio  # noqa: E402
 import base64  # noqa: E402
 import errno  # noqa: E402
-import json # noqa: E402
+import json  # noqa: E402
 import logging  # noqa: E402
 import mimetypes  # noqa: E402
 import pty  # noqa: E402
@@ -75,7 +75,11 @@ from itsdangerous import BadSignature, SignatureExpired, TimestampSigner  # noqa
 from pydantic import BaseModel, Field  # noqa: E402
 
 from .database_manager import DatabaseManager  # noqa: E402
-from .error_handling import safe_exit, setup_exception_handling, setup_signal_handling  # noqa: E402
+from .error_handling import (
+    safe_exit,
+    setup_exception_handling,
+    setup_signal_handling,
+)  # noqa: E402
 from .parsers import parse_toml_to_venv_script  # noqa: E402
 from .session_manager import SessionManager  # noqa: E402
 from .vector_manager import VectorManager  # noqa: E402
@@ -3255,14 +3259,14 @@ def setup_arg_parser():
 
     api_key_subparsers = parser_api_key.add_subparsers(dest="api_key_command")
 
-    ## Get API key
+    # Get API key
     parser_get_api = api_key_subparsers.add_parser(
         "get", help="Get the current API key"
     )
 
     parser_get_api.set_defaults(func=fpk_cli_handle_get_api_key)
 
-    ## Set API key
+    # Set API key
     parser_set_api = api_key_subparsers.add_parser("set", help="Set the API key")
 
     parser_set_api.add_argument("api_key", type=str, help="API key to set")
@@ -3372,7 +3376,7 @@ def setup_arg_parser():
 
     vector_subparsers = parser_vector.add_subparsers(dest="vector_command")
 
-    ## Add PDF
+    # Add PDF
     parser_add_pdf = vector_subparsers.add_parser(
         "add-pdf", help="Add text from a PDF file to the vector database"
     )
@@ -3388,7 +3392,7 @@ def setup_arg_parser():
 
     parser_add_pdf.set_defaults(func=fpk_cli_handle_vector_commands)
 
-    ## Add texts
+    # Add texts
     parser_add_text = vector_subparsers.add_parser(
         "add-texts", help="Add new texts to generate embeddings and store them"
     )
@@ -3404,7 +3408,7 @@ def setup_arg_parser():
 
     parser_add_text.set_defaults(func=fpk_cli_handle_vector_commands)
 
-    ## Add URL
+    # Add URL
     parser_add_url = vector_subparsers.add_parser(
         "add-url", help="Add text from a URL to the vector database"
     )
@@ -3420,7 +3424,7 @@ def setup_arg_parser():
 
     parser_add_url.set_defaults(func=fpk_cli_handle_vector_commands)
 
-    ## Add Wikipedia
+    # Add Wikipedia
     parser_add_wikipedia_page = vector_subparsers.add_parser(
         "add-wikipedia", help="Add text from a Wikipedia page to the vector database"
     )
@@ -3438,7 +3442,7 @@ def setup_arg_parser():
 
     parser_add_wikipedia_page.set_defaults(func=fpk_cli_handle_vector_commands)
 
-    ## Search text
+    # Search text
     parser_search_text = vector_subparsers.add_parser(
         "search-text", help="Search for texts similar to the given query"
     )
@@ -4804,7 +4808,6 @@ def setup_routes(fastapi_app):
         token: str = Depends(authenticate_token),
     ):
         """Save a file to the flatpack build directory."""
-
         if not flatpack_directory:
             raise HTTPException(status_code=500, detail="Flatpack directory is not set")
 
