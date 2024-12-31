@@ -75,8 +75,7 @@ from itsdangerous import BadSignature, SignatureExpired, TimestampSigner
 from pydantic import BaseModel, Field
 
 from .database_manager import DatabaseManager
-from .error_handling import safe_exit, setup_exception_handling, \
-    setup_signal_handling
+from .error_handling import safe_exit, setup_exception_handling, setup_signal_handling
 from .parsers import parse_toml_to_venv_script
 from .session_manager import SessionManager
 from .vector_manager import VectorManager
@@ -84,8 +83,7 @@ from .vector_manager import VectorManager
 if not IMPORT_CACHE_FILE.exists():
     IMPORT_CACHE_FILE.touch()
     console.print("")
-    console.print(
-        "[bold green]First-time initialisation complete! ✨[/bold green]")
+    console.print("[bold green]First-time initialisation complete! ✨[/bold green]")
     console.print("")
 
 
@@ -99,8 +97,7 @@ def lazy_import(module_name, package=None, callable_name=None):
 
         try:
             module = importlib.import_module(module_name, package)
-            result = getattr(module,
-                             callable_name) if callable_name else module
+            result = getattr(module, callable_name) if callable_name else module
             _runtime_cache[cache_key] = result
             return result
         except (ImportError, AttributeError):
@@ -128,8 +125,7 @@ BaseHTTPMiddleware = lazy_import(
 )
 BeautifulSoup = lazy_import("bs4", callable_name="BeautifulSoup")
 Cookie = lazy_import("fastapi", callable_name="Cookie")
-CORSMiddleware = lazy_import("fastapi.middleware.cors",
-                             callable_name="CORSMiddleware")
+CORSMiddleware = lazy_import("fastapi.middleware.cors", callable_name="CORSMiddleware")
 Depends = lazy_import("fastapi", callable_name="Depends")
 FastAPI = lazy_import("fastapi", callable_name="FastAPI")
 FileResponse = lazy_import("fastapi.responses", callable_name="FileResponse")
@@ -140,8 +136,7 @@ HTTPException = lazy_import("fastapi", callable_name="HTTPException")
 JSONResponse = lazy_import("fastapi.responses", callable_name="JSONResponse")
 NgrokError = lazy_import("ngrok.exceptions", callable_name="NgrokError")
 PrettyTable = lazy_import("prettytable", callable_name="PrettyTable")
-RedirectResponse = lazy_import("fastapi.responses",
-                               callable_name="RedirectResponse")
+RedirectResponse = lazy_import("fastapi.responses", callable_name="RedirectResponse")
 Request = lazy_import("fastapi", callable_name="Request")
 Response = lazy_import("fastapi.responses", callable_name="Response")
 SessionMiddleware = lazy_import(
@@ -150,8 +145,7 @@ SessionMiddleware = lazy_import(
 StaticFiles = lazy_import("fastapi.staticfiles", callable_name="StaticFiles")
 croniter = lazy_import("croniter", callable_name="croniter")
 ngrok = lazy_import("ngrok")
-snapshot_download = lazy_import("huggingface_hub",
-                                callable_name="snapshot_download")
+snapshot_download = lazy_import("huggingface_hub", callable_name="snapshot_download")
 warnings = lazy_import("warnings")
 zstd = lazy_import("zstandard")
 
@@ -212,8 +206,7 @@ class ConnectionLimitMiddleware(BaseHTTPMiddleware):
                 self.connected_ip = client_ip
             elif self.connected_ip != client_ip:
                 return JSONResponse(
-                    {"detail": "Another client is already connected"},
-                    status_code=503
+                    {"detail": "Another client is already connected"}, status_code=503
                 )
 
         try:
@@ -312,12 +305,12 @@ class ProcessManager:
             return False
 
     def set_process(
-            self,
-            process: subprocess.Popen,
-            master_fd: int,
-            slave_fd: int,
-            input_pipe: Optional[int] = None,
-            output_pipe: Optional[int] = None,
+        self,
+        process: subprocess.Popen,
+        master_fd: int,
+        slave_fd: int,
+        input_pipe: Optional[int] = None,
+        output_pipe: Optional[int] = None,
     ) -> None:
         """Set a new process with validation."""
         if self.is_active():
@@ -377,8 +370,7 @@ class ProcessManager:
             self.reset_state()
             final_status = self.get_status()
             logger.info(
-                "Process manager cleared: %s -> %s", initial_status,
-                final_status
+                "Process manager cleared: %s -> %s", initial_status, final_status
             )
 
     def terminate_with_cleanup(self, timeout: int = 5) -> None:
@@ -393,14 +385,12 @@ class ProcessManager:
             self.process.terminate()
             try:
                 logger.debug(
-                    "Waiting up to %s seconds for process to terminate",
-                    timeout
+                    "Waiting up to %s seconds for process to terminate", timeout
                 )
                 self.process.wait(timeout=timeout)
                 logger.info("Process terminated gracefully")
             except subprocess.TimeoutExpired:
-                logger.warning(
-                    "Process did not terminate in time, force killing...")
+                logger.warning("Process did not terminate in time, force killing...")
                 self.process.kill()
                 self.process.wait()
                 logger.info("Process killed")
@@ -429,8 +419,7 @@ class ProcessManager:
                     "memory_percent": process.memory_percent(),
                     "num_threads": process.num_threads(),
                     "num_fds": (
-                        process.num_fds() if hasattr(process,
-                                                     "num_fds") else None
+                        process.num_fds() if hasattr(process, "num_fds") else None
                     ),
                 }
         except Exception as e:
@@ -460,8 +449,7 @@ class ProcessManager:
 
             try:
                 return_code = process.wait(timeout=timeout)
-                logger.info("Process completed with return code: %s",
-                            return_code)
+                logger.info("Process completed with return code: %s", return_code)
                 return return_code
             except subprocess.TimeoutExpired:
                 logger.warning("Process timed out after %s seconds", timeout)
@@ -548,18 +536,13 @@ def setup_logging(log_path: Path):
         log_path, maxBytes=5 * 1024 * 1024, backupCount=5
     )
     file_handler.setLevel(logging.WARNING)
-    file_formatter = logging.Formatter(
-        "%(asctime)s - %(levelname)s - %(message)s"
-    )
+    file_formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
     file_handler.setFormatter(file_formatter)
 
     logger.addHandler(console_handler)
     logger.addHandler(file_handler)
 
-    logger.info(
-        "Logging initialized with output to console and file: %s",
-        log_path
-    )
+    logger.info("Logging initialized with output to console and file: %s", log_path)
 
     return logger
 
@@ -597,8 +580,7 @@ def add_hook_to_database(hook: Hook):
     except Exception as e:
         logger.error("An error occurred while adding the hook: %s", e)
         raise HTTPException(
-            status_code=500,
-            detail=f"An error occurred while adding the hook: {e}"
+            status_code=500, detail=f"An error occurred while adding the hook: {e}"
         )
 
 
@@ -616,8 +598,7 @@ def authenticate_token(request: Request):
         if token == stored_token:
             return token
 
-    raise HTTPException(status_code=401,
-                        detail="Invalid or missing authentication")
+    raise HTTPException(status_code=401, detail="Invalid or missing authentication")
 
 
 async def check_and_run_schedules():
@@ -655,16 +636,14 @@ async def check_and_run_schedules():
                             last_run_dt = None
 
                         if (
-                                prev_run <= now < next_run
-                                and last_run_dt is None
-                                or last_run_dt < prev_run
+                            prev_run <= now < next_run
+                            and last_run_dt is None
+                            or last_run_dt < prev_run
                         ):
                             await run_build_process(schedule_id)
-                            db_manager.update_schedule_last_run(schedule_id,
-                                                                now)
+                            db_manager.update_schedule_last_run(schedule_id, now)
                             logger.info(
-                                "Executed recurring build for schedule %s",
-                                schedule_id
+                                "Executed recurring build for schedule %s", schedule_id
                             )
 
                 elif schedule_type == "manual":
@@ -672,29 +651,25 @@ async def check_and_run_schedules():
                         executed_datetimes = []
 
                         for dt in datetimes:
-                            scheduled_time = datetime.fromisoformat(
-                                dt).replace(
+                            scheduled_time = datetime.fromisoformat(dt).replace(
                                 tzinfo=timezone.utc
                             )
                             if scheduled_time <= now:
                                 await run_build_process(schedule_id)
                                 logger.info(
-                                    "Executed manual build for schedule %s",
-                                    schedule_id
+                                    "Executed manual build for schedule %s", schedule_id
                                 )
                                 executed_datetimes.append(dt)
 
                         remaining_datetimes = [
-                            dt for dt in datetimes if
-                            dt not in executed_datetimes
+                            dt for dt in datetimes if dt not in executed_datetimes
                         ]
 
                         if not remaining_datetimes:
                             db_manager.delete_schedule(schedule_id)
                         else:
                             db_manager.update_schedule(
-                                schedule_id, schedule_type, pattern,
-                                remaining_datetimes
+                                schedule_id, schedule_type, pattern, remaining_datetimes
                             )
 
         except Exception as e:
@@ -724,41 +699,34 @@ def check_node_and_run_npm_install(web_dir):
                 raise FileNotFoundError("Node.js or npm not found")
 
             node_version = subprocess.run(
-                [node_path, "--version"], check=True, capture_output=True,
-                text=True
+                [node_path, "--version"], check=True, capture_output=True, text=True
             ).stdout.strip()
             console.print("")
             console.print(f"[green]Node.js version:[/green] {node_version}")
             console.print("")
-            console.print(
-                "[green]npm is assumed to be installed with Node.js[/green]")
+            console.print("[green]npm is assumed to be installed with Node.js[/green]")
             console.print("")
 
             web_dir_path = Path(web_dir).resolve()
 
             if not web_dir_path.exists() or not web_dir_path.is_dir():
-                raise FileNotFoundError(
-                    f"Web directory not found: {web_dir_path}")
+                raise FileNotFoundError(f"Web directory not found: {web_dir_path}")
 
             os.chdir(web_dir_path)
 
-            with console.status("[bold green]Running npm install...",
-                                spinner="dots"):
+            with console.status("[bold green]Running npm install...", spinner="dots"):
                 subprocess.run(
-                    [npm_path, "install"], check=True, capture_output=True,
-                    text=True
+                    [npm_path, "install"], check=True, capture_output=True, text=True
                 )
 
-            console.print(
-                "[bold green]Successfully ran 'npm install'[/bold green]")
+            console.print("[bold green]Successfully ran 'npm install'[/bold green]")
             console.print("")
 
             with console.status(
-                    "[bold green]Installing Tailwind CSS...", spinner="dots"
+                "[bold green]Installing Tailwind CSS...", spinner="dots"
             ):
                 tailwind_install_result = subprocess.run(
-                    [npm_path, "install", "tailwindcss", "postcss",
-                     "autoprefixer"],
+                    [npm_path, "install", "tailwindcss", "postcss", "autoprefixer"],
                     check=True,
                     capture_output=True,
                     text=True,
@@ -895,11 +863,11 @@ def create_session(token):
 
 
 def create_temp_sh(
-        build_dir,
-        custom_json_path: Path,
-        temp_sh_path: Path,
-        use_euxo: bool = False,
-        hooks: list = None,
+    build_dir,
+    custom_json_path: Path,
+    temp_sh_path: Path,
+    use_euxo: bool = False,
+    hooks: list = None,
 ):
     if hooks is None:
         hooks = []
@@ -930,8 +898,7 @@ def create_temp_sh(
                 outfile.write(send_code_to_python(hook["hook_script"]))
                 outfile.write("\n")
 
-        last_count = sum(
-            1 for block in code_blocks if not is_block_disabled(block))
+        last_count = sum(1 for block in code_blocks if not is_block_disabled(block))
 
         temp_sh_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -1277,8 +1244,7 @@ def create_temp_sh(
 
     except Exception as e:
         logging.error(
-            "An error occurred while creating temp script: %s", e,
-            exc_info=True
+            "An error occurred while creating temp script: %s", e, exc_info=True
         )
         raise
 
@@ -1309,8 +1275,7 @@ def create_venv(venv_dir: str):
         )
     except Exception as e:
         logger.error(
-            "An unexpected error occurred while creating virtual environment: %s",
-            e
+            "An unexpected error occurred while creating virtual environment: %s", e
         )
         console.print(
             f"[bold red]ERROR:[/bold red] An unexpected error occurred while creating virtual environment: {e}"
@@ -1352,14 +1317,12 @@ async def csrf_protect(request: Request):
             raise HTTPException(status_code=403, detail="CSRF token invalid")
 
     except (SignatureExpired, BadSignature):
-        raise HTTPException(status_code=403,
-                            detail="CSRF token expired or invalid")
+        raise HTTPException(status_code=403, detail="CSRF token expired or invalid")
 
 
 def decompress_data(input_path, output_path, allowed_dir=None):
     try:
-        abs_input_path = validate_file_path(input_path,
-                                            allowed_dir=allowed_dir)
+        abs_input_path = validate_file_path(input_path, allowed_dir=allowed_dir)
 
         abs_output_path = validate_file_path(
             output_path, is_input=False, allowed_dir=allowed_dir
@@ -1378,14 +1341,12 @@ def decompress_data(input_path, output_path, allowed_dir=None):
                 with tarfile.open(fileobj=tmp_file, mode="r:") as tar:
 
                     for member in tar.getmembers():
-                        member_path = os.path.join(abs_output_path,
-                                                   member.name)
+                        member_path = os.path.join(abs_output_path, member.name)
                         if (
-                                not os.path.commonprefix(
-                                    [abs_output_path,
-                                     os.path.abspath(member_path)]
-                                )
-                                    == abs_output_path
+                            not os.path.commonprefix(
+                                [abs_output_path, os.path.abspath(member_path)]
+                            )
+                            == abs_output_path
                         ):
                             raise Exception(
                                 f"Attempted Path Traversal in Tar File: {member.name}"
@@ -1472,8 +1433,7 @@ def get_all_hooks_from_database():
     except Exception as e:
         logger.error("An error occurred while fetching hooks: %s", e)
         raise HTTPException(
-            status_code=500,
-            detail=f"An error occurred while fetching hooks: {e}"
+            status_code=500, detail=f"An error occurred while fetching hooks: {e}"
         )
 
 
@@ -1484,8 +1444,7 @@ def get_executable_path(executable):
         where_cmd = os.path.join(system_root, "System32", "where.exe")
         try:
             result = subprocess.run(
-                [where_cmd, executable], check=True, capture_output=True,
-                text=True
+                [where_cmd, executable], check=True, capture_output=True, text=True
             )
             paths = result.stdout.strip().split("\n")
             return paths[0] if paths else None
@@ -1498,8 +1457,7 @@ def get_executable_path(executable):
                 which_cmd = "/bin/which"
 
             result = subprocess.run(
-                [which_cmd, executable], check=True, capture_output=True,
-                text=True
+                [which_cmd, executable], check=True, capture_output=True, text=True
             )
             return result.stdout.strip()
         except subprocess.CalledProcessError:
@@ -1566,8 +1524,7 @@ def load_config():
         dict: The loaded configuration.
     """
     if not os.path.exists(CONFIG_FILE_PATH):
-        logger.warning("Configuration file does not exist: %s",
-                       CONFIG_FILE_PATH)
+        logger.warning("Configuration file does not exist: %s", CONFIG_FILE_PATH)
         return {}
 
     try:
@@ -1610,8 +1567,7 @@ async def run_build_process(schedule_id=None):
             await update_build_status("aborted", schedule_id)
             return
 
-        await update_build_status("in_progress: Running build script",
-                                  schedule_id)
+        await update_build_status("in_progress: Running build script", schedule_id)
         await fpk_build(flatpack_directory)
 
         if abort_requested:
@@ -1680,13 +1636,11 @@ class OutStream:
                 os.close(self._fileno)
             except OSError as e:
                 if e.errno == errno.EBADF:
-                    print(
-                        f"File descriptor {self._fileno} was already closed.")
+                    print(f"File descriptor {self._fileno} was already closed.")
                 else:
                     raise
 
-        finished_lines = [line.decode(errors="replace") for line in
-                          finished_lines]
+        finished_lines = [line.decode(errors="replace") for line in finished_lines]
         return finished_lines, readable, output
 
     def fileno(self):
@@ -1745,7 +1699,7 @@ async def run_subprocess(command, log_file):
             stdout=slave_fd,
             stderr=slave_fd,
             start_new_session=True,
-            check=True
+            check=True,
         )
 
         process_manager.set_process(process, master_fd, slave_fd)
@@ -1787,8 +1741,7 @@ async def run_subprocess(command, log_file):
                             log_file.flush()
 
                             if "Python executor finished" in decoded_data:
-                                logger.info(
-                                    "Python executor finished, cleaning up")
+                                logger.info("Python executor finished, cleaning up")
                                 return process.returncode
                         except OSError as e:
                             logger.error("Error reading from master_fd: %s", e)
@@ -1796,8 +1749,7 @@ async def run_subprocess(command, log_file):
 
                 if process.poll() is not None:
                     logger.info(
-                        "Process terminated with return code: %s",
-                        process.returncode
+                        "Process terminated with return code: %s", process.returncode
                     )
                     break
 
@@ -1872,8 +1824,7 @@ def setup_static_directory(fastapi_app, directory: str):
     global flatpack_directory
     flatpack_directory = os.path.abspath(directory)
 
-    if os.path.exists(flatpack_directory) and os.path.isdir(
-            flatpack_directory):
+    if os.path.exists(flatpack_directory) and os.path.isdir(flatpack_directory):
         static_dir = os.path.join(flatpack_directory, "web")
 
         @fastapi_app.middleware("http")
@@ -1961,8 +1912,7 @@ def sync_connections_from_file():
                 )
                 connections.append(mapping)
             except Exception as e:
-                logger.warning(
-                    "Invalid connection entry in connections.json: %s", e)
+                logger.warning("Invalid connection entry in connections.json: %s", e)
                 continue
 
         if connections:
@@ -2012,8 +1962,7 @@ def sync_sources_from_file():
             for source in sources:
                 try:
                     db_manager.add_source(
-                        source.source_name, source.source_type,
-                        source.source_details
+                        source.source_name, source.source_type, source.source_details
                     )
                 except Exception as e:
                     logger.warning(
@@ -2023,8 +1972,7 @@ def sync_sources_from_file():
                     )
 
             logger.info(
-                "Successfully synced %d sources from file to database",
-                len(sources)
+                "Successfully synced %d sources from file to database", len(sources)
             )
     except Exception as e:
         logger.error("Error syncing sources from file: %s", e)
@@ -2068,8 +2016,7 @@ async def update_build_status(status, schedule_id=None, error=None):
     if error:
         status_data["error"] = str(error)
 
-    status_file = os.path.join(flatpack_directory, "build",
-                               "build_status.json")
+    status_file = os.path.join(flatpack_directory, "build", "build_status.json")
 
     try:
         os.makedirs(os.path.dirname(status_file), exist_ok=True)
@@ -2098,8 +2045,7 @@ def validate_file_path(path, is_input=True, allowed_dir=None):
 
     if is_input:
         if not os.path.exists(absolute_path):
-            raise FileNotFoundError(
-                f"The path '{absolute_path}' does not exist.")
+            raise FileNotFoundError(f"The path '{absolute_path}' does not exist.")
         if not (os.path.isfile(absolute_path) or os.path.isdir(absolute_path)):
             raise ValueError(
                 f"The path '{absolute_path}' is neither a file nor a directory."
@@ -2121,8 +2067,7 @@ def validate_session(session_id):
 
 
 def write_status_to_file(status_data):
-    status_file = os.path.join(flatpack_directory, "build",
-                               "build_status.json")
+    status_file = os.path.join(flatpack_directory, "build", "build_status.json")
 
     with open(status_file, "w") as f:
         json.dump(status_data, f)
@@ -2148,18 +2093,14 @@ async def fpk_build(directory: Union[str, None], use_euxo: bool = False):
         last_unboxed_flatpack = cache_file_path.read_text().strip()
         flatpack_directory = last_unboxed_flatpack
     else:
-        logger.error(
-            "No cached flatpack found, and no valid directory provided.")
-        raise ValueError(
-            "No cached flatpack found, and no valid directory provided.")
+        logger.error("No cached flatpack found, and no valid directory provided.")
+        raise ValueError("No cached flatpack found, and no valid directory provided.")
 
     flatpack_dir = Path(last_unboxed_flatpack)
 
     if not flatpack_dir.exists():
-        logger.error("The flatpack directory '%s' does not exist.",
-                     flatpack_dir)
-        raise ValueError(
-            f"The flatpack directory '{flatpack_dir}' does not exist.")
+        logger.error("The flatpack directory '%s' does not exist.", flatpack_dir)
+        raise ValueError(f"The flatpack directory '{flatpack_dir}' does not exist.")
 
     build_dir = flatpack_dir / "build"
 
@@ -2175,8 +2116,7 @@ async def fpk_build(directory: Union[str, None], use_euxo: bool = False):
 
     if not connections_file.exists():
         logger.error(
-            "connections.json not found in %s. Build process canceled.",
-            flatpack_dir
+            "connections.json not found in %s. Build process canceled.", flatpack_dir
         )
         raise FileNotFoundError(
             f"connections.json not found in {flatpack_dir}. Build process canceled."
@@ -2212,8 +2152,7 @@ async def fpk_build(directory: Union[str, None], use_euxo: bool = False):
 
                 if not matched_hook:
                     invalid_connections.append(connection)
-                    table.add_row(source_id, source_type,
-                                  f"[red]{target_id}[/red]")
+                    table.add_row(source_id, source_type, f"[red]{target_id}[/red]")
                 else:
                     table.add_row(source_id, source_type, target_id)
 
@@ -2229,8 +2168,7 @@ async def fpk_build(directory: Union[str, None], use_euxo: bool = False):
                     console.print(
                         f"[red] - Source: {conn.get('source_id')}, Target: {conn.get('target_id')}[/red]"
                     )
-                raise ValueError(
-                    "Invalid connections found. Build process canceled.")
+                raise ValueError("Invalid connections found. Build process canceled.")
 
         logger.info("Successfully validated %d connections", len(connections))
     except json.JSONDecodeError:
@@ -2240,8 +2178,7 @@ async def fpk_build(directory: Union[str, None], use_euxo: bool = False):
     custom_json_path = build_dir / "custom.json"
 
     if not custom_json_path.exists() or not custom_json_path.is_file():
-        logger.error("custom.json not found in %s. Build process canceled.",
-                     build_dir)
+        logger.error("custom.json not found in %s. Build process canceled.", build_dir)
         raise FileNotFoundError(
             f"custom.json not found in {build_dir}. Build process canceled."
         )
@@ -2252,8 +2189,7 @@ async def fpk_build(directory: Union[str, None], use_euxo: bool = False):
         temp_sh_path.unlink()
 
     create_temp_sh(
-        build_dir, custom_json_path, temp_sh_path, use_euxo=use_euxo,
-        hooks=hooks
+        build_dir, custom_json_path, temp_sh_path, use_euxo=use_euxo, hooks=hooks
     )
 
     lines = temp_sh_path.read_text().splitlines()
@@ -2289,8 +2225,7 @@ async def fpk_build(directory: Union[str, None], use_euxo: bool = False):
 
         if not web_dir.exists():
             logger.error("The web directory '%s' does not exist.", web_dir)
-            raise FileNotFoundError(
-                f"The web directory '{web_dir}' does not exist.")
+            raise FileNotFoundError(f"The web directory '{web_dir}' does not exist.")
 
         output_dir = web_dir / "output"
 
@@ -2334,14 +2269,12 @@ async def fpk_build(directory: Union[str, None], use_euxo: bool = False):
                         if mime_type in allowed_mimetypes:
                             dest_path = output_dir / source_file.name
                             shutil.copy2(source_file, dest_path)
-                            logger.info("Copied %s to %s", source_file,
-                                        dest_path)
+                            logger.info("Copied %s to %s", source_file, dest_path)
                     else:
                         logger.error("File %s not found.", source_file)
                 else:
                     logger.error(
-                        "Could not determine relative path for %s",
-                        original_path
+                        "Could not determine relative path for %s", original_path
                     )
 
 
@@ -2361,13 +2294,11 @@ def fpk_cache_unbox(directory_name: str):
             f.write(directory_name)
 
         logger.info(
-            "Cached the directory name '%s' to %s", directory_name,
-            cache_file_path
+            "Cached the directory name '%s' to %s", directory_name, cache_file_path
         )
 
     except IOError as e:
-        logger.error("Failed to cache the directory name '%s': %s",
-                     directory_name, e)
+        logger.error("Failed to cache the directory name '%s': %s", directory_name, e)
 
 
 def fpk_check_ngrok_auth():
@@ -2420,8 +2351,7 @@ def fpk_create(flatpack_name, repo_url=TEMPLATE_REPO_URL):
             else:
                 shutil.copy2(s, d)
 
-        logger.info("Copied template files to flatpack directory: %s",
-                    flatpack_dir)
+        logger.info("Copied template files to flatpack directory: %s", flatpack_dir)
 
         files_to_edit = [
             (
@@ -2523,8 +2453,7 @@ https://fpk.ai/w/{directory_name}
         local,
     )
 
-    disclaimer_message = disclaimer_template.format(
-        please_note=please_note_content)
+    disclaimer_message = disclaimer_template.format(please_note=please_note_content)
     console.print(disclaimer_message)
 
 
@@ -2578,8 +2507,7 @@ def fpk_download_and_extract_template(repo_url, dest_dir):
                 print(f"File not found: {file}")
 
         logger.info(
-            "Downloaded and extracted template from %s to %s", repo_url,
-            dest_dir
+            "Downloaded and extracted template from %s to %s", repo_url, dest_dir
         )
 
         return template_dir
@@ -2596,7 +2524,7 @@ def fpk_download_and_extract_template(repo_url, dest_dir):
 
 
 def fpk_fetch_flatpack_toml_from_dir(
-        directory_name: str, session: httpx.Client
+    directory_name: str, session: httpx.Client
 ) -> Optional[str]:
     """Fetch the flatpack TOML configuration from a specific directory.
 
@@ -2668,9 +2596,9 @@ def fpk_fetch_github_dirs(session: httpx.Client) -> List[str]:
                 item["name"]
                 for item in json_data
                 if (
-                        isinstance(item, dict)
-                        and item.get("type") == "dir"
-                        and item.get("name", "").lower()
+                    isinstance(item, dict)
+                    and item.get("type") == "dir"
+                    and item.get("name", "").lower()
                 )
             ]
 
@@ -2789,8 +2717,7 @@ def fpk_get_last_flatpack() -> Optional[str]:
             with cache_file_path.open("r") as cache_file:
                 last_flatpack = cache_file.read().strip()
                 logger.info(
-                    "Last unboxed flatpack directory retrieved: %s",
-                    last_flatpack
+                    "Last unboxed flatpack directory retrieved: %s", last_flatpack
                 )
                 return last_flatpack
         else:
@@ -2866,15 +2793,14 @@ def fpk_set_secure_file_permissions(file_path):
         logger.info("Set secure file permissions for %s", file_path)
     except OSError as e:
         error_message = f"Failed to set secure file permissions for {file_path}: {e}"
-        logger.error("Failed to set secure file permissions for %s: %s",
-                     file_path, e)
+        logger.error("Failed to set secure file permissions for %s: %s", file_path, e)
 
 
 def fpk_unbox(
-        directory_name: str,
-        session: httpx.Client,
-        local: bool = False,
-        fpk_path: str | Path | None = None,
+    directory_name: str,
+    session: httpx.Client,
+    local: bool = False,
+    fpk_path: str | Path | None = None,
 ) -> bool:
     """
     Unbox a flatpack into a directory, either from a URL, local directory, or local .fpk file
@@ -2888,9 +2814,9 @@ def fpk_unbox(
     global flatpack_directory
 
     if (
-            directory_name is None
-            or not isinstance(directory_name, str)
-            or directory_name.strip() == ""
+        directory_name is None
+        or not isinstance(directory_name, str)
+        or directory_name.strip() == ""
     ):
         logger.error("Invalid directory name: %s", directory_name)
         return False
@@ -2905,8 +2831,7 @@ def fpk_unbox(
         logger.info("Flatpack directory: %s", flatpack_dir)
 
         if not os.path.exists(CONFIG_FILE_PATH):
-            logger.info(
-                "Config file not found. Creating initial configuration.")
+            logger.info("Config file not found. Creating initial configuration.")
             default_config = {}
             save_config(default_config)
 
@@ -2941,8 +2866,7 @@ def fpk_unbox(
 
         elif local:
             if not flatpack_dir.exists():
-                logger.error("Local directory '%s' does not exist.",
-                             directory_name)
+                logger.error("Local directory '%s' does not exist.", directory_name)
                 return False
 
             toml_path = flatpack_dir / "flatpack.toml"
@@ -3014,8 +2938,7 @@ def fpk_unbox(
                         else:
                             f.write(file_decoded.decode("utf-8"))
 
-                    logger.info("Downloaded and saved %s to %s", file,
-                                file_path)
+                    logger.info("Downloaded and saved %s to %s", file, file_path)
                 except Exception as e:
                     logger.error("Failed to download or save %s: %s", file, e)
                     raise
@@ -3053,8 +2976,7 @@ def fpk_unbox(
             ]
 
             with console.status(
-                    "[bold green]Setting up a new Next.js project...",
-                    spinner="dots"
+                "[bold green]Setting up a new Next.js project...", spinner="dots"
             ):
                 subprocess.run(
                     create_next_app_cmd,
@@ -3124,8 +3046,7 @@ def fpk_unbox(
 
         try:
             flatpack_dir_str = str(flatpack_dir.resolve())
-            logger.info("Initializing database manager with path: %s",
-                        flatpack_dir_str)
+            logger.info("Initializing database manager with path: %s", flatpack_dir_str)
             initialize_database_manager(flatpack_dir_str)
 
             logger.info("Syncing hooks to database")
@@ -3166,8 +3087,7 @@ def fpk_valid_directory_name(name: str) -> bool:
     return is_valid
 
 
-def fpk_update(flatpack_name: str, session: requests.Session,
-               branch: str = "main"):
+def fpk_update(flatpack_name: str, session: requests.Session, branch: str = "main"):
     """
     Update files of the specified flatpack with the latest versions from the template.
     Files are placed in the /web or /build directory, overwriting existing ones.
@@ -3182,8 +3102,7 @@ def fpk_update(flatpack_name: str, session: requests.Session,
     """
     files_to_update = {
         "build": ["device.sh"],
-        "web": ["app.css", "app.js", "index.html", "package.json",
-                "robotomono.woff2"],
+        "web": ["app.css", "app.js", "index.html", "package.json", "robotomono.woff2"],
     }
 
     binary_extensions = [".sh", ".woff2"]
@@ -3230,8 +3149,7 @@ def fpk_update(flatpack_name: str, session: requests.Session,
                             local_file.write(file_content)
                     else:
                         content = file_content.decode("utf-8")
-                        with open(local_file_path, "w",
-                                  encoding="utf-8") as local_file:
+                        with open(local_file_path, "w", encoding="utf-8") as local_file:
                             local_file.write(content)
 
                     if local_file_path.exists():
@@ -3286,8 +3204,7 @@ def fpk_verify(directory: Union[str, None]):
         console.print("[red]No valid flatpack directory found.[/red]")
         return
 
-    verification_script_path = Path(
-        last_unboxed_flatpack) / "build" / "build.sh"
+    verification_script_path = Path(last_unboxed_flatpack) / "build" / "build.sh"
 
     if not verification_script_path.exists() or not verification_script_path.is_file():
         console.print(
@@ -3304,11 +3221,9 @@ def setup_arg_parser():
         argparse.ArgumentParser: The configured argument parser.
     """
     # Create the top-level parser
-    parser = argparse.ArgumentParser(
-        description="Flatpack command line interface")
+    parser = argparse.ArgumentParser(description="Flatpack command line interface")
 
-    subparsers = parser.add_subparsers(dest="command",
-                                       help="Available commands")
+    subparsers = parser.add_subparsers(dest="command", help="Available commands")
 
     # General commands
     parser_find = subparsers.add_parser(
@@ -3317,8 +3232,7 @@ def setup_arg_parser():
 
     parser_find.set_defaults(func=fpk_cli_handle_find)
 
-    parser_help = subparsers.add_parser("help",
-                                        help="Display help for commands")
+    parser_help = subparsers.add_parser("help", help="Display help for commands")
 
     parser_help.set_defaults(func=fpk_cli_handle_help)
 
@@ -3349,8 +3263,7 @@ def setup_arg_parser():
     parser_get_api.set_defaults(func=fpk_cli_handle_get_api_key)
 
     ## Set API key
-    parser_set_api = api_key_subparsers.add_parser("set",
-                                                   help="Set the API key")
+    parser_set_api = api_key_subparsers.add_parser("set", help="Set the API key")
 
     parser_set_api.add_argument("api_key", type=str, help="API key to set")
 
@@ -3375,12 +3288,10 @@ def setup_arg_parser():
     parser_build.set_defaults(func=fpk_cli_handle_build)
 
     # Create flatpack
-    parser_create = subparsers.add_parser("create",
-                                          help="Create a new flatpack")
+    parser_create = subparsers.add_parser("create", help="Create a new flatpack")
 
     parser_create.add_argument(
-        "input", nargs="?", default=None,
-        help="The name of the flatpack to create"
+        "input", nargs="?", default=None, help="The name of the flatpack to create"
     )
 
     parser_create.set_defaults(func=fpk_cli_handle_create)
@@ -3417,12 +3328,10 @@ def setup_arg_parser():
     parser_run = subparsers.add_parser("run", help="Run the FastAPI server")
 
     parser_run.add_argument(
-        "input", nargs="?", default=None,
-        help="The name of the flatpack to run"
+        "input", nargs="?", default=None, help="The name of the flatpack to run"
     )
 
-    parser_run.add_argument("--share", action="store_true",
-                            help="Share using ngrok")
+    parser_run.add_argument("--share", action="store_true", help="Share using ngrok")
 
     parser_run.add_argument(
         "--domain", type=str, default=None, help="Custom ngrok domain"
@@ -3436,8 +3345,7 @@ def setup_arg_parser():
     )
 
     parser_unbox.add_argument(
-        "input", nargs="?", default=None,
-        help="The name of the flatpack to unbox"
+        "input", nargs="?", default=None, help="The name of the flatpack to unbox"
     )
 
     parser_unbox.add_argument(
@@ -3460,8 +3368,7 @@ def setup_arg_parser():
     parser_update.set_defaults(func=fpk_cli_handle_update)
 
     # Vector database management
-    parser_vector = subparsers.add_parser("vector",
-                                          help="Vector database management")
+    parser_vector = subparsers.add_parser("vector", help="Vector database management")
 
     vector_subparsers = parser_vector.add_subparsers(dest="vector_command")
 
@@ -3515,8 +3422,7 @@ def setup_arg_parser():
 
     ## Add Wikipedia
     parser_add_wikipedia_page = vector_subparsers.add_parser(
-        "add-wikipedia",
-        help="Add text from a Wikipedia page to the vector database"
+        "add-wikipedia", help="Add text from a Wikipedia page to the vector database"
     )
 
     parser_add_wikipedia_page.add_argument(
@@ -3591,8 +3497,7 @@ def fpk_cli_handle_add_pdf(pdf_path, vm):
 
     try:
         vm.add_pdf(pdf_path)
-        logger.info("Added text from PDF: '%s' to the vector database.",
-                    pdf_path)
+        logger.info("Added text from PDF: '%s' to the vector database.", pdf_path)
     except Exception as e:
         logger.error("Failed to add PDF to the vector database: %s", e)
 
@@ -3612,8 +3517,7 @@ def fpk_cli_handle_add_url(url, vm):
         response = requests.head(url, allow_redirects=True, timeout=5)
         if 200 <= response.status_code < 400:
             vm.add_url(url)
-            logger.info("Added text from URL: '%s' to the vector database.",
-                        url)
+            logger.info("Added text from URL: '%s' to the vector database.", url)
         else:
             logger.error(
                 "URL is not accessible: '%s'. HTTP Status Code: %d",
@@ -3631,8 +3535,7 @@ def get_python_processes() -> List[Dict[str, any]]:
     current_pid = os.getpid()
     parent_pid = os.getppid()
 
-    logger.info("Current process: %s, Parent process: %s", current_pid,
-                parent_pid)
+    logger.info("Current process: %s, Parent process: %s", current_pid, parent_pid)
     logger.info("Current process tree: %s", get_process_tree(current_pid))
 
     def is_descendant_of_current_process(proc):
@@ -3654,9 +3557,9 @@ def get_python_processes() -> List[Dict[str, any]]:
     for proc in psutil.process_iter(["pid", "name", "cmdline"]):
         try:
             if (
-                    "python" in proc.info["name"].lower()
-                    and proc.info["pid"] != current_pid
-                    and is_descendant_of_current_process(proc)
+                "python" in proc.info["name"].lower()
+                and proc.info["pid"] != current_pid
+                and is_descendant_of_current_process(proc)
             ):
                 cmd = (
                     " ".join(proc.info["cmdline"])
@@ -3666,12 +3569,9 @@ def get_python_processes() -> List[Dict[str, any]]:
                 python_processes.append(
                     {"pid": proc.info["pid"], "command": cmd, "process": proc}
                 )
-                logger.info("Adding process %s to termination list",
-                            proc.info["pid"])
+                logger.info("Adding process %s to termination list", proc.info["pid"])
                 logger.info("Process details: %s", cmd)
-        except (
-                psutil.NoSuchProcess, psutil.AccessDenied,
-                psutil.ZombieProcess):
+        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
             pass
     return python_processes
 
@@ -3689,8 +3589,7 @@ def terminate_python_processes(processes: List[Dict[str, any]]) -> None:
                 process.wait(timeout=3)
                 logger.info("PID %s terminated successfully", pid)
             except psutil.TimeoutExpired:
-                logger.info("PID %s didn't respond to SIGTERM, using SIGKILL",
-                            pid)
+                logger.info("PID %s didn't respond to SIGTERM, using SIGKILL", pid)
                 process.kill()
                 logger.info("PID %s killed successfully", pid)
         except psutil.NoSuchProcess:
@@ -3711,8 +3610,7 @@ def fpk_cli_handle_build(args, session):
     directory_name = args.directory
 
     if directory_name is None:
-        logger.info(
-            "No directory name provided. Using cached directory if available.")
+        logger.info("No directory name provided. Using cached directory if available.")
 
     try:
         asyncio.run(fpk_build(directory_name, use_euxo=args.use_euxo))
@@ -3730,8 +3628,7 @@ def fpk_cli_handle_build(args, session):
             logger.info("Detected running Python processes")
 
             for proc in processes:
-                logger.info("PID: %s - Command: %s", proc["pid"],
-                            proc["command"])
+                logger.info("PID: %s - Command: %s", proc["pid"], proc["command"])
 
             terminate_python_processes(processes)
         else:
@@ -3743,8 +3640,7 @@ def fpk_cli_handle_build(args, session):
 
 def fpk_cli_handle_create(args, session):
     if not args.input:
-        console.print(
-            "[bold red]Error:[/bold red] No flatpack name specified.")
+        console.print("[bold red]Error:[/bold red] No flatpack name specified.")
         return
 
     flatpack_name = args.input
@@ -3755,8 +3651,7 @@ def fpk_cli_handle_create(args, session):
         return
 
     try:
-        with console.status(
-                f"[bold blue]Creating flatpack '{flatpack_name}'..."):
+        with console.status(f"[bold blue]Creating flatpack '{flatpack_name}'..."):
             fpk_create(flatpack_name)
 
         console.print(
@@ -3839,8 +3734,7 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
             )
             os.makedirs(local_dir, exist_ok=True)
 
-        console.print(
-            f"[bold blue]INFO:[/bold blue] Downloading model '{model_id}'...")
+        console.print(f"[bold blue]INFO:[/bold blue] Downloading model '{model_id}'...")
 
         try:
             if token:
@@ -3921,12 +3815,10 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
             requirements_file = os.path.join(llama_cpp_dir, "requirements.txt")
             venv_dir = os.path.join(llama_cpp_dir, "venv")
             venv_python = os.path.join(venv_dir, "bin", "python")
-            convert_script = os.path.join(llama_cpp_dir,
-                                          "convert_hf_to_gguf.py")
+            convert_script = os.path.join(llama_cpp_dir, "convert_hf_to_gguf.py")
 
             if not os.path.exists(ready_file):
-                console.print(
-                    "[bold blue]INFO:[/bold blue] Building llama.cpp...")
+                console.print("[bold blue]INFO:[/bold blue] Building llama.cpp...")
 
                 try:
                     cmake_executable = shutil.which("cmake")
@@ -3938,13 +3830,11 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
                         return
 
                     subprocess.run(
-                        [cmake_executable, "-B", "build"], cwd=llama_cpp_dir,
-                        check=True
+                        [cmake_executable, "-B", "build"], cwd=llama_cpp_dir, check=True
                     )
 
                     subprocess.run(
-                        [cmake_executable, "--build", "build", "--config",
-                         "Release"],
+                        [cmake_executable, "--build", "build", "--config", "Release"],
                         cwd=llama_cpp_dir,
                         check=True,
                     )
@@ -3998,8 +3888,7 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
                 )
 
             output_file = os.path.join(local_dir, f"{repo_name}-fp16.bin")
-            quantized_output_file = os.path.join(local_dir,
-                                                 f"{repo_name}-Q4_K_M.gguf")
+            quantized_output_file = os.path.join(local_dir, f"{repo_name}-Q4_K_M.gguf")
             outtype = "f16"
 
             if not os.path.exists(convert_script):
@@ -4009,8 +3898,7 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
                 return
 
             if not os.path.exists(output_file):
-                console.print(
-                    "[bold blue]INFO:[/bold blue] Converting the model...")
+                console.print("[bold blue]INFO:[/bold blue] Converting the model...")
 
                 try:
                     venv_activate = os.path.join(venv_dir, "bin", "activate")
@@ -4055,13 +3943,11 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
                 )
 
             if os.path.exists(output_file):
-                console.print(
-                    "[bold blue]INFO:[/bold blue] Quantizing the model...")
+                console.print("[bold blue]INFO:[/bold blue] Quantizing the model...")
 
                 try:
                     quantize_command = [
-                        os.path.join(llama_cpp_dir,
-                                     "build/bin/llama-quantize"),
+                        os.path.join(llama_cpp_dir, "build/bin/llama-quantize"),
                         output_file,
                         quantized_output_file,
                         "Q4_K_M",
@@ -4103,8 +3989,7 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
             "\n[bold yellow]WARNING:[/bold yellow] Process interrupted by user. Exiting..."
         )
     except Exception as e:
-        console.print(
-            f"[bold red]ERROR:[/bold red] An unexpected error occurred: {e}")
+        console.print(f"[bold red]ERROR:[/bold red] An unexpected error occurred: {e}")
 
 
 def fpk_cli_handle_find(args, session):
@@ -4306,17 +4191,14 @@ def setup_routes(fastapi_app):
                 ngrok_module = lazy_import("ngrok")
                 await asyncio.wait_for(
                     asyncio.to_thread(
-                        ngrok_module.disconnect,
-                        fastapi_app.state.ngrok_listener.url()
+                        ngrok_module.disconnect, fastapi_app.state.ngrok_listener.url()
                     ),
                     timeout=5.0,
                 )
                 logger.info("Disconnected ngrok ingress.")
-                console.print("Disconnected ngrok ingress.",
-                              style="bold green")
+                console.print("Disconnected ngrok ingress.", style="bold green")
             except asyncio.TimeoutError:
-                logger.error(
-                    "Timed out while trying to disconnect ngrok ingress.")
+                logger.error("Timed out while trying to disconnect ngrok ingress.")
                 console.print(
                     "Timed out while trying to disconnect ngrok ingress.",
                     style="bold red",
@@ -4324,8 +4206,7 @@ def setup_routes(fastapi_app):
             except Exception as e:
                 logger.error("Failed to disconnect ngrok ingress: %s", e)
                 console.print(
-                    f"Failed to disconnect ngrok ingress: {e}",
-                    style="bold red"
+                    f"Failed to disconnect ngrok ingress: {e}", style="bold red"
                 )
             finally:
                 fastapi_app.state.ngrok_listener = None
@@ -4334,7 +4215,7 @@ def setup_routes(fastapi_app):
     async def csrf_middleware(request: Request, call_next):
         """Enforces CSRF protection on non-GET requests, excluding exempt paths."""
         if request.method != "GET" and not any(
-                request.url.path.startswith(path) for path in CSRF_EXEMPT_PATHS
+            request.url.path.startswith(path) for path in CSRF_EXEMPT_PATHS
         ):
             await csrf_protect(request)
         return await call_next(request)
@@ -4345,8 +4226,7 @@ def setup_routes(fastapi_app):
         csrf_token = secrets.token_urlsafe(32)
         timestamp = str(int(time.time()))
         token_with_timestamp = f"{timestamp}:{csrf_token}"
-        signed_token = request.app.state.signer.sign(
-            token_with_timestamp).decode()
+        signed_token = request.app.state.signer.sign(token_with_timestamp).decode()
 
         response.set_cookie(
             key="csrf_token",
@@ -4385,7 +4265,7 @@ def setup_routes(fastapi_app):
 
     @fastapi_app.post("/api/abort-build", dependencies=[Depends(csrf_protect)])
     async def abort_build(
-            request: Request, token: str = Depends(authenticate_token)
+        request: Request, token: str = Depends(authenticate_token)
     ) -> JSONResponse:
         global abort_requested, build_in_progress, process_manager, flatpack_directory
 
@@ -4408,8 +4288,7 @@ def setup_routes(fastapi_app):
                     if process_manager
                     else "no_process_manager"
                 )
-                logger.info("Starting build abort from status: %s",
-                            initial_status)
+                logger.info("Starting build abort from status: %s", initial_status)
 
                 cleanup_success = True
                 memory_before = 0
@@ -4429,8 +4308,7 @@ def setup_routes(fastapi_app):
                             break
                         except Exception as e:
                             logger.error(
-                                "Termination attempt %s failed: %s",
-                                attempt + 1, e
+                                "Termination attempt %s failed: %s", attempt + 1, e
                             )
                             if attempt == MAX_TERMINATION_ATTEMPTS - 1:
                                 cleanup_success = False
@@ -4455,12 +4333,10 @@ def setup_routes(fastapi_app):
                             temp_path = build_dir / temp_file
                             if temp_path.exists():
                                 temp_path.unlink()
-                                logger.debug("Removed temp file: %s",
-                                             temp_file)
+                                logger.debug("Removed temp file: %s", temp_file)
                         except Exception as e:
                             logger.warning(
-                                "Could not remove temp file %s: %s", temp_file,
-                                e
+                                "Could not remove temp file %s: %s", temp_file, e
                             )
                             cleanup_success = cleanup_success and False
 
@@ -4525,29 +4401,26 @@ def setup_routes(fastapi_app):
 
     @fastapi_app.post("/api/build", dependencies=[Depends(csrf_protect)])
     async def build_flatpack(
-            request: Request,
-            background_tasks: BackgroundTasks,
-            token: str = Depends(authenticate_token),
+        request: Request,
+        background_tasks: BackgroundTasks,
+        token: str = Depends(authenticate_token),
     ):
         """Trigger the build process for the flatpack."""
         global abort_requested
 
         if not flatpack_directory:
-            raise HTTPException(status_code=500,
-                                detail="Flatpack directory is not set")
+            raise HTTPException(status_code=500, detail="Flatpack directory is not set")
 
         if build_in_progress:
             return JSONResponse(
-                content={"message": "A build is already in progress."},
-                status_code=409
+                content={"message": "A build is already in progress."}, status_code=409
             )
 
         try:
             abort_requested = False
             background_tasks.add_task(run_build_process, schedule_id=None)
             logger.info(
-                "Started build process for flatpack located at %s",
-                flatpack_directory
+                "Started build process for flatpack located at %s", flatpack_directory
             )
 
             return JSONResponse(
@@ -4571,11 +4444,9 @@ def setup_routes(fastapi_app):
     async def get_build_status(token: str = Depends(authenticate_token)):
         """Get the current build status."""
         if not flatpack_directory:
-            raise HTTPException(status_code=500,
-                                detail="Flatpack directory is not set")
+            raise HTTPException(status_code=500, detail="Flatpack directory is not set")
 
-        status_file = os.path.join(flatpack_directory, "build",
-                                   "build_status.json")
+        status_file = os.path.join(flatpack_directory, "build", "build_status.json")
 
         if os.path.exists(status_file):
             with open(status_file, "r") as f:
@@ -4583,16 +4454,13 @@ def setup_routes(fastapi_app):
             return JSONResponse(content=status_data)
         return JSONResponse(content={"status": "no_builds"})
 
-    @fastapi_app.post("/api/clear-build-status",
-                      dependencies=[Depends(csrf_protect)])
+    @fastapi_app.post("/api/clear-build-status", dependencies=[Depends(csrf_protect)])
     async def clear_build_status(token: str = Depends(authenticate_token)):
         """Clear the current build status."""
         if not flatpack_directory:
-            raise HTTPException(status_code=500,
-                                detail="Flatpack directory is not set")
+            raise HTTPException(status_code=500, detail="Flatpack directory is not set")
 
-        status_file = os.path.join(flatpack_directory, "build",
-                                   "build_status.json")
+        status_file = os.path.join(flatpack_directory, "build", "build_status.json")
 
         try:
             if os.path.exists(status_file):
@@ -4607,8 +4475,7 @@ def setup_routes(fastapi_app):
             )
 
     @fastapi_app.post("/api/comments", dependencies=[Depends(csrf_protect)])
-    async def add_comment(comment: Comment,
-                          token: str = Depends(authenticate_token)):
+    async def add_comment(comment: Comment, token: str = Depends(authenticate_token)):
         """Add a new comment to the database."""
         ensure_database_initialized()
         try:
@@ -4616,8 +4483,7 @@ def setup_routes(fastapi_app):
                 comment.block_id, comment.selected_text, comment.comment
             )
             return JSONResponse(
-                content={"message": "Comment added successfully."},
-                status_code=201
+                content={"message": "Comment added successfully."}, status_code=201
             )
         except Exception as e:
             logger.error("Error adding comment: %s", str(e), exc_info=True)
@@ -4629,8 +4495,7 @@ def setup_routes(fastapi_app):
     @fastapi_app.delete(
         "/api/comments/{comment_id}", dependencies=[Depends(csrf_protect)]
     )
-    async def delete_comment(comment_id: int,
-                             token: str = Depends(authenticate_token)):
+    async def delete_comment(comment_id: int, token: str = Depends(authenticate_token)):
         """Delete a comment from the database by its ID."""
         ensure_database_initialized()
         try:
@@ -4663,14 +4528,13 @@ def setup_routes(fastapi_app):
     @fastapi_app.get("/api/heartbeat")
     async def heartbeat():
         """Lightweight heartbeat endpoint for maintaining connection."""
-        return JSONResponse(content={"timestamp": int(time.time())},
-                            status_code=200)
+        return JSONResponse(content={"timestamp": int(time.time())}, status_code=200)
 
     @fastapi_app.get(
         "/api/hook-mappings/{target_id}", dependencies=[Depends(csrf_protect)]
     )
     async def get_hook_mappings(
-            target_id: str, token: str = Depends(authenticate_token)
+        target_id: str, token: str = Depends(authenticate_token)
     ):
         """Get all source mappings for a specific hook."""
         ensure_database_initialized()
@@ -4702,10 +4566,8 @@ def setup_routes(fastapi_app):
             logger.error("Failed to add hook: %s", e)
             raise HTTPException(status_code=500, detail="Failed to add hook.")
 
-    @fastapi_app.delete("/api/hooks/{hook_id}",
-                        dependencies=[Depends(csrf_protect)])
-    async def delete_hook(hook_id: int,
-                          token: str = Depends(authenticate_token)):
+    @fastapi_app.delete("/api/hooks/{hook_id}", dependencies=[Depends(csrf_protect)])
+    async def delete_hook(hook_id: int, token: str = Depends(authenticate_token)):
         """Delete a specific hook by its ID."""
         ensure_database_initialized()
         try:
@@ -4713,8 +4575,7 @@ def setup_routes(fastapi_app):
                 hooks = get_all_hooks_from_database()
                 save_hooks_to_file(hooks)
                 return JSONResponse(
-                    content={"message": "Hook deleted successfully."},
-                    status_code=200
+                    content={"message": "Hook deleted successfully."}, status_code=200
                 )
             raise HTTPException(status_code=404, detail="Hook not found")
         except Exception as e:
@@ -4725,8 +4586,7 @@ def setup_routes(fastapi_app):
             )
 
     @fastapi_app.get(
-        "/api/hooks", response_model=List[Hook],
-        dependencies=[Depends(csrf_protect)]
+        "/api/hooks", response_model=List[Hook], dependencies=[Depends(csrf_protect)]
     )
     async def get_hooks(token: str = Depends(authenticate_token)):
         """Retrieve all hooks from the database and synchronize with the hooks file."""
@@ -4741,13 +4601,11 @@ def setup_routes(fastapi_app):
             raise e
         except Exception as e:
             logger.error("Failed to retrieve hooks: %s", e)
-            raise HTTPException(status_code=500,
-                                detail="Failed to retrieve hooks.")
+            raise HTTPException(status_code=500, detail="Failed to retrieve hooks.")
 
-    @fastapi_app.put("/api/hooks/{hook_id}",
-                     dependencies=[Depends(csrf_protect)])
+    @fastapi_app.put("/api/hooks/{hook_id}", dependencies=[Depends(csrf_protect)])
     async def update_hook(
-            hook_id: int, hook: Hook, token: str = Depends(authenticate_token)
+        hook_id: int, hook: Hook, token: str = Depends(authenticate_token)
     ):
         """Update an existing hook by its ID."""
         ensure_database_initialized()
@@ -4765,8 +4623,7 @@ def setup_routes(fastapi_app):
                 hooks = get_all_hooks_from_database()
                 save_hooks_to_file(hooks)
                 return JSONResponse(
-                    content={"message": "Hook updated successfully."},
-                    status_code=200
+                    content={"message": "Hook updated successfully."}, status_code=200
                 )
 
             raise HTTPException(
@@ -4779,14 +4636,12 @@ def setup_routes(fastapi_app):
                 detail=f"An error occurred while updating the hook: {e}",
             )
 
-    @fastapi_app.get("/api/list-media-files",
-                     dependencies=[Depends(csrf_protect)])
+    @fastapi_app.get("/api/list-media-files", dependencies=[Depends(csrf_protect)])
     async def list_media_files(token: str = Depends(authenticate_token)):
         """List all media files from the output directory."""
         global flatpack_directory
         if not flatpack_directory:
-            raise HTTPException(status_code=500,
-                                detail="Flatpack directory is not set")
+            raise HTTPException(status_code=500, detail="Flatpack directory is not set")
         output_folder = Path(flatpack_directory) / "web" / "output"
         allowed_extensions = {".gif", ".jpg", ".mp3", ".mp4", ".png", ".wav"}
         try:
@@ -4804,12 +4659,10 @@ def setup_routes(fastapi_app):
             )
 
     @fastapi_app.get("/api/load-file")
-    async def load_file(filename: str,
-                        token: str = Depends(authenticate_token)):
+    async def load_file(filename: str, token: str = Depends(authenticate_token)):
         """Load a file from the flatpack build directory."""
         if not flatpack_directory:
-            raise HTTPException(status_code=500,
-                                detail="Flatpack directory is not set")
+            raise HTTPException(status_code=500, detail="Flatpack directory is not set")
 
         sanitized_filename = secure_filename(filename)
         build_dir = Path(flatpack_directory) / "build"
@@ -4821,8 +4674,7 @@ def setup_routes(fastapi_app):
 
             if not file_path.is_relative_to(build_dir):
                 raise HTTPException(
-                    status_code=403,
-                    detail="Access to the requested file is forbidden"
+                    status_code=403, detail="Access to the requested file is forbidden"
                 )
         except Exception as e:
             logger.error("Error validating file path: %s", e)
@@ -4836,33 +4688,27 @@ def setup_routes(fastapi_app):
                 code_blocks = json.load(file)
 
             if not isinstance(code_blocks, list):
-                raise ValueError(
-                    "Invalid file format: Expected a list of code blocks")
+                raise ValueError("Invalid file format: Expected a list of code blocks")
 
             json_content = json.dumps(code_blocks)
-            base64_content = base64.b64encode(
-                json_content.encode("utf-8")).decode(
+            base64_content = base64.b64encode(json_content.encode("utf-8")).decode(
                 "utf-8"
             )
 
             return JSONResponse(content={"content": base64_content})
 
         except json.JSONDecodeError:
-            logger.error("Error decoding JSON from file: %s",
-                         sanitized_filename)
-            raise HTTPException(status_code=400,
-                                detail="Invalid JSON format in file")
+            logger.error("Error decoding JSON from file: %s", sanitized_filename)
+            raise HTTPException(status_code=400, detail="Invalid JSON format in file")
         except ValueError as ve:
             logger.error("Error validating file content: %s", str(ve))
             raise HTTPException(status_code=400, detail=str(ve))
         except Exception as e:
-            logger.error("Error reading file '%s': %s", sanitized_filename,
-                         str(e))
+            logger.error("Error reading file '%s': %s", sanitized_filename, str(e))
             raise HTTPException(status_code=500, detail="Error reading file")
 
     @fastapi_app.get("/api/logs", dependencies=[Depends(csrf_protect)])
-    async def get_all_logs(request: Request,
-                           token: str = Depends(authenticate_token)):
+    async def get_all_logs(request: Request, token: str = Depends(authenticate_token)):
         """Get a list of all available logs ordered by date."""
         global flatpack_directory
 
@@ -4875,8 +4721,7 @@ def setup_routes(fastapi_app):
                 logs_directory = Path(last_unboxed_flatpack) / "build" / "logs"
             else:
                 raise HTTPException(
-                    status_code=500,
-                    detail="No cached flatpack directory found"
+                    status_code=500, detail="No cached flatpack directory found"
                 )
 
         try:
@@ -4884,8 +4729,7 @@ def setup_routes(fastapi_app):
                 logs_directory.mkdir(parents=True, exist_ok=True)
                 if not logs_directory.exists():
                     raise HTTPException(
-                        status_code=500,
-                        detail="Failed to create logs directory"
+                        status_code=500, detail="Failed to create logs directory"
                     )
 
             log_files = sorted(
@@ -4894,8 +4738,7 @@ def setup_routes(fastapi_app):
                     for f in os.listdir(logs_directory)
                     if f.startswith("build_") and f.endswith(".log")
                 ],
-                key=lambda x: datetime.strptime(x,
-                                                "build_%Y_%m_%d_%H_%M_%S.log"),
+                key=lambda x: datetime.strptime(x, "build_%Y_%m_%d_%H_%M_%S.log"),
                 reverse=True,
             )
 
@@ -4910,11 +4753,9 @@ def setup_routes(fastapi_app):
                 status_code=500, detail=f"Failed to list log files: {e}"
             )
 
-    @fastapi_app.get("/api/logs/{log_filename}",
-                     dependencies=[Depends(csrf_protect)])
+    @fastapi_app.get("/api/logs/{log_filename}", dependencies=[Depends(csrf_protect)])
     async def get_log_file(
-            request: Request, log_filename: str,
-            token: str = Depends(authenticate_token)
+        request: Request, log_filename: str, token: str = Depends(authenticate_token)
     ):
         """Get the content of a specific log file."""
         global flatpack_directory
@@ -4928,8 +4769,7 @@ def setup_routes(fastapi_app):
                 logs_directory = Path(last_unboxed_flatpack) / "build" / "logs"
             else:
                 raise HTTPException(
-                    status_code=500,
-                    detail="No cached flatpack directory found"
+                    status_code=500, detail="No cached flatpack directory found"
                 )
 
         sanitized_log_filename = secure_filename(log_filename)
@@ -4937,8 +4777,7 @@ def setup_routes(fastapi_app):
 
         if log_path.exists() and log_path.is_file():
             try:
-                if not log_path.resolve().is_relative_to(
-                        logs_directory.resolve()):
+                if not log_path.resolve().is_relative_to(logs_directory.resolve()):
                     raise HTTPException(
                         status_code=403,
                         detail="Access to the requested file is forbidden",
@@ -4949,8 +4788,7 @@ def setup_routes(fastapi_app):
                 return JSONResponse(content={"log": content}, status_code=200)
             except Exception as e:
                 logger.error(
-                    "Error reading log file '%s': %s", sanitized_log_filename,
-                    e
+                    "Error reading log file '%s': %s", sanitized_log_filename, e
                 )
                 raise HTTPException(
                     status_code=500, detail=f"Error reading log file: {e}"
@@ -4960,44 +4798,38 @@ def setup_routes(fastapi_app):
 
     @fastapi_app.post("/api/save-file", dependencies=[Depends(csrf_protect)])
     async def save_file(
-            request: Request,
-            filename: str = Form(...),
-            content: str = Form(...),
-            token: str = Depends(authenticate_token),
+        request: Request,
+        filename: str = Form(...),
+        content: str = Form(...),
+        token: str = Depends(authenticate_token),
     ):
         """Save a file to the flatpack build directory."""
 
         if not flatpack_directory:
-            raise HTTPException(status_code=500,
-                                detail="Flatpack directory is not set")
+            raise HTTPException(status_code=500, detail="Flatpack directory is not set")
 
         sanitized_filename = secure_filename(filename)
-        file_path = os.path.join(flatpack_directory, "build",
-                                 sanitized_filename)
+        file_path = os.path.join(flatpack_directory, "build", sanitized_filename)
 
         if not os.path.commonpath(
-                [flatpack_directory, os.path.realpath(file_path)]
+            [flatpack_directory, os.path.realpath(file_path)]
         ).startswith(os.path.realpath(flatpack_directory)):
             raise HTTPException(
-                status_code=403,
-                detail="Access to the requested file is forbidden"
+                status_code=403, detail="Access to the requested file is forbidden"
             )
 
         try:
-            decoded_content = base64.b64decode(content.encode("utf-8")).decode(
-                "utf-8")
+            decoded_content = base64.b64decode(content.encode("utf-8")).decode("utf-8")
 
             code_blocks = json.loads(decoded_content)
 
             with open(file_path, "w", encoding="utf-8") as file:
                 json.dump(code_blocks, file, ensure_ascii=False, indent=4)
 
-            return JSONResponse(
-                content={"message": "File saved successfully!"})
+            return JSONResponse(content={"message": "File saved successfully!"})
 
         except Exception as e:
-            raise HTTPException(status_code=500,
-                                detail=f"Failed to save file: {e}")
+            raise HTTPException(status_code=500, detail=f"Failed to save file: {e}")
 
     @fastapi_app.get("/api/schedule", dependencies=[Depends(csrf_protect)])
     async def get_schedule(token: str = Depends(authenticate_token)):
@@ -5005,19 +4837,16 @@ def setup_routes(fastapi_app):
         ensure_database_initialized()
         try:
             schedules = db_manager.get_all_schedules()
-            return JSONResponse(content={"schedules": schedules},
-                                status_code=200)
+            return JSONResponse(content={"schedules": schedules}, status_code=200)
         except Exception as e:
-            logger.error(
-                "An error occurred while retrieving the schedules: %s", e)
+            logger.error("An error occurred while retrieving the schedules: %s", e)
             raise HTTPException(
                 status_code=500,
                 detail=f"An error occurred while retrieving the schedules: {e}",
             )
 
     @fastapi_app.post("/api/schedule", dependencies=[Depends(csrf_protect)])
-    async def save_schedule(request: Request,
-                            token: str = Depends(authenticate_token)):
+    async def save_schedule(request: Request, token: str = Depends(authenticate_token)):
         """Save a new schedule to the database."""
         ensure_database_initialized()
         try:
@@ -5028,13 +4857,11 @@ def setup_routes(fastapi_app):
 
             if schedule_type == "manual":
                 datetimes = [
-                    datetime.fromisoformat(dt).astimezone(
-                        timezone.utc).isoformat()
+                    datetime.fromisoformat(dt).astimezone(timezone.utc).isoformat()
                     for dt in datetimes
                 ]
 
-            new_schedule_id = db_manager.add_schedule(schedule_type, pattern,
-                                                      datetimes)
+            new_schedule_id = db_manager.add_schedule(schedule_type, pattern, datetimes)
 
             return JSONResponse(
                 content={
@@ -5054,9 +4881,9 @@ def setup_routes(fastapi_app):
         "/api/schedule/{schedule_id}", dependencies=[Depends(csrf_protect)]
     )
     async def delete_schedule_entry(
-            schedule_id: int,
-            datetime_index: Optional[int] = None,
-            token: str = Depends(authenticate_token),
+        schedule_id: int,
+        datetime_index: Optional[int] = None,
+        token: str = Depends(authenticate_token),
     ):
         """Delete a schedule or a specific datetime entry from the database."""
         ensure_database_initialized()
@@ -5072,29 +4899,24 @@ def setup_routes(fastapi_app):
                         },
                         status_code=200,
                     )
-                raise HTTPException(status_code=404,
-                                    detail="Datetime entry not found")
+                raise HTTPException(status_code=404, detail="Datetime entry not found")
             success = db_manager.delete_schedule(schedule_id)
             if success:
                 return JSONResponse(
-                    content={
-                        "message": "Entire schedule deleted successfully."},
+                    content={"message": "Entire schedule deleted successfully."},
                     status_code=200,
                 )
             raise HTTPException(status_code=404, detail="Schedule not found")
         except Exception as e:
-            logger.error(
-                "An error occurred while deleting the schedule entry: %s", e)
+            logger.error("An error occurred while deleting the schedule entry: %s", e)
             raise HTTPException(
                 status_code=500,
                 detail=f"An error occurred while deleting the schedule entry: {e}",
             )
 
-    @fastapi_app.post("/api/source-hook-mappings",
-                      response_model=MappingResults)
+    @fastapi_app.post("/api/source-hook-mappings", response_model=MappingResults)
     async def add_source_hook_mappings(
-            mappings: List[SourceHookMapping],
-            token: str = Depends(authenticate_token)
+        mappings: List[SourceHookMapping], token: str = Depends(authenticate_token)
     ) -> JSONResponse:
         """Add new source-hook mappings to the database."""
         try:
@@ -5117,8 +4939,7 @@ def setup_routes(fastapi_app):
                             mapping.sourceId,
                             mapping.targetId,
                         )
-                        raise ValueError(
-                            "Missing required sourceId or targetId")
+                        raise ValueError("Missing required sourceId or targetId")
 
                     valid_mappings.append(mapping)
                     results.append(
@@ -5133,8 +4954,7 @@ def setup_routes(fastapi_app):
                     logger.error("Validation error for mapping: %s", str(e))
                     continue
                 except Exception as e:
-                    logger.error("Unexpected error processing mapping: %s",
-                                 str(e))
+                    logger.error("Unexpected error processing mapping: %s", str(e))
                     continue
 
             if valid_mappings:
@@ -5146,11 +4966,10 @@ def setup_routes(fastapi_app):
             raise HTTPException(status_code=500, detail=str(e))
 
     @fastapi_app.delete(
-        "/api/source-hook-mappings/{mapping_id}",
-        dependencies=[Depends(csrf_protect)]
+        "/api/source-hook-mappings/{mapping_id}", dependencies=[Depends(csrf_protect)]
     )
     async def delete_source_hook_mapping(
-            mapping_id: int, token: str = Depends(authenticate_token)
+        mapping_id: int, token: str = Depends(authenticate_token)
     ) -> JSONResponse:
         """Delete a specific source-hook mapping by its ID."""
         try:
@@ -5159,14 +4978,12 @@ def setup_routes(fastapi_app):
             mapping = db_manager.get_source_hook_mapping(mapping_id)
 
             if not mapping:
-                raise HTTPException(status_code=404,
-                                    detail="Mapping not found")
+                raise HTTPException(status_code=404, detail="Mapping not found")
 
             success = db_manager.delete_source_hook_mapping(mapping_id)
 
             if not success:
-                raise HTTPException(status_code=500,
-                                    detail="Failed to delete mapping")
+                raise HTTPException(status_code=500, detail="Failed to delete mapping")
 
             remaining_mappings = db_manager.get_all_source_hook_mappings()
 
@@ -5183,8 +5000,7 @@ def setup_routes(fastapi_app):
             save_connections_to_file_and_db(converted_mappings)
 
             return JSONResponse(
-                content={"message": "Mapping deleted successfully"},
-                status_code=200
+                content={"message": "Mapping deleted successfully"}, status_code=200
             )
 
         except HTTPException:
@@ -5195,21 +5011,19 @@ def setup_routes(fastapi_app):
 
     @fastapi_app.get("/api/source-hook-mappings")
     async def get_all_source_hook_mappings(
-            token: str = Depends(authenticate_token),
+        token: str = Depends(authenticate_token),
     ) -> JSONResponse:
         """Fetch all source-hook mappings from the database."""
         try:
             ensure_database_initialized()
             mappings = db_manager.get_all_source_hook_mappings()
-            return JSONResponse(
-                content={"mappings": mappings if mappings else []})
+            return JSONResponse(content={"mappings": mappings if mappings else []})
         except Exception as e:
             logger.error("Error retrieving source-hook mappings: %s", e)
             raise HTTPException(status_code=500, detail=str(e))
 
     @fastapi_app.post("/api/sources", dependencies=[Depends(csrf_protect)])
-    async def add_source(source: Source,
-                         token: str = Depends(authenticate_token)):
+    async def add_source(source: Source, token: str = Depends(authenticate_token)):
         """Add a new source to the database."""
         ensure_database_initialized()
         try:
@@ -5217,8 +5031,7 @@ def setup_routes(fastapi_app):
                 source.source_name, source.source_type, source.source_details
             )
             return JSONResponse(
-                content={"message": "Source added successfully.",
-                         "id": source_id},
+                content={"message": "Source added successfully.", "id": source_id},
                 status_code=201,
             )
         except Exception as e:
@@ -5240,18 +5053,16 @@ def setup_routes(fastapi_app):
                 status_code=500, detail=f"Error retrieving sources: {e}"
             )
 
-    @fastapi_app.get("/api/sources/{source_id}",
-                     dependencies=[Depends(csrf_protect)])
+    @fastapi_app.get("/api/sources/{source_id}", dependencies=[Depends(csrf_protect)])
     async def get_source_by_id(
-            source_id: int, token: str = Depends(authenticate_token)
+        source_id: int, token: str = Depends(authenticate_token)
     ):
         """Retrieve a source by its ID."""
         ensure_database_initialized()
         try:
             source = db_manager.get_source_by_id(source_id)
             if source:
-                return JSONResponse(content={"source": source},
-                                    status_code=200)
+                return JSONResponse(content={"source": source}, status_code=200)
             raise HTTPException(status_code=404, detail="Source not found")
         except Exception as e:
             logger.error("Error retrieving source by ID: %s", e)
@@ -5259,11 +5070,9 @@ def setup_routes(fastapi_app):
                 status_code=500, detail=f"Error retrieving source by ID: {e}"
             )
 
-    @fastapi_app.put("/api/sources/{source_id}",
-                     dependencies=[Depends(csrf_protect)])
+    @fastapi_app.put("/api/sources/{source_id}", dependencies=[Depends(csrf_protect)])
     async def update_source(
-            source_id: int, source: SourceUpdate,
-            token: str = Depends(authenticate_token)
+        source_id: int, source: SourceUpdate, token: str = Depends(authenticate_token)
     ):
         """Update an existing source."""
         ensure_database_initialized()
@@ -5276,8 +5085,7 @@ def setup_routes(fastapi_app):
             )
             if success:
                 return JSONResponse(
-                    content={"message": "Source updated successfully."},
-                    status_code=200
+                    content={"message": "Source updated successfully."}, status_code=200
                 )
             raise HTTPException(status_code=404, detail="Source not found")
         except Exception as e:
@@ -5289,21 +5097,18 @@ def setup_routes(fastapi_app):
     @fastapi_app.delete(
         "/api/sources/{source_id}", dependencies=[Depends(csrf_protect)]
     )
-    async def delete_source(source_id: int,
-                            token: str = Depends(authenticate_token)):
+    async def delete_source(source_id: int, token: str = Depends(authenticate_token)):
         """Delete a source from the database by its ID."""
         ensure_database_initialized()
         try:
             if db_manager.delete_source(source_id):
                 return JSONResponse(
-                    content={"message": "Source deleted successfully."},
-                    status_code=200
+                    content={"message": "Source deleted successfully."}, status_code=200
                 )
             raise HTTPException(status_code=404, detail="Source not found")
         except Exception as e:
             logger.error("Error deleting source: %s", e)
-            raise HTTPException(status_code=500,
-                                detail=f"Error deleting source: {e}")
+            raise HTTPException(status_code=500, detail=f"Error deleting source: {e}")
 
     @fastapi_app.get("/api/user-status")
     async def user_status(auth: str = Depends(authenticate_token)):
@@ -5323,35 +5128,30 @@ def setup_routes(fastapi_app):
         if validate_api_token(api_token):
             session_id = create_session(api_token)
             response = JSONResponse(
-                content={"message": "API token is valid.",
-                         "session_id": session_id},
+                content={"message": "API token is valid.", "session_id": session_id},
                 status_code=200,
             )
             response.set_cookie(
-                key="session_id", value=session_id, httponly=True,
-                samesite="strict"
+                key="session_id", value=session_id, httponly=True, samesite="strict"
             )
             return response
         VALIDATION_ATTEMPTS += 1
         if VALIDATION_ATTEMPTS >= MAX_ATTEMPTS:
             shutdown_server()
-        return JSONResponse(content={"message": "Invalid API token."},
-                            status_code=401)
+        return JSONResponse(content={"message": "Invalid API token."}, status_code=401)
 
     @fastapi_app.post("/api/verify", dependencies=[Depends(csrf_protect)])
     async def verify_flatpack(
-            request: Request, token: str = Depends(authenticate_token)
+        request: Request, token: str = Depends(authenticate_token)
     ):
         """Trigger the verification process for the flatpack."""
         if not flatpack_directory:
-            raise HTTPException(status_code=500,
-                                detail="Flatpack directory is not set")
+            raise HTTPException(status_code=500, detail="Flatpack directory is not set")
 
         try:
             fpk_verify(flatpack_directory)
             return JSONResponse(
-                content={
-                    "message": "Verification process completed successfully."},
+                content={"message": "Verification process completed successfully."},
                 status_code=200,
             )
         except Exception as e:
@@ -5403,8 +5203,7 @@ def fpk_cli_handle_run(args, session):
             break
         if acknowledgment == "NO":
             console.print("")
-            console.print("You must agree to proceed. Exiting.",
-                          style="bold red")
+            console.print("You must agree to proceed. Exiting.", style="bold red")
             return
         else:
             console.print("")
@@ -5425,8 +5224,7 @@ def fpk_cli_handle_run(args, session):
     if not directory.is_relative_to(allowed_directory):
         console.print("")
         console.print(
-            "The specified directory is not within allowed paths.",
-            style="bold red"
+            "The specified directory is not within allowed paths.", style="bold red"
         )
         return
 
@@ -5487,8 +5285,7 @@ def fpk_cli_handle_run(args, session):
 
     csrf_token_base = secrets.token_urlsafe(32)
     logger.info("[CSRF] New token generated for this session.")
-    console.print("[CSRF] New token generated for this session.",
-                  style="bold blue")
+    console.print("[CSRF] New token generated for this session.", style="bold blue")
 
     console.print("")
 
@@ -5499,14 +5296,13 @@ def fpk_cli_handle_run(args, session):
     set_token(token)
     console.print("")
 
-    with console.status("[bold green]Initializing FastAPI server...",
-                        spinner="dots"):
+    with console.status("[bold green]Initializing FastAPI server...", spinner="dots"):
         app = initialize_fastapi_app(secret_key)
         setup_static_directory(app, str(directory))
 
     if args.share:
         with console.status(
-                "[bold green]Establishing ngrok ingress...", spinner="dots"
+            "[bold green]Establishing ngrok ingress...", spinner="dots"
         ):
             try:
                 if args.domain:
@@ -5543,12 +5339,10 @@ def fpk_cli_handle_run(args, session):
                 logger.info("FastAPI ingress established at %s", fastapi_url)
                 logger.info("Next.js ingress established at %s", nextjs_url)
                 console.print(
-                    f"FastAPI ingress established at {fastapi_url}",
-                    style="bold green"
+                    f"FastAPI ingress established at {fastapi_url}", style="bold green"
                 )
                 console.print(
-                    f"Next.js ingress established at {nextjs_url}",
-                    style="bold green"
+                    f"Next.js ingress established at {nextjs_url}", style="bold green"
                 )
                 console.print("")
 
@@ -5577,8 +5371,7 @@ def fpk_cli_handle_run(args, session):
 
     if not uvicorn:
         console.print(
-            "Failed to load uvicorn. Please check your installation.",
-            style="bold red"
+            "Failed to load uvicorn. Please check your installation.", style="bold red"
         )
         return
 
@@ -5629,12 +5422,10 @@ def fpk_cli_handle_run(args, session):
                         break
 
             threading.Thread(
-                target=log_process_output, args=(nextjs_process, "Next.js"),
-                daemon=True
+                target=log_process_output, args=(nextjs_process, "Next.js"), daemon=True
             ).start()
 
-            console.print(
-                "[bold green]Started Next.js development server[/bold green]")
+            console.print("[bold green]Started Next.js development server[/bold green]")
             console.print("")
 
             source_path = directory / "web" / "output"
@@ -5657,13 +5448,11 @@ def fpk_cli_handle_run(args, session):
                 console.print("")
 
             except OSError as e:
-                console.print(
-                    f"[bold red]Error creating symlink: {e}[/bold red]")
+                console.print(f"[bold red]Error creating symlink: {e}[/bold red]")
 
                 console.print("")
         except Exception as e:
-            console.print(
-                f"[bold red]Failed to start Next.js server: {e}[/bold red]")
+            console.print(f"[bold red]Failed to start Next.js server: {e}[/bold red]")
             return
 
     async def cleanup():
@@ -5796,8 +5585,7 @@ def fpk_cli_handle_unbox(args, session):
     """
     if args.input is None:
         console.print(
-            "Please specify a flatpack for the unbox command.",
-            style="bold red"
+            "Please specify a flatpack for the unbox command.", style="bold red"
         )
         return
 
@@ -5805,7 +5593,7 @@ def fpk_cli_handle_unbox(args, session):
 
     input_path = Path(args.input)
     is_fpk = (
-            input_path.suffix == ".fpk" and input_path.exists() and input_path.is_file()
+        input_path.suffix == ".fpk" and input_path.exists() and input_path.is_file()
     )
 
     if is_fpk:
@@ -5814,8 +5602,7 @@ def fpk_cli_handle_unbox(args, session):
         existing_dirs = fpk_fetch_github_dirs(session)
         if directory_name not in existing_dirs:
             console.print(
-                f"The flatpack '{directory_name}' does not exist.",
-                style="bold red"
+                f"The flatpack '{directory_name}' does not exist.", style="bold red"
             )
             return
 
@@ -5839,11 +5626,9 @@ def fpk_cli_handle_unbox(args, session):
     if args.local and not is_fpk:
         local_directory_path = Path(directory_name)
         if not local_directory_path.exists() or not local_directory_path.is_dir():
-            logger.error("Local directory does not exist: '%s'.",
-                         directory_name)
+            logger.error("Local directory does not exist: '%s'.", directory_name)
             console.print(
-                f"Local directory does not exist: '{directory_name}'.",
-                style="bold red"
+                f"Local directory does not exist: '{directory_name}'.", style="bold red"
             )
             return
 
@@ -5855,8 +5640,7 @@ def fpk_cli_handle_unbox(args, session):
                 directory_name,
             )
             console.print(
-                f"flatpack.toml not found in '{directory_name}'.",
-                style="bold red"
+                f"flatpack.toml not found in '{directory_name}'.", style="bold red"
             )
             return
 
@@ -5867,20 +5651,17 @@ def fpk_cli_handle_unbox(args, session):
 
     try:
         if is_fpk:
-            unbox_result = fpk_unbox(directory_name, session,
-                                     fpk_path=input_path)
+            unbox_result = fpk_unbox(directory_name, session, fpk_path=input_path)
         else:
             unbox_result = fpk_unbox(directory_name, session, local=args.local)
 
         if unbox_result:
             logger.info("Unboxed flatpack '%s' successfully.", directory_name)
             console.print(
-                f"Unboxed flatpack '{directory_name}' successfully.",
-                style="bold green"
+                f"Unboxed flatpack '{directory_name}' successfully.", style="bold green"
             )
         else:
-            logger.info("Unboxing of flatpack '%s' was aborted.",
-                        directory_name)
+            logger.info("Unboxing of flatpack '%s' was aborted.", directory_name)
             console.print(
                 f"Unboxing of flatpack '{directory_name}' was aborted.",
                 style="bold yellow",
@@ -5888,8 +5669,7 @@ def fpk_cli_handle_unbox(args, session):
     except Exception as e:
         logger.error("Failed to unbox flatpack '%s': %s", directory_name, e)
         console.print(
-            f"Failed to unbox flatpack '{directory_name}': {e}",
-            style="bold red"
+            f"Failed to unbox flatpack '{directory_name}': {e}", style="bold red"
         )
 
 
@@ -5926,8 +5706,7 @@ def fpk_cli_handle_vector_commands(args, session, vm):
         results = vm.search_vectors(args.query, recency_weight=recency_weight)
 
         if hasattr(args, "json") and args.json:
-            json_results = [{"id": r["id"], "text": r["text"]} for r in
-                            results]
+            json_results = [{"id": r["id"], "text": r["text"]} for r in results]
             print(json.dumps(json_results))
         else:
             if results:
@@ -5982,11 +5761,9 @@ def fpk_cli_handle_verify(args, session):
 
     try:
         fpk_verify(directory_name)
-        logger.info("Verification successful for directory: %s",
-                    directory_name)
+        logger.info("Verification successful for directory: %s", directory_name)
     except Exception as e:
-        logger.error("Verification failed for directory '%s': %s",
-                     directory_name, e)
+        logger.error("Verification failed for directory '%s': %s", directory_name, e)
 
 
 def fpk_cli_handle_version(args, session):
