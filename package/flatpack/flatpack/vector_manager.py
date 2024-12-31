@@ -21,7 +21,7 @@ from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from sentence_transformers import SentenceTransformer
 
-warnings.filterwarnings("ignore", category=FutureWarning)
+warnings.filterwarnings('ignore', category=FutureWarning)
 
 console = Console()
 
@@ -31,23 +31,29 @@ HOME_DIR.mkdir(exist_ok=True)
 
 def ensure_spacy_model():
     python_path = sys.executable
-    pip_path = [python_path, "-m", "pip"]
+    pip_path = [
+        python_path,
+        "-m",
+        "pip"
+    ]
 
     try:
         try:
             import spacy
+            nlp = spacy.load("en_core_web_sm")
 
-            spacy_nlp = spacy.load("en_core_web_sm")
+            if 'parser' in nlp.pipe_names:
+                nlp.remove_pipe('parser')
 
-            if "parser" in spacy_nlp.pipe_names:
-                spacy_nlp.remove_pipe("parser")
-
-            if "sentencizer" not in spacy_nlp.pipe_names:
-                spacy_nlp.add_pipe(
-                    "sentencizer", config={"punct_chars": None, "overwrite": True}
+            if 'sentencizer' not in nlp.pipe_names:
+                nlp.add_pipe(
+                    'sentencizer',
+                    config={
+                        'punct_chars': None,
+                        'overwrite': True
+                    }
                 )
-            return spacy_nlp
-
+            return nlp
         except OSError:
             pass
     except ImportError:
@@ -57,41 +63,57 @@ def ensure_spacy_model():
     console.print("Installing spaCy (MIT) and downloading model...")
 
     with Progress(
-        SpinnerColumn(),
-        TextColumn("[progress.description]{task.description}"),
-        transient=True,
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            transient=True,
     ) as progress:
         install_task = progress.add_task("Installing spaCy...", total=None)
 
         try:
             process = subprocess.Popen(
-                pip_path + ["install", "spacy"],
+                pip_path + ['install', 'spacy'],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
-                universal_newlines=True,
+                universal_newlines=True
             )
             for line in process.stdout:
                 if "Installing collected packages" in line:
-                    progress.update(install_task, description="Installing packages...")
+                    progress.update(
+                        install_task,
+                        description="Installing packages..."
+                    )
                 elif "Successfully installed" in line:
                     progress.update(
-                        install_task, description="SpaCy installed successfully!"
+                        install_task,
+                        description="SpaCy installed successfully!"
                     )
             process.wait()
             if process.returncode != 0:
-                raise subprocess.CalledProcessError(process.returncode, pip_path)
+                raise subprocess.CalledProcessError(
+                    process.returncode,
+                    pip_path
+                )
         except (subprocess.CalledProcessError, FileNotFoundError) as e:
             console.print(f"[red]Error installing spaCy: {e}[/red]")
             return None
 
-        download_task = progress.add_task("Downloading spaCy model...", total=None)
+        download_task = progress.add_task(
+            "Downloading spaCy model...",
+            total=None
+        )
 
         try:
             process = subprocess.Popen(
-                [python_path, "-m", "spacy", "download", "en_core_web_sm"],
+                [
+                    python_path,
+                    '-m',
+                    'spacy',
+                    'download',
+                    'en_core_web_sm'
+                ],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
-                universal_newlines=True,
+                universal_newlines=True
             )
 
             process.wait()
@@ -99,7 +121,13 @@ def ensure_spacy_model():
             if process.returncode != 0:
                 raise subprocess.CalledProcessError(
                     process.returncode,
-                    [python_path, "-m", "spacy", "download", "en_core_web_sm"],
+                    [
+                        python_path,
+                        '-m',
+                        'spacy',
+                        'download',
+                        'en_core_web_sm'
+                    ]
                 )
         except (subprocess.CalledProcessError, FileNotFoundError) as e:
             console.print(f"[red]Error downloading spaCy model: {e}[/red]")
@@ -107,16 +135,21 @@ def ensure_spacy_model():
 
     try:
         import spacy
+        nlp = spacy.load("en_core_web_sm")
 
-        spacy_nlp = spacy.load("en_core_web_sm")
-
-        if "sentencizer" not in spacy_nlp.pipe_names:
-            spacy_nlp.add_pipe(
-                "sentencizer", config={"punct_chars": None, "overwrite": True}
+        if 'sentencizer' not in nlp.pipe_names:
+            nlp.add_pipe(
+                'sentencizer',
+                config={
+                    'punct_chars': None,
+                    'overwrite': True
+                }
             )
-        return spacy_nlp
+        return nlp
     except ImportError:
-        console.print("[red]Failed to import spaCy after installation.[/red]")
+        console.print(
+            "[red]Failed to import spaCy after installation.[/red]"
+        )
         return None
 
 
@@ -138,7 +171,7 @@ VECTOR_DIMENSION = 384
 
 
 class VectorManager:
-    def __init__(self, model_id="all-MiniLM-L6-v2", directory="./data"):
+    def __init__(self, model_id='all-MiniLM-L6-v2', directory='./data'):
         self.directory = directory
 
         if not os.path.exists(self.directory):
@@ -159,26 +192,26 @@ class VectorManager:
                 except OSError:
                     pass
 
-        self.model = (
-            model_id
-            if isinstance(model_id, SentenceTransformer)
-            else SentenceTransformer(
-                model_id, device="cpu", cache_folder=HOME_DIR / "cache"
-            )
+        self.model = model_id if isinstance(
+            model_id,
+            SentenceTransformer
+        ) else SentenceTransformer(
+            model_id,
+            device='cpu',
+            cache_folder=HOME_DIR / "cache"
         )
 
-        self.index = hnswlib.Index(space="cosine", dim=VECTOR_DIMENSION)
-        self.metadata, self.hash_set, self.embeddings, self.ids = (
-            self._load_metadata_and_embeddings()
-        )
+        self.index = hnswlib.Index(space='cosine', dim=VECTOR_DIMENSION)
+        self.metadata, self.hash_set, self.embeddings, self.ids = self._load_metadata_and_embeddings()
         self._initialize_index()
 
         self.nlp = nlp
 
-        if "sentencizer" not in self.nlp.pipe_names:
-            self.nlp.add_pipe(
-                "sentencizer", config={"punct_chars": None, "overwrite": True}
-            )
+        if 'sentencizer' not in self.nlp.pipe_names:
+            self.nlp.add_pipe('sentencizer', config={
+                'punct_chars': None,
+                'overwrite': True
+            })
 
         gc.collect()
 
@@ -186,14 +219,19 @@ class VectorManager:
         if os.path.exists(self.index_file):
             self.index.load_index(self.index_file, max_elements=MAX_ELEMENTS)
         else:
-            self.index.init_index(max_elements=MAX_ELEMENTS, ef_construction=200, M=64)
+            self.index.init_index(
+                max_elements=MAX_ELEMENTS,
+                ef_construction=200,
+                M=64
+            )
 
             if self.embeddings is not None and len(self.embeddings) > 0:
                 batch_size = 1000
                 for i in range(0, len(self.embeddings), batch_size):
                     batch_end = min(i + batch_size, len(self.embeddings))
                     self.index.add_items(
-                        self.embeddings[i:batch_end], self.ids[i:batch_end]
+                        self.embeddings[i:batch_end],
+                        self.ids[i:batch_end]
                     )
                     gc.collect()
 
@@ -206,9 +244,9 @@ class VectorManager:
         ids = []
 
         if os.path.exists(self.metadata_file):
-            with open(self.metadata_file, "r") as file:
+            with open(self.metadata_file, 'r') as file:
                 chunk_size = 1024 * 1024
-                buffer = ""
+                buffer = ''
 
                 while True:
                     chunk = file.read(chunk_size)
@@ -218,7 +256,7 @@ class VectorManager:
 
                     try:
                         metadata.update(json.loads(buffer))
-                        buffer = ""
+                        buffer = ''
                     except json.JSONDecodeError:
                         continue
 
@@ -233,7 +271,7 @@ class VectorManager:
         return metadata, hash_set, embeddings, ids
 
     def _save_metadata_and_embeddings(self):
-        with open(self.metadata_file, "w") as file:
+        with open(self.metadata_file, 'w') as file:
             json.dump(self.metadata, file, indent=2)
 
         if self.embeddings is not None:
@@ -255,23 +293,21 @@ class VectorManager:
         batch_size = 32
 
         for i in range(0, len(texts), batch_size):
-            batch_texts = texts[i : i + batch_size]
+            batch_texts = texts[i:i + batch_size]
             batch_embeddings = []
             batch_ids = []
             batch_entries = {}
 
-            hashes = [self._generate_positive_hash(text) for text in batch_texts]
-            new_texts = [
-                (h, text)
-                for h, text in zip(hashes, batch_texts)
-                if h not in self.hash_set
-            ]
+            hashes = [self._generate_positive_hash(text) for text in
+                      batch_texts]
+            new_texts = [(h, text) for h, text in zip(hashes, batch_texts)
+                         if h not in self.hash_set]
 
             if new_texts:
                 batch_embeddings = self.model.encode(
                     [text for _, text in new_texts],
                     normalize_embeddings=True,
-                    batch_size=len(new_texts),
+                    batch_size=len(new_texts)
                 )
 
                 now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -283,7 +319,7 @@ class VectorManager:
                         "hash": text_hash,
                         "source": source_reference,
                         "date": now,
-                        "text": text,
+                        "text": text
                     }
 
                 if len(batch_embeddings) > 0:
@@ -291,7 +327,8 @@ class VectorManager:
                     if self.embeddings is None:
                         self.embeddings = batch_embeddings
                     else:
-                        self.embeddings = np.vstack((self.embeddings, batch_embeddings))
+                        self.embeddings = np.vstack(
+                            (self.embeddings, batch_embeddings))
 
                     self.index.add_items(batch_embeddings, batch_ids)
                     self.metadata.update(batch_entries)
@@ -299,9 +336,8 @@ class VectorManager:
                     self._save_metadata_and_embeddings()
             gc.collect()
 
-    def search_vectors(
-        self, query: str, top_k: int = 10, recency_weight: float = 0.5
-    ) -> List[Dict[str, Any]]:
+    def search_vectors(self, query: str, top_k: int = 10,
+                       recency_weight: float = 0.5) -> List[Dict[str, Any]]:
         """Search vectors with an optional bias toward recent results."""
         if not self.is_index_ready():
             return []
@@ -312,14 +348,17 @@ class VectorManager:
 
         try:
             query_embedding = self.model.encode(
-                [query], normalize_embeddings=True, show_progress_bar=False
+                [query],
+                normalize_embeddings=True,
+                show_progress_bar=False
             )
 
             actual_k = min(top_k, self.index.get_current_count())
             if actual_k < 1:
                 return []
 
-            labels, distances = self.index.knn_query(query_embedding, k=actual_k)
+            labels, distances = self.index.knn_query(query_embedding,
+                                                     k=actual_k)
 
             if len(labels) == 0 or len(labels[0]) == 0:
                 return []
@@ -331,26 +370,24 @@ class VectorManager:
                 str_idx = str(idx)
                 if str_idx in self.metadata:
                     meta = self.metadata[str_idx]
-                    doc_date = datetime.datetime.strptime(
-                        meta["date"], "%Y-%m-%d %H:%M:%S"
-                    )
-                    recency_score = 1 / (1 + (now - doc_date).total_seconds() / 86400)
+                    doc_date = datetime.datetime.strptime(meta['date'],
+                                                          "%Y-%m-%d %H:%M:%S")
+                    recency_score = 1 / (
+                            1 + (now - doc_date).total_seconds() / 86400)
                     combined_score = recency_weight * recency_score + (
-                        1 - recency_weight
-                    ) * (1 - distance)
+                            1 - recency_weight) * (1 - distance)
 
-                    results.append(
-                        {
-                            "id": int(idx),
-                            "text": meta["text"],
-                            "source": meta["source"],
-                            "distance": float(distance),
-                            "recency_score": recency_score,
-                            "combined_score": combined_score,
-                        }
-                    )
+                    results.append({
+                        'id': int(idx),
+                        'text': meta['text'],
+                        'source': meta['source'],
+                        'distance': float(distance),
+                        'recency_score': recency_score,
+                        'combined_score': combined_score
+                    })
 
-            results = sorted(results, key=lambda x: x["combined_score"], reverse=True)
+            results = sorted(results, key=lambda x: x['combined_score'],
+                             reverse=True)
             return results[:top_k]
         except Exception:
             return []
@@ -358,11 +395,11 @@ class VectorManager:
     @staticmethod
     def _preprocess_text(text: str) -> str:
         """Clean and normalize text before processing."""
-        text = " ".join(text.split())
+        text = ' '.join(text.split())
 
-        text = text.replace("•", ".")
-        text = text.replace("…", "...")
-        text = text.replace("\n", " ")
+        text = text.replace('•', '.')
+        text = text.replace('…', '...')
+        text = text.replace('\n', ' ')
 
         return text.strip()
 
@@ -383,35 +420,36 @@ class VectorManager:
             if not clean_sent or len(clean_sent.split()) < 3:
                 continue
 
-            if clean_sent.endswith(
-                (".", "!", "?", '"', "'", ")", "]", "}")
-            ) or clean_sent.endswith((':", "."', '."', '!"', '?"')):
+            if (clean_sent.endswith(
+                    ('.', '!', '?', '"', "'", ')', ']', '}')) or
+                    clean_sent.endswith((':", "."', '."', '!"', '?"'))):
 
                 current_chunk.append(clean_sent)
 
                 if len(current_chunk) >= SENTENCE_CHUNK_SIZE:
-                    chunk_text = " ".join(current_chunk)
+                    chunk_text = ' '.join(current_chunk)
                     if len(chunk_text.split()) >= 10:
                         self.add_texts([chunk_text], source_reference)
                     current_chunk = []
             else:
                 if current_chunk:
-                    current_chunk[-1] = current_chunk[-1] + " " + clean_sent
+                    current_chunk[-1] = current_chunk[-1] + ' ' + clean_sent
                 else:
                     current_chunk.append(clean_sent)
 
         if current_chunk:
-            chunk_text = " ".join(current_chunk)
+            chunk_text = ' '.join(current_chunk)
             if len(chunk_text.split()) >= 10:
                 self.add_texts([chunk_text], source_reference)
         gc.collect()
 
     def add_pdf(self, pdf_path: str):
         """Extract text from PDF with improved text handling."""
-        if not os.path.isfile(pdf_path) or not pdf_path.lower().endswith(".pdf"):
+        if not os.path.isfile(pdf_path) or not pdf_path.lower().endswith(
+                '.pdf'):
             return
 
-        with open(pdf_path, "rb") as file:
+        with open(pdf_path, 'rb') as file:
             pdf = PdfReader(file)
 
             page_texts = []
@@ -424,14 +462,14 @@ class VectorManager:
                     current_text_length += len(text)
 
                     if current_text_length >= 10000:
-                        combined_text = " ".join(page_texts)
+                        combined_text = ' '.join(page_texts)
                         self._process_text_and_add(combined_text, pdf_path)
                         page_texts = []
                         current_text_length = 0
                         gc.collect()
 
             if page_texts:
-                combined_text = " ".join(page_texts)
+                combined_text = ' '.join(page_texts)
                 self._process_text_and_add(combined_text, pdf_path)
 
     def add_url(self, url: str):
@@ -439,20 +477,20 @@ class VectorManager:
         try:
             with requests.get(url, timeout=10, stream=True) as response:
                 response.raise_for_status()
-                content = b""
+                content = b''
                 for chunk in response.iter_content(chunk_size=8192):
                     if chunk:
                         content += chunk
                         if len(content) >= 1_000_000:
-                            soup = BeautifulSoup(content, "html.parser")
-                            text = soup.get_text(separator=" ", strip=True)
+                            soup = BeautifulSoup(content, 'html.parser')
+                            text = soup.get_text(separator=' ', strip=True)
                             self._process_text_and_add(text, url)
-                            content = b""
+                            content = b''
                             gc.collect()
 
                 if content:
-                    soup = BeautifulSoup(content, "html.parser")
-                    text = soup.get_text(separator=" ", strip=True)
+                    soup = BeautifulSoup(content, 'html.parser')
+                    text = soup.get_text(separator=' ', strip=True)
                     self._process_text_and_add(text, url)
         except requests.RequestException:
             pass
@@ -468,7 +506,7 @@ class VectorManager:
             "explaintext": 1,
             "exsectionformat": "plain",
             "redirects": 1,
-            "format": "json",
+            "format": "json"
         }
 
         try:
