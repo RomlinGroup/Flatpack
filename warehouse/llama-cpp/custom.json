@@ -2,7 +2,7 @@
   {
     "type": "bash",
     "disabled": false,
-    "code": "# llama-cpp-python\n# License: MIT\n\n../bin/pip install llama-cpp-python \\\n    --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/cpu"
+    "code": "# llama-cpp-python\n# License: MIT\n\n./bin/pip install llama-cpp-python \\\n    --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/cpu"
   },
   {
     "type": "bash",
@@ -17,7 +17,7 @@
   {
     "type": "bash",
     "disabled": false,
-    "code": "../bin/pip install \\\nonnxruntime==1.20.1 \\\nphonemizer==3.3.0 \\\npiper-phonemize-cross==1.2.1 \\\npiper-tts==1.2.0 --no-deps"
+    "code": "./bin/pip install \\\nonnxruntime==1.20.1 \\\nphonemizer==3.3.0 \\\npiper-phonemize-cross==1.2.1 \\\npiper-tts==1.2.0 --no-deps"
   },
   {
     "type": "bash",
