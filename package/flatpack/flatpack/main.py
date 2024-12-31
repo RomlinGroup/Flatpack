@@ -36,53 +36,49 @@ if not IMPORT_CACHE_FILE.exists():
         "[bold green]Initialising Flatpack for the first time. This may take a moment...[/bold green]"
     )
 
-import argparse  # noqa: E402
-import asyncio  # noqa: E402
-import base64  # noqa: E402
-import errno  # noqa: E402
-import json  # noqa: E402
-import logging  # noqa: E402
-import mimetypes  # noqa: E402
-import pty  # noqa: E402
-import re  # noqa: E402
-import secrets  # noqa: E402
-import select  # noqa: E402
-import shlex  # noqa: E402
-import shutil  # noqa: E402
-import signal  # noqa: E402
-import sqlite3  # noqa: E402
-import stat  # noqa: E402
-import string  # noqa: E402
-import subprocess  # noqa: E402
-import tarfile  # noqa: E402
-import tempfile  # noqa: E402
-import time  # noqa: E402
-import unicodedata  # noqa: E402
+import argparse
+import asyncio
+import base64
+import errno
+import json
+import logging
+import mimetypes
+import pty
+import re
+import secrets
+import select
+import shlex
+import shutil
+import signal
+import sqlite3
+import stat
+import string
+import subprocess
+import tarfile
+import tempfile
+import time
+import unicodedata
 
-from datetime import datetime, timedelta, timezone  # noqa: E402
-from importlib.metadata import version  # noqa: E402
-from io import BytesIO  # noqa: E402
-from logging.handlers import RotatingFileHandler  # noqa: E402
-from typing import Dict, List, Optional, Set, Union  # noqa: E402
-from zipfile import ZipFile  # noqa: E402
+from datetime import datetime, timedelta, timezone
+from importlib.metadata import version
+from io import BytesIO
+from logging.handlers import RotatingFileHandler
+from typing import Dict, List, Optional, Set, Union
+from zipfile import ZipFile
 
-import httpx  # noqa: E402
-import psutil  # noqa: E402
-import requests  # noqa: E402
-import toml  # noqa: E402
+import httpx
+import psutil
+import requests
+import toml
 
-from itsdangerous import BadSignature, SignatureExpired, TimestampSigner  # noqa: E402
-from pydantic import BaseModel, Field  # noqa: E402
+from itsdangerous import BadSignature, SignatureExpired, TimestampSigner
+from pydantic import BaseModel, Field
 
-from .database_manager import DatabaseManager  # noqa: E402
-from .error_handling import (
-    safe_exit,
-    setup_exception_handling,
-    setup_signal_handling,
-)  # noqa: E402
-from .parsers import parse_toml_to_venv_script  # noqa: E402
-from .session_manager import SessionManager  # noqa: E402
-from .vector_manager import VectorManager  # noqa: E402
+from .database_manager import DatabaseManager
+from .error_handling import safe_exit, setup_exception_handling, setup_signal_handling
+from .parsers import parse_toml_to_venv_script
+from .session_manager import SessionManager
+from .vector_manager import VectorManager
 
 if not IMPORT_CACHE_FILE.exists():
     IMPORT_CACHE_FILE.touch()
@@ -524,12 +520,9 @@ def initialize_database_manager(flatpack_db_directory):
 
 
 def setup_logging(log_path: Path):
-    """Sets up logging to console and a rotating file."""
-    global logger
+    """Sets up logging to console and a rotating file with specified log level (default WARNING)."""
     logger = logging.getLogger("app_logger")
     logger.setLevel(logging.WARNING)
-
-    logger.handlers.clear()
 
     console_handler = logging.StreamHandler()
     console_handler.setLevel(logging.WARNING)
@@ -1695,7 +1688,7 @@ async def run_subprocess(command, log_file):
 
         master_fd, slave_fd = pty.openpty()
 
-        process = subprocess.run(
+        process = subprocess.Popen(
             command,
             cwd=str(current_dir),
             shell=False,
@@ -1703,7 +1696,6 @@ async def run_subprocess(command, log_file):
             stdout=slave_fd,
             stderr=slave_fd,
             start_new_session=True,
-            check=True,
         )
 
         process_manager.set_process(process, master_fd, slave_fd)
@@ -3812,7 +3804,7 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
                         return
                 else:
                     console.print(
-                        "[bold blue]INFO:[/bold blue] llama.cpp directory already exists. Skipping setup."
+                        f"[bold blue]INFO:[/bold blue] llama.cpp directory already exists. Skipping setup."
                     )
 
             ready_file = os.path.join(llama_cpp_dir, "ready")
@@ -4808,6 +4800,7 @@ def setup_routes(fastapi_app):
         token: str = Depends(authenticate_token),
     ):
         """Save a file to the flatpack build directory."""
+
         if not flatpack_directory:
             raise HTTPException(status_code=500, detail="Flatpack directory is not set")
 
