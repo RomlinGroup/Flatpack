@@ -29,7 +29,7 @@ jobs:
         run: |
           ./test.sh
           
-          if [ -f "test/build/test/test_pass" ]; then
+          if [ -f "test/build/test_pass" ]; then
             echo "Test passed successfully"
             exit 0
           else
