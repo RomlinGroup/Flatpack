@@ -319,7 +319,7 @@ def setup_logging(log_path: Path) -> logging.Logger:
         )
         return logger
 
-    except (OSError) as e:
+    except OSError as e:
         logger.addHandler(console_handler)
         logger.error("Failed to setup file logging at %s: %s", log_path, e)
         return logger
@@ -2230,7 +2230,7 @@ def fpk_download_and_extract_template(repo_url, dest_dir):
         error_message = f"Failed to download template from {repo_url}: {e}"
         logger.error("%s", error_message)
         raise RuntimeError(error_message)
-    except (OSError) as e:
+    except OSError as e:
         error_message = (
             f"Failed to extract template or remove index.html in {dest_dir}: {e}"
         )
@@ -2438,7 +2438,7 @@ def fpk_get_last_flatpack() -> Optional[str]:
                 return last_flatpack
         else:
             logger.warning("Cache file does not exist: %s", cache_file_path)
-    except (OSError) as e:
+    except OSError as e:
         error_message = f"An error occurred while accessing the cache file: {e}"
         logger.error("%s", error_message)
     return None
@@ -4080,7 +4080,7 @@ def setup_routes(fastapi_app):
                     try:
                         os.write(3, b"__EXIT_PYTHON_EXECUTOR__\n")
                         await asyncio.sleep(0.5)
-                    except (OSError):
+                    except OSError:
                         pass
 
                 for proc in build_processes:
