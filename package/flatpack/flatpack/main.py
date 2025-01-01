@@ -278,41 +278,61 @@ def initialize_database_manager(flatpack_db_directory):
     )
 
 
-def setup_logging(log_path: Path):
-    """Sets up logging to console and a rotating file with specified log level (default WARNING)."""
-    global logger
+logger = logging.getLogger(__name__)
+
+
+def setup_logging(log_path: Path) -> logging.Logger:
+    """Sets up logging to both console and a rotating file."""
+    if logger.handlers:
+        logger.handlers.clear()
 
     logger.setLevel(logging.WARNING)
 
     console_handler = logging.StreamHandler()
     console_handler.setLevel(logging.WARNING)
-    console_formatter = logging.Formatter("%(asctime)s - %(message)s")
+    console_formatter = logging.Formatter(
+        fmt="%(asctime)s - %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S"
+    )
     console_handler.setFormatter(console_formatter)
 
-    file_handler = RotatingFileHandler(
-        log_path, maxBytes=5 * 1024 * 1024, backupCount=5
-    )
-    file_handler.setLevel(logging.WARNING)
-    file_formatter = logging.Formatter(
-        "%(asctime)s - %(levelname)s - %(message)s")
-    file_handler.setFormatter(file_formatter)
+    try:
+        file_handler = RotatingFileHandler(
+            log_path,
+            maxBytes=5 * 1024 * 1024,
+            backupCount=5,
+            encoding='utf-8'
+        )
+        file_handler.setLevel(logging.WARNING)
+        file_formatter = logging.Formatter(
+            fmt="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
+            datefmt="%Y-%m-%d %H:%M:%S"
+        )
+        file_handler.setFormatter(file_formatter)
 
-    logger.addHandler(console_handler)
-    logger.addHandler(file_handler)
+        logger.addHandler(console_handler)
+        logger.addHandler(file_handler)
 
-    logger.info("Logging initialized with output to console and file: %s",
-                log_path)
+        logger.info(
+            f"Logging initialized: console and file output to {log_path}")
+        return logger
 
-    return logger
+    except (OSError, IOError) as e:
+        logger.addHandler(console_handler)
+        logger.error(f"Failed to setup file logging at {log_path}: {e}")
+        return logger
 
 
-# Initialize the logger
-global_log_file_path = HOME_DIR / ".fpk_logger.log"
-logger = setup_logging(global_log_file_path)
-os.chmod(global_log_file_path, 0o600)
+try:
+    global_log_file_path = HOME_DIR / ".fpk_logger.log"
+    logger = setup_logging(global_log_file_path)
+    os.chmod(global_log_file_path, 0o600)
+except Exception as e:
+    logging.basicConfig(level=logging.WARNING)
+    logger = logging.getLogger(__name__)
+    logger.error(f"Failed to initialize logging: {e}")
 
 schedule_lock = asyncio.Lock()
-
 uvicorn_server = None
 
 
