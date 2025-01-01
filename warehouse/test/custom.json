@@ -32,7 +32,7 @@
   {
     "type": "bash",
     "disabled": false,
-    "code": "../bin/pip install pexpect"
+    "code": "./bin/pip install pexpect"
   },
   {
     "type": "python",
