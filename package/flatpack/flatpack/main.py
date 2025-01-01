@@ -314,12 +314,14 @@ def setup_logging(log_path: Path) -> logging.Logger:
         logger.addHandler(file_handler)
 
         logger.info(
-            f"Logging initialized: console and file output to {log_path}")
+            "Logging initialized: console and file output to %s",
+            log_path
+        )
         return logger
 
-    except (OSError, IOError) as e:
+    except (OSError) as e:
         logger.addHandler(console_handler)
-        logger.error(f"Failed to setup file logging at {log_path}: {e}")
+        logger.error("Failed to setup file logging at %s: %s", log_path, e)
         return logger
 
 
@@ -4078,7 +4080,7 @@ def setup_routes(fastapi_app):
                     try:
                         os.write(3, b"__EXIT_PYTHON_EXECUTOR__\n")
                         await asyncio.sleep(0.5)
-                    except (OSError, IOError):
+                    except (OSError):
                         pass
 
                 for proc in build_processes:
