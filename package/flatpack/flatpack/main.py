@@ -280,7 +280,8 @@ def initialize_database_manager(flatpack_db_directory):
 
 def setup_logging(log_path: Path):
     """Sets up logging to console and a rotating file with specified log level (default WARNING)."""
-    logger = logging.getLogger("app_logger")
+    global logger
+
     logger.setLevel(logging.WARNING)
 
     console_handler = logging.StreamHandler()
@@ -1330,10 +1331,6 @@ def initialize_fastapi_app(secret_key):
         "fastapi.middleware.cors",
         callable_name="CORSMiddleware"
     )
-    Response = lazy_import(
-        "fastapi.responses",
-        callable_name="Response"
-    )
     SessionMiddleware = lazy_import(
         "starlette.middleware.sessions",
         callable_name="SessionMiddleware"
@@ -2211,7 +2208,7 @@ def fpk_download_and_extract_template(repo_url, dest_dir):
         error_message = f"Failed to download template from {repo_url}: {e}"
         logger.error("%s", error_message)
         raise RuntimeError(error_message)
-    except (OSError, IOError) as e:
+    except (OSError) as e:
         error_message = (
             f"Failed to extract template or remove index.html in {dest_dir}: {e}"
         )
@@ -2419,7 +2416,7 @@ def fpk_get_last_flatpack() -> Optional[str]:
                 return last_flatpack
         else:
             logger.warning("Cache file does not exist: %s", cache_file_path)
-    except (OSError, IOError) as e:
+    except (OSError) as e:
         error_message = f"An error occurred while accessing the cache file: {e}"
         logger.error("%s", error_message)
     return None
@@ -3902,10 +3899,6 @@ def update_hook_in_file(hook_id, updated_hook):
 
 
 def setup_routes(fastapi_app):
-    CORSMiddleware = lazy_import(
-        "fastapi.middleware.cors",
-        callable_name="CORSMiddleware"
-    )
     FileResponse = lazy_import(
         "fastapi.responses",
         callable_name="FileResponse"
@@ -3981,11 +3974,6 @@ def setup_routes(fastapi_app):
     @fastapi_app.get("/csrf-token")
     async def get_csrf_token(request: Request, response: Response):
         """Generate and return a CSRF token, setting it as an HTTP-only cookie."""
-        Response = lazy_import(
-            "fastapi.responses",
-            callable_name="Response"
-        )
-
         csrf_token = secrets.token_urlsafe(32)
         timestamp = str(int(time.time()))
         token_with_timestamp = f"{timestamp}:{csrf_token}"
@@ -4028,8 +4016,10 @@ def setup_routes(fastapi_app):
             return {"message": f"Database connection failed: {e}"}
 
     @fastapi_app.post("/api/abort-build", dependencies=[Depends(csrf_protect)])
-    async def abort_build(request: Request, token: str = Depends(
-        authenticate_token)) -> JSONResponse:
+    async def abort_build(
+            request: Request,
+            token: str = Depends(authenticate_token)
+    ) -> JSONResponse:
         global abort_requested, build_in_progress, flatpack_directory
 
         async with abort_lock:
