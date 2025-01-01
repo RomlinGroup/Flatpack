@@ -86,7 +86,7 @@ echo_stage "Executing flatpack build test"
 if flatpack build test &>/dev/null; then
   echo_success "Flatpack build test executed successfully"
 
-  if [ -f "test/build/test/test_pass" ]; then
+  if [ -f "test/build/test_pass" ]; then
     echo_success "Test pass file found - Verification complete"
   else
     echo_failure "Test pass file not found"
