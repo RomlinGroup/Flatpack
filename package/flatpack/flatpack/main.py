@@ -1,25 +1,15 @@
-import atexit
-import importlib
 import os
 import sys
-import threading
 
 from pathlib import Path
 from textwrap import dedent
 
 from rich.console import Console
-from rich.panel import Panel
-from rich.syntax import Syntax
-from rich.table import Table
-from rich.text import Text
 
 PACKAGE_DIR = Path(sys.modules["flatpack"].__file__).parent
 IMPORT_CACHE_FILE = PACKAGE_DIR / ".fpk_import_cache"
 
 console = Console()
-
-_cache_lock = threading.RLock()
-_runtime_cache = {}
 
 if not IMPORT_CACHE_FILE.exists():
     ascii_art = dedent(
@@ -40,6 +30,7 @@ import argparse
 import asyncio
 import base64
 import errno
+import importlib
 import json
 import logging
 import mimetypes
@@ -54,8 +45,7 @@ import sqlite3
 import stat
 import string
 import subprocess
-import tarfile
-import tempfile
+import threading
 import time
 import unicodedata
 
@@ -73,9 +63,15 @@ import toml
 
 from itsdangerous import BadSignature, SignatureExpired, TimestampSigner
 from pydantic import BaseModel, Field
+from rich.panel import Panel
+from rich.syntax import Syntax
+from rich.table import Table
+from rich.text import Text
 
 from .database_manager import DatabaseManager
-from .error_handling import safe_exit, setup_exception_handling, \
+from .error_handling import \
+    safe_exit, \
+    setup_exception_handling, \
     setup_signal_handling
 from .parsers import parse_toml_to_venv_script
 from .session_manager import SessionManager
@@ -85,12 +81,17 @@ if not IMPORT_CACHE_FILE.exists():
     IMPORT_CACHE_FILE.touch()
     console.print("")
     console.print(
-        "[bold green]First-time initialisation complete! ✨[/bold green]")
+        "[bold green]First-time initialisation complete! ✨[/bold green]"
+    )
     console.print("")
+
+_cache_lock = threading.RLock()
+_runtime_cache = {}
 
 
 def lazy_import(module_name, package=None, callable_name=None):
     """Dynamically import module or callable with thread-safe runtime caching."""
+    global _cache_lock, _runtime_cache
     cache_key = (module_name, package, callable_name)
 
     with _cache_lock:
@@ -124,36 +125,16 @@ def set_file_limits():
 APIKeyCookie = lazy_import("fastapi.security", callable_name="APIKeyCookie")
 BackgroundTasks = lazy_import("fastapi", callable_name="BackgroundTasks")
 BaseHTTPMiddleware = lazy_import(
-    "starlette.middleware.base", callable_name="BaseHTTPMiddleware"
+    "starlette.middleware.base",
+    callable_name="BaseHTTPMiddleware"
 )
-BeautifulSoup = lazy_import("bs4", callable_name="BeautifulSoup")
-Cookie = lazy_import("fastapi", callable_name="Cookie")
-CORSMiddleware = lazy_import("fastapi.middleware.cors",
-                             callable_name="CORSMiddleware")
 Depends = lazy_import("fastapi", callable_name="Depends")
 FastAPI = lazy_import("fastapi", callable_name="FastAPI")
-FileResponse = lazy_import("fastapi.responses", callable_name="FileResponse")
 Form = lazy_import("fastapi", callable_name="Form")
-Header = lazy_import("fastapi", callable_name="Header")
-HTMLResponse = lazy_import("fastapi.responses", callable_name="HTMLResponse")
 HTTPException = lazy_import("fastapi", callable_name="HTTPException")
 JSONResponse = lazy_import("fastapi.responses", callable_name="JSONResponse")
-NgrokError = lazy_import("ngrok.exceptions", callable_name="NgrokError")
-PrettyTable = lazy_import("prettytable", callable_name="PrettyTable")
-RedirectResponse = lazy_import("fastapi.responses",
-                               callable_name="RedirectResponse")
 Request = lazy_import("fastapi", callable_name="Request")
-Response = lazy_import("fastapi.responses", callable_name="Response")
-SessionMiddleware = lazy_import(
-    "starlette.middleware.sessions", callable_name="SessionMiddleware"
-)
-StaticFiles = lazy_import("fastapi.staticfiles", callable_name="StaticFiles")
-croniter = lazy_import("croniter", callable_name="croniter")
-ngrok = lazy_import("ngrok")
-snapshot_download = lazy_import("huggingface_hub",
-                                callable_name="snapshot_download")
 warnings = lazy_import("warnings")
-zstd = lazy_import("zstandard")
 
 HOME_DIR = Path.home() / ".fpk"
 
@@ -250,230 +231,6 @@ class MappingResults(BaseModel):
     mappings: List[dict]
 
 
-class ProcessManager:
-    """Enhanced ProcessManager with robust state management and health monitoring."""
-
-    def __init__(self):
-        self.process: Optional[subprocess.Popen] = None
-        self.master_fd: Optional[int] = None
-        self.slave_fd: Optional[int] = None
-        self.input_pipe: Optional[int] = None
-        self.output_pipe: Optional[int] = None
-        self.pid: Optional[int] = None
-        self._status: str = "initialized"
-        self._last_error: Optional[str] = None
-
-    def reset_state(self) -> None:
-        """Reset internal state before reuse."""
-        if self.is_active():
-            raise RuntimeError("Cannot reset state while process is active")
-
-        self.process = None
-        self.master_fd = None
-        self.slave_fd = None
-        self.input_pipe = None
-        self.output_pipe = None
-        self.pid = None
-        self._status = "reset"
-        self._last_error = None
-        logger.info("Process manager state reset")
-
-    def is_active(self) -> bool:
-        """Check if there is an active process running."""
-        return self.process is not None and self.process.poll() is None
-
-    def get_status(self) -> str:
-        """Get detailed status of the process manager."""
-        if not self.process:
-            return "no_process"
-
-        if self.is_active():
-            if self.check_health():
-                return "running_healthy"
-            return "running_unhealthy"
-
-        return_code = self.process.poll()
-        if return_code is not None:
-            return f"terminated_with_code_{return_code}"
-
-        return "unknown"
-
-    def check_health(self) -> bool:
-        """Check if process is healthy and responding."""
-        if not self.is_active():
-            return False
-
-        try:
-            os.kill(self.pid, 0)
-            return True
-        except OSError as e:
-            logger.warning("Health check failed: %s", e)
-            self._last_error = str(e)
-            return False
-
-    def set_process(
-            self,
-            process: subprocess.Popen,
-            master_fd: int,
-            slave_fd: int,
-            input_pipe: Optional[int] = None,
-            output_pipe: Optional[int] = None,
-    ) -> None:
-        """Set a new process with validation."""
-        if self.is_active():
-            raise RuntimeError("Process manager already has an active process")
-
-        if process is None:
-            raise ValueError("Cannot set None as process")
-
-        self.process = process
-        self.master_fd = master_fd
-        self.slave_fd = slave_fd
-        self.input_pipe = input_pipe
-        self.output_pipe = output_pipe
-        self.pid = process.pid if process else None
-        self._status = "process_set"
-
-        logger.info("Process set with PID: %s", self.pid)
-
-    def clear(self) -> None:
-        initial_status = self.get_status()
-        logger.info("Starting cleanup from status: %s", initial_status)
-
-        try:
-            if self.slave_fd is not None:
-                try:
-                    os.close(self.slave_fd)
-                    logger.debug("Closed slave_fd")
-                except OSError:
-                    logger.debug("Note: slave_fd was already closed")
-
-            if self.master_fd is not None:
-                try:
-                    os.close(self.master_fd)
-                    logger.debug("Closed master_fd")
-                except OSError:
-                    logger.debug("Note: master_fd was already closed")
-
-            if self.process and self.is_active():
-                try:
-                    self.terminate_with_cleanup()
-                except Exception as e:
-                    logger.error("Error during process termination: %s", e)
-                    self._last_error = str(e)
-
-            for pipe in (self.input_pipe, self.output_pipe):
-                if pipe is not None:
-                    try:
-                        os.close(pipe)
-                        logger.debug("Closed pipe %s", pipe)
-                    except OSError:
-                        logger.debug("Note: pipe %s was already closed", pipe)
-
-        except Exception as e:
-            logger.error("Error during cleanup: %s", e)
-            self._last_error = str(e)
-        finally:
-            self.reset_state()
-            final_status = self.get_status()
-            logger.info(
-                "Process manager cleared: %s -> %s", initial_status,
-                final_status
-            )
-
-    def terminate_with_cleanup(self, timeout: int = 5) -> None:
-        """Graceful termination with resource cleanup."""
-        if not self.is_active():
-            logger.debug("No active process to terminate")
-            return
-
-        logger.info("Attempting graceful termination of process %s", self.pid)
-
-        try:
-            self.process.terminate()
-            try:
-                logger.debug(
-                    "Waiting up to %s seconds for process to terminate",
-                    timeout
-                )
-                self.process.wait(timeout=timeout)
-                logger.info("Process terminated gracefully")
-            except subprocess.TimeoutExpired:
-                logger.warning(
-                    "Process did not terminate in time, force killing...")
-                self.process.kill()
-                self.process.wait()
-                logger.info("Process killed")
-        except Exception as e:
-            logger.error("Error during termination: %s", e)
-            self._last_error = str(e)
-            raise
-        finally:
-            for pipe in (self.input_pipe, self.output_pipe):
-                if pipe is not None:
-                    try:
-                        os.close(pipe)
-                    except OSError:
-                        pass
-
-    def get_resource_usage(self) -> Dict[str, float]:
-        """Get resource usage statistics for the process."""
-        if not self.is_active():
-            return {}
-
-        try:
-            process = psutil.Process(self.pid)
-            with process.oneshot():
-                return {
-                    "cpu_percent": process.cpu_percent(),
-                    "memory_percent": process.memory_percent(),
-                    "num_threads": process.num_threads(),
-                    "num_fds": (
-                        process.num_fds() if hasattr(process,
-                                                     "num_fds") else None
-                    ),
-                }
-        except Exception as e:
-            logger.error("Error getting resource usage: %s", e)
-            self._last_error = str(e)
-            return {}
-
-    def get_last_error(self) -> Optional[str]:
-        """Get the last error that occurred."""
-        return self._last_error
-
-    async def run_with_timeout(self, cmd: list, timeout: int = 30) -> int:
-        """Run a command with timeout and return exit code."""
-        if self.is_active():
-            raise RuntimeError("Process manager is already running a process")
-
-        try:
-            current_dir = Path.cwd()
-            logger.info("Running command in directory: %s", current_dir)
-
-            process = subprocess.Popen(
-                cmd,
-                cwd=str(current_dir),
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-            )
-
-            try:
-                return_code = process.wait(timeout=timeout)
-                logger.info("Process completed with return code: %s",
-                            return_code)
-                return return_code
-            except subprocess.TimeoutExpired:
-                logger.warning("Process timed out after %s seconds", timeout)
-                process.kill()
-                return -1
-
-        except Exception as e:
-            logger.error("Error running command: %s", e)
-            self._last_error = str(e)
-            return -1
-
-
 class Source(BaseModel):
     source_name: str
     source_type: str
@@ -497,16 +254,6 @@ abort_lock = asyncio.Lock()
 csrf_cookie = APIKeyCookie(name="csrf_token")
 
 db_manager = None
-process_manager = ProcessManager()
-
-
-def cleanup_on_exit():
-    if process_manager and process_manager.is_active():
-        logger.info("Cleaning up process manager on exit")
-        process_manager.clear()
-
-
-atexit.register(cleanup_on_exit)
 
 
 def initialize_database_manager(flatpack_db_directory):
@@ -1095,6 +842,25 @@ def create_temp_sh(
             outfile.write(header_script)
             outfile.write("\n")
 
+            abort_handler = dedent(
+                """\
+                ABORT_FILE="$SCRIPT_DIR/abort_build"
+
+                function check_abort() {
+                    if [ -f "$ABORT_FILE" ]; then
+                        echo "Abort requested, stopping build..."
+                        cleanup
+                        exit 1
+                    fi
+                }
+
+                trap 'check_abort' DEBUG
+                """
+            )
+
+            outfile.write(abort_handler)
+            outfile.write("\n")
+
             log_eval_data_func = dedent(
                 """\
                 function log_eval_data() {
@@ -1120,14 +886,21 @@ def create_temp_sh(
 
                     if [ -n "$files_since_last" ]; then
                         local eval_data_json="[]"
-                    
+
                         for file in $files_since_last; do
                             local file_basename="/output/$(basename "$file")"
                             local file_mime_type=$(file --mime-type -b "$file")
-                            local file_json="{\"eval\": $block_index, \"file\": \"$file\", \"public\": \"$file_basename\", \"type\": \"$file_mime_type\"}"
+
+                            local file_json=$(jq -n \\
+                                --arg eval "$block_index" \\
+                                --arg file "$file" \\
+                                --arg public "$file_basename" \\
+                                --arg type "$file_mime_type" \\
+                                '{eval: ($eval|tonumber), file: $file, public: $public, type: $type}')
+
                             eval_data_json=$(echo "$eval_data_json" | jq ". + [$file_json]")
                         done
-                    
+
                         echo "$eval_data_json" | jq -s '.[0] + .[1]' "$EVAL_DATA" > "$EVAL_DATA.tmp" && mv "$EVAL_DATA.tmp" "$EVAL_DATA"
                     fi
 
@@ -1149,17 +922,41 @@ def create_temp_sh(
             cleanup_script = dedent(
                 """\
                 function cleanup() {
-                    echo "__EXIT_PYTHON_EXECUTOR__" >&3 2>/dev/null || true
-                    exec 3>&- 2>/dev/null || true
-                    exec 4<&- 2>/dev/null || true
-                    exec 5>&- 2>/dev/null || true
-                    wait "${PYTHON_EXECUTOR_PID}" 2>/dev/null || true
+                    if [ -n "$PYTHON_EXECUTOR_PID" ]; then
+                        echo "__EXIT_PYTHON_EXECUTOR__" >&3 2>/dev/null || true
 
-                    kill -TERM -- -$$ 2>/dev/null || true
+                        sleep 0.5
 
-                    rm -f "$SCRIPT_DIR/python_stdin" "$SCRIPT_DIR/python_stdout" "$SCRIPT_DIR/python_input"
+                        if kill -0 $PYTHON_EXECUTOR_PID 2>/dev/null; then
+                            kill -TERM $PYTHON_EXECUTOR_PID 2>/dev/null || true
+                        fi
+                    fi
+                
+                    exec 3>&- 2>/dev/null || true  # Python stdin
+                    exec 4<&- 2>/dev/null || true  # Python stdout
+                    exec 5>&- 2>/dev/null || true  # Python input
+                
+                    rm -f "$SCRIPT_DIR/python_stdin" "$SCRIPT_DIR/python_stdout" "$SCRIPT_DIR/python_input" "$SCRIPT_DIR/abort_build"
+                
+                    local build_dir="$SCRIPT_DIR"
+                    local current_pid=$$
+                    local parent_pid=$PPID
+                
+                    children=$(pgrep -P $current_pid)
+                    
+                    for child in $children; do
+                        if [ "$child" != "$parent_pid" ] && [ "$child" != "$current_pid" ]; then
+                            kill -TERM $child 2>/dev/null || true
+                        fi
+                    done
+                
+                    ps -ef | grep python | grep "$build_dir" | grep -v grep | while read -r pid rest; do
+                        if [ "$pid" != "$parent_pid" ] && [ "$pid" != "$current_pid" ]; then
+                            kill -TERM $pid 2>/dev/null || true
+                        fi
+                    done
                 }
-
+                
                 trap 'cleanup' EXIT INT TERM
             """
             )
@@ -1354,6 +1151,10 @@ async def csrf_protect(request: Request):
 
 
 def decompress_data(input_path, output_path, allowed_dir=None):
+    import tarfile
+    import tempfile
+    import zstandard as zstd
+
     try:
         abs_input_path = validate_file_path(input_path,
                                             allowed_dir=allowed_dir)
@@ -1525,6 +1326,19 @@ def get_token() -> Optional[str]:
 
 def initialize_fastapi_app(secret_key):
     """Initialize and configure a FastAPI application."""
+    CORSMiddleware = lazy_import(
+        "fastapi.middleware.cors",
+        callable_name="CORSMiddleware"
+    )
+    Response = lazy_import(
+        "fastapi.responses",
+        callable_name="Response"
+    )
+    SessionMiddleware = lazy_import(
+        "starlette.middleware.sessions",
+        callable_name="SessionMiddleware"
+    )
+
     fastapi_app = FastAPI(openapi_url=None)
 
     fastapi_app.add_middleware(SessionMiddleware, secret_key=secret_key)
@@ -1682,6 +1496,11 @@ def set_token(token: str):
 
 def setup_static_directory(fastapi_app, directory: str):
     """Setup the static directory for serving static files, excluding 'output' folder for unauthenticated users."""
+    StaticFiles = lazy_import(
+        "fastapi.staticfiles",
+        callable_name="StaticFiles"
+    )
+
     global flatpack_directory
     flatpack_directory = os.path.abspath(directory)
 
@@ -1736,6 +1555,7 @@ def shutdown_server():
 
 
 def strip_html(script):
+    BeautifulSoup = lazy_import("bs4", callable_name="BeautifulSoup")
     MarkupResemblesLocatorWarning = lazy_import(
         "bs4", callable_name="MarkupResemblesLocatorWarning"
     )
@@ -2065,7 +1885,10 @@ async def fpk_build(directory: Union[str, None], use_euxo: bool = False):
         temp_sh_path.unlink()
 
     create_temp_sh(
-        build_dir, custom_json_path, temp_sh_path, use_euxo=use_euxo,
+        build_dir,
+        custom_json_path,
+        temp_sh_path,
+        use_euxo=use_euxo,
         hooks=hooks
     )
 
@@ -2094,9 +1917,7 @@ async def fpk_build(directory: Union[str, None], use_euxo: bool = False):
 
     build_log_file_path = log_dir / log_filename
 
-    os.system(
-        f"{'set -euxo' if use_euxo else 'set -euo'} pipefail && source {building_script_path} 2>&1 | tee {build_log_file_path}"
-    )
+    os.system(f"bash {building_script_path} 2>&1 | tee {build_log_file_path}")
 
     web_dir = flatpack_dir / "web"
 
@@ -2920,7 +2741,7 @@ def fpk_unbox(
             )
             bash_script_path.write_text(bash_script_content)
 
-            os.system(f"set -euo pipefail && source {bash_script_path}")
+            os.system(f"bash {bash_script_path}")
 
             logger.info("Bash script execution completed successfully")
         finally:
@@ -4081,6 +3902,19 @@ def update_hook_in_file(hook_id, updated_hook):
 
 
 def setup_routes(fastapi_app):
+    CORSMiddleware = lazy_import(
+        "fastapi.middleware.cors",
+        callable_name="CORSMiddleware"
+    )
+    FileResponse = lazy_import(
+        "fastapi.responses",
+        callable_name="FileResponse"
+    )
+    Response = lazy_import(
+        "fastapi.responses",
+        callable_name="Response"
+    )
+
     fastapi_app.add_middleware(ConnectionLimitMiddleware)
 
     @fastapi_app.on_event("startup")
@@ -4147,6 +3981,11 @@ def setup_routes(fastapi_app):
     @fastapi_app.get("/csrf-token")
     async def get_csrf_token(request: Request, response: Response):
         """Generate and return a CSRF token, setting it as an HTTP-only cookie."""
+        Response = lazy_import(
+            "fastapi.responses",
+            callable_name="Response"
+        )
+
         csrf_token = secrets.token_urlsafe(32)
         timestamp = str(int(time.time()))
         token_with_timestamp = f"{timestamp}:{csrf_token}"
@@ -4189,143 +4028,107 @@ def setup_routes(fastapi_app):
             return {"message": f"Database connection failed: {e}"}
 
     @fastapi_app.post("/api/abort-build", dependencies=[Depends(csrf_protect)])
-    async def abort_build(
-            request: Request, token: str = Depends(authenticate_token)
-    ) -> JSONResponse:
-        global abort_requested, build_in_progress, process_manager, flatpack_directory
+    async def abort_build(request: Request, token: str = Depends(
+        authenticate_token)) -> JSONResponse:
+        global abort_requested, build_in_progress, flatpack_directory
 
         async with abort_lock:
             try:
                 if not flatpack_directory:
                     logger.warning(
-                        "Abort request received with no active build directory"
-                    )
+                        "Abort request received with no active build directory")
                     return JSONResponse(
                         content={"message": "No active build directory."},
-                        status_code=400,
-                    )
+                        status_code=400)
+
+                build_dir = Path(flatpack_directory) / "build"
+                abort_file = build_dir / "abort_build"
+                abort_file.touch()
 
                 abort_requested = True
                 build_in_progress = False
 
-                initial_status = (
-                    process_manager.get_status()
-                    if process_manager
-                    else "no_process_manager"
-                )
-                logger.info("Starting build abort from status: %s",
-                            initial_status)
+                build_script_pid = None
+                build_processes = []
+                for proc in psutil.process_iter(
+                        ['pid', 'cmdline', 'name', 'ppid']):
+                    try:
+                        if str(build_dir) in ' '.join(proc.cmdline()):
+                            if 'python' in proc.name().lower():
+                                build_processes.append(proc)
+
+                                if proc.ppid() == os.getpid():
+                                    build_script_pid = proc.pid
+                    except (psutil.NoSuchProcess, psutil.AccessDenied):
+                        continue
 
                 cleanup_success = True
-                memory_before = 0
-                final_status = "no_active_process"
 
-                if process_manager and process_manager.is_active():
-                    logger.info("Active process found, initiating cleanup...")
+                if build_script_pid:
+                    try:
+                        os.write(3, b"__EXIT_PYTHON_EXECUTOR__\n")
+                        await asyncio.sleep(0.5)
+                    except (OSError, IOError):
+                        pass
 
-                    resource_usage = process_manager.get_resource_usage()
-                    memory_before = resource_usage.get("memory_percent", 0)
+                for proc in build_processes:
+                    try:
+                        if proc.is_running():
+                            proc.terminate()
+                    except psutil.NoSuchProcess:
+                        pass
 
-                    MAX_TERMINATION_ATTEMPTS = 3
-                    for attempt in range(MAX_TERMINATION_ATTEMPTS):
-                        try:
-                            process_manager.terminate_with_cleanup(timeout=5)
-                            cleanup_success = True
-                            break
-                        except Exception as e:
-                            logger.error(
-                                "Termination attempt %s failed: %s",
-                                attempt + 1, e
-                            )
-                            if attempt == MAX_TERMINATION_ATTEMPTS - 1:
-                                cleanup_success = False
-                            await asyncio.sleep(1)
+                temp_files = ["temp.sh", "python_executor.py", "python_stdin",
+                              "python_stdout", "python_input", "abort_build"]
 
-                    final_status = process_manager.get_status()
-                else:
-                    logger.info("No active process found in ProcessManager")
-
-                build_dir = Path(flatpack_directory) / "build"
-                temp_files = [
-                    "temp.sh",
-                    "python_executor.py",
-                    "python_stdin",
-                    "python_stdout",
-                    "python_input",
-                ]
-
-                async with asyncio.timeout(10):
-                    for temp_file in temp_files:
-                        try:
-                            temp_path = build_dir / temp_file
-                            if temp_path.exists():
-                                temp_path.unlink()
-                                logger.debug("Removed temp file: %s",
-                                             temp_file)
-                        except Exception as e:
-                            logger.warning(
-                                "Could not remove temp file %s: %s", temp_file,
-                                e
-                            )
-                            cleanup_success = cleanup_success and False
+                for temp_file in temp_files:
+                    try:
+                        temp_path = build_dir / temp_file
+                        if temp_path.exists():
+                            temp_path.unlink()
+                    except Exception as e:
+                        logger.warning("Could not remove temp file %s: %s",
+                                       temp_file, e)
+                        cleanup_success = False
 
                 status_data = BuildStatusData(
                     status="aborted",
                     timestamp=datetime.now().isoformat(),
                     cleanup_success=cleanup_success,
-                    initial_status=initial_status,
-                    final_status=final_status,
-                    memory_released=memory_before,
-                    error=process_manager.get_last_error() if process_manager else None,
+                    initial_status="running",
+                    final_status="aborted",
+                    memory_released=0,
+                    error=None
                 )
 
                 status_file = build_dir / "build_status.json"
                 os.makedirs(status_file.parent, exist_ok=True)
-
-                async with asyncio.timeout(5):
-                    with open(status_file, "w") as f:
-                        json.dump(status_data.dict(), f)
-
-                logger.info(
-                    "Build aborted. Process status: %s -> %s",
-                    initial_status,
-                    final_status,
-                )
+                with open(status_file, "w") as f:
+                    json.dump(status_data.dict(), f)
 
                 return JSONResponse(
                     content={
                         "message": "Build process aborted successfully",
                         "cleanup_success": cleanup_success,
-                        "initial_status": initial_status,
-                        "final_status": final_status,
-                        "memory_released": memory_before,
-                        "last_error": (
-                            process_manager.get_last_error()
-                            if process_manager
-                            else None
-                        ),
                     },
-                    status_code=200,
+                    status_code=200
                 )
 
             except Exception as e:
                 logger.error("Error in abort_build: %s", str(e), exc_info=True)
-
                 abort_requested = False
                 build_in_progress = False
 
                 try:
-                    if process_manager and process_manager.is_active():
-                        process_manager.terminate_with_cleanup(timeout=3)
+                    if abort_file.exists():
+                        abort_file.unlink()
                 except Exception as cleanup_error:
                     logger.error("Emergency cleanup failed: %s", cleanup_error)
 
                 return JSONResponse(
-                    content={
-                        "message": f"Error during abort: {str(e)}",
-                        "error": str(e),
-                    },
-                    status_code=500,
+                    content={"message": f"Error during abort: {str(e)}",
+                             "error": str(e)},
+                    status_code=500
                 )
 
     @fastapi_app.post("/api/build", dependencies=[Depends(csrf_protect)])
@@ -5170,6 +4973,8 @@ def setup_routes(fastapi_app):
 
 
 def fpk_cli_handle_run(args, session):
+    ngrok = lazy_import("ngrok")
+
     global abort_requested, build_in_progress, console, flatpack_directory, nextjs_process
 
     if not args.input:
