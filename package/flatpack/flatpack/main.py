@@ -29,12 +29,10 @@ if not IMPORT_CACHE_FILE.exists():
 import argparse
 import asyncio
 import base64
-import errno
 import importlib
 import json
 import logging
 import mimetypes
-import pty
 import re
 import secrets
 import select
@@ -1931,12 +1929,13 @@ async def fpk_build(directory: Union[str, None], use_euxo: bool = False):
 
     log_dir = build_dir / "logs"
     log_dir.mkdir(parents=True, exist_ok=True)
+
     log_file_time = datetime.utcnow().strftime("%Y_%m_%d_%H_%M_%S")
     log_filename = f"build_{log_file_time}.log"
 
     build_log_file_path = log_dir / log_filename
 
-    os.system(f"bash {building_script_path} 2>&1 | tee {build_log_file_path}")
+    os.system(f"bash {building_script_path}")
 
     web_dir = flatpack_dir / "web"
 
