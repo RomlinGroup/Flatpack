@@ -1770,14 +1770,6 @@ def validate_session(session_id):
     return False
 
 
-def write_status_to_file(status_data):
-    status_file = os.path.join(flatpack_directory, "build",
-                               "build_status.json")
-
-    with open(status_file, "w") as f:
-        json.dump(status_data, f)
-
-
 async def fpk_build(directory: Union[str, None], use_euxo: bool = False):
     """Asynchronous function to build a flatpack with connection validation."""
     global flatpack_directory
@@ -1929,13 +1921,18 @@ async def fpk_build(directory: Union[str, None], use_euxo: bool = False):
 
     log_dir = build_dir / "logs"
     log_dir.mkdir(parents=True, exist_ok=True)
-
-    log_file_time = datetime.utcnow().strftime("%Y_%m_%d_%H_%M_%S")
-    log_filename = f"build_{log_file_time}.log"
-
+    log_filename = f"build_{datetime.utcnow().strftime('%Y_%m_%d_%H_%M_%S')}.log"
     build_log_file_path = log_dir / log_filename
 
-    os.system(f"bash {building_script_path}")
+    process = subprocess.Popen(
+        f"stdbuf -i0 -o0 -e0 bash {building_script_path} | tee {build_log_file_path}",
+        shell=True,
+        stdin=sys.stdin,
+        stdout=sys.stdout,
+        stderr=sys.stderr
+    )
+
+    process.wait()
 
     web_dir = flatpack_dir / "web"
 
@@ -2759,7 +2756,8 @@ def fpk_unbox(
             )
             bash_script_path.write_text(bash_script_content)
 
-            os.system(f"bash {bash_script_path}")
+            safe_script_path = shlex.quote(str(bash_script_path.resolve()))
+            subprocess.run(['/bin/bash', safe_script_path], check=True)
 
             logger.info("Bash script execution completed successfully")
         finally:
