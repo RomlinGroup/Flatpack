@@ -1926,7 +1926,7 @@ async def fpk_build(directory: Union[str, None], use_euxo: bool = False):
     build_log_file_path = log_dir / log_filename
 
     process = subprocess.Popen(
-        f"stdbuf -i0 -o0 -e0 bash {building_script_path} | tee {build_log_file_path}",
+        f"stdbuf -i0 -o0 -e0 python3 -u -c 'import sys; sys.stdout = sys.stderr' && bash {building_script_path} | tee {build_log_file_path}",
         bufsize=1,
         shell=True,
         stdin=sys.stdin,
