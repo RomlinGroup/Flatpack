@@ -3462,7 +3462,6 @@ def download_file_with_progress(
                 finally:
                     pbar.close()
     except (requests.exceptions.RequestException, IOError) as e:
-        console.print(f"[red]Error downloading {url}: {str(e)}[/red]")
         raise
     except KeyboardInterrupt:
         console.print("\n[yellow]Download interrupted by user.[/yellow]")
@@ -3507,7 +3506,6 @@ def download_model_files(model_id: str, local_dir: Path, token: str = None):
         return False
 
     except requests.exceptions.RequestException as e:
-        console.print(f"[red]Error downloading model: {str(e)}[/red]")
         return False
 
 
