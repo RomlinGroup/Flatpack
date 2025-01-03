@@ -1927,10 +1927,12 @@ async def fpk_build(directory: Union[str, None], use_euxo: bool = False):
 
     process = subprocess.Popen(
         f"stdbuf -i0 -o0 -e0 bash {building_script_path} | tee {build_log_file_path}",
+        bufsize=1,
         shell=True,
         stdin=sys.stdin,
         stdout=sys.stdout,
-        stderr=sys.stderr
+        stderr=sys.stderr,
+        universal_newlines=True
     )
 
     process.wait()
