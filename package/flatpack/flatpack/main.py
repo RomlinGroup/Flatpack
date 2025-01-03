@@ -52,6 +52,7 @@ from importlib.metadata import version
 from io import BytesIO
 from logging.handlers import RotatingFileHandler
 from typing import Dict, List, Optional, Set, Union
+from tqdm.auto import tqdm
 from zipfile import ZipFile
 
 import httpx
@@ -3426,17 +3427,93 @@ def is_running_in_docker():
         return False
 
 
+def download_file_with_progress(
+        url: str,
+        local_path: Path,
+        token: str = None,
+        chunk_size: int = 8192
+):
+    """Download a file with progress tracking using tqdm."""
+    headers = {'Authorization': f'Bearer {token}'} if token else {}
+
+    try:
+        response = requests.get(url, headers=headers, stream=True)
+        response.raise_for_status()
+
+        total_size = int(response.headers.get('content-length', 0))
+        block_size = chunk_size
+        desc = os.path.basename(url)
+
+        with open(local_path, 'wb') as f:
+            with tqdm(
+                    total=total_size,
+                    unit='iB',
+                    unit_scale=True,
+                    unit_divisor=1024,
+                    desc=desc,
+                    dynamic_ncols=True
+            ) as pbar:
+                try:
+                    for chunk in response.iter_content(chunk_size=block_size):
+                        size = f.write(chunk)
+                        pbar.update(size)
+                        if os.path.exists("abort_build"):
+                            raise KeyboardInterrupt()
+                finally:
+                    pbar.close()
+    except (requests.exceptions.RequestException, IOError) as e:
+        console.print(f"[red]Error downloading {url}: {str(e)}[/red]")
+        raise
+    except KeyboardInterrupt:
+        console.print("\n[yellow]Download interrupted by user.[/yellow]")
+        raise
+
+
+def download_model_files(model_id: str, local_dir: Path, token: str = None):
+    """Download model files from Hugging Face."""
+    api_url = f"https://huggingface.co/api/models/{model_id}/tree/main"
+    headers = {'Authorization': f'Bearer {token}'} if token else {}
+
+    try:
+        response = requests.get(api_url, headers=headers)
+        response.raise_for_status()
+        files = response.json()
+
+        tracking_file = local_dir / ".download_tracking"
+        downloaded_files = set()
+
+        if tracking_file.exists():
+            downloaded_files = set(tracking_file.read_text().splitlines())
+
+        for file in files:
+            if file['type'] == 'file':
+                rel_path = file['path']
+                if rel_path in downloaded_files:
+                    continue
+
+                file_url = f"https://huggingface.co/{model_id}/resolve/main/{rel_path}"
+                local_path = local_dir / rel_path
+
+                local_path.parent.mkdir(parents=True, exist_ok=True)
+
+                download_file_with_progress(file_url, local_path, token)
+
+                downloaded_files.add(rel_path)
+                tracking_file.write_text('\n'.join(downloaded_files))
+
+        return True
+
+    except KeyboardInterrupt:
+        return False
+
+    except requests.exceptions.RequestException as e:
+        console.print(f"[red]Error downloading model: {str(e)}[/red]")
+        return False
+
+
 def fpk_cli_handle_compress(args, session: httpx.Client):
     """
     Handle the model compression command for the Flatpack CLI.
-    Prevents execution inside Docker containers for security and compatibility.
-
-    Args:
-        args: The command-line arguments.
-        session: The HTTP session.
-
-    Returns:
-        None
     """
     if is_running_in_docker():
         console.print(
@@ -3461,7 +3538,7 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
         return
 
     repo_name = model_id.split("/")[-1]
-    local_dir = repo_name
+    local_dir = Path(repo_name)
 
     console.print(
         Panel.fit(
@@ -3471,7 +3548,7 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
     )
 
     try:
-        if os.path.exists(local_dir):
+        if local_dir.exists():
             console.print(
                 f"[bold yellow]INFO:[/bold yellow] Existing model directory '{local_dir}' found. Attempting to resume download..."
             )
@@ -3479,34 +3556,17 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
             console.print(
                 f"[bold blue]INFO:[/bold blue] Creating new directory '{local_dir}' for the model..."
             )
-            os.makedirs(local_dir, exist_ok=True)
+            local_dir.mkdir(parents=True, exist_ok=True)
 
-        console.print(
-            f"[bold blue]INFO:[/bold blue] Downloading model '{model_id}'...")
-
-        try:
-            if token:
-                lazy_import("huggingface_hub").snapshot_download(
-                    repo_id=model_id,
-                    local_dir=local_dir,
-                    revision="main",
-                    token=token,
-                    resume_download=True,
+        success = download_model_files(model_id, local_dir, token)
+        if not success:
+            if os.path.exists("abort_build"):
+                console.print(
+                    "\n[bold yellow]WARNING:[/bold yellow] Process interrupted by user. Exiting..."
                 )
-            else:
-                lazy_import("huggingface_hub").snapshot_download(
-                    repo_id=model_id,
-                    local_dir=local_dir,
-                    revision="main",
-                    resume_download=True,
-                )
-
+                return
             console.print(
-                f"[bold green]SUCCESS:[/bold green] Finished downloading {model_id} into the directory '{local_dir}'"
-            )
-        except Exception as e:
-            console.print(
-                f"[bold red]ERROR:[/bold red] Failed to download the model. Error: {e}"
+                f"[bold red]ERROR:[/bold red] Failed to download the model."
             )
             return
 
@@ -3560,7 +3620,10 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
                     )
 
             ready_file = os.path.join(llama_cpp_dir, "ready")
-            requirements_file = os.path.join(llama_cpp_dir, "requirements.txt")
+            requirements_file = os.path.join(
+                llama_cpp_dir,
+                "requirements.txt"
+            )
             venv_dir = os.path.join(llama_cpp_dir, "venv")
             venv_python = os.path.join(venv_dir, "bin", "python")
             convert_script = os.path.join(llama_cpp_dir,
@@ -3656,15 +3719,17 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
 
                 try:
                     venv_activate = os.path.join(venv_dir, "bin", "activate")
+
                     convert_command = [
                         "/bin/bash",
                         "-c",
                         (
                             f"source {shlex.quote(venv_activate)} && {shlex.quote(venv_python)} "
-                            f"{shlex.quote(convert_script)} {shlex.quote(local_dir)} --outfile "
-                            f"{shlex.quote(output_file)} --outtype {shlex.quote(outtype)}"
+                            f"{shlex.quote(convert_script)} {shlex.quote(str(local_dir))} --outfile "
+                            f"{shlex.quote(str(output_file))} --outtype {shlex.quote(outtype)}"
                         ),
                     ]
+
                     console.print(
                         Panel(
                             Syntax(
@@ -3677,6 +3742,7 @@ def fpk_cli_handle_compress(args, session: httpx.Client):
                             expand=False,
                         )
                     )
+
                     subprocess.run(convert_command, check=True)
                     console.print(
                         f"[bold green]SUCCESS:[/bold green] Conversion complete. The model has been compressed and saved as '{output_file}'"

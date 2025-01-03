@@ -106,9 +106,6 @@ Check out the [JLA - Compatibility Checker](https://joinup.ec.europa.eu/collecti
 - **[httpx](https://pypi.org/project/httpx/)**\
   BSD License ([LICENSE](https://github.com/encode/httpx/blob/master/LICENSE.md))
 
-- **[huggingface-hub](https://pypi.org/project/huggingface-hub/)**\
-  Apache Software License (Apache) ([LICENSE](https://github.com/huggingface/huggingface_hub/blob/main/LICENSE))
-
 - **[itsdangerous](https://pypi.org/project/itsdangerous/)**\
   BSD License ([LICENSE](https://github.com/pallets/itsdangerous/blob/main/LICENSE.txt))
 
