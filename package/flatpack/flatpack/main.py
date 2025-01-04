@@ -2700,16 +2700,14 @@ def fpk_unbox(
                 "--yes",
             ]
 
-            with console.status(
-                    "[bold green]Setting up a new Next.js project...",
-                    spinner="dots"
-            ):
-                subprocess.run(
-                    create_next_app_cmd,
-                    check=True,
-                    stderr=subprocess.DEVNULL,
-                    stdout=subprocess.DEVNULL,
-                )
+            console.print(
+                "[bold green]Setting up a new Next.js project...[/bold green]"
+            )
+
+            subprocess.run(
+                create_next_app_cmd,
+                check=True
+            )
 
             console.print(
                 "[bold green]Successfully set up a new Next.js project[/bold green]"
