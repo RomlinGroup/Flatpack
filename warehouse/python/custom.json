@@ -1,0 +1,12 @@
+[
+  {
+    "type": "bash",
+    "disabled": false,
+    "code": "echo \"Hello from Bash!\""
+  },
+  {
+    "type": "python",
+    "disabled": false,
+    "code": "print(\"Hello from Python!\")"
+  }
+]
