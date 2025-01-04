@@ -2696,8 +2696,7 @@ def fpk_unbox(
                 "--no-experimental-app",
                 "--no-src-dir",
                 "--no-turbopack",
-                "--use-npm",
-                "--yes",
+                "--use-npm"
             ]
 
             console.print(
@@ -2706,6 +2705,8 @@ def fpk_unbox(
 
             subprocess.run(
                 create_next_app_cmd,
+                input='y\n',
+                text=True,
                 check=True
             )
 
