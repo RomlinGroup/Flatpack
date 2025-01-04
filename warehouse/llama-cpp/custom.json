@@ -1,5 +1,10 @@
 [
   {
+    "type": "python",
+    "disabled": false,
+    "code": "import sys\n\nprint(\"Building llama-cpp\")\nprint(f\"Python version: {sys.version}\")"
+  },
+  {
     "type": "bash",
     "disabled": false,
     "code": "# llama-cpp-python\n# License: MIT\n\n./bin/pip install llama-cpp-python \\\n    --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/cpu"
@@ -11,7 +16,7 @@
   },
   {
     "type": "bash",
-    "disabled": false,
+    "disabled": true,
     "code": "if [ -d \"vector\" ]; then\n    echo \"Directory 'vector' already exists. Deleting it now.\"\n    rm -rf \"vector\"\n    echo \"Directory 'vector' has been deleted.\"\nfi\n\necho \"Creating 'vector' directory now.\"\n\nmkdir \"vector\"\n\necho \"Directory 'vector' created successfully.\""
   },
   {
