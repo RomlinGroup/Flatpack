@@ -5,10 +5,13 @@
 FROM ubuntu:24.04
 
 ARG DEBIAN_FRONTEND=noninteractive
-ENV NVM_DIR=/home/flatpackuser/.nvm \
-    NODE_VERSION=22 \
+ENV FORCE_COLOR=1 \
     NODE_PATH=/home/flatpackuser/.nvm/v22/lib/node_modules \
-    PATH=/home/flatpackuser/.nvm/versions/node/v22/bin:/home/flatpackuser/.local/bin:${PATH}
+    NODE_VERSION=22 \
+    NVM_DIR=/home/flatpackuser/.nvm \
+    PATH=/home/flatpackuser/.nvm/versions/node/v22/bin:/home/flatpackuser/.local/bin:${PATH} \
+    PYTHONUNBUFFERED=1 \
+    TERM=xterm-256color
 
 LABEL authors="flatpack"
 
