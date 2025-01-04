@@ -1,12 +1,22 @@
 [
   {
-    "type": "bash",
+    "type": "python",
     "disabled": false,
-    "code": "echo \"Hello from Bash!\""
+    "code": "def test_things():\n    numbers = [1, 2, 3, 4, 5]\n    squared = [x * x for x in numbers]\n    result = sum(squared)\n    print(f\"Original numbers: {numbers}\")\n    print(f\"Squared numbers: {squared}\") \n    print(f\"Sum of squares: {result}\")\n    return result"
   },
   {
     "type": "python",
     "disabled": false,
-    "code": "print(\"Hello from Python!\")"
+    "code": "print(\"Testing the function:\")\nresult = test_things()\n\nprint(f\"The final result was: {result}\")"
+  },
+  {
+    "type": "python",
+    "disabled": false,
+    "code": "import sys\n\nprint(f\"Python version: {sys.version}\")\nprint(f\"The variable says: {python_says_hello}\")"
+  },
+  {
+    "type": "bash",
+    "disabled": false,
+    "code": "echo \"Hello from Bash!\""
   }
 ]
