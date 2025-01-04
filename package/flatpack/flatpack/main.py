@@ -690,11 +690,17 @@ def create_temp_sh(
             if hook["hook_type"] == "bash":
                 outfile.write(f"{hook['hook_script']}\n")
             elif hook["hook_type"] == "python":
+                outfile.write(
+                    f"\necho -e '\\033[1;33m[BEGIN] Executing hook {hook_index} (Python)\\033[0m'\n"
+                )
                 outfile.write(send_code_to_python(hook["hook_script"]))
-                outfile.write("\n")
+                outfile.write(
+                    f"\necho -e '\\033[1;33m[END] Executing hook {hook_index} (Python)\\033[0m'\n"
+                )
 
         last_count = sum(
-            1 for block in code_blocks if not is_block_disabled(block))
+            1 for block in code_blocks if not is_block_disabled(block)
+        )
 
         temp_sh_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -728,32 +734,30 @@ def create_temp_sh(
                         old_stdin = sys.stdin
                         sys.stdin = sys.__stdin__
                         os.setpgrp()
-
+        
                         def my_input(prompt=""):
                             print("READY_FOR_INPUT")
                             sys.stdout.flush()
                             print(prompt, end="", flush=True)
                             line = input_pipe.readline().strip()
                             return line
-
+                
                         GLOBAL_NAMESPACE["input"] = my_input
                         exec(code, GLOBAL_NAMESPACE)
-
+                
                         sys.stdout.flush()
                         sys.stderr.flush()
                         sys.stdout = old_stdout
                         sys.stdin = old_stdin
-
+                
                         print("EXECUTION_COMPLETE")
                     except Exception as e:
                         sys.stdout = old_stdout
                         sys.stdin = old_stdin
-
-                        print(f"Error executing code: {e}", file=sys.stderr)
-
+            
                         traceback.print_exc()
                         sys.exit(1)
-
+        
                 def signal_handler(signum, frame):
                     print(f"Python executor received signal {signum}. Exiting.")
                     sys.exit(1)
@@ -1068,19 +1072,19 @@ def create_temp_sh(
 
                 if language == "bash":
                     outfile.write(
-                        f"\necho '[BEGIN] Executing block {block_index} (Bash)'\n"
+                        f"\necho -e '\\033[1;33m[BEGIN] Executing block {block_index} (Bash)\\033[0m'\n"
                     )
                     outfile.write(f"{code}\n")
                     outfile.write(
-                        f"\necho '[END] Executing block {block_index} (Bash)'\n"
+                        f"\necho -e '\\033[1;33m[END] Executing block {block_index} (Bash)\\033[0m'\n"
                     )
                 elif language == "python":
                     outfile.write(
-                        f"\necho '[BEGIN] Executing block {block_index} (Python)'\n"
+                        f"\necho -e '\\033[1;33m[BEGIN] Executing block {block_index} (Python)\\033[0m'\n"
                     )
                     outfile.write(send_code_to_python(code))
                     outfile.write(
-                        f"\necho '[END] Executing block {block_index} (Python)'\n"
+                        f"\necho -e '\\033[1;33m[END] Executing block {block_index} (Python)\\033[0m'\n"
                     )
 
                 outfile.write(f'log_eval_data "{block_index}"\n')

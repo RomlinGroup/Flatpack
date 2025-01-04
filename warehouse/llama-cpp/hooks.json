@@ -8,15 +8,6 @@
       "hook_type": "bash",
       "show_on_frontpage": true,
       "created_at": "2024-12-24 19:39:06"
-    },
-    {
-      "id": 2,
-      "hook_name": "tokens",
-      "hook_placement": "before",
-      "hook_script": "tokens = 128",
-      "hook_type": "python",
-      "show_on_frontpage": true,
-      "created_at": "2024-12-24 19:38:30"
     }
   ]
 }
