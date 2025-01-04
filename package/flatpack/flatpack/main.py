@@ -2699,16 +2699,17 @@ def fpk_unbox(
                 "--use-npm"
             ]
 
-            console.print(
-                "[bold green]Setting up a new Next.js project...[/bold green]"
-            )
+            with console.status(
+                    "[bold green]Setting up a new Next.js project...",
+                    spinner="dots"
+            ):
 
-            subprocess.run(
-                create_next_app_cmd,
-                input='y\n',
-                text=True,
-                check=True
-            )
+                subprocess.run(
+                    create_next_app_cmd,
+                    input='y\n',
+                    text=True,
+                    check=True
+                )
 
             console.print(
                 "[bold green]Successfully set up a new Next.js project[/bold green]"
