@@ -1075,13 +1075,172 @@ def create_temp_sh(
                         f"\necho -e '\\033[1;33m[BEGIN] Executing block {block_index} (Bash)\\033[0m'\n"
                     )
                     outfile.write(f"{code}\n")
+
+                    code_single_line = "".join(code.splitlines())
+
+                    dangerous_patterns = [
+                        r"^\s*base64\s",
+                        r"^\s*bash\s",
+                        r"^\s*cat\s+/etc/shadow",
+                        r"^\s*cat\s+/etc/passwd",
+                        r"^\s*chroot\s",
+                        r"^\s*dd\s",
+                        r"^\s*eval\s",
+                        r"^\s*fdisk\s",
+                        r"^\s*find\s+(?!.*-exec).*$",
+                        r"^\s*fish\s",
+                        r"^\s*killall\s",
+                        r"^\s*ksh\s",
+                        r"^\s*mkfs\s",
+                        r"^\s*mount\s",
+                        r"^\s*nc\s",
+                        r"^\s*ncat\s",
+                        r"^\s*parted\s",
+                        r"^\s*perl\s+(-c)?",
+                        r"^\s*pgrep\s",
+                        r"^\s*php\s+(-c)?",
+                        r"^\s*pkill\s",
+                        r"^\s*python\s+(-c)?",
+                        r"^\s*pv\s",
+                        r"^\s*reboot\s",
+                        r"^\s*rm\s+.*-r",
+                        r"^\s*ruby\s+(-c)?",
+                        r"^\s*shutdown\s",
+                        r"^\s*su\s",
+                        r"^\s*sudo\s",
+                        r"^\s*systemctl\s+(?!start|stop|restart|status)",
+                        r"^\s*umount\s",
+                        r"^\s*useradd\s",
+                        r"^\s*usermod\s",
+                        r"^\s*userdel\s",
+                        r"^\s*vgchange\s",
+                        r"^\s*vgcreate\s",
+                        r"^\s*vgremove\s",
+                        r"^\s*lvcreate\s",
+                        r"^\s*lvremove\s",
+                        r"^\s*lvextend\s",
+                        r"^\s*lvreduce\s",
+                        r"^\s*zsh\s",
+                    ]
+
+                    for pattern in dangerous_patterns:
+                        if re.search(pattern, code_single_line):
+                            outfile.write(
+                                f"echo -e \"\\033[31m[ERROR] Commands matching '{pattern}' are not allowed.\\033[0m\"\n"
+                            )
+                            outfile.write("exit 1\n")
+
+                    if re.search(r"pip\s+", code_single_line):
+                        outfile.write(
+                            f"echo -e \"\\033[31m[ERROR] 'pip' commands are not allowed in code blocks. Please use the flatpack.toml file.\\033[0m\"\n"
+                        )
+                        outfile.write("exit 1\n")
+
                     outfile.write(
                         f"\necho -e '\\033[1;33m[END] Executing block {block_index} (Bash)\\033[0m'\n"
                     )
+
                 elif language == "python":
                     outfile.write(
                         f"\necho -e '\\033[1;33m[BEGIN] Executing block {block_index} (Python)\\033[0m'\n"
                     )
+
+                    dangerous_python_functions = [
+                        "__import__",
+                        "compile",
+                        "eval",
+                        "exec",
+                        "execfile",
+                        "os.chmod",
+                        "os.chown",
+                        "os.chroot",
+                        "os.execv",
+                        "os.execve",
+                        "os.link",
+                        "os.makedirs",
+                        "os.mkdir",
+                        "os.mknod",
+                        "os.popen",
+                        "os.putenv",
+                        "os.remove",
+                        "os.removedirs",
+                        "os.rename",
+                        "os.replace",
+                        "os.rmdir",
+                        "os.setpgrp",
+                        "os.setregid",
+                        "os.setresuid",
+                        "os.setreuid",
+                        "os.setsid",
+                        "os.setuid",
+                        "os.system",
+                        "os.symlink",
+                        "os.unlink",
+                        "platform.os",
+                        "platform.popen",
+                        "platform.processor",
+                        "platform.python_branch",
+                        "platform.python_build",
+                        "platform.python_compiler",
+                        "platform.python_implementation",
+                        "platform.python_revision",
+                        "platform.python_version",
+                        "platform.python_version_tuple",
+                        "platform.release",
+                        "platform.subprocess",
+                        "platform.system",
+                        "platform.system_alias",
+                        "platform.uname",
+                        "platform.version",
+                        "platform.win32_edition",
+                        "platform.win32_is_iot",
+                        "platform.win32_ver",
+                        "shutil.copy",
+                        "shutil.copy2",
+                        "shutil.copyfile",
+                        "shutil.copymode",
+                        "shutil.copystat",
+                        "shutil.copytree",
+                        "shutil.make_archive",
+                        "shutil.move",
+                        "shutil.rmtree",
+                        "subprocess.Popen",
+                        "subprocess.call",
+                        "subprocess.check_call",
+                        "subprocess.check_output",
+                        "subprocess.getoutput",
+                        "subprocess.getstatusoutput",
+                        "tempfile.NamedTemporaryFile",
+                        "tempfile.SpooledTemporaryFile",
+                        "tempfile.TemporaryFile",
+                        "tempfile.mkdtemp",
+                        "tempfile.mkstemp",
+                        "__builtins__"
+                    ]
+
+                    code_lines = code.splitlines()
+
+                    for line_number, line in enumerate(code_lines, 1):
+                        in_string = False
+                        in_comment = False
+                        for i, char in enumerate(line):
+                            if char == "#" and not in_string:
+                                in_comment = True
+                            elif char in ("'", "\"") and not in_comment:
+                                in_string = not in_string
+                            elif char == "\\" and in_string:
+                                i += 1
+
+                            if not in_string and not in_comment:
+                                for func in dangerous_python_functions:
+                                    if re.search(
+                                            r"\b" + re.escape(func) + r"\s*\(",
+                                            line[i:]):
+                                        outfile.write(
+                                            f"echo -e \"\\033[31m[ERROR] Line {line_number}: Potentially dangerous function '{func}' is not allowed.\\033[0m\"\n"
+                                        )
+                                        outfile.write("exit 1\n")
+
                     outfile.write(send_code_to_python(code))
                     outfile.write(
                         f"\necho -e '\\033[1;33m[END] Executing block {block_index} (Python)\\033[0m'\n"
