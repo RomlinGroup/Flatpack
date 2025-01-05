@@ -710,111 +710,118 @@ def create_temp_sh(
             exec_file.write(
                 dedent(
                     """\
-                import os
-                import selectors
-                import signal
-                import sys
-                import traceback
-
-                GLOBAL_NAMESPACE = {}
-
-                def setup_input_pipe():
-                    script_dir = os.path.dirname(os.path.abspath(__file__))
-                    input_pipe_path = os.path.join(script_dir, "python_input")
-
-                    if not os.path.exists(input_pipe_path):
-                        os.mkfifo(input_pipe_path)
-
-                    return open(input_pipe_path, 'r')
-
-                def execute_code(code):
-                    try:
-                        old_stdout = sys.stdout
-                        sys.stdout = sys.__stdout__
-                        old_stdin = sys.stdin
-                        sys.stdin = sys.__stdin__
-                        os.setpgrp()
-        
-                        def my_input(prompt=""):
-                            print("READY_FOR_INPUT")
-                            sys.stdout.flush()
-                            print(prompt, end="", flush=True)
-                            line = input_pipe.readline().strip()
-                            return line
-                
-                        GLOBAL_NAMESPACE["input"] = my_input
-                        exec(code, GLOBAL_NAMESPACE)
-                
-                        sys.stdout.flush()
-                        sys.stderr.flush()
-                        sys.stdout = old_stdout
-                        sys.stdin = old_stdin
-                
-                        print("EXECUTION_COMPLETE")
-                    except Exception as e:
-                        sys.stdout = old_stdout
-                        sys.stdin = old_stdin
+                    import os
+                    import resource
+                    import selectors
+                    import signal
+                    import sys
+                    import traceback
+                    
+                    if sys.platform != 'darwin':
+                        resource.setrlimit(resource.RLIMIT_AS, (16 * 2**30, 16 * 2**30))  # 16GB memory
+   
+                    # 2 hour CPU limit
+                    resource.setrlimit(resource.RLIMIT_CPU, (7200, 7200))  
+    
+                    GLOBAL_NAMESPACE = {}
+    
+                    def setup_input_pipe():
+                        script_dir = os.path.dirname(os.path.abspath(__file__))
+                        input_pipe_path = os.path.join(script_dir, "python_input")
+    
+                        if not os.path.exists(input_pipe_path):
+                            os.mkfifo(input_pipe_path)
+    
+                        return open(input_pipe_path, 'r')
+    
+                    def execute_code(code):
+                        try:
+                            old_stdout = sys.stdout
+                            sys.stdout = sys.__stdout__
+                            old_stdin = sys.stdin
+                            sys.stdin = sys.__stdin__
+                            os.setpgrp()
             
-                        traceback.print_exc()
+                            def my_input(prompt=""):
+                                print("READY_FOR_INPUT")
+                                sys.stdout.flush()
+                                print(prompt, end="", flush=True)
+                                line = input_pipe.readline().strip()
+                                return line
+                    
+                            GLOBAL_NAMESPACE["input"] = my_input
+                            exec(code, GLOBAL_NAMESPACE)
+                    
+                            sys.stdout.flush()
+                            sys.stderr.flush()
+                            sys.stdout = old_stdout
+                            sys.stdin = old_stdin
+                    
+                            print("EXECUTION_COMPLETE")
+                        except Exception as e:
+                            sys.stdout = old_stdout
+                            sys.stdin = old_stdin
+                
+                            traceback.print_exc()
+                            sys.exit(1)
+            
+                    def signal_handler(signum, frame):
+                        print(f"Python executor received signal {signum}. Exiting.")
                         sys.exit(1)
-        
-                def signal_handler(signum, frame):
-                    print(f"Python executor received signal {signum}. Exiting.")
-                    sys.exit(1)
-
-                if __name__ == "__main__":
-                    signal.signal(signal.SIGTERM, signal_handler)
-                    signal.signal(signal.SIGINT, signal_handler)
-
-                    input_pipe = setup_input_pipe()
-                    selector = selectors.DefaultSelector()
-                    selector.register(sys.stdin, selectors.EVENT_READ, "code")
-                    selector.register(input_pipe, selectors.EVENT_READ, "input")
-
-                    while True:
-                        code_block = []
-
+    
+                    if __name__ == "__main__":
+                        signal.signal(signal.SIGTERM, signal_handler)
+                        signal.signal(signal.SIGINT, signal_handler)
+    
+                        input_pipe = setup_input_pipe()
+                        selector = selectors.DefaultSelector()
+                        selector.register(sys.stdin, selectors.EVENT_READ, "code")
+                        selector.register(input_pipe, selectors.EVENT_READ, "input")
+    
                         while True:
-                            events = selector.select()
-
-                            for event, mask in events:
-                                stream = event.fileobj
-                                stream_type = event.data
-
-                                line = stream.readline()
-
-                                if not line:
+                            code_block = []
+    
+                            while True:
+                                events = selector.select()
+    
+                                for event, mask in events:
+                                    stream = event.fileobj
+                                    stream_type = event.data
+    
+                                    line = stream.readline()
+    
+                                    if not line:
+                                        continue
+    
+                                    if stream_type == "code":
+                                        if line.strip() == "__EXIT_PYTHON_EXECUTOR__":
+                                            print("Received exit signal. Cleaning up...")
+                                            sys.stdout.flush()
+                                            sys.exit(0)
+    
+                                        if line.strip() == "__END_CODE_BLOCK__":
+                                            if code_block:
+                                                execute_code(''.join(code_block))
+                                            break
+                                        elif line.strip() == "READY_FOR_INPUT":
+                                            pass
+                                        else:
+                                            code_block.append(line)
+                                    elif stream_type == "input":
+                                        if "input" in GLOBAL_NAMESPACE:
+                                            input_line = line.strip()
+    
+                                            try:
+                                                GLOBAL_NAMESPACE["input"](input_line)
+                                            except Exception as e:
+                                                print(f"Error calling input handler: {e}", file=sys.stderr)
+                                                traceback.print_exc()
+                                        else:
+                                            print("No input handler available")
+                                else:
                                     continue
-
-                                if stream_type == "code":
-                                    if line.strip() == "__EXIT_PYTHON_EXECUTOR__":
-                                        print("Received exit signal. Cleaning up...")
-                                        sys.stdout.flush()
-                                        sys.exit(0)
-
-                                    if line.strip() == "__END_CODE_BLOCK__":
-                                        if code_block:
-                                            execute_code(''.join(code_block))
-                                        break
-                                    elif line.strip() == "READY_FOR_INPUT":
-                                        pass
-                                    else:
-                                        code_block.append(line)
-                                elif stream_type == "input":
-                                    if "input" in GLOBAL_NAMESPACE:
-                                        input_line = line.strip()
-
-                                        try:
-                                            GLOBAL_NAMESPACE["input"](input_line)
-                                        except Exception as e:
-                                            print(f"Error calling input handler: {e}", file=sys.stderr)
-                                            traceback.print_exc()
-                                    else:
-                                        print("No input handler available")
-                            else:
-                                continue
-                            break
-            """
+                                break
+                    """
                 )
             )
 
@@ -862,7 +869,7 @@ def create_temp_sh(
 
                 echo '[]' > "$EVAL_DATA"
                 touch "$EVAL_DATA"
-            """
+                """
             )
 
             outfile.write(header_script)
@@ -940,7 +947,7 @@ def create_temp_sh(
 
                     jq -nc --arg curr "$block_index" --arg last "$LAST_COUNT" --arg eval "$eval_count" --arg dt "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" '{\"curr\": ($curr|tonumber), \"last\": ($last|tonumber), \"eval\": (if $eval == \"null\" then null else ($eval|tonumber) end), \"datetime\": $dt }' | jq '.' > "$EVAL_BUILD"
                 }
-            """
+                """
             )
             outfile.write(log_eval_data_func)
             outfile.write("\n")
@@ -984,7 +991,7 @@ def create_temp_sh(
                 }
                 
                 trap 'cleanup' EXIT INT TERM
-            """
+                """
             )
             outfile.write(cleanup_script)
             outfile.write("\n")
@@ -1005,7 +1012,7 @@ def create_temp_sh(
                 exec 4< "$SCRIPT_DIR/python_stdout"
                 exec 5> "$SCRIPT_DIR/python_input"
                 echo "File descriptors set up."
-            """
+                """
             )
             outfile.write(pipe_setup)
             outfile.write("\n")
@@ -1045,7 +1052,7 @@ def create_temp_sh(
                         fi
                     done
                 }
-            """
+                """
             )
             outfile.write(helper_functions)
             outfile.write("\n")
@@ -1056,7 +1063,7 @@ def create_temp_sh(
                     send_code_to_python_and_wait << 'EOF_CODE'
                     {}
                     EOF_CODE
-                """
+                    """
                 ).format(code)
 
             for hook_index, hook in enumerate(hooks):
@@ -1079,48 +1086,57 @@ def create_temp_sh(
                     code_single_line = "".join(code.splitlines())
 
                     dangerous_patterns = [
-                        r"^\s*base64\s",
-                        r"^\s*bash\s",
-                        r"^\s*cat\s+/etc/shadow",
-                        r"^\s*cat\s+/etc/passwd",
-                        r"^\s*chroot\s",
-                        r"^\s*dd\s",
-                        r"^\s*eval\s",
-                        r"^\s*fdisk\s",
-                        r"^\s*find\s+(?!.*-exec).*$",
-                        r"^\s*fish\s",
-                        r"^\s*killall\s",
-                        r"^\s*ksh\s",
-                        r"^\s*mkfs\s",
-                        r"^\s*mount\s",
-                        r"^\s*nc\s",
-                        r"^\s*ncat\s",
-                        r"^\s*parted\s",
-                        r"^\s*perl\s+(-c)?",
-                        r"^\s*pgrep\s",
-                        r"^\s*php\s+(-c)?",
-                        r"^\s*pkill\s",
-                        r"^\s*python\s+(-c)?",
-                        r"^\s*pv\s",
-                        r"^\s*reboot\s",
-                        r"^\s*rm\s+.*-r",
-                        r"^\s*ruby\s+(-c)?",
-                        r"^\s*shutdown\s",
-                        r"^\s*su\s",
-                        r"^\s*sudo\s",
-                        r"^\s*systemctl\s+(?!start|stop|restart|status)",
-                        r"^\s*umount\s",
-                        r"^\s*useradd\s",
-                        r"^\s*usermod\s",
-                        r"^\s*userdel\s",
-                        r"^\s*vgchange\s",
-                        r"^\s*vgcreate\s",
-                        r"^\s*vgremove\s",
-                        r"^\s*lvcreate\s",
-                        r"^\s*lvremove\s",
-                        r"^\s*lvextend\s",
-                        r"^\s*lvreduce\s",
-                        r"^\s*zsh\s",
+                        r"\$\((rm|chmod|chown|sudo|su|eval).*?\)",
+                        r"\$\{.*?\}",
+                        r"\.\s+\S+",
+                        r"/\s*$",
+                        r"`.*`",
+                        r"^\s*\bbase64\b\s",
+                        r"^\s*\bbash\b\s",
+                        r"^\s*\bcat\b\s+/etc/passwd",
+                        r"^\s*\bcat\b\s+/etc/shadow",
+                        r"^\s*\bchroot\b\s",
+                        r"^\s*\bdd\b\s",
+                        r"^\s*\benv\b\s",
+                        r"^\s*\beval\b\s",
+                        r"^\s*\bfdisk\b\s",
+                        r"^\s*\bfind\b\s+(?!.*-exec).*$",
+                        r"^\s*\bfish\b\s",
+                        r"^\s*\bkillall\b\s",
+                        r"^\s*\bksh\b\s",
+                        r"^\s*\blvcreate\b\s",
+                        r"^\s*\blvextend\b\s",
+                        r"^\s*\blvreduce\b\s",
+                        r"^\s*\blvremove\b\s",
+                        r"^\s*\bmkfs\b\s",
+                        r"^\s*\bmount\b\s",
+                        r"^\s*\bnc\b\s",
+                        r"^\s*\bncat\b\s",
+                        r"^\s*\bparted\b\s",
+                        r"^\s*\bperl\b\s+(-c)?",
+                        r"^\s*\bpgrep\b\s",
+                        r"^\s*\bphp\b\s+(-c)?",
+                        r"^\s*\bpkill\b\s",
+                        r"^\s*\bpv\b\s",
+                        r"^\s*\bpython\b\s+(-c)?",
+                        r"^\s*\breboot\b\s",
+                        r"^\s*\brm\b\s+.*--no-preserve-root",
+                        r"^\s*\brm\b\s+.*-r",
+                        r"^\s*\bruby\b\s+(-c)?",
+                        r"^\s*\bshutdown\b\s",
+                        r"^\s*\bsource\b\s",
+                        r"^\s*\bsu\b\s",
+                        r"^\s*\bsudo\b\s",
+                        r"^\s*\bsystemctl\b\s+(?!start|stop|restart|status)",
+                        r"^\s*\btrap\b\s",
+                        r"^\s*\bumount\b\s",
+                        r"^\s*\buseradd\b\s",
+                        r"^\s*\buserdel\b\s",
+                        r"^\s*\busermod\b\s",
+                        r"^\s*\bvgchange\b\s",
+                        r"^\s*\bvgcreate\b\s",
+                        r"^\s*\bvgremove\b\s",
+                        r"^\s*\bzsh\b\s"
                     ]
 
                     for pattern in dangerous_patterns:
@@ -1146,36 +1162,38 @@ def create_temp_sh(
                     )
 
                     dangerous_python_functions = [
+                        "__builtins__",
                         "__import__",
                         "compile",
                         "eval",
                         "exec",
                         "execfile",
+                        "fcntl",
+                        "imp",
+                        "importlib",
+                        "importlib.import_module",
+                        "importlib.util",
                         "os.chmod",
                         "os.chown",
                         "os.chroot",
                         "os.execv",
                         "os.execve",
                         "os.link",
-                        "os.makedirs",
-                        "os.mkdir",
                         "os.mknod",
+                        "os.path.join",
                         "os.popen",
                         "os.putenv",
-                        "os.remove",
                         "os.removedirs",
                         "os.rename",
                         "os.replace",
-                        "os.rmdir",
                         "os.setpgrp",
                         "os.setregid",
                         "os.setresuid",
                         "os.setreuid",
                         "os.setsid",
                         "os.setuid",
-                        "os.system",
                         "os.symlink",
-                        "os.unlink",
+                        "os.system",
                         "platform.os",
                         "platform.popen",
                         "platform.processor",
@@ -1195,14 +1213,13 @@ def create_temp_sh(
                         "platform.win32_edition",
                         "platform.win32_is_iot",
                         "platform.win32_ver",
-                        "shutil.copy",
+                        "pty",
+                        "resource",
                         "shutil.copy2",
-                        "shutil.copyfile",
                         "shutil.copymode",
                         "shutil.copystat",
                         "shutil.copytree",
                         "shutil.make_archive",
-                        "shutil.move",
                         "shutil.rmtree",
                         "subprocess.Popen",
                         "subprocess.call",
@@ -1210,12 +1227,10 @@ def create_temp_sh(
                         "subprocess.check_output",
                         "subprocess.getoutput",
                         "subprocess.getstatusoutput",
-                        "tempfile.NamedTemporaryFile",
+                        "tempfile.mkdtemp",
                         "tempfile.SpooledTemporaryFile",
                         "tempfile.TemporaryFile",
-                        "tempfile.mkdtemp",
-                        "tempfile.mkstemp",
-                        "__builtins__"
+                        "winreg"
                     ]
 
                     code_lines = code.splitlines()
@@ -1223,6 +1238,7 @@ def create_temp_sh(
                     for line_number, line in enumerate(code_lines, 1):
                         in_string = False
                         in_comment = False
+
                         for i, char in enumerate(line):
                             if char == "#" and not in_string:
                                 in_comment = True
