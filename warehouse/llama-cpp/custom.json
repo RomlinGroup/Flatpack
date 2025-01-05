@@ -1,10 +1,5 @@
 [
   {
-    "type": "python",
-    "disabled": false,
-    "code": "import sys\n\nprint(\"Building llama-cpp\")\nprint(f\"Python version: {sys.version}\")"
-  },
-  {
     "type": "bash",
     "disabled": false,
     "code": "# llama.cpp\n# License: MIT\n\nif [ ! -d \"llama.cpp\" ]; then\n  git clone https://github.com/ggerganov/llama.cpp\n\n  cd llama.cpp\n\n  cmake -B build\n  cmake --build build --config Release\nelse\n  cd llama.cpp\nfi"
@@ -22,11 +17,11 @@
   {
     "type": "bash",
     "disabled": false,
-    "code": "../bin/pip install -U kokoro-onnx\n[ ! -f ../kokoro-v0_19.onnx ] && wget -O ../kokoro-v0_19.onnx https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files/kokoro-v0_19.onnx\n[ ! -f ../voices.json ] && wget -O ../voices.json https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files/voices.json"
+    "code": "[ ! -f ../kokoro-v0_19.onnx ] && wget -O ../kokoro-v0_19.onnx https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files/kokoro-v0_19.onnx\n[ ! -f ../voices.json ] && wget -O ../voices.json https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files/voices.json"
   },
   {
     "type": "python",
     "disabled": false,
-    "code": "print(\"[DEBUG] Inside python block 5\")\n\nimport soundfile as sf\nimport subprocess\n\nfrom kokoro_onnx import Kokoro\n\nkokoro = Kokoro('kokoro-v0_19.onnx', 'voices.json')\n\nwhile True:\n    print(\"Enter your prompt (or 'quit' to exit):\")\n    user_input = input()\n   \n    if user_input.lower() == 'quit':\n        break\n\n    cmd = [\n        \"./llama.cpp/build/bin/llama-cli\",\n        \"-m\", \n        \"./llama.cpp/models/gemma-2-2b-it-Q4_K_M.gguf\",\n        \"--temp\",\n        \"0.7\",\n        \"--prompt\",\n        user_input,\n        \"--no-display-prompt\"\n    ]\n\n    print(\"\\nGenerating response...\")\n    result = subprocess.run(cmd, capture_output=True, text=True)\n    generated_text = result.stdout.strip()\n    print(\"\\nResponse:\", generated_text)\n\n    with open('output/output.txt', 'w', encoding='utf-8') as f:\n        f.write(generated_text)\n\n    samples, sample_rate = kokoro.create(\n        generated_text,\n        voice='af_bella',\n        speed=1.0,\n        lang='en-us'\n    )\n    \n    sf.write('output/output.wav', samples, sample_rate)\n    print('\\nSaved response to output.txt and audio to output.wav')"
+    "code": "import soundfile as sf\nimport subprocess\n\nfrom kokoro_onnx import Kokoro\n\nkokoro = Kokoro('kokoro-v0_19.onnx', 'voices.json')\n\nwhile True:\n    print(\"Enter your prompt (or 'quit' to exit):\")\n    user_input = input()\n   \n    if user_input.lower() == 'quit':\n        break\n\n    cmd = [\n        \"./llama.cpp/build/bin/llama-cli\",\n        \"-m\", \n        \"./llama.cpp/models/gemma-2-2b-it-Q4_K_M.gguf\",\n        \"--temp\",\n        \"0.7\",\n        \"--prompt\",\n        user_input,\n        \"--no-display-prompt\"\n    ]\n\n    print(\"\\nGenerating response...\")\n    result = subprocess.run(cmd, capture_output=True, text=True)\n    generated_text = result.stdout.strip()\n    print(\"\\nResponse:\", generated_text)\n\n    with open('output/output.txt', 'w', encoding='utf-8') as f:\n        f.write(generated_text)\n\n    samples, sample_rate = kokoro.create(\n        generated_text,\n        voice='af_bella',\n        speed=1.0,\n        lang='en-us'\n    )\n    \n    sf.write('output/output.wav', samples, sample_rate)\n    print('\\nSaved response to output.txt and audio to output.wav')"
   }
 ]
