@@ -29,6 +29,7 @@ wget = "*"
 
 [packages.python]
 numpy = "2.2.0"
+pexpect = "4.9.0"
 tiktoken = "0.8.0"
 tqdm = "4.67.1"
 
