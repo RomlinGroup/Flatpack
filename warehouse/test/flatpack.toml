@@ -12,10 +12,7 @@ external = 8080
 internal = 80
 
 [directories]
-checkpoints = "checkpoints"
-data = "data"
-models = "models"
-scripts = "scripts"
+output = "output"
 
 [packages]
 
