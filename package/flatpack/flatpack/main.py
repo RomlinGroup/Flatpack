@@ -704,129 +704,6 @@ def create_temp_sh(
 
         temp_sh_path.parent.mkdir(parents=True, exist_ok=True)
 
-        executor_path = temp_sh_path.parent / "python_executor.py"
-
-        with executor_path.open("w", encoding="utf-8") as exec_file:
-            exec_file.write(
-                dedent(
-                    """\
-                    import os
-                    import resource
-                    import selectors
-                    import signal
-                    import sys
-                    import traceback
-                    
-                    if sys.platform != 'darwin':
-                        resource.setrlimit(resource.RLIMIT_AS, (16 * 2**30, 16 * 2**30))  # 16GB memory
-   
-                    # 2 hour CPU limit
-                    resource.setrlimit(resource.RLIMIT_CPU, (7200, 7200))  
-    
-                    GLOBAL_NAMESPACE = {}
-    
-                    def setup_input_pipe():
-                        script_dir = os.path.dirname(os.path.abspath(__file__))
-                        input_pipe_path = os.path.join(script_dir, "python_input")
-    
-                        if not os.path.exists(input_pipe_path):
-                            os.mkfifo(input_pipe_path)
-    
-                        return open(input_pipe_path, 'r')
-    
-                    def execute_code(code):
-                        try:
-                            old_stdout = sys.stdout
-                            sys.stdout = sys.__stdout__
-                            old_stdin = sys.stdin
-                            sys.stdin = sys.__stdin__
-                            os.setpgrp()
-            
-                            def my_input(prompt=""):
-                                print("READY_FOR_INPUT")
-                                sys.stdout.flush()
-                                print(prompt, end="", flush=True)
-                                line = input_pipe.readline().strip()
-                                return line
-                    
-                            GLOBAL_NAMESPACE["input"] = my_input
-                            exec(code, GLOBAL_NAMESPACE)
-                    
-                            sys.stdout.flush()
-                            sys.stderr.flush()
-                            sys.stdout = old_stdout
-                            sys.stdin = old_stdin
-                    
-                            print("EXECUTION_COMPLETE")
-                        except Exception as e:
-                            sys.stdout = old_stdout
-                            sys.stdin = old_stdin
-                
-                            traceback.print_exc()
-                            sys.exit(1)
-            
-                    def signal_handler(signum, frame):
-                        print(f"Python executor received signal {signum}. Exiting.")
-                        sys.exit(1)
-    
-                    if __name__ == "__main__":
-                        signal.signal(signal.SIGTERM, signal_handler)
-                        signal.signal(signal.SIGINT, signal_handler)
-    
-                        input_pipe = setup_input_pipe()
-                        selector = selectors.DefaultSelector()
-                        selector.register(sys.stdin, selectors.EVENT_READ, "code")
-                        selector.register(input_pipe, selectors.EVENT_READ, "input")
-    
-                        while True:
-                            code_block = []
-    
-                            while True:
-                                events = selector.select()
-    
-                                for event, mask in events:
-                                    stream = event.fileobj
-                                    stream_type = event.data
-    
-                                    line = stream.readline()
-    
-                                    if not line:
-                                        continue
-    
-                                    if stream_type == "code":
-                                        if line.strip() == "__EXIT_PYTHON_EXECUTOR__":
-                                            print("Received exit signal. Cleaning up...")
-                                            sys.stdout.flush()
-                                            sys.exit(0)
-    
-                                        if line.strip() == "__END_CODE_BLOCK__":
-                                            if code_block:
-                                                execute_code(''.join(code_block))
-                                            break
-                                        elif line.strip() == "READY_FOR_INPUT":
-                                            pass
-                                        else:
-                                            code_block.append(line)
-                                    elif stream_type == "input":
-                                        if "input" in GLOBAL_NAMESPACE:
-                                            input_line = line.strip()
-    
-                                            try:
-                                                GLOBAL_NAMESPACE["input"](input_line)
-                                            except Exception as e:
-                                                print(f"Error calling input handler: {e}", file=sys.stderr)
-                                                traceback.print_exc()
-                                        else:
-                                            print("No input handler available")
-                                else:
-                                    continue
-                                break
-                    """
-                )
-            )
-
-        executor_path.chmod(0o755)
-
         with temp_sh_path.open("w", encoding="utf-8") as outfile:
             header_script = dedent(
                 f"""\
@@ -856,6 +733,23 @@ def create_temp_sh(
                 export PYTHONPATH="$(dirname "$SCRIPT_DIR"):$PYTHONPATH"
 
                 echo "Virtual environment is $VENV_PYTHON"
+                
+                # BEGIN Pipes (debug)
+                echo "Creating pipes..."
+                rm -f "$SCRIPT_DIR/python_stdin" "$SCRIPT_DIR/python_stdout" "$SCRIPT_DIR/python_input"
+                mkfifo -m 666 "$SCRIPT_DIR/python_stdin" "$SCRIPT_DIR/python_stdout" "$SCRIPT_DIR/python_input"
+                echo "Pipes created."
+
+                echo "Starting Python executor..."
+                "$VENV_PYTHON" -u "$SCRIPT_DIR/python_executor.py" < "$SCRIPT_DIR/python_stdin" > "$SCRIPT_DIR/python_stdout" 2>&1 &
+                PYTHON_EXECUTOR_PID=$!
+                echo "Python executor started with PID: $PYTHON_EXECUTOR_PID"
+
+                exec 3> "$SCRIPT_DIR/python_stdin"
+                exec 4< "$SCRIPT_DIR/python_stdout"
+                exec 5> "$SCRIPT_DIR/python_input"
+                echo "File descriptors set up."
+                # END Pipes (debug)
 
                 datetime=$(date -u +"%Y-%m-%d %H:%M:%S")
 
@@ -965,12 +859,6 @@ def create_temp_sh(
                         fi
                     fi
                 
-                    exec 3>&- 2>/dev/null || true  # Python stdin
-                    exec 4<&- 2>/dev/null || true  # Python stdout
-                    exec 5>&- 2>/dev/null || true  # Python input
-                
-                    rm -f "$SCRIPT_DIR/python_stdin" "$SCRIPT_DIR/python_stdout" "$SCRIPT_DIR/python_input" "$SCRIPT_DIR/abort_build"
-                
                     local build_dir="$SCRIPT_DIR"
                     local current_pid=$$
                     local parent_pid=$PPID
@@ -996,27 +884,6 @@ def create_temp_sh(
             outfile.write(cleanup_script)
             outfile.write("\n")
 
-            pipe_setup = dedent(
-                """\
-                echo "Creating pipes..."
-                rm -f "$SCRIPT_DIR/python_stdin" "$SCRIPT_DIR/python_stdout" "$SCRIPT_DIR/python_input"
-                mkfifo -m 666 "$SCRIPT_DIR/python_stdin" "$SCRIPT_DIR/python_stdout" "$SCRIPT_DIR/python_input"
-                echo "Pipes created."
-
-                echo "Starting Python executor..."
-                "$VENV_PYTHON" -u "$SCRIPT_DIR/python_executor.py" < "$SCRIPT_DIR/python_stdin" > "$SCRIPT_DIR/python_stdout" 2>&1 &
-                PYTHON_EXECUTOR_PID=$!
-                echo "Python executor started with PID: $PYTHON_EXECUTOR_PID"
-
-                exec 3> "$SCRIPT_DIR/python_stdin"
-                exec 4< "$SCRIPT_DIR/python_stdout"
-                exec 5> "$SCRIPT_DIR/python_input"
-                echo "File descriptors set up."
-                """
-            )
-            outfile.write(pipe_setup)
-            outfile.write("\n")
-
             helper_functions = dedent(
                 """\
                 function send_input_to_python() {
@@ -1025,10 +892,13 @@ def create_temp_sh(
                 }
 
                 function send_code_to_python_and_wait() {
+                    echo "Python executor PID: $PYTHON_EXECUTOR_PID"                    
+                    echo "" >&3
+                    
                     cat >&3
                     echo '__END_CODE_BLOCK__' >&3
                     output=""
-
+                    
                     while IFS= read -r line <&4; do
                         if [[ ! "$line" == *"EXECUTION_COMPLETE"* ]]; then
                             echo "$line"
@@ -2767,6 +2637,7 @@ def fpk_unbox(
                 return False
 
             toml_path = flatpack_dir / "flatpack.toml"
+
             if not toml_path.exists():
                 logger.error(
                     "flatpack.toml not found in the specified directory: '%s'.",
@@ -2793,6 +2664,7 @@ def fpk_unbox(
             logger.info("Created directory: %s", directory)
 
         eval_data_path = output_dir / "eval_data.json"
+
         with open(eval_data_path, "w") as f:
             json.dump([], f)
 
@@ -2883,7 +2755,9 @@ def fpk_unbox(
                     create_next_app_cmd,
                     input='y\n',
                     text=True,
-                    check=True
+                    check=True,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL
                 )
 
             console.print(
@@ -2947,9 +2821,24 @@ def fpk_unbox(
                 temp_toml_path.unlink()
 
         try:
+            pkgdir = sys.modules['flatpack'].__path__[0]
+            executor_src = os.path.join(pkgdir, 'python_executor.py')
+            executor_dest = build_dir / 'python_executor.py'
+
+            shutil.copy(executor_src, executor_dest)
+
+            try:
+                shutil.copy2(executor_src, executor_dest)
+                logger.info("Copied python_executor.py to build directory")
+            except Exception as e:
+                logger.error("Failed to copy python_executor.py: %s", e)
+                raise
+
             flatpack_dir_str = str(flatpack_dir.resolve())
-            logger.info("Initializing database manager with path: %s",
-                        flatpack_dir_str)
+            logger.info(
+                "Initializing database manager with path: %s",
+                flatpack_dir_str
+            )
             initialize_database_manager(flatpack_dir_str)
 
             logger.info("Syncing hooks to database")
@@ -2990,8 +2879,11 @@ def fpk_valid_directory_name(name: str) -> bool:
     return is_valid
 
 
-def fpk_update(flatpack_name: str, session: requests.Session,
-               branch: str = "main"):
+def fpk_update(
+        flatpack_name: str,
+        session: requests.Session,
+        branch: str = "main"
+):
     """
     Update files of the specified flatpack with the latest versions from the template.
     Files are placed in the /web or /build directory, overwriting existing ones.
@@ -4332,7 +4224,7 @@ def setup_routes(fastapi_app):
                     except psutil.NoSuchProcess:
                         pass
 
-                temp_files = ["temp.sh", "python_executor.py", "python_stdin",
+                temp_files = ["temp.sh", "python_stdin",
                               "python_stdout", "python_input", "abort_build"]
 
                 for temp_file in temp_files:
