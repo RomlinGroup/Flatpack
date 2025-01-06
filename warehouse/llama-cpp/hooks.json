@@ -1,7 +1,7 @@
 {
   "hooks": [
     {
-      "id": 3,
+      "id": 2,
       "hook_name": "gpio",
       "hook_placement": "before",
       "hook_script": "GPIO=true",

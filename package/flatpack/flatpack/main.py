@@ -734,22 +734,15 @@ def create_temp_sh(
 
                 echo "Virtual environment is $VENV_PYTHON"
                 
-                # BEGIN Pipes (debug)
-                echo "Creating pipes..."
                 rm -f "$SCRIPT_DIR/python_stdin" "$SCRIPT_DIR/python_stdout" "$SCRIPT_DIR/python_input"
                 mkfifo -m 666 "$SCRIPT_DIR/python_stdin" "$SCRIPT_DIR/python_stdout" "$SCRIPT_DIR/python_input"
-                echo "Pipes created."
 
-                echo "Starting Python executor..."
                 "$VENV_PYTHON" -u "$SCRIPT_DIR/python_executor.py" < "$SCRIPT_DIR/python_stdin" > "$SCRIPT_DIR/python_stdout" 2>&1 &
                 PYTHON_EXECUTOR_PID=$!
-                echo "Python executor started with PID: $PYTHON_EXECUTOR_PID"
 
                 exec 3> "$SCRIPT_DIR/python_stdin"
                 exec 4< "$SCRIPT_DIR/python_stdout"
                 exec 5> "$SCRIPT_DIR/python_input"
-                echo "File descriptors set up."
-                # END Pipes (debug)
 
                 datetime=$(date -u +"%Y-%m-%d %H:%M:%S")
 
@@ -887,7 +880,7 @@ def create_temp_sh(
             helper_functions = dedent(
                 """\
                 function send_input_to_python() {
-                    echo "Sending input to Python: '$1'"
+                    # echo "Sending input to Python: '$1'"
                     echo "$1" >&5
                 }
 
@@ -901,7 +894,7 @@ def create_temp_sh(
                     output=""
                     
                     while IFS= read -r line <&4; do
-                        if [[ ! "$line" == *"EXECUTION_COMPLETE"* ]]; then
+                        if [[ ! "$line" == *"EXECUTION_COMPLETE"* ]] && [[ ! "$line" == *"READY_FOR_INPUT"* ]]; then
                             echo "$line"
                         fi
 
