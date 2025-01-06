@@ -892,7 +892,8 @@ def create_temp_sh(
                 }
 
                 function send_code_to_python_and_wait() {
-                    echo "Python executor PID: $PYTHON_EXECUTOR_PID"                    
+                    lsof -p $PYTHON_EXECUTOR_PID 2>/dev/null | grep FIFO >/dev/null
+                    
                     echo "" >&3
                     
                     cat >&3
