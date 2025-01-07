@@ -748,8 +748,8 @@ def create_temp_sh(
 
                 LAST_COUNT={last_count}
 
-                EVAL_BUILD="$(dirname "$SCRIPT_DIR")/web/output/eval_build.json"
-                EVAL_DATA="$(dirname "$SCRIPT_DIR")/web/output/eval_data.json"
+                EVAL_BUILD="$(dirname "$SCRIPT_DIR")/build/output/eval_build.json"
+                EVAL_DATA="$(dirname "$SCRIPT_DIR")/build/output/eval_data.json"
 
                 echo "SCRIPT_DIR=$SCRIPT_DIR"
                 echo "EVAL_DATA=$EVAL_DATA"
@@ -1584,8 +1584,15 @@ def setup_static_directory(fastapi_app, directory: str):
             return await call_next(request)
 
         fastapi_app.mount(
-            "/", StaticFiles(directory=static_dir, html=True), name="static"
+            "/",
+            StaticFiles(
+                directory=static_dir,
+                html=True,
+                follow_symlinks=True
+            ),
+            name="static"
         )
+
         logger.info("Static files will be served from: %s", static_dir)
     else:
         logger.error(
@@ -1987,7 +1994,7 @@ async def fpk_build(directory: Union[str, None], use_euxo: bool = False):
         raise FileNotFoundError(
             f"The web directory '{web_dir}' does not exist.")
 
-    output_dir = web_dir / "output"
+    output_dir = build_dir / "output"
     eval_build_path = output_dir / "eval_build.json"
     eval_data_path = output_dir / "eval_data.json"
 
@@ -2009,6 +2016,7 @@ async def fpk_build(directory: Union[str, None], use_euxo: bool = False):
 
             if relative_path:
                 source_file = build_dir / relative_path
+
                 if source_file.exists():
                     allowed_mimetypes = [
                         "audio/wav",
@@ -2026,8 +2034,10 @@ async def fpk_build(directory: Union[str, None], use_euxo: bool = False):
                 else:
                     logger.error("File %s not found.", source_file)
             else:
-                logger.error("Could not determine relative path for %s",
-                             original_path)
+                logger.error(
+                    "Could not determine relative path for %s",
+                    original_path
+                )
 
 
 def fpk_cache_unbox(directory_name: str):
@@ -2651,7 +2661,7 @@ def fpk_unbox(
         web_dir = flatpack_dir / "web"
 
         app_dir = web_dir / "app"
-        output_dir = web_dir / "output"
+        output_dir = build_dir / "output"
 
         for directory in [web_dir, build_dir, output_dir]:
             directory.mkdir(parents=True, exist_ok=True)
@@ -2663,6 +2673,14 @@ def fpk_unbox(
             json.dump([], f)
 
         logger.info("Created empty eval_data.json in %s", eval_data_path)
+
+        web_output_dir = web_dir / "output"
+
+        if web_output_dir.is_symlink():
+            web_output_dir.unlink()
+
+        relative_path = os.path.relpath(output_dir, web_output_dir.parent)
+        web_output_dir.symlink_to(relative_path, target_is_directory=True)
 
         files_to_download = {
             "build": [],
@@ -5237,8 +5255,10 @@ def fpk_cli_handle_run(args, session):
 
     csrf_token_base = secrets.token_urlsafe(32)
     logger.info("[CSRF] New token generated for this session.")
-    console.print("[CSRF] New token generated for this session.",
-                  style="bold blue")
+    console.print(
+        "[CSRF] New token generated for this session.",
+        style="bold blue"
+    )
 
     console.print("")
 
@@ -5384,36 +5404,46 @@ def fpk_cli_handle_run(args, session):
             ).start()
 
             console.print(
-                "[bold green]Started Next.js development server[/bold green]")
+                "[bold green]Started Next.js development server[/bold green]"
+            )
             console.print("")
 
-            source_path = directory / "web" / "output"
-            target_path = app_dir / "public" / "output"
+            build_output = build_dir / "output"
 
-            try:
-                if target_path.exists():
-                    os.unlink(target_path)
-                    console.print(
-                        f"[bold yellow]Removed existing symlink at '{target_path}'[/bold yellow]"
+            if not build_output.exists():
+                console.print(
+                    f"[bold red]Error: Source directory {build_output} does not exist[/bold red]"
+                )
+                return
+
+            (app_dir / "public").mkdir(parents=True, exist_ok=True)
+
+            targets = [
+                app_dir / "public" / "output"
+            ]
+
+            for target in targets:
+                try:
+                    if target.exists():
+                        os.unlink(target)
+
+                    os.symlink(
+                        build_output,
+                        target
                     )
-
+                except OSError as e:
+                    console.print(
+                        f"[bold red]Error creating symlink: {e}[/bold red]"
+                    )
                     console.print("")
 
-                os.symlink(source_path, target_path)
-                console.print(
-                    f"[bold green]Created symlink from '{source_path}' to '{target_path}'[/bold green]"
-                )
-
-                console.print("")
-
-            except OSError as e:
-                console.print(
-                    f"[bold red]Error creating symlink: {e}[/bold red]")
-
-                console.print("")
+            console.print(
+                "[bold green]Successfully created all symlinks![/bold green]"
+            )
         except Exception as e:
             console.print(
-                f"[bold red]Failed to start Next.js server: {e}[/bold red]")
+                f"[bold red]Failed to start Next.js server: {e}[/bold red]"
+            )
             return
 
     async def cleanup():
