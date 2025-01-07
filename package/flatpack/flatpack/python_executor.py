@@ -24,7 +24,7 @@ class SecureString(str):
         return super(SecureString, cls).__new__(cls, s)
 
     def __repr__(self):
-        return 'SecureString(%s)' % super(SecureString, self).__repr__()
+        return f'SecureString({super(SecureString, self).__repr__()})'
 
     def __getattr__(self, attr):
         if attr == '__code__':

@@ -4087,8 +4087,10 @@ def setup_routes(fastapi_app):
                     timeout=5.0,
                 )
                 logger.info("Disconnected ngrok ingress.")
-                console.print("Disconnected ngrok ingress.",
-                              style="bold green")
+                console.print(
+                    "Disconnected ngrok ingress.",
+                    style="bold green"
+                )
             except asyncio.TimeoutError:
                 logger.error(
                     "Timed out while trying to disconnect ngrok ingress.")
