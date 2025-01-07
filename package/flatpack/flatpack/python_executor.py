@@ -8,7 +8,7 @@ import sys
 import time
 import traceback
 
-CODE_TIMEOUT = 30
+CODE_TIMEOUT = 86400
 CPU_LIMIT = 7200
 FILE_LIMIT = 128
 MEMORY_LIMIT = 16 * 2 ** 30
