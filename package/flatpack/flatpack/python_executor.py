@@ -77,20 +77,25 @@ def setup_input_pipe():
         script_dir = os.path.dirname(os.path.abspath(__file__))
         input_pipe_path = os.path.join(script_dir, "python_input")
 
+        if not os.path.commonpath(
+                [script_dir, os.path.abspath(input_pipe_path)]) == script_dir:
+            raise SecurityError("Invalid input pipe path")
+
         def open_with_timeout(path, mode, timeout=5):
             start_time = time.time()
+
             while time.time() - start_time < timeout:
                 try:
                     return open(path, mode, buffering=1)
                 except OSError as e:
                     if e.errno != errno.EINTR:
-                        raise
+                        raise OSError("Failed to open input pipe") from None
                 time.sleep(0.1)
-            raise TimeoutError(f"Failed to open pipe {path} after {timeout}s")
+            raise TimeoutError("Failed to open pipe after timeout")
 
         return open_with_timeout(input_pipe_path, 'r')
     except Exception as e:
-        print(f"Failed to setup input pipe: {e}", file=sys.stderr)
+        print("Failed to setup input pipe", file=sys.stderr)
         sys.exit(1)
 
 
