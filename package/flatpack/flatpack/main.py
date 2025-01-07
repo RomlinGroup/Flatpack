@@ -1584,15 +1584,8 @@ def setup_static_directory(fastapi_app, directory: str):
             return await call_next(request)
 
         fastapi_app.mount(
-            "/",
-            StaticFiles(
-                directory=static_dir,
-                html=True,
-                follow_symlinks=True
-            ),
-            name="static"
+            "/", StaticFiles(directory=static_dir, html=True), name="static"
         )
-
         logger.info("Static files will be served from: %s", static_dir)
     else:
         logger.error(
