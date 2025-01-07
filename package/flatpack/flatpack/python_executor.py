@@ -1,5 +1,6 @@
 import errno
 import os
+import pwd
 import resource
 import selectors
 import signal
@@ -7,15 +8,47 @@ import sys
 import time
 import traceback
 
-MEMORY_LIMIT = 16 * 2 ** 30
+CODE_TIMEOUT = 30
 CPU_LIMIT = 7200
+FILE_LIMIT = 128
+MEMORY_LIMIT = 16 * 2 ** 30
+PROC_LIMIT = 32
 
 GLOBAL_NAMESPACE = {}
 
 input_pipe = None
 
 
+class SecureString(str):
+    def __new__(cls, s):
+        return super(SecureString, cls).__new__(cls, s)
+
+    def __repr__(self):
+        return 'SecureString(%s)' % super(SecureString, self).__repr__()
+
+    def __getattr__(self, attr):
+        if attr == '__code__':
+            raise AttributeError('Access to __code__ is restricted')
+        return super(SecureString, self).__getattr__(attr)
+
+
+def get_safe_globals():
+    return {
+        '__builtins__': __builtins__,
+        '__name__': '__main__'
+    }
+
+
+def drop_privileges():
+    if os.geteuid() == 0:
+        nobody = pwd.getpwnam('nobody')
+        os.setgid(nobody.pw_gid)
+        os.setuid(nobody.pw_uid)
+
+
 def setup_resources():
+    os.umask(0o077)
+
     if sys.platform != 'darwin':
         try:
             resource.setrlimit(
@@ -25,6 +58,14 @@ def setup_resources():
             resource.setrlimit(
                 resource.RLIMIT_CPU,
                 (CPU_LIMIT, CPU_LIMIT)
+            )
+            resource.setrlimit(
+                resource.RLIMIT_NOFILE,
+                (FILE_LIMIT, FILE_LIMIT)
+            )
+            resource.setrlimit(
+                resource.RLIMIT_NPROC,
+                (PROC_LIMIT, PROC_LIMIT)
             )
         except Exception as e:
             print(f"Warning: Could not set resource limits: {e}",
@@ -56,6 +97,9 @@ def setup_input_pipe():
 def execute_code(code):
     old_stdout = sys.stdout
     old_stdin = sys.stdin
+    old_handler = signal.signal(signal.SIGALRM, timeout_handler)
+    signal.alarm(CODE_TIMEOUT)
+
     try:
         sys.stdout = sys.__stdout__
         sys.stdin = sys.__stdin__
@@ -72,8 +116,10 @@ def execute_code(code):
                 print(f"Input error: {e}", file=sys.stderr)
                 return ""
 
-        GLOBAL_NAMESPACE["input"] = my_input
-        exec(code, GLOBAL_NAMESPACE)
+        globals_dict = get_safe_globals()
+        globals_dict['input'] = my_input
+        secure_code = SecureString(code)
+        exec(secure_code, globals_dict)
 
         sys.stdout.flush()
         sys.stderr.flush()
@@ -85,8 +131,14 @@ def execute_code(code):
         return False
 
     finally:
+        signal.alarm(0)
+        signal.signal(signal.SIGALRM, old_handler)
         sys.stdout = old_stdout
         sys.stdin = old_stdin
+
+
+def timeout_handler(signum, frame):
+    raise TimeoutError("Code execution timed out")
 
 
 def signal_handler(signum, frame):
@@ -96,7 +148,6 @@ def signal_handler(signum, frame):
 
 def handle_stream_input(stream_type, line, code_block):
     if stream_type == "code":
-
         if line.strip() == "__EXIT_PYTHON_EXECUTOR__":
             print("Received exit signal. Cleaning up...")
             sys.stdout.flush()
@@ -107,7 +158,10 @@ def handle_stream_input(stream_type, line, code_block):
                 try:
                     execute_code(''.join(code_block))
                 except Exception as e:
-                    print(f"Error executing code block: {e}", file=sys.stderr)
+                    print(
+                        f"Error executing code block: {e}",
+                        file=sys.stderr
+                    )
                     traceback.print_exc()
                 return True
 
@@ -138,6 +192,7 @@ def handle_stream_input(stream_type, line, code_block):
 def main():
     global input_pipe
 
+    drop_privileges()
     setup_resources()
     signal.signal(signal.SIGTERM, signal_handler)
     signal.signal(signal.SIGINT, signal_handler)
@@ -167,25 +222,25 @@ def main():
 
                                 try:
                                     line = stream.readline()
+
                                     if not line:
                                         continue
 
-                                    if handle_stream_input(stream_type, line,
-                                                           code_block):
+                                    if handle_stream_input(
+                                            stream_type,
+                                            line,
+                                            code_block
+                                    ):
                                         break
-
                                 except Exception as e:
                                     print(f"Error handling stream: {e}",
                                           file=sys.stderr)
-
                         except Exception as e:
                             print(f"Error in inner loop: {e}", file=sys.stderr)
                             break
-
                 except Exception as e:
                     print(f"Error in outer loop: {e}", file=sys.stderr)
                     time.sleep(1)
-
     except Exception as e:
         print(f"Fatal error: {e}", file=sys.stderr)
         sys.exit(1)

@@ -179,64 +179,6 @@ class Comment(BaseModel):
     comment: str
 
 
-class ConnectionLimitMiddleware(BaseHTTPMiddleware):
-    def __init__(self, fastapi_instance):
-        super().__init__(fastapi_instance)
-        self.connected_ip = None
-        self.lock = asyncio.Lock()
-
-    def get_client_ip(self, request):
-        """Safely get client IP from request with fallbacks."""
-        if request.client and request.client.host:
-            return request.client.host
-
-        forwarded_for = request.headers.get("X-Forwarded-For")
-
-        if forwarded_for:
-            return forwarded_for.split(",")[0].strip()
-
-        real_ip = request.headers.get("X-Real-IP")
-
-        if real_ip:
-            return real_ip
-
-        return None
-
-    async def dispatch(self, request, call_next):
-        try:
-            client_ip = self.get_client_ip(request)
-
-            if client_ip is None:
-                logger.warning(
-                    "Unable to determine client IP - allowing request"
-                )
-                return await call_next(request)
-
-            async with self.lock:
-                if self.connected_ip is None:
-                    self.connected_ip = client_ip
-                elif self.connected_ip != client_ip:
-                    return JSONResponse(
-                        {"detail": "Another client is already connected"},
-                        status_code=503
-                    )
-
-            try:
-                response = await call_next(request)
-                return response
-            finally:
-                pass
-
-        except Exception as e:
-            logger.error(f"Error in connection limit middleware: {str(e)}")
-            return JSONResponse(
-                status_code=500,
-                content={
-                    "detail": "Internal server error in connection handling"
-                }
-            )
-
-
 class EndpointFilter(logging.Filter):
     def filter(self, record):
         return all(
@@ -4105,12 +4047,11 @@ def setup_routes(fastapi_app):
         "fastapi.responses",
         callable_name="FileResponse"
     )
+
     Response = lazy_import(
         "fastapi.responses",
         callable_name="Response"
     )
-
-    fastapi_app.add_middleware(ConnectionLimitMiddleware)
 
     @fastapi_app.on_event("startup")
     async def startup_event():
