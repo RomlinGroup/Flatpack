@@ -484,37 +484,20 @@ def check_node_and_run_npm_install(web_dir):
             with console.status("[bold green]Running npm install...",
                                 spinner="dots"):
                 subprocess.run(
-                    [npm_path, "install"], check=True, capture_output=True,
+                    [
+                        npm_path,
+                        "install",
+                        "tailwindcss",
+                        "postcss",
+                        "autoprefixer"
+                    ],
+                    check=True,
+                    capture_output=True,
                     text=True
                 )
 
             console.print(
                 "[bold green]Successfully ran 'npm install'[/bold green]")
-            console.print("")
-
-            with console.status(
-                    "[bold green]Installing Tailwind CSS...", spinner="dots"
-            ):
-                tailwind_install_result = subprocess.run(
-                    [npm_path, "install", "tailwindcss", "postcss",
-                     "autoprefixer"],
-                    check=True,
-                    capture_output=True,
-                    text=True,
-                )
-
-                if tailwind_install_result.stdout:
-                    console.print(
-                        f"[green]Tailwind CSS installation output:[/green]\n{tailwind_install_result.stdout}"
-                    )
-                if tailwind_install_result.stderr:
-                    console.print(
-                        f"[yellow]Tailwind CSS installation warnings/errors (if any):[/yellow]\n{tailwind_install_result.stderr}"
-                    )
-
-            console.print(
-                "[bold green]Successfully installed Tailwind CSS[/bold green]"
-            )
 
             tailwind_config = dedent(
                 """\
@@ -2266,49 +2249,6 @@ def fpk_download_and_extract_template(repo_url, dest_dir):
         raise RuntimeError(error_message)
 
 
-def fpk_fetch_flatpack_toml_from_dir(
-        directory_name: str, session: httpx.Client
-) -> Optional[str]:
-    """Fetch the flatpack TOML configuration from a specific directory.
-
-    Args:
-        directory_name (str): Name of the flatpack directory.
-        session (httpx.Client): HTTP client session for making requests.
-
-    Returns:
-        Optional[str]: The TOML content if found, otherwise None.
-    """
-    if not fpk_valid_directory_name(directory_name):
-        message = f"Invalid directory name: '{directory_name}'."
-
-        logger.error("%s", message)
-
-        return None
-
-    fpk_url = f"{BASE_URL}/{directory_name}/{directory_name}.fpk"
-    toml_url = f"{BASE_URL}/{directory_name}/flatpack.toml"
-
-    try:
-        response = session.get(toml_url)
-        response.raise_for_status()
-
-        logger.info("Successfully fetched TOML from %s", toml_url)
-
-        return response.text
-    except httpx.HTTPStatusError as e:
-        message = f"HTTP error occurred: {e.response.status_code} - {e.response.text}"
-        logger.error("%s", message)
-        return None
-    except httpx.RequestError as e:
-        message = f"Network error occurred: {e}"
-        logger.error("%s", message)
-        return None
-    except Exception as e:
-        message = f"An unexpected error occurred: {e}"
-        logger.error("%s", message)
-        return None
-
-
 def fpk_fetch_github_dirs(session: httpx.Client) -> List[str]:
     """
     Fetch a list of directory names from the GitHub repository.
@@ -2577,7 +2517,8 @@ def fpk_unbox(
 
         if not os.path.exists(CONFIG_FILE_PATH):
             logger.info(
-                "Config file not found. Creating initial configuration.")
+                "Config file not found. Creating initial configuration."
+            )
             default_config = {}
             save_config(default_config)
 
@@ -2612,8 +2553,10 @@ def fpk_unbox(
 
         elif local:
             if not flatpack_dir.exists():
-                logger.error("Local directory '%s' does not exist.",
-                             directory_name)
+                logger.error(
+                    "Local directory '%s' does not exist.",
+                    directory_name
+                )
                 return False
 
             toml_path = flatpack_dir / "flatpack.toml"
@@ -2666,7 +2609,7 @@ def fpk_unbox(
                 "index.html",
                 "package.json",
                 "robotomono.woff2",
-            ],
+            ]
         }
 
         for json_file in ["connections.json", "hooks.json", "sources.json"]:
@@ -2697,8 +2640,10 @@ def fpk_unbox(
                         else:
                             f.write(file_decoded.decode("utf-8"))
 
-                    logger.info("Downloaded and saved %s to %s", file,
-                                file_path)
+                    logger.info(
+                        "Downloaded and saved %s to %s", file,
+                        file_path
+                    )
                 except Exception as e:
                     logger.error("Failed to download or save %s: %s", file, e)
                     raise
@@ -2707,6 +2652,7 @@ def fpk_unbox(
             logger.warning(
                 "Cleaning up: Removing the flatpack directory due to npm install failure."
             )
+
             try:
                 shutil.rmtree(flatpack_dir)
                 logger.info("Cleanup successful: Flatpack directory removed.")
@@ -2807,6 +2753,28 @@ def fpk_unbox(
         finally:
             if temp_toml_path.exists():
                 temp_toml_path.unlink()
+
+        files_to_copy = ["app/pages/index.tsx"]
+
+        for file in files_to_copy:
+            source = build_dir / file
+            destination = web_dir / file
+
+            if source.exists():
+                try:
+                    destination.parent.mkdir(parents=True, exist_ok=True)
+
+                    if destination.exists():
+                        destination.unlink()
+
+                    shutil.copy2(source, destination)
+                    logger.info("Copied %s successfully", file)
+                except Exception as e:
+                    logger.error("Failed to copy %s: %s", file, e)
+            else:
+                logger.error("Source file not found: %s", file)
+
+        logger.info("Copy operation completed")
 
         try:
             pkgdir = sys.modules['flatpack'].__path__[0]
@@ -5581,8 +5549,10 @@ def fpk_cli_handle_unbox(args, session):
     fpk_display_disclaimer(directory_name, local=args.local or is_fpk)
     while True:
         user_response = input().strip().upper()
+
         if user_response == "YES":
             break
+
         if user_response == "NO":
             console.print("")
             console.print("Installation aborted by user.", style="bold yellow")
