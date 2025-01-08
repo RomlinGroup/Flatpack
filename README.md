@@ -24,7 +24,7 @@ Flatpack democratises AI and ML through micro language models and model compress
 
 在 Flatpack，我们的使命十分明确: 致力于建立对 AI 的信任。
 
-Flatpack 通过微语言模型和模型压缩普及 AI 和 ML。我们的平台使用户能够训练具有 100M 到 10B 个参数的自定义语言模型。我们引入了 flatpack (FPK)，将 AI 和 ML 集成到边缘计算、电子元件和机器人中。
+Flatpack 通过微语言模型和模型压缩普及 AI 和 ML。我们的平台使用户能够训练具有 100M 到 10B 个参数的自定义语言模型。我们引入了 flatpacks (FPKs)，将 AI 和 ML 集成到边缘计算、电子元件和机器人中。
 
 > **Flatpack:** "Picture merging the Swedish ingenuity of flatpacks (hence our name) and ready-to-assemble furniture with the imaginative appeal of certain Danish snap-together toy bricks. Our method of developing micro language models is designed to be intelligently integrated into the physical world."
 
