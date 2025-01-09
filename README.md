@@ -95,7 +95,7 @@ flatpack update <flatpack_name>
 
 ### Create a local and private flatpack
 
-Here is how to create a local and private flatpack using [RomlinGroup/template](https://github.com/RomlinGroup/template). To make your flatpack public, submit a PR to the [warehouse](https://github.com/RomlinGroup/Flatpack/tree/main/warehouse) (approval is subject to our discretion).
+Here is how to create a local and private flatpack.
 
 ```bash
 flatpack create <flatpack_name>
