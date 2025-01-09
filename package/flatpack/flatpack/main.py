@@ -2065,7 +2065,7 @@ def fpk_create(flatpack_name, repo_url=TEMPLATE_REPO_URL):
         logger.info("Created flatpack directory: %s", flatpack_dir)
 
         for item in os.listdir(template_dir):
-            if item in [".gitignore", "LICENSE"]:
+            if item in [".deepsource.toml", ".gitignore", "LICENSE"]:
                 continue
             s = os.path.join(template_dir, item)
             d = os.path.join(flatpack_dir, item)
