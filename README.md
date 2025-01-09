@@ -164,16 +164,18 @@ flatpack compress <hf_model_name> --method llama.cpp --token <hf_token>
 
 ## Flatpack (FPK)
 
-- [template](warehouse/template)
+- [template](https://github.com/RomlinGroup/template)
+  - /app
   - app.css
   - app.js
   - index.html
   - robotomono.woff2
   - flatpack.toml
-  - README.md
   - connections.json
   - custom.json
   - hooks.json
+  - package.json
+  - source.json
   - build.sh
   - device.sh
 
