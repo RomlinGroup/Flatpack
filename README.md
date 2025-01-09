@@ -165,20 +165,27 @@ flatpack compress <hf_model_name> --method llama.cpp --token <hf_token>
 ## Flatpack (FPK)
 
 - [template](https://github.com/RomlinGroup/template)
-  - /app
-  - app.css
-  - app.js
-  - index.html
-  - robotomono.woff2
-  - flatpack.toml
-  - README.md
-  - connections.json
-  - custom.json
-  - hooks.json
-  - package.json
-  - source.json
-  - build.sh
-  - device.sh
+  - **Application Files**:
+    - `/app` (Application directory)
+    - `app.css` (Stylesheet)
+    - `app.js` (JavaScript logic)
+    - `index.html` (HTML entry point)
+    - `robotomono.woff2` (Font file)
+
+  - **Configuration Files**:
+    - `flatpack.toml` (Flatpack configuration)
+    - `connections.json` (Connection settings)
+    - `custom.json` (Custom configurations)
+    - `hooks.json` (Hooks settings)
+    - `source.json` (Source mappings)
+    - `package.json` (Node.js package configuration)
+
+  - **Documentation**:
+    - `README.md` (Project documentation)
+
+  - **Scripts**:
+    - `build.sh` (Build script)
+    - `device.sh` (Device-specific script)
 
 > The Roboto Mono font ([robotomono.woff2](https://fonts.google.com/specimen/Roboto+Mono)) in our template is graciously borrowed from [https://fonts.google.com/specimen/Roboto+Mono](https://fonts.google.com/specimen/Roboto+Mono) ([Apache License 2.0](https://fonts.google.com/specimen/Roboto+Mono/license))
 
