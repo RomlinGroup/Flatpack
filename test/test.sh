@@ -15,6 +15,27 @@ echo_failure() {
   exit 1
 }
 
+echo_stage "Checking for Python 3.12 installation"
+if ! command -v python3.12 &>/dev/null; then
+  echo "Python 3.12 not found. Attempting to install..."
+
+  if command -v brew &>/dev/null; then
+    echo "Using Homebrew to install Python 3.12..."
+    brew install python@3.12 || echo_failure "Homebrew Python 3.12 installation failed"
+  elif command -v apt-get &>/dev/null; then
+    echo "Using apt-get to install Python 3.12..."
+    sudo apt-get update
+    sudo apt-get install -y python3.12 || echo_failure "apt-get Python 3.12 installation failed"
+  elif command -v pip3 &>/dev/null; then
+    echo "Using pip3 to install Python 3.12..."
+    pip3 install python==3.12 || echo_failure "pip3 Python 3.12 installation failed"
+  else
+    echo_failure "No supported package manager found to install Python 3.12"
+  fi
+else
+  echo_success "Python 3.12 is already installed."
+fi
+
 echo_stage "Checking for pipx installation"
 if ! command -v pipx &>/dev/null; then
   echo "Pipx not found. Attempting to install..."
@@ -52,7 +73,7 @@ else
 fi
 
 echo_stage "Installing Flatpack"
-pipx install flatpack || echo_failure "Flatpack installation failed"
+pipx install flatpack --python=python3.12 || echo_failure "Flatpack installation failed"
 echo_success "Flatpack installed successfully"
 
 echo_stage "Cleaning up test folder"

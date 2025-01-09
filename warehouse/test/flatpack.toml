@@ -31,7 +31,6 @@ wget = "*"
 numpy = "2.2.0"
 pexpect = "4.9.0"
 tiktoken = "0.8.0"
-tqdm = "4.67.1"
 
 # [[git]]
 # from_source = "{{git_source_url}}"
