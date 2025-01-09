@@ -71,11 +71,5 @@ RUN mkdir -p ${NVM_DIR} && \
 
 RUN pip3 install flatpack
 
-RUN mkdir -p /home/flatpackuser/.cache /home/flatpackuser/.config && \
-    echo '#!/bin/bash\nsource ${HOME}/.nvm/nvm.sh\nexec "$@"' > /home/flatpackuser/docker-entrypoint.sh && \
-    chmod +x /home/flatpackuser/docker-entrypoint.sh
-
+EXPOSE 3000
 EXPOSE 8000
-
-ENTRYPOINT ["/home/flatpackuser/docker-entrypoint.sh"]
-CMD ["bash"]
