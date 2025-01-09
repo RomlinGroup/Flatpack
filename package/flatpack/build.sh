@@ -3,11 +3,6 @@ set -e
 
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 
-remove_dir() {
-  local dir_name="$1"
-  rm -rf "$dir_name" 2>/dev/null && echo "Successfully removed $dir_name!" || echo "$dir_name doesn't exist or couldn't be removed."
-}
-
 check_flatpack() {
   echo "Checking flatpack installation..."
   which flatpack || echo "flatpack not found in PATH"
@@ -16,6 +11,11 @@ check_flatpack() {
   else
     echo "pipx not installed"
   fi
+}
+
+remove_dir() {
+  local dir_name="$1"
+  rm -rf "$dir_name" 2>/dev/null && echo "Successfully removed $dir_name!" || echo "$dir_name doesn't exist or couldn't be removed."
 }
 
 echo "Cleaning up old build and distribution directories..."
@@ -47,29 +47,11 @@ python3 -m venv --prompt flatpack_env "$SCRIPT_DIR/venv"
 source "$SCRIPT_DIR/venv/bin/activate"
 
 echo "Ensuring build dependencies are installed..."
-pip install --upgrade pip setuptools wheel build
+python3 -m pip install --upgrade pip build setuptools wheel
 
 echo "Building the PyPI package..."
 python3 -m build
 
 deactivate
 
-echo "Installing the locally built version of flatpack..."
-
-WHEEL_FILE=$(ls "$SCRIPT_DIR/dist/"*.whl 2>/dev/null)
-
-if [ -z "$WHEEL_FILE" ]; then
-  echo "No wheel file found in the dist/ directory. Ensure the build step completed successfully."
-  exit 1
-fi
-
-echo "Installing the locally built version of flatpack from $WHEEL_FILE..."
-pipx install "$WHEEL_FILE"
-
-echo "Ensuring pipx executables are in PATH..."
-pipx ensurepath
-
-echo "Installation complete. Checking final state..."
-check_flatpack
-
-echo "You may need to restart your terminal or run 'source ~/.zshrc' (or equivalent) for PATH changes to take effect."
+pipx install --python python3.12 flatpack

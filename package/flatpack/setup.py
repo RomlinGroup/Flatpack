@@ -5,10 +5,10 @@ with open("README.md", "r") as f:
 
 setup(
     name="flatpack",
-    version="3.12.44",
+    version="3.12.45",
     license="Apache Software License (Apache-2.0)",
     packages=find_packages(),
-    python_requires=">=3.10.0",
+    python_requires=">=3.10.0, <3.13.0",
     install_requires=[
         "beautifulsoup4==4.12.3",
         "croniter==6.0.0",
@@ -40,5 +40,15 @@ setup(
         "console_scripts": [
             "flatpack=flatpack.main:main"
         ]
-    }
+    },
+    classifiers=[
+        "Development Status :: 4 - Beta",
+        "Intended Audience :: Developers",
+        "License :: OSI Approved :: Apache Software License",
+        "Operating System :: MacOS :: MacOS X",
+        "Operating System :: POSIX :: Linux",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12"
+    ]
 )

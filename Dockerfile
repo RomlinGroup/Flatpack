@@ -24,15 +24,36 @@ RUN apt-get update && \
     file \
     git \
     jq \
+    libbz2-dev \
     libcurl4-openssl-dev \
-    pipx \
+    libffi-dev \
+    libgdbm-dev \
+    liblzma-dev \
+    libncurses5-dev \
+    libncursesw5-dev \
+    libreadline-dev \
+    libsqlite3-dev \
+    libssl-dev \
     procps \
     python3-dev \
     python3-full \
     python3-pip \
     sox \
     wget \
+    zlib1g-dev \
     && rm -rf /var/lib/apt/lists/*
+
+RUN wget https://www.python.org/ftp/python/3.12.8/Python-3.12.8.tgz && \
+    tar xvf Python-3.12.8.tgz && \
+    cd Python-3.12.8 && \
+    ./configure --enable-optimizations && \
+    make -j$(nproc) && \
+    make altinstall && \
+    cd .. && \
+    rm -rf Python-3.12.8 Python-3.12.8.tgz
+
+RUN ln -sf /usr/local/bin/python3.12 /usr/bin/python3 && \
+    ln -sf /usr/local/bin/pip3.12 /usr/bin/pip3
 
 RUN useradd -m -s /bin/bash -u 1001 flatpackuser && \
     chown -R flatpackuser:flatpackuser /home/flatpackuser
@@ -48,7 +69,7 @@ RUN mkdir -p ${NVM_DIR} && \
     nvm alias default ${NODE_VERSION} && \
     chmod 700 ${NVM_DIR}
 
-RUN pipx install flatpack
+RUN pip3 install flatpack
 
 RUN mkdir -p /home/flatpackuser/.cache /home/flatpackuser/.config && \
     echo '#!/bin/bash\nsource ${HOME}/.nvm/nvm.sh\nexec "$@"' > /home/flatpackuser/docker-entrypoint.sh && \
