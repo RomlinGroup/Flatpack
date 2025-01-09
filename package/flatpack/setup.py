@@ -5,8 +5,8 @@ with open("README.md", "r") as f:
 
 setup(
     name="flatpack",
-    version="3.12.45",
-    license="Apache Software License (Apache-2.0)",
+    version="3.12.46",
+    license="Apache-2.0",
     packages=find_packages(),
     python_requires=">=3.10.0, <3.13.0",
     install_requires=[
@@ -45,10 +45,12 @@ setup(
         "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
         "License :: OSI Approved :: Apache Software License",
-        "Operating System :: MacOS :: MacOS X",
         "Operating System :: POSIX :: Linux",
+        "Operating System :: MacOS :: MacOS X",
+        "Operating System :: Microsoft :: Windows",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
-        "Programming Language :: Python :: 3.12"
+        "Programming Language :: Python :: 3.12",
+        "Programming Language :: Python :: 3 :: Only"
     ]
 )
