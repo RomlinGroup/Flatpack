@@ -34,12 +34,6 @@ Flatpack is a general-purpose generative AI platform that supports educational, 
 
 Users are solely responsible for conducting thorough compliance assessments and ensuring that any use of Flatpack adheres to applicable laws, including the EU AI Act and related regulations.
 
-## Micro language models
-
-[Micro language models](http://microlanguagemodels.com) (100M to 10B parameters) provide an efficient alternative to large language models, addressing deployment, reliability, and scalability challenges. Their compact size enables rapid pre-training and fine-tuning, allowing organisations to adapt swiftly to market shifts and specific needs. These models can be readily deployed in edge-adjacent environments such as laptops, microprocessors, and smartphones, offering accessibility and versatility.
-
-[微型语言模型](http://microlanguagemodels.com)（100M 到 10B 个参数）为大型语言模型提供了一种有效的替代方案，解决了部署、可靠性和可扩展性挑战。其紧凑尺寸可实现快速预训练和微调，使组织能够迅速适应市场变化和特定需求。这些模型可轻松部署在笔记本电脑、微处理器和智能手机等边缘相邻环境中，提供可访问性及多功能性。
-
 ## Edge artificial intelligence
 
 Edge artificial intelligence uses local devices to enhance decision-making near data sources, improving privacy, response times,  and security while reducing reliance on cloud connectivity. Benefits include decreased latency, improved scalability, and reduced energy usage.
@@ -47,6 +41,12 @@ Edge artificial intelligence uses local devices to enhance decision-making near 
 边缘人工智能使用本地设备来增强数据源附近的决策能力，提高隐私性、响应时间和安全性，同时减少对云连接的依赖，包括降低延迟、提高可扩展性和减少能源消耗等优势。
 
 > "Edge artificial intelligence (AI), or AI at the edge, is the implementation of artificial intelligence in an edge computing environment, which allows computations to be done close to where data is actually collected, rather than at a centralized cloud computing facility or an offsite data center." ([Red Hat 2023](https://www.redhat.com/en/topics/edge-computing/what-is-edge-ai))
+
+## Micro language models
+
+[Micro language models](http://microlanguagemodels.com) (100M to 10B parameters) provide an efficient alternative to large language models, addressing deployment, reliability, and scalability challenges. Their compact size enables rapid pre-training and fine-tuning, allowing organisations to adapt swiftly to market shifts and specific needs. These models can be readily deployed in edge-adjacent environments such as laptops, microprocessors, and smartphones, offering accessibility and versatility.
+
+[微型语言模型](http://microlanguagemodels.com)（100M 到 10B 个参数）为大型语言模型提供了一种有效的替代方案，解决了部署、可靠性和可扩展性挑战。其紧凑尺寸可实现快速预训练和微调，使组织能够迅速适应市场变化和特定需求。这些模型可轻松部署在笔记本电脑、微处理器和智能手机等边缘相邻环境中，提供可访问性及多功能性。
 
 ## Flatpack 3.X.X (Aglaonice)
 
