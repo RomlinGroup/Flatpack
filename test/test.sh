@@ -15,6 +15,8 @@ echo_failure() {
   exit 1
 }
 
+printf "Launching test.sh 🚀"
+
 echo_stage "Cleaning up test folder (if it exists)"
 if [ -d "test" ]; then
   rm -rf test
