@@ -5418,6 +5418,7 @@ def fpk_cli_handle_run(args, session):
             console.print(
                 "[bold green]Successfully created all symlinks![/bold green]"
             )
+            console.print("")
         except Exception as e:
             console.print(
                 f"[bold red]Failed to start Next.js server: {e}[/bold red]"
