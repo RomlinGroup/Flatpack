@@ -15,9 +15,12 @@ echo_failure() {
   exit 1
 }
 
+echo_stage "Cleaning up test folder (if it exists)"
 if [ -d "test" ]; then
   rm -rf test
-  echo "Forcibly removed existing test folder at script start"
+  echo_success "Deleted existing test folder"
+else
+  echo "No existing test folder found"
 fi
 
 echo_stage "Checking for Python 3.12 installation"
@@ -81,14 +84,6 @@ echo_stage "Installing Flatpack"
 pipx install flatpack --python=python3.12 || echo_failure "Flatpack installation failed"
 echo_success "Flatpack installed successfully"
 
-echo_stage "Cleaning up test folder"
-if [ -d "test" ]; then
-  rm -rf test
-  echo_success "Deleted existing test folder"
-else
-  echo "No existing test folder found"
-fi
-
 echo_stage "Verifying flatpack list"
 output=$(flatpack list)
 if [[ "$output" == *"Directory Name"* ]]; then
@@ -123,7 +118,6 @@ fi
 
 if [ -d "test" ]; then
   rm -rf test
-  echo "Forcibly removed test folder at script end"
 fi
 
 printf "\n\033[1;32m🎉 All stages completed successfully!\033[0m\n"
