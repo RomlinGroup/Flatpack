@@ -15,6 +15,11 @@ echo_failure() {
   exit 1
 }
 
+if [ -d "test" ]; then
+  rm -rf test
+  echo "Forcibly removed existing test folder at script start"
+fi
+
 echo_stage "Checking for Python 3.12 installation"
 if ! command -v python3.12 &>/dev/null; then
   echo "Python 3.12 not found. Attempting to install..."
@@ -114,6 +119,11 @@ if flatpack build test; then
   fi
 else
   echo_failure "Flatpack build test execution failed"
+fi
+
+if [ -d "test" ]; then
+  rm -rf test
+  echo "Forcibly removed test folder at script end"
 fi
 
 printf "\n\033[1;32m🎉 All stages completed successfully!\033[0m\n"
