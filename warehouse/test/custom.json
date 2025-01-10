@@ -2,7 +2,7 @@
   {
     "type": "bash",
     "disabled": false,
-    "code": "rm -f test_results.json && touch test_results.json"
+    "code": "rm -f test_pass\nrm -f test_results.json && touch test_results.json"
   },
   {
     "type": "python",
