@@ -104,7 +104,7 @@ else
 fi
 
 echo_stage "Executing flatpack build test"
-if flatpack build test &>/dev/null; then
+if flatpack build test; then
   echo_success "Flatpack build test executed successfully"
 
   if [ -f "test/build/test_pass" ]; then

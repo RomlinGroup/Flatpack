@@ -652,7 +652,12 @@ def create_temp_sh(
                 outfile.write(
                     f"\necho -e '\\033[1;33m[BEGIN] Executing hook {hook_index} (Python)\\033[0m'\n"
                 )
-                outfile.write(send_code_to_python(hook["hook_script"]))
+                outfile.write(
+                    send_code_to_python(
+                        hook["hook_name"],
+                        hook["hook_script"]
+                    )
+                )
                 outfile.write(
                     f"\necho -e '\\033[1;33m[END] Executing hook {hook_index} (Python)\\033[0m'\n"
                 )
@@ -668,6 +673,8 @@ def create_temp_sh(
                 f"""\
                 #!/bin/bash
                 set -{'eux' if use_euxo else 'eu'}o pipefail
+                
+                executed_blocks=()
 
                 cd "{build_dir}" || exit 1
 
@@ -745,7 +752,7 @@ def create_temp_sh(
                 function log_eval_data() {
                     local block_index="$1"
 
-                    echo "[LOG] Running log_eval_data for block $block_index"
+                    echo -e "\033[1;36m[LOG] Running log_eval_data for block $block_index\033[0m"
 
                     files_since_last="$(find "${SCRIPT_DIR}" \\
                         -type f \\
@@ -880,7 +887,7 @@ def create_temp_sh(
             outfile.write(helper_functions)
             outfile.write("\n")
 
-            def send_code_to_python(code):
+            def send_code_to_python(id, code):
                 return dedent(
                     """\
                     send_code_to_python_and_wait << 'EOF_CODE'
@@ -897,15 +904,17 @@ def create_temp_sh(
                 if is_block_disabled(block):
                     continue
 
+                id = block.get("id")
                 code = block.get("code", "")
                 language = block.get("type")
 
-                if language == "bash":
-                    outfile.write(
-                        f"\necho -e '\\033[1;33m[BEGIN] Executing block {block_index} (Bash)\\033[0m'\n"
-                    )
-                    outfile.write(f"{code}\n")
+                outfile.write('echo -e ""\n')  # Empty line
 
+                outfile.write(
+                    f"\necho -e '\\033[1;35m[DEBUG] INDEX {block_index} / ID {id} / LANGUAGE {language}\\033[0m'\n"
+                )
+
+                if language == "bash":
                     code_single_line = "".join(code.splitlines())
 
                     dangerous_patterns = [
@@ -962,6 +971,11 @@ def create_temp_sh(
                         r"^\s*\bzsh\b\s"
                     ]
 
+                    outfile.write(
+                        f"\necho -e '\\033[1;33m[BEGIN] Executing block {block_index} (Bash)\\033[0m'\n"
+                    )
+                    outfile.write(f"{code}\n")
+
                     for pattern in dangerous_patterns:
                         if re.search(pattern, code_single_line):
                             outfile.write(
@@ -978,11 +992,10 @@ def create_temp_sh(
                     outfile.write(
                         f"\necho -e '\\033[1;33m[END] Executing block {block_index} (Bash)\\033[0m'\n"
                     )
+                    outfile.write(f'executed_blocks+=("{id}")\n')
 
                 elif language == "python":
-                    outfile.write(
-                        f"\necho -e '\\033[1;33m[BEGIN] Executing block {block_index} (Python)\\033[0m'\n"
-                    )
+                    code_lines = code.splitlines()
 
                     dangerous_python_functions = [
                         "__builtins__",
@@ -1056,11 +1069,13 @@ def create_temp_sh(
                         "winreg"
                     ]
 
-                    code_lines = code.splitlines()
+                    outfile.write(
+                        f"\necho -e '\\033[1;33m[BEGIN] Executing block {block_index} (Python)\\033[0m'\n"
+                    )
 
                     for line_number, line in enumerate(code_lines, 1):
-                        in_string = False
                         in_comment = False
+                        in_string = False
 
                         for i, char in enumerate(line):
                             if char == "#" and not in_string:
@@ -1080,12 +1095,30 @@ def create_temp_sh(
                                         )
                                         outfile.write("exit 1\n")
 
-                    outfile.write(send_code_to_python(code))
+                    outfile.write(send_code_to_python(id, code))
                     outfile.write(
                         f"\necho -e '\\033[1;33m[END] Executing block {block_index} (Python)\\033[0m'\n"
                     )
+                    outfile.write(f'executed_blocks+=("{id}")\n')
 
                 outfile.write(f'log_eval_data "{block_index}"\n')
+
+            outfile.write('echo -e ""\n')  # Empty line
+
+            outfile.write(dedent(
+                """\
+                echo -e "\\033[1;32m[BEGIN] Executed blocks\\033[0m"
+                executed_blocks_counter=0
+                if [ ${#executed_blocks[@]:-0} -gt 0 ]; then
+                    for block_id in "${executed_blocks[@]}"; do
+                        echo "($executed_blocks_counter) $block_id"
+                        ((executed_blocks_counter++))
+                    done
+                fi
+                echo -e "\\033[1;32mTotal: $executed_blocks_counter\\033[0m"
+                echo -e "\\033[1;32m[END] Executed blocks\\033[0m"
+                """
+            ))
 
             for hook_index, hook in enumerate(hooks):
                 if hook.get("hook_placement", "").strip().lower() == "after":

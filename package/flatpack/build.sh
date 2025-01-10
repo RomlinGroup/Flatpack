@@ -54,4 +54,4 @@ python3 -m build
 
 deactivate
 
-pipx install --python python3.12 flatpack
+pipx install --python python3.12 dist/*.whl

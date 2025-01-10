@@ -28,7 +28,7 @@ sox = "*"
 wget = "*"
 
 [packages.python]
-numpy = "2.2.0"
+numpy = "2.2.1"
 pexpect = "4.9.0"
 tiktoken = "0.8.0"
 

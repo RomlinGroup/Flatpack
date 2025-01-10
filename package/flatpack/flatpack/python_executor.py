@@ -121,10 +121,15 @@ def execute_code(code):
                 print(f"Input error: {e}", file=sys.stderr)
                 return ""
 
-        globals_dict = get_safe_globals()
-        globals_dict['input'] = my_input
+        if 'input' not in GLOBAL_NAMESPACE:
+            GLOBAL_NAMESPACE.update(get_safe_globals())
+            GLOBAL_NAMESPACE['input'] = my_input
+
+        print(f"DEBUG Current globals: {GLOBAL_NAMESPACE.keys()}",
+              file=sys.stderr)
+
         secure_code = SecureString(code)
-        exec(secure_code, globals_dict)
+        exec(secure_code, GLOBAL_NAMESPACE)
 
         sys.stdout.flush()
         sys.stderr.flush()
@@ -162,6 +167,7 @@ def handle_stream_input(stream_type, line, code_block):
             if code_block:
                 try:
                     execute_code(''.join(code_block))
+                    code_block.clear()
                 except Exception as e:
                     print(
                         f"Error executing code block: {e}",
