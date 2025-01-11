@@ -481,15 +481,14 @@ def check_node_and_run_npm_install(web_dir):
 
             os.chdir(web_dir_path)
 
-            with console.status("[bold green]Running npm install...",
-                                spinner="dots"):
+            with console.status(
+                    "[bold green]Running npm install...",
+                    spinner="dots"
+            ):
                 subprocess.run(
                     [
                         npm_path,
-                        "install",
-                        "tailwindcss",
-                        "postcss",
-                        "autoprefixer"
+                        "install"
                     ],
                     check=True,
                     capture_output=True,
@@ -497,54 +496,8 @@ def check_node_and_run_npm_install(web_dir):
                 )
 
             console.print(
-                "[bold green]Successfully ran 'npm install'[/bold green]")
-
-            tailwind_config = dedent(
-                """\
-                /** @type {import('tailwindcss').Config} */
-                module.exports = {
-                  content: [
-                    './pages/**/*.{js,ts,jsx,tsx,mdx}',
-                    './components/**/*.{js,ts,jsx,tsx,mdx}',
-                  ],
-                  theme: {
-                    extend: {},
-                  },
-                  plugins: [],
-                }
-                """
+                "[bold green]Successfully ran 'npm install'[/bold green]"
             )
-
-            postcss_config = dedent(
-                """\
-                module.exports = {
-                  plugins: {
-                    tailwindcss: {},
-                    autoprefixer: {},
-                  },
-                }
-                """
-            )
-
-            globals_css = dedent(
-                """\
-                @tailwind base;
-                @tailwind components;
-                @tailwind utilities;
-                """
-            )
-
-            styles_dir = web_dir_path / "styles"
-            styles_dir.mkdir(exist_ok=True)
-
-            with open(web_dir_path / "tailwind.config.js", "w") as f:
-                f.write(tailwind_config)
-
-            with open(web_dir_path / "postcss.config.js", "w") as f:
-                f.write(postcss_config)
-
-            with open(styles_dir / "globals.css", "w") as f:
-                f.write(globals_css)
 
         except FileNotFoundError as e:
             console.print(
