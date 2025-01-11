@@ -827,6 +827,8 @@ def create_temp_sh(
                             read -r user_input < /dev/tty
                             send_input_to_python "$user_input"
                             output=""
+                        elif [[ "$output" == *"EXECUTION_FAILED"* ]]; then
+                            exit 1
                         elif [[ "$output" == *"EXECUTION_COMPLETE"* ]]; then
                             break
                         elif [[ "$output" == *"Error executing code:"* ]]; then
@@ -928,9 +930,9 @@ def create_temp_sh(
                         f"\necho -e '\\033[1;33m[BEGIN] Executing block {block_index} (Bash)\\033[0m'\n"
                     )
 
-                    outfile.write(f"{code}\n")
-
                     outfile.write(f'block_start_time=$(date +%s.%N)\n')
+
+                    outfile.write(f"{code}\n")
 
                     for pattern in dangerous_patterns:
                         if re.search(pattern, code_single_line):

@@ -8,6 +8,8 @@ import sys
 import time
 import traceback
 
+from textwrap import dedent
+
 CODE_TIMEOUT = 86400
 CPU_LIMIT = 7200
 FILE_LIMIT = 128
@@ -106,6 +108,22 @@ def execute_code(code):
     signal.alarm(CODE_TIMEOUT)
 
     try:
+        try:
+            compile(code, '<string>', 'exec')
+        except SyntaxError as syntax_error:
+            error_message = dedent(f"""
+                Error: Invalid syntax detected
+                Location: Line {syntax_error.lineno}, Column {syntax_error.offset}
+                Details: {str(syntax_error)}
+
+                Invalid character or syntax prevents code execution.
+                Please review and correct.
+            """)
+            print(error_message, file=sys.stderr)
+            sys.stderr.flush()
+            print("EXECUTION_FAILED")
+            sys.exit(1)
+
         sys.stdout = sys.__stdout__
         sys.stdin = sys.__stdin__
         os.setpgrp()
@@ -125,9 +143,6 @@ def execute_code(code):
             GLOBAL_NAMESPACE.update(get_safe_globals())
             GLOBAL_NAMESPACE['input'] = my_input
 
-        print(f"DEBUG Current globals: {GLOBAL_NAMESPACE.keys()}",
-              file=sys.stderr)
-
         secure_code = SecureString(code)
         exec(secure_code, GLOBAL_NAMESPACE)
 
@@ -137,7 +152,10 @@ def execute_code(code):
         return True
 
     except Exception as e:
-        traceback.print_exc()
+        error_details = traceback.format_exc()
+        print(f"EXECUTION ERROR:\n{error_details}", file=sys.stderr)
+        sys.stderr.flush()
+        print("EXECUTION_FAILED")
         return False
 
     finally:
