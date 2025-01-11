@@ -42,8 +42,8 @@ tiktoken = "0.8.0"
 # ]
 
 [[file]]
-from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/test/custom.json"
-to_destination = "custom.json"
+from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/test/flatpack.json"
+to_destination = "flatpack.json"
 
 [[file]]
 from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/test/build.sh"

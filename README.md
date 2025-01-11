@@ -173,7 +173,7 @@ flatpack compress <hf_model_name> --method llama.cpp --token <hf_token>
   - `package.json` (Editor)
   - `flatpack.toml` (Flatpack)
   - `connections.json` (Flatpack)
-  - `custom.json` (Flatpack)
+  - `flatpack.json` (Flatpack)
   - `hooks.json` (Flatpack)
   - `source.json` (Flatpack)
   - `build.sh` (Flatpack)

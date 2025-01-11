@@ -618,7 +618,7 @@ def create_session(token):
 
 def create_temp_sh(
         build_dir,
-        custom_json_path: Path,
+        flatpack_json_path: Path,
         temp_sh_path: Path,
         use_euxo: bool = False,
         hooks: list = None,
@@ -629,7 +629,7 @@ def create_temp_sh(
         logging.info("Using %d hooks passed to the function", len(hooks))
 
     try:
-        with custom_json_path.open("r", encoding="utf-8") as infile:
+        with flatpack_json_path.open("r", encoding="utf-8") as infile:
             code_blocks = json.load(infile)
 
         def is_block_disabled(block):
@@ -1955,13 +1955,13 @@ async def fpk_build(directory: Union[str, None], use_euxo: bool = False):
         logger.error("Invalid JSON format in connections.json")
         raise ValueError("Invalid JSON format in connections.json")
 
-    custom_json_path = build_dir / "custom.json"
+    flatpack_json_path = build_dir / "flatpack.json"
 
-    if not custom_json_path.exists() or not custom_json_path.is_file():
-        logger.error("custom.json not found in %s. Build process canceled.",
+    if not flatpack_json_path.exists() or not flatpack_json_path.is_file():
+        logger.error("flatpack.json not found in %s. Build process canceled.",
                      build_dir)
         raise FileNotFoundError(
-            f"custom.json not found in {build_dir}. Build process canceled."
+            f"flatpack.json not found in {build_dir}. Build process canceled."
         )
 
     temp_sh_path = build_dir / "temp.sh"
@@ -1971,7 +1971,7 @@ async def fpk_build(directory: Union[str, None], use_euxo: bool = False):
 
     create_temp_sh(
         build_dir,
-        custom_json_path,
+        flatpack_json_path,
         temp_sh_path,
         use_euxo=use_euxo,
         hooks=hooks
