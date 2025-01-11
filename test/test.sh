@@ -95,7 +95,7 @@ else
 fi
 
 echo_stage "Unboxing test directory"
-echo "YES" | flatpack unbox test
+echo "YES" | flatpack unbox test.fpk --local
 echo_success "Flatpack unbox test completed"
 
 echo_stage "Checking test folder structure"

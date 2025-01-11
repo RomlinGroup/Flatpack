@@ -463,7 +463,9 @@ def check_node_and_run_npm_install(web_dir):
                 raise FileNotFoundError("Node.js or npm not found")
 
             node_version = subprocess.run(
-                [node_path, "--version"], check=True, capture_output=True,
+                [node_path, "--version"],
+                check=True,
+                capture_output=True,
                 text=True
             ).stdout.strip()
             console.print(f"[green]Node.js version:[/green] {node_version}")

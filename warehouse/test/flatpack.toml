@@ -42,15 +42,15 @@ tiktoken = "0.8.0"
 # ]
 
 [[file]]
-from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/test/flatpack.json"
+from_source = "flatpack.json"
 to_destination = "flatpack.json"
 
 [[file]]
-from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/test/build.sh"
+from_source = "build.sh"
 to_destination = "build.sh"
 
 [[file]]
-from_source = "https://raw.githubusercontent.com/RomlinGroup/Flatpack/main/warehouse/test/device.sh"
+from_source = "device.sh"
 to_destination = "device.sh"
 
 [[run]]
