@@ -974,7 +974,10 @@ def create_temp_sh(
                     outfile.write(
                         f"\necho -e '\\033[1;33m[BEGIN] Executing block {block_index} (Bash)\\033[0m'\n"
                     )
+
                     outfile.write(f"{code}\n")
+
+                    outfile.write(f'block_start_time=$(date +%s.%N)\n')
 
                     for pattern in dangerous_patterns:
                         if re.search(pattern, code_single_line):
@@ -992,7 +995,21 @@ def create_temp_sh(
                     outfile.write(
                         f"\necho -e '\\033[1;33m[END] Executing block {block_index} (Bash)\\033[0m'\n"
                     )
+
                     outfile.write(f'executed_blocks+=("{id}")\n')
+
+                    outfile.write(
+                        f'block_end_time=$(date +%s.%N)\n'
+                    )
+                    outfile.write(
+                        f'total_duration_ms=$(echo "($block_end_time - $block_start_time) * 1000" | bc)\n'
+                    )
+                    outfile.write(
+                        f'total_execution_times="${{total_execution_times:+$total_execution_times }}$total_duration_ms"\n'
+                    )
+                    outfile.write(
+                        'echo -e "\\033[1;32m[DEBUG] Block duration: $total_duration_ms milliseconds\\033[0m"\n'
+                    )
 
                 elif language == "python":
                     code_lines = code.splitlines()
@@ -1073,6 +1090,8 @@ def create_temp_sh(
                         f"\necho -e '\\033[1;33m[BEGIN] Executing block {block_index} (Python)\\033[0m'\n"
                     )
 
+                    outfile.write(f'block_start_time=$(date +%s.%N)\n')
+
                     for line_number, line in enumerate(code_lines, 1):
                         in_comment = False
                         in_string = False
@@ -1099,7 +1118,21 @@ def create_temp_sh(
                     outfile.write(
                         f"\necho -e '\\033[1;33m[END] Executing block {block_index} (Python)\\033[0m'\n"
                     )
+
                     outfile.write(f'executed_blocks+=("{id}")\n')
+
+                    outfile.write(
+                        f'block_end_time=$(date +%s.%N)\n'
+                    )
+                    outfile.write(
+                        f'total_duration_ms=$(echo "($block_end_time - $block_start_time) * 1000" | bc)\n'
+                    )
+                    outfile.write(
+                        f'total_execution_times="${{total_execution_times:+$total_execution_times }}$total_duration_ms"\n'
+                    )
+                    outfile.write(
+                        'echo -e "\\033[1;32m[DEBUG] Block duration: $total_duration_ms milliseconds\\033[0m"\n'
+                    )
 
                 outfile.write(f'log_eval_data "{block_index}"\n')
 
