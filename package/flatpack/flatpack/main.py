@@ -466,7 +466,6 @@ def check_node_and_run_npm_install(web_dir):
                 [node_path, "--version"], check=True, capture_output=True,
                 text=True
             ).stdout.strip()
-            console.print("")
             console.print(f"[green]Node.js version:[/green] {node_version}")
             console.print("")
             console.print(
