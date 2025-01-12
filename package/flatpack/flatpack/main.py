@@ -72,6 +72,7 @@ from .error_handling import \
     safe_exit, \
     setup_exception_handling, \
     setup_signal_handling
+from .package_manager import PackageManager
 from .parsers import parse_toml_to_venv_script
 from .session_manager import SessionManager
 from .vector_manager import VectorManager
@@ -468,6 +469,7 @@ def check_node_and_run_npm_install(web_dir):
                 capture_output=True,
                 text=True
             ).stdout.strip()
+            console.print("")
             console.print(f"[green]Node.js version:[/green] {node_version}")
             console.print("")
             console.print(
@@ -2503,11 +2505,225 @@ def fpk_set_secure_file_permissions(file_path):
                      file_path, e)
 
 
+def unbox_from_local_fpk(
+        directory_name: str,
+        fpk_path: Path
+) -> bool:
+    """Unboxes a flatpack from a local .fpk file."""
+    global flatpack_directory
+
+    flatpack_dir = Path.cwd() / directory_name
+    flatpack_directory = str(flatpack_dir.resolve())
+    logger.info("Flatpack directory: %s", flatpack_dir)
+
+    if flatpack_dir.exists():
+        logger.error(
+            "Directory '%s' already exists. Unboxing aborted to prevent conflicts.",
+            directory_name,
+        )
+        return False
+
+    flatpack_dir.mkdir(parents=True, exist_ok=True)
+
+    try:
+        decompress_data(fpk_path, flatpack_dir)
+        logger.info("Decompressed .fpk file into %s", flatpack_dir)
+        return True
+    except Exception as e:
+        logger.error("Failed to decompress .fpk file: %s", e)
+        return False
+
+
+def unbox_from_local_directory(directory_name: str) -> bool:
+    """Unboxes a flatpack from an existing local directory."""
+    global flatpack_directory
+
+    flatpack_dir = Path.cwd() / directory_name
+    flatpack_directory = str(flatpack_dir.resolve())
+    logger.info("Flatpack directory: %s", flatpack_dir)
+
+    toml_path = flatpack_dir / "flatpack.toml"
+    if not toml_path.exists():
+        logger.error(
+            "flatpack.toml not found in the specified directory: '%s'.",
+            directory_name,
+        )
+        return False
+    return True
+
+
+def unbox_from_online(
+        directory_name: str,
+        session: httpx.Client,
+) -> bool:
+    """Unboxes a flatpack from a URL."""
+    global flatpack_directory
+
+    flatpack_dir = Path.cwd() / directory_name
+    flatpack_directory = str(flatpack_dir.resolve())
+    logger.info("Flatpack directory: %s", flatpack_dir)
+
+    if flatpack_dir.exists():
+        logger.error(
+            "Directory '%s' already exists. Unboxing aborted to prevent conflicts.",
+            directory_name,
+        )
+        return False
+
+    flatpack_dir.mkdir(parents=True, exist_ok=True)
+
+    build_dir = flatpack_dir / "build"
+    web_dir = flatpack_dir / "web"
+
+    app_dir = web_dir / "app"
+    output_dir = build_dir / "output"
+
+    for directory in [web_dir, build_dir, output_dir]:
+        directory.mkdir(parents=True, exist_ok=True)
+        logger.info("Created directory: %s", directory)
+
+    eval_data_path = output_dir / "eval_data.json"
+
+    with open(eval_data_path, "w") as f:
+        json.dump([], f)
+
+    logger.info("Created empty eval_data.json in %s", eval_data_path)
+
+    web_output_dir = web_dir / "output"
+
+    if web_output_dir.is_symlink():
+        web_output_dir.unlink()
+
+    relative_path = os.path.relpath(output_dir, web_output_dir.parent)
+    web_output_dir.symlink_to(relative_path, target_is_directory=True)
+
+    files_to_download = {
+        "build": [],
+        "web": [
+            "app.css",
+            "app.js",
+            "index.html",
+            "package.json",
+            "robotomono.woff2",
+        ]
+    }
+
+    for json_file in ["connections.json", "hooks.json", "sources.json"]:
+        json_path = build_dir / json_file
+        if not json_path.exists():
+            files_to_download["build"].append(json_file)
+
+    for dir_name, files in files_to_download.items():
+        target_dir = web_dir if dir_name == "web" else build_dir
+
+        for file in files:
+            try:
+                file_url = f"{TEMPLATE_REPO_URL}/contents/{file}"
+                response = session.get(file_url)
+                response.raise_for_status()
+
+                file_content = response.json()["content"]
+                file_decoded = base64.b64decode(file_content)
+                file_path = target_dir / file
+
+                mode = "wb" if file.endswith(".woff2") else "w"
+                encoding = None if file.endswith(".woff2") else "utf-8"
+
+                with open(file_path, mode, encoding=encoding) as f:
+                    if mode == "wb":
+                        f.write(file_decoded)
+                    else:
+                        f.write(file_decoded.decode("utf-8"))
+
+                logger.info(
+                    "Downloaded and saved %s to %s", file,
+                    file_path
+                )
+            except Exception as e:
+                logger.error("Failed to download or save %s: %s", file, e)
+                raise
+
+    if not check_node_and_run_npm_install(web_dir):
+        logger.warning(
+            "Cleaning up: Removing the flatpack directory due to npm install failure."
+        )
+
+        try:
+            shutil.rmtree(flatpack_dir)
+            logger.info("Cleanup successful: Flatpack directory removed.")
+        except Exception as e:
+            logger.error("Error during cleanup: %s", e)
+        return False
+
+    try:
+        if app_dir.exists():
+            shutil.rmtree(app_dir)
+
+        create_next_app_cmd = [
+            "npx",
+            "create-next-app@latest",
+            str(app_dir),
+            "--import-alias",
+            "@/*",
+            "--tailwind",
+            "--typescript",
+            "--no-app",
+            "--no-eslint",
+            "--no-experimental-app",
+            "--no-src-dir",
+            "--no-turbopack",
+            "--use-npm"
+        ]
+
+        with console.status(
+                "[bold green]Setting up a new Next.js project...",
+                spinner="dots"
+        ):
+
+            subprocess.run(
+                create_next_app_cmd,
+                input='y\n',
+                text=True,
+                check=True,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL
+            )
+
+        console.print(
+            "[bold green]Successfully set up a new Next.js project[/bold green]"
+        )
+        console.print("")
+
+    except subprocess.CalledProcessError:
+        return False
+
+    fpk_url = f"{BASE_URL}/{directory_name}/{directory_name}.fpk"
+    fpk_path = build_dir / f"{directory_name}.fpk"
+
+    try:
+        response = session.head(fpk_url)
+        response.raise_for_status()
+
+        download_response = session.get(fpk_url)
+        download_response.raise_for_status()
+
+        with open(fpk_path, "wb") as fpk_file:
+            fpk_file.write(download_response.content)
+        logger.info("Downloaded .fpk file to %s", fpk_path)
+
+        decompress_data(fpk_path, build_dir)
+        logger.info("Decompressed .fpk file into %s", build_dir)
+        return True
+    except Exception as e:
+        logger.error("Failed to handle .fpk file: %s", e)
+        return False
+
+
 def fpk_unbox(
         directory_name: str,
         session: httpx.Client,
         local: bool = False,
-        fpk_path: str | Path | None = None,
+        fpk_path: Union[str, Path, None] = None,
 ) -> bool:
     """
     Unbox a flatpack into a directory, either from a URL, local directory, or local .fpk file
@@ -2518,328 +2734,112 @@ def fpk_unbox(
         local: If True, use existing local directory
         fpk_path: Optional path to a local .fpk file to unbox
     """
-    global flatpack_directory
-
     if (
-            directory_name is None
+            not directory_name
             or not isinstance(directory_name, str)
-            or directory_name.strip() == ""
+            or not fpk_valid_directory_name(directory_name)
     ):
         logger.error("Invalid directory name: %s", directory_name)
         return False
 
-    if not fpk_valid_directory_name(directory_name):
-        logger.error("Invalid directory name: '%s'", directory_name)
+    if not Path(CONFIG_FILE_PATH).exists():
+        logger.info("Config file not found. Creating initial configuration.")
+        save_config({})
+
+    flatpack_dir = Path.cwd() / directory_name
+    build_dir = flatpack_dir / "build"
+    web_dir = flatpack_dir / "web"
+
+    if fpk_path is not None:
+        fpk_file = Path(fpk_path)
+
+        if not fpk_file.is_file() or fpk_file.suffix != ".fpk":
+            logger.error("Invalid .fpk file: %s", fpk_file)
+            return False
+
+        if not unbox_from_local_fpk(directory_name, fpk_file):
+            return False
+
+        toml_path = flatpack_dir / "flatpack.toml"
+    elif local:
+        if not unbox_from_local_directory(directory_name):
+            return False
+
+        toml_path = flatpack_dir / "flatpack.toml"
+    else:
+        if not unbox_from_online(directory_name, session):
+            return False
+
+        toml_path = build_dir / "flatpack.toml"
+
+    if not toml_path.exists():
+        logger.error("flatpack.toml not found in %s", toml_path.parent)
         return False
 
+    temp_toml_path = build_dir / "temp_flatpack.toml"
+    bash_script_path = build_dir / "flatpack.sh"
+
     try:
-        flatpack_dir = Path.cwd() / directory_name
-        flatpack_directory = str(flatpack_dir.resolve())
-        logger.info("Flatpack directory: %s", flatpack_dir)
+        toml_content = toml_path.read_text()
+        temp_toml_path.write_text(toml_content)
 
-        if not os.path.exists(CONFIG_FILE_PATH):
-            logger.info(
-                "Config file not found. Creating initial configuration."
-            )
-            default_config = {}
-            save_config(default_config)
-
-        if fpk_path is not None:
-            fpk_file = Path(fpk_path)
-
-            if not fpk_file.exists() or not fpk_file.is_file():
-                logger.error("Invalid .fpk file path: %s", fpk_file)
-                return False
-
-            if not fpk_file.suffix == ".fpk":
-                logger.error("File must have .fpk extension: %s", fpk_file)
-                return False
-
-            if flatpack_dir.exists():
-                logger.error(
-                    "Directory '%s' already exists. Unboxing aborted to prevent conflicts.",
-                    directory_name,
-                )
-                return False
-
-            flatpack_dir.mkdir(parents=True, exist_ok=True)
-
-            local = False
-
-            try:
-                decompress_data(fpk_file, flatpack_dir)
-                logger.info("Decompressed .fpk file into %s", flatpack_dir)
-            except Exception as e:
-                logger.error("Failed to decompress .fpk file: %s", e)
-                return False
-
-        elif local:
-            if not flatpack_dir.exists():
-                logger.error(
-                    "Local directory '%s' does not exist.",
-                    directory_name
-                )
-                return False
-
-            toml_path = flatpack_dir / "flatpack.toml"
-
-            if not toml_path.exists():
-                logger.error(
-                    "flatpack.toml not found in the specified directory: '%s'.",
-                    directory_name,
-                )
-                return False
-        else:
-            if flatpack_dir.exists():
-                logger.error(
-                    "Directory '%s' already exists. Unboxing aborted to prevent conflicts.",
-                    directory_name,
-                )
-                return False
-            flatpack_dir.mkdir(parents=True, exist_ok=True)
-
-        build_dir = flatpack_dir / "build"
-        web_dir = flatpack_dir / "web"
-
-        app_dir = web_dir / "app"
-        output_dir = build_dir / "output"
-
-        for directory in [web_dir, build_dir, output_dir]:
-            directory.mkdir(parents=True, exist_ok=True)
-            logger.info("Created directory: %s", directory)
-
-        eval_data_path = output_dir / "eval_data.json"
-
-        with open(eval_data_path, "w") as f:
-            json.dump([], f)
-
-        logger.info("Created empty eval_data.json in %s", eval_data_path)
-
-        web_output_dir = web_dir / "output"
-
-        if web_output_dir.is_symlink():
-            web_output_dir.unlink()
-
-        relative_path = os.path.relpath(output_dir, web_output_dir.parent)
-        web_output_dir.symlink_to(relative_path, target_is_directory=True)
-
-        files_to_download = {
-            "build": [],
-            "web": [
-                "app.css",
-                "app.js",
-                "index.html",
-                "package.json",
-                "robotomono.woff2",
-            ]
-        }
-
-        for json_file in ["connections.json", "hooks.json", "sources.json"]:
-            json_path = build_dir / json_file
-
-            if not json_path.exists():
-                files_to_download["build"].append(json_file)
-
-        for dir_name, files in files_to_download.items():
-            target_dir = web_dir if dir_name == "web" else build_dir
-
-            for file in files:
-                try:
-                    file_url = f"{TEMPLATE_REPO_URL}/contents/{file}"
-                    response = session.get(file_url)
-                    response.raise_for_status()
-
-                    file_content = response.json()["content"]
-                    file_decoded = base64.b64decode(file_content)
-                    file_path = target_dir / file
-
-                    mode = "wb" if file.endswith(".woff2") else "w"
-                    encoding = None if file.endswith(".woff2") else "utf-8"
-
-                    with open(file_path, mode, encoding=encoding) as f:
-                        if mode == "wb":
-                            f.write(file_decoded)
-                        else:
-                            f.write(file_decoded.decode("utf-8"))
-
-                    logger.info(
-                        "Downloaded and saved %s to %s", file,
-                        file_path
-                    )
-                except Exception as e:
-                    logger.error("Failed to download or save %s: %s", file, e)
-                    raise
-
-        if not check_node_and_run_npm_install(web_dir):
-            logger.warning(
-                "Cleaning up: Removing the flatpack directory due to npm install failure."
-            )
-
-            try:
-                shutil.rmtree(flatpack_dir)
-                logger.info("Cleanup successful: Flatpack directory removed.")
-            except Exception as e:
-                logger.error("Error during cleanup: %s", e)
-            return False
-
-        try:
-            if app_dir.exists():
-                shutil.rmtree(app_dir)
-
-            create_next_app_cmd = [
-                "npx",
-                "create-next-app@latest",
-                str(app_dir),
-                "--import-alias",
-                "@/*",
-                "--tailwind",
-                "--typescript",
-                "--no-app",
-                "--no-eslint",
-                "--no-experimental-app",
-                "--no-src-dir",
-                "--no-turbopack",
-                "--use-npm"
-            ]
-
-            with console.status(
-                    "[bold green]Setting up a new Next.js project...",
-                    spinner="dots"
-            ):
-
-                subprocess.run(
-                    create_next_app_cmd,
-                    input='y\n',
-                    text=True,
-                    check=True,
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL
-                )
-
-            console.print(
-                "[bold green]Successfully set up a new Next.js project[/bold green]"
-            )
-            console.print("")
-
-        except subprocess.CalledProcessError:
-            return False
-
-        if not local:
-            fpk_url = f"{BASE_URL}/{directory_name}/{directory_name}.fpk"
-            fpk_path = build_dir / f"{directory_name}.fpk"
-
-            try:
-                response = session.head(fpk_url)
-                response.raise_for_status()
-
-                download_response = session.get(fpk_url)
-                download_response.raise_for_status()
-
-                with open(fpk_path, "wb") as fpk_file:
-                    fpk_file.write(download_response.content)
-                logger.info("Downloaded .fpk file to %s", fpk_path)
-
-                decompress_data(fpk_path, build_dir)
-                logger.info("Decompressed .fpk file into %s", build_dir)
-            except Exception as e:
-                logger.error("Failed to handle .fpk file: %s", e)
-                return False
-
-        toml_path = (
-            build_dir / "flatpack.toml" if not local else flatpack_dir / "flatpack.toml"
+        bash_script_content = parse_toml_to_venv_script(
+            str(temp_toml_path), env_name=str(flatpack_dir)
         )
+        bash_script_path.write_text(bash_script_content)
 
-        if not toml_path.exists():
-            logger.error(
-                "flatpack.toml not found in %s",
-                build_dir if not local else flatpack_dir,
-            )
-            return False
+        safe_script_path = shlex.quote(str(bash_script_path.resolve()))
+        subprocess.run(['/bin/bash', safe_script_path], check=True)
 
-        temp_toml_path = build_dir / "temp_flatpack.toml"
-        bash_script_path = build_dir / "flatpack.sh"
+        logger.info("Bash script execution completed successfully")
+    except Exception as e:
+        logger.error("Failed to execute bash script: %s", e)
+        return False
+    finally:
+        if temp_toml_path.exists():
+            temp_toml_path.unlink()
+
+    files_to_copy = ["app/pages/index.tsx"]
+
+    for file in files_to_copy:
+        source = build_dir / file
+        destination = web_dir / file
 
         try:
-            toml_content = toml_path.read_text()
-            temp_toml_path.write_text(toml_content)
-
-            bash_script_content = parse_toml_to_venv_script(
-                str(temp_toml_path), env_name=str(flatpack_dir)
-            )
-            bash_script_path.write_text(bash_script_content)
-
-            safe_script_path = shlex.quote(str(bash_script_path.resolve()))
-            subprocess.run(['/bin/bash', safe_script_path], check=True)
-
-            logger.info("Bash script execution completed successfully")
-        finally:
-            if temp_toml_path.exists():
-                temp_toml_path.unlink()
-
-        files_to_copy = ["app/pages/index.tsx"]
-
-        for file in files_to_copy:
-            source = build_dir / file
-            destination = web_dir / file
-
             if source.exists():
-                try:
-                    destination.parent.mkdir(parents=True, exist_ok=True)
+                destination.parent.mkdir(parents=True, exist_ok=True)
 
-                    if destination.exists():
-                        destination.unlink()
-
-                    shutil.copy2(source, destination)
-                    logger.info("Copied %s successfully", file)
-                except Exception as e:
-                    logger.error("Failed to copy %s: %s", file, e)
+                if destination.exists():
+                    destination.unlink()
+                shutil.copy2(source, destination)
+                logger.info("Copied %s successfully", file)
             else:
-                logger.error("Source file not found: %s", file)
-
-        logger.info("Copy operation completed")
-
-        try:
-            pkgdir = sys.modules['flatpack'].__path__[0]
-            executor_src = os.path.join(pkgdir, 'python_executor.py')
-            executor_dest = build_dir / 'python_executor.py'
-
-            shutil.copy(executor_src, executor_dest)
-
-            try:
-                shutil.copy2(executor_src, executor_dest)
-                logger.info("Copied python_executor.py to build directory")
-            except Exception as e:
-                logger.error("Failed to copy python_executor.py: %s", e)
-                raise
-
-            flatpack_dir_str = str(flatpack_dir.resolve())
-            logger.info(
-                "Initializing database manager with path: %s",
-                flatpack_dir_str
-            )
-            initialize_database_manager(flatpack_dir_str)
-
-            logger.info("Syncing hooks to database")
-            sync_hooks_to_db_on_startup()
-
-            logger.info("Syncing connections")
-            sync_connections_from_file()
-
-            logger.info("Syncing sources")
-            sync_sources_from_file()
-
-            logger.info("Running cache unbox")
-            fpk_cache_unbox(flatpack_dir_str)
-
-            logger.info("All initialization steps completed successfully")
-            return True
-
+                logger.warning("Source file not found: %s", file)
         except Exception as e:
-            logger.error("Failed during final initialization steps: %s", e)
-            return False
+            logger.error("Failed to copy %s: %s", file, e)
+
+    try:
+        pkgdir = sys.modules['flatpack'].__path__[0]
+        executor_src = Path(pkgdir) / 'python_executor.py'
+        executor_dest = build_dir / 'python_executor.py'
+
+        shutil.copy2(executor_src, executor_dest)
+        logger.info("Copied python_executor.py to build directory")
+
+        flatpack_dir_str = str(flatpack_dir.resolve())
+        initialize_database_manager(flatpack_dir_str)
+
+        sync_hooks_to_db_on_startup()
+        sync_connections_from_file()
+        sync_sources_from_file()
+
+        fpk_cache_unbox(flatpack_dir_str)
+
+        logger.info("All initialization steps completed successfully")
+        return True
 
     except Exception as e:
-        logger.error("An unexpected error occurred during unboxing: %s", e)
+        logger.error("Failed during final initialization steps: %s", e)
         return False
 
 
@@ -3001,8 +3001,10 @@ def setup_arg_parser():
     parser = argparse.ArgumentParser(
         description="Flatpack command line interface")
 
-    subparsers = parser.add_subparsers(dest="command",
-                                       help="Available commands")
+    subparsers = parser.add_subparsers(
+        dest="command",
+        help="Available commands"
+    )
 
     # General commands
     parser_find = subparsers.add_parser(
@@ -3011,47 +3013,62 @@ def setup_arg_parser():
 
     parser_find.set_defaults(func=fpk_cli_handle_find)
 
-    parser_help = subparsers.add_parser("help",
-                                        help="Display help for commands")
+    parser_help = subparsers.add_parser(
+        "help",
+        help="Display help for commands"
+    )
 
     parser_help.set_defaults(func=fpk_cli_handle_help)
 
     parser_list = subparsers.add_parser(
-        "list", help="List available flatpack directories"
+        "list",
+        help="List available flatpack directories"
     )
 
     parser_list.set_defaults(func=fpk_cli_handle_list)
 
     parser_version = subparsers.add_parser(
-        "version", help="Display the version of flatpack"
+        "version",
+        help="Display the version of flatpack"
     )
 
     parser_version.set_defaults(func=fpk_cli_handle_version)
 
     # API Key management
     parser_api_key = subparsers.add_parser(
-        "api-key", help="API key management commands"
+        "api-key",
+        help="API key management commands"
     )
 
     api_key_subparsers = parser_api_key.add_subparsers(dest="api_key_command")
 
     # Get API key
     parser_get_api = api_key_subparsers.add_parser(
-        "get", help="Get the current API key"
+        "get",
+        help="Get the current API key"
     )
 
     parser_get_api.set_defaults(func=fpk_cli_handle_get_api_key)
 
     # Set API key
-    parser_set_api = api_key_subparsers.add_parser("set",
-                                                   help="Set the API key")
+    parser_set_api = api_key_subparsers.add_parser(
+        "set",
+        help="Set the API key"
+    )
 
-    parser_set_api.add_argument("api_key", type=str, help="API key to set")
+    parser_set_api.add_argument(
+        "api_key",
+        type=str,
+        help="API key to set"
+    )
 
     parser_set_api.set_defaults(func=fpk_cli_handle_set_api_key)
 
     # Build commands
-    parser_build = subparsers.add_parser("build", help="Build a flatpack")
+    parser_build = subparsers.add_parser(
+        "build",
+        help="Build a flatpack"
+    )
 
     parser_build.add_argument(
         "directory",
@@ -3069,11 +3086,15 @@ def setup_arg_parser():
     parser_build.set_defaults(func=fpk_cli_handle_build)
 
     # Create flatpack
-    parser_create = subparsers.add_parser("create",
-                                          help="Create a new flatpack")
+    parser_create = subparsers.add_parser(
+        "create",
+        help="Create a new flatpack"
+    )
 
     parser_create.add_argument(
-        "input", nargs="?", default=None,
+        "input",
+        nargs="?",
+        default=None,
         help="The name of the flatpack to create"
     )
 
@@ -3081,7 +3102,8 @@ def setup_arg_parser():
 
     # Model compression
     parser_compress = subparsers.add_parser(
-        "compress", help="Compress a model for deployment"
+        "compress",
+        help="Compress a model for deployment"
     )
 
     parser_compress.add_argument(
@@ -3108,63 +3130,85 @@ def setup_arg_parser():
     parser_compress.set_defaults(func=fpk_cli_handle_compress)
 
     # Run server
-    parser_run = subparsers.add_parser("run", help="Run the FastAPI server")
+    parser_run = subparsers.add_parser(
+        "run",
+        help="Run the FastAPI server"
+    )
 
     parser_run.add_argument(
-        "input", nargs="?", default=None,
+        "input",
+        nargs="?",
+        default=None,
         help="The name of the flatpack to run"
     )
 
-    parser_run.add_argument("--share", action="store_true",
-                            help="Share using ngrok")
+    parser_run.add_argument(
+        "--share",
+        action="store_true",
+        help="Share using ngrok"
+    )
 
     parser_run.add_argument(
-        "--domain", type=str, default=None, help="Custom ngrok domain"
+        "--domain",
+        type=str,
+        default=None,
+        help="Custom ngrok domain"
     )
 
     parser_run.set_defaults(func=fpk_cli_handle_run)
 
     # Unbox commands
     parser_unbox = subparsers.add_parser(
-        "unbox", help="Unbox a flatpack from GitHub or a local directory"
+        "unbox",
+        help="Unbox a flatpack from a local directory, .fpk file, or warehouse"
     )
 
     parser_unbox.add_argument(
-        "input", nargs="?", default=None,
-        help="The name of the flatpack to unbox"
+        "input",
+        nargs="?",
+        default=None,
+        help="Path to local directory, .fpk file, or flatpack name"
     )
 
     parser_unbox.add_argument(
-        "--local",
+        "--warehouse",
         action="store_true",
-        help="Unbox from a local directory instead of GitHub",
+        help="Fetch flatpack from the online warehouse"
     )
 
     parser_unbox.set_defaults(func=fpk_cli_handle_unbox)
 
     # Update flatpack
     parser_update = subparsers.add_parser(
-        "update", help="Update a flatpack from the template"
+        "update",
+        help="Update a flatpack from the template"
     )
 
     parser_update.add_argument(
-        "flatpack_name", help="The name of the flatpack to update"
+        "flatpack_name",
+        help="The name of the flatpack to update"
     )
 
     parser_update.set_defaults(func=fpk_cli_handle_update)
 
     # Vector database management
-    parser_vector = subparsers.add_parser("vector",
-                                          help="Vector database management")
+    parser_vector = subparsers.add_parser(
+        "vector",
+        help="Vector database management"
+    )
 
     vector_subparsers = parser_vector.add_subparsers(dest="vector_command")
 
     # Add PDF
     parser_add_pdf = vector_subparsers.add_parser(
-        "add-pdf", help="Add text from a PDF file to the vector database"
+        "add-pdf",
+        help="Add text from a PDF file to the vector database"
     )
 
-    parser_add_pdf.add_argument("pdf_path", help="Path to the PDF file to add")
+    parser_add_pdf.add_argument(
+        "pdf_path",
+        help="Path to the PDF file to add"
+    )
 
     parser_add_pdf.add_argument(
         "--data-dir",
@@ -3180,7 +3224,11 @@ def setup_arg_parser():
         "add-texts", help="Add new texts to generate embeddings and store them"
     )
 
-    parser_add_text.add_argument("texts", nargs="+", help="Texts to add")
+    parser_add_text.add_argument(
+        "texts",
+        nargs="+",
+        help="Texts to add"
+    )
 
     parser_add_text.add_argument(
         "--data-dir",
@@ -3193,10 +3241,14 @@ def setup_arg_parser():
 
     # Add URL
     parser_add_url = vector_subparsers.add_parser(
-        "add-url", help="Add text from a URL to the vector database"
+        "add-url",
+        help="Add text from a URL to the vector database"
     )
 
-    parser_add_url.add_argument("url", help="URL to add")
+    parser_add_url.add_argument(
+        "url",
+        help="URL to add"
+    )
 
     parser_add_url.add_argument(
         "--data-dir",
@@ -3214,7 +3266,8 @@ def setup_arg_parser():
     )
 
     parser_add_wikipedia_page.add_argument(
-        "page_title", help="The title of the Wikipedia page to add"
+        "page_title",
+        help="The title of the Wikipedia page to add"
     )
 
     parser_add_wikipedia_page.add_argument(
@@ -3228,10 +3281,14 @@ def setup_arg_parser():
 
     # Search text
     parser_search_text = vector_subparsers.add_parser(
-        "search-text", help="Search for texts similar to the given query"
+        "search-text",
+        help="Search for texts similar to the given query"
     )
 
-    parser_search_text.add_argument("query", help="Text query to search for")
+    parser_search_text.add_argument(
+        "query",
+        help="Text query to search for"
+    )
 
     parser_search_text.add_argument(
         "--data-dir",
@@ -3241,7 +3298,9 @@ def setup_arg_parser():
     )
 
     parser_search_text.add_argument(
-        "--json", action="store_true", help="Output results in JSON format"
+        "--json",
+        action="store_true",
+        help="Output results in JSON format"
     )
 
     parser_search_text.add_argument(
@@ -3254,7 +3313,10 @@ def setup_arg_parser():
     parser_search_text.set_defaults(func=fpk_cli_handle_vector_commands)
 
     # Verify commands
-    parser_verify = subparsers.add_parser("verify", help="Verify a flatpack")
+    parser_verify = subparsers.add_parser(
+        "verify",
+        help="Verify a flatpack"
+    )
 
     parser_verify.add_argument(
         "directory",
@@ -3264,6 +3326,74 @@ def setup_arg_parser():
     )
 
     parser_verify.set_defaults(func=fpk_cli_handle_verify)
+
+    # Packing
+    parser_pack = subparsers.add_parser(
+        "pack",
+        help="Pack a directory into a .fpk package"
+    )
+
+    parser_pack.add_argument(
+        "input_path",
+        help="Path to input directory"
+    )
+
+    parser_pack.add_argument(
+        "-f", "--force",
+        action="store_true",
+        help="Overwrite existing .fpk file if it exists"
+    )
+
+    parser_pack.set_defaults(func=fpk_cli_handle_pack)
+
+    # Unpack
+    parser_unpack = subparsers.add_parser(
+        "unpack",
+        help="Unpack a .fpk package"
+    )
+
+    parser_unpack.add_argument(
+        "input_path",
+        help="Path to .fpk package"
+    )
+
+    parser_unpack.set_defaults(func=fpk_cli_handle_unpack)
+
+    # Sign
+    parser_sign = subparsers.add_parser(
+        "sign",
+        help="Sign a .fpk package"
+    )
+
+    parser_sign.add_argument(
+        "input_path",
+        help="Path to .fpk package"
+    )
+
+    parser_sign.add_argument(
+        "output_path",
+        help="Path for signed .fpk package"
+    )
+
+    parser_sign.add_argument(
+        "private_key_path",
+        help="Path to private key file"
+    )
+
+    parser_sign.add_argument(
+        "--hash-size",
+        type=int,
+        choices=[256, 384, 512],
+        default=256,
+        help="Hash size for signing"
+    )
+
+    parser_sign.add_argument(
+        "--passphrase",
+        help="Passphrase for encrypted private key (required if key is encrypted)"
+    )
+
+    parser_sign.set_defaults(func=fpk_cli_handle_sign)
 
     return parser
 
@@ -3280,13 +3410,18 @@ def fpk_cli_handle_add_pdf(pdf_path, vm):
         None
     """
     if not os.path.exists(pdf_path):
-        logger.error("PDF file does not exist: '%s'", pdf_path)
+        logger.error(
+            "PDF file does not exist: '%s'",
+            pdf_path
+        )
         return
 
     try:
         vm.add_pdf(pdf_path)
-        logger.info("Added text from PDF: '%s' to the vector database.",
-                    pdf_path)
+        logger.info(
+            "Added text from PDF: '%s' to the vector database.",
+            pdf_path
+        )
     except Exception as e:
         logger.error("Failed to add PDF to the vector database: %s", e)
 
@@ -3306,8 +3441,10 @@ def fpk_cli_handle_add_url(url, vm):
         response = requests.head(url, allow_redirects=True, timeout=5)
         if 200 <= response.status_code < 400:
             vm.add_url(url)
-            logger.info("Added text from URL: '%s' to the vector database.",
-                        url)
+            logger.info(
+                "Added text from URL: '%s' to the vector database.",
+                url
+            )
         else:
             logger.error(
                 "URL is not accessible: '%s'. HTTP Status Code: %d",
@@ -5535,13 +5672,6 @@ def fpk_cli_handle_set_api_key(args, session):
 
 
 def fpk_cli_handle_unbox(args, session):
-    """
-    Handle the 'unbox' command to unbox a flatpack from GitHub, a local directory, or a .fpk file.
-
-    Args:
-        args: The command-line arguments.
-        session: The HTTP session.
-    """
     if args.input is None:
         console.print(
             "Please specify a flatpack for the unbox command.",
@@ -5550,93 +5680,109 @@ def fpk_cli_handle_unbox(args, session):
         return
 
     directory_name = args.input
-
     input_path = Path(args.input)
-    is_fpk = (
-            input_path.suffix == ".fpk" and input_path.exists() and input_path.is_file()
-    )
 
-    if is_fpk:
-        directory_name = input_path.stem
-    elif not args.local:
-        existing_dirs = fpk_fetch_github_dirs(session)
-        if directory_name not in existing_dirs:
+    if input_path.suffix == ".fpk":
+
+        if not input_path.exists() or not input_path.is_file():
             console.print(
-                f"The flatpack '{directory_name}' does not exist.",
+                f"The .fpk file '{input_path}' does not exist.",
                 style="bold red"
             )
             return
 
-    console.print("Running unbox process...", style="bold green")
+        directory_name = input_path.stem
+        fpk_file = input_path
+        local = True
+        warehouse = False
 
-    fpk_display_disclaimer(directory_name, local=args.local or is_fpk)
+    elif args.warehouse:
+        existing_dirs = fpk_fetch_github_dirs(session)
+
+        if directory_name not in existing_dirs:
+            console.print(
+                f"The flatpack '{directory_name}' does not exist in the warehouse.",
+                style="bold red"
+            )
+            return
+
+        fpk_file = None
+        local = False
+        warehouse = True
+
+    else:
+        if not fpk_valid_directory_name(directory_name):
+            console.print(
+                f"Invalid directory name: '{directory_name}'.",
+                style="bold red"
+            )
+            return
+
+        if not input_path.exists() or not input_path.is_dir():
+            console.print(
+                f"The directory '{directory_name}' does not exist.",
+                style="bold red"
+            )
+            return
+
+        if input_path.exists() and input_path.samefile(Path(directory_name)):
+            console.print(
+                f"Cannot unbox: '{directory_name}' is the source directory.",
+                style="bold red"
+            )
+            return
+
+        fpk_file = None
+        local = True
+        warehouse = False
+
+    target_dir = Path(directory_name)
+
+    if target_dir.exists():
+        console.print(
+            f"Cannot unbox: Directory '{directory_name}' already exists.",
+            style="bold red"
+        )
+        return
+
+    fpk_display_disclaimer(directory_name, local=local)
+
     while True:
         user_response = input().strip().upper()
 
         if user_response == "YES":
             break
-
         if user_response == "NO":
-            console.print("")
-            console.print("Installation aborted by user.", style="bold yellow")
+            console.print(
+                "Installation aborted by user.",
+                style="bold yellow"
+            )
             return
-        logger.error("Invalid input from user. Expected 'YES' or 'NO'.")
+
         console.print(
             "Invalid input. Please type 'YES' to accept or 'NO' to decline.",
-            style="bold red",
+            style="bold red"
         )
 
-    if args.local and not is_fpk:
-        local_directory_path = Path(directory_name)
-        if not local_directory_path.exists() or not local_directory_path.is_dir():
-            logger.error("Local directory does not exist: '%s'.",
-                         directory_name)
-            console.print(
-                f"Local directory does not exist: '{directory_name}'.",
-                style="bold red"
-            )
-            return
-
-        directory_name = str(local_directory_path.resolve())
-        toml_path = local_directory_path / "flatpack.toml"
-        if not toml_path.exists():
-            logger.error(
-                "flatpack.toml not found in the specified directory: '%s'.",
-                directory_name,
-            )
-            console.print(
-                f"flatpack.toml not found in '{directory_name}'.",
-                style="bold red"
-            )
-            return
-
-    if directory_name is None or directory_name.strip() == "":
-        logger.error("Invalid directory name")
-        console.print("Invalid directory name", style="bold red")
-        return
-
     try:
-        if is_fpk:
-            unbox_result = fpk_unbox(directory_name, session,
-                                     fpk_path=input_path)
-        else:
-            unbox_result = fpk_unbox(directory_name, session, local=args.local)
+        unbox_result = fpk_unbox(
+            directory_name,
+            session,
+            local=local,
+            fpk_path=fpk_file
+        )
 
         if unbox_result:
-            logger.info("Unboxed flatpack '%s' successfully.", directory_name)
             console.print(
                 f"Unboxed flatpack '{directory_name}' successfully.",
                 style="bold green"
             )
         else:
-            logger.info("Unboxing of flatpack '%s' was aborted.",
-                        directory_name)
             console.print(
-                f"Unboxing of flatpack '{directory_name}' was aborted.",
-                style="bold yellow",
+                f"Unboxing of flatpack '{directory_name}' failed or was aborted.",
+                style="bold yellow"
             )
     except Exception as e:
-        logger.error("Failed to unbox flatpack '%s': %s", directory_name, e)
         console.print(
             f"Failed to unbox flatpack '{directory_name}': {e}",
             style="bold red"
@@ -5749,6 +5895,58 @@ def fpk_cli_handle_version(args, session):
     print(VERSION)
 
 
+def fpk_cli_handle_pack(args, session):
+    try:
+        manager = PackageManager()
+        manager.pack(args.input_path, overwrite=args.force)
+
+        print(
+            f"Successfully compressed {args.input_path} to {args.input_path}.fpk"
+        )
+    except FileExistsError:
+        print(
+            f"The package '{args.input_path}.fpk' already exists. Use --force to overwrite."
+        )
+    except Exception as e:
+        print(f"Error: {str(e)}")
+
+
+def fpk_cli_handle_unpack(args, session):
+    """Handle the unpack command."""
+    try:
+        manager = PackageManager()
+        manager.unpack(args.input_path, args.output_path)
+        console.print(
+            f"[green]Successfully decompressed {args.input_path} to {args.output_path}[/green]"
+        )
+    except Exception as e:
+        console.print(f"[red]Error decompressing file: {e}[/red]")
+        raise
+
+
+def fpk_cli_handle_sign(args, session):
+    try:
+        manager = PackageManager()
+
+        if not args.input_path or not args.output_path or not args.private_key_path:
+            console.print("[red]Error: Missing required arguments.[/red]")
+            return
+
+        manager.sign(
+            args.input_path,
+            args.output_path,
+            args.private_key_path,
+            hash_size=args.hash_size,
+            passphrase=args.passphrase
+        )
+
+        console.print(
+            f"[green]Successfully signed {args.input_path} to {args.output_path}[/green]"
+        )
+    except Exception as e:
+        console.print(f"[red]Error signing file: {e}[/red]")
+
+
 @safe_exit
 def main():
     setup_exception_handling()
@@ -5764,13 +5962,16 @@ def main():
         if args.command == "vector":
             vm = fpk_initialize_vector_manager(args)
 
-        if hasattr(args, "func"):
-            if args.command == "vector" and "vector_command" in args:
-                args.func(args, session, vm)
+        try:
+            if hasattr(args, "func"):
+                if args.command == "vector" and "vector_command" in args:
+                    args.func(args, session, vm)
+                else:
+                    args.func(args, session)
             else:
-                args.func(args, session)
-        else:
-            parser.print_help()
+                parser.print_help()
+        except Exception as e:
+            print(f"Error: {str(e)}")
 
 
 if __name__ == "__main__":

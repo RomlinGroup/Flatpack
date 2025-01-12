@@ -79,8 +79,13 @@ flatpack list
 ```
 
 ```bash
-# Use the --local flag for local flatpacks
-flatpack unbox <flatpack_name>
+# Unbox from a local flatpack or .fpk file (default)
+flatpack unbox my-flatpack
+```
+
+```bash
+# Use the --warehouse flag for hosted flatpacks
+flatpack unbox my-flatpack --warehouse
 ```
 
 ```bash

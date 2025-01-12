@@ -12,6 +12,7 @@ setup(
     install_requires=[
         "beautifulsoup4==4.12.3",
         "croniter==6.0.0",
+        "cryptography==44.0.0",
         "fastapi==0.115.6",
         "hnswlib==0.8.0",
         "httpx==0.28.1",
