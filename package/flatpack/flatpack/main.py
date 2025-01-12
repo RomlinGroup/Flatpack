@@ -18,7 +18,7 @@ if not IMPORT_CACHE_FILE.exists():
         |   __|  |  |  _  |_   _|  _  |  _  |     |  |  |
         |   __|  |__|     | | | |   __|     |   --|    -|
         |__|  |_____|__|__| |_| |__|  |__|__|_____|__|__|                                      
-    """
+        """
     )
 
     console.print(f"[bold green]{ascii_art}[/bold green]")
@@ -1775,6 +1775,7 @@ def validate_file_path(path, is_input=True, allowed_dir=None):
 
     if allowed_dir:
         allowed_dir_absolute = os.path.abspath(allowed_dir)
+
         if not absolute_path.startswith(allowed_dir_absolute):
             raise ValueError(
                 f"Path '{path}' is outside the allowed directory '{allowed_dir}'."
@@ -1783,13 +1784,16 @@ def validate_file_path(path, is_input=True, allowed_dir=None):
     if is_input:
         if not os.path.exists(absolute_path):
             raise FileNotFoundError(
-                f"The path '{absolute_path}' does not exist.")
+                f"The path '{absolute_path}' does not exist."
+            )
+
         if not (os.path.isfile(absolute_path) or os.path.isdir(absolute_path)):
             raise ValueError(
                 f"The path '{absolute_path}' is neither a file nor a directory."
             )
     else:
         output_dir = os.path.dirname(absolute_path)
+
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
 
@@ -1799,6 +1803,7 @@ def validate_file_path(path, is_input=True, allowed_dir=None):
 def validate_session(session_id):
     if session_id in active_sessions:
         session = active_sessions[session_id]
+
         if datetime.now() < session["expiration"]:
             return True
     return False
@@ -1825,23 +1830,28 @@ async def fpk_build(directory: Union[str, None], use_euxo: bool = False):
         flatpack_directory = last_unboxed_flatpack
     else:
         logger.error(
-            "No cached flatpack found, and no valid directory provided.")
+            "No cached flatpack found, and no valid directory provided."
+        )
         raise ValueError(
-            "No cached flatpack found, and no valid directory provided.")
+            "No cached flatpack found, and no valid directory provided."
+        )
 
     flatpack_dir = Path(last_unboxed_flatpack)
 
     if not flatpack_dir.exists():
-        logger.error("The flatpack directory '%s' does not exist.",
-                     flatpack_dir)
+        logger.error(
+            "The flatpack directory '%s' does not exist.",
+            flatpack_dir
+        )
         raise ValueError(
-            f"The flatpack directory '{flatpack_dir}' does not exist.")
+            f"The flatpack directory '{flatpack_dir}' does not exist."
+        )
 
     build_dir = flatpack_dir / "build"
 
     if not build_dir.exists():
-        logger.error("The build directory '%s' does not exist.", build_dir)
-        raise ValueError(f"The build directory '{build_dir}' does not exist.")
+        logger.error("The build directory is missing. Did you unbox?")
+        raise ValueError("The build directory is missing. Did you unbox?")
 
     sync_hooks_to_db_on_startup()
     sync_connections_from_file()
@@ -1888,8 +1898,11 @@ async def fpk_build(directory: Union[str, None], use_euxo: bool = False):
 
                 if not matched_hook:
                     invalid_connections.append(connection)
-                    table.add_row(source_id, source_type,
-                                  f"[red]{target_id}[/red]")
+                    table.add_row(
+                        source_id,
+                        source_type,
+                        f"[red]{target_id}[/red]"
+                    )
                 else:
                     table.add_row(source_id, source_type, target_id)
 
@@ -1906,7 +1919,8 @@ async def fpk_build(directory: Union[str, None], use_euxo: bool = False):
                         f"[red] - Source: {conn.get('source_id')}, Target: {conn.get('target_id')}[/red]"
                     )
                 raise ValueError(
-                    "Invalid connections found. Build process canceled.")
+                    "Invalid connections found. Build process canceled."
+                )
 
         logger.info("Successfully validated %d connections", len(connections))
     except json.JSONDecodeError:
@@ -1916,8 +1930,10 @@ async def fpk_build(directory: Union[str, None], use_euxo: bool = False):
     flatpack_json_path = build_dir / "flatpack.json"
 
     if not flatpack_json_path.exists() or not flatpack_json_path.is_file():
-        logger.error("flatpack.json not found in %s. Build process canceled.",
-                     build_dir)
+        logger.error(
+            "flatpack.json not found in %s. Build process canceled.",
+            build_dir
+        )
         raise FileNotFoundError(
             f"flatpack.json not found in {build_dir}. Build process canceled."
         )
@@ -1938,10 +1954,12 @@ async def fpk_build(directory: Union[str, None], use_euxo: bool = False):
     lines = temp_sh_path.read_text().splitlines()
 
     start = 0
+
     while start < len(lines) and not lines[start].strip():
         start += 1
 
     end = len(lines)
+
     while end > start and not lines[end - 1].strip():
         end -= 1
 
@@ -1975,17 +1993,21 @@ async def fpk_build(directory: Union[str, None], use_euxo: bool = False):
     if not web_dir.exists():
         logger.error("The web directory '%s' does not exist.", web_dir)
         raise FileNotFoundError(
-            f"The web directory '{web_dir}' does not exist.")
+            f"The web directory '{web_dir}' does not exist."
+        )
 
     output_dir = build_dir / "output"
     eval_build_path = output_dir / "eval_build.json"
     eval_data_path = output_dir / "eval_data.json"
 
     if not eval_data_path.exists():
-        logger.error("The 'eval_data.json' file does not exist in '%s'.",
-                     output_dir)
+        logger.error(
+            "The 'eval_data.json' file does not exist in '%s'.",
+            output_dir
+        )
         raise FileNotFoundError(
-            f"The 'eval_data.json' file does not exist in '{output_dir}'.")
+            f"The 'eval_data.json' file does not exist in '{output_dir}'."
+        )
 
     with eval_data_path.open("r") as file:
         eval_data = json.load(file)
@@ -2543,6 +2565,7 @@ def unbox_from_local_directory(directory_name: str) -> bool:
     logger.info("Flatpack directory: %s", flatpack_dir)
 
     toml_path = flatpack_dir / "flatpack.toml"
+
     if not toml_path.exists():
         logger.error(
             "flatpack.toml not found in the specified directory: '%s'.",
@@ -2750,54 +2773,55 @@ def fpk_unbox(
     build_dir = flatpack_dir / "build"
     web_dir = flatpack_dir / "web"
 
+    bash_script_path = flatpack_dir / "flatpack.sh"
+    toml_path = flatpack_dir / "flatpack.toml"
+
+    # Unbox from local .fpk file
     if fpk_path is not None:
         fpk_file = Path(fpk_path)
-
         if not fpk_file.is_file() or fpk_file.suffix != ".fpk":
             logger.error("Invalid .fpk file: %s", fpk_file)
             return False
-
         if not unbox_from_local_fpk(directory_name, fpk_file):
             return False
 
-        toml_path = flatpack_dir / "flatpack.toml"
+    # Unbox from local directory
     elif local:
         if not unbox_from_local_directory(directory_name):
             return False
 
-        toml_path = flatpack_dir / "flatpack.toml"
+    # Unbox from online warehouse repository
+    # https://github.com/RomlinGroup/Flatpack/tree/main/warehouse
     else:
         if not unbox_from_online(directory_name, session):
             return False
 
+        bash_script_path = build_dir / "flatpack.sh"
         toml_path = build_dir / "flatpack.toml"
 
     if not toml_path.exists():
         logger.error("flatpack.toml not found in %s", toml_path.parent)
         return False
 
-    temp_toml_path = build_dir / "temp_flatpack.toml"
-    bash_script_path = build_dir / "flatpack.sh"
-
     try:
-        toml_content = toml_path.read_text()
-        temp_toml_path.write_text(toml_content)
-
         bash_script_content = parse_toml_to_venv_script(
-            str(temp_toml_path), env_name=str(flatpack_dir)
+            str(toml_path),
+            env_name=str(flatpack_dir)
         )
+
         bash_script_path.write_text(bash_script_content)
 
         safe_script_path = shlex.quote(str(bash_script_path.resolve()))
-        subprocess.run(['/bin/bash', safe_script_path], check=True)
+
+        subprocess.run(
+            ['/bin/bash', safe_script_path],
+            check=True
+        )
 
         logger.info("Bash script execution completed successfully")
     except Exception as e:
         logger.error("Failed to execute bash script: %s", e)
         return False
-    finally:
-        if temp_toml_path.exists():
-            temp_toml_path.unlink()
 
     files_to_copy = ["app/pages/index.tsx"]
 
