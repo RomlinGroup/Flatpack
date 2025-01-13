@@ -10,7 +10,7 @@ from cryptography.hazmat.primitives.asymmetric import padding
 
 class PackageManager:
     @staticmethod
-    def _validate_flatpack_path(self, path, is_input=True, operation=None):
+    def _validate_flatpack_path(path, is_input=True, operation=None):
         absolute_path = os.path.abspath(path)
 
         if is_input:
