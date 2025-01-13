@@ -2599,7 +2599,7 @@ def unbox_from_local_fpk(
     try:
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)
-            package_manager.unpack(fpk_path, temp_path)
+            package_manager.unpack(str(fpk_path), str(temp_path))
 
             flatpack_dir.mkdir(parents=True, exist_ok=True)
             build_dir, web_dir, app_dir, output_dir = setup_flatpack_directories(
