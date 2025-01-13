@@ -1,5 +1,4 @@
 name: Compress and Sign FPK
-
 on:
   push:
     branches:
@@ -12,7 +11,6 @@ permissions:
 jobs:
   compress_and_sign:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -27,19 +25,22 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r utilities/compress_and_sign_fpk/requirements.txt
+          pip install flatpack
 
-      - name: Create private_key.pem file from secret
-        run: echo "${{ secrets.PRIVATE_KEY_PEM }}" > utilities/compress_and_sign_fpk/private_key.pem
-
-      - name: Run Bulk Compress and Sign Script
-        env:
-          PASSPHRASE: ${{ secrets.PASSPHRASE }}
+      - name: Remove existing FPK files
         run: |
-          python utilities/compress_and_sign_fpk/git_compress_and_sign_fpk.py -p utilities/compress_and_sign_fpk/private_key.pem --passphrase $PASSPHRASE
+          find . -name "*.fpk" -type f -delete
 
-      - name: Clean up private key
-        run: rm utilities/compress_and_sign_fpk/private_key.pem
+      - name: Create FPK packages
+        run: |
+          for d in warehouse/*/; do
+            if [ -d "$d" ]; then
+              echo "Processing directory: $d"
+              flatpack pack "$d"
+              # Move the created FPK file into the directory
+              mv "${d%/}.fpk" "$d"
+            fi
+          done
 
       - name: Commit and push changes
         run: |
