@@ -145,7 +145,7 @@ class PackageManager:
             print(f"Pack operation failed: {str(e)}")
             raise
 
-    def unpack(self, input_path):
+    def unpack(self, input_path, output_path=None):
         try:
             abs_input_path = self._validate_flatpack_path(
                 input_path,
@@ -153,14 +153,15 @@ class PackageManager:
                 operation='unpack'
             )
 
-            output_path = os.path.splitext(abs_input_path)[0]
+            final_output_path = output_path if output_path else \
+                os.path.splitext(abs_input_path)[0]
 
-            if os.path.exists(output_path):
+            if os.path.exists(final_output_path):
                 raise FileExistsError(
-                    f"The directory '{output_path}' already exists."
+                    f"The directory '{final_output_path}' already exists."
                 )
 
-            os.makedirs(output_path)
+            os.makedirs(final_output_path)
 
             with open(abs_input_path, 'rb') as f:
                 compressed_data = f.read()
@@ -173,9 +174,9 @@ class PackageManager:
                     tmp_file.seek(0)
 
                     with tarfile.open(fileobj=tmp_file, mode='r:') as tar:
-                        tar.extractall(path=output_path)
+                        tar.extractall(path=final_output_path)
             except tarfile.ReadError:
-                with open(output_path, 'wb') as f:
+                with open(final_output_path, 'wb') as f:
                     f.write(decompressed_data)
         except Exception as e:
             raise
