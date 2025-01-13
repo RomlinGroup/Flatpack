@@ -2581,6 +2581,7 @@ def unbox_from_local_fpk(
         fpk_path: Path,
         session: httpx.Client
 ) -> bool:
+    import tempfile
     global flatpack_directory
 
     package_manager = PackageManager()
