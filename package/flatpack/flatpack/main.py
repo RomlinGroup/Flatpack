@@ -51,7 +51,7 @@ from datetime import datetime, timedelta, timezone
 from importlib.metadata import version
 from io import BytesIO
 from logging.handlers import RotatingFileHandler
-from typing import Dict, List, Optional, Set, Union
+from typing import Dict, List, Optional, Set, Tuple, Union
 from tqdm.auto import tqdm
 from zipfile import ZipFile
 
@@ -229,6 +229,8 @@ abort_lock = asyncio.Lock()
 csrf_cookie = APIKeyCookie(name="csrf_token")
 
 db_manager = None
+
+DirectoryPaths = Tuple[Path, Path, Path, Path]
 
 
 def initialize_database_manager(flatpack_db_directory):
@@ -2263,8 +2265,7 @@ def fpk_fetch_github_dirs(session: httpx.Client) -> List[str]:
                     {
                         "timestamp": datetime.now().isoformat(),
                         "directories": directories,
-                    },
-                    f,
+                    }, f
                 )
 
             logger.info("Cached GitHub dirs: %s", directories)
@@ -2346,6 +2347,7 @@ def fpk_get_api_key() -> Optional[str]:
     try:
         config = load_config()
         api_key = config.get("api_key")
+
         if api_key:
             logger.info("API key retrieved successfully.")
         else:
@@ -2435,36 +2437,8 @@ def fpk_list_directories(session: httpx.Client) -> str:
         return ""
 
 
-def fpk_set_secure_file_permissions(file_path):
-    """Set secure file permissions for the specified file.
-
-    Args:
-        file_path (str): Path to the file for which to set secure permissions.
-    """
-    try:
-        os.chmod(file_path, stat.S_IRUSR | stat.S_IWUSR)
-        logger.info("Set secure file permissions for %s", file_path)
-    except OSError as e:
-        error_message = f"Failed to set secure file permissions for {file_path}: {e}"
-        logger.error("Failed to set secure file permissions for %s: %s",
-                     file_path, e)
-
-
-def setup_flatpack_directories(flatpack_dir: Path) -> tuple[
-    Path, Path, Path, Path
-]:
-    build_dir = flatpack_dir / "build"
-    web_dir = flatpack_dir / "web"
-    app_dir = web_dir / "app"
-    output_dir = build_dir / "output"
-
-    web_dir.mkdir(parents=True, exist_ok=True)
-    logger.info("Created directory: %s", web_dir)
-
-    return build_dir, web_dir, app_dir, output_dir
-
-
 def setup_nextjs_project(app_dir: Path) -> bool:
+    """Set up a new Next.js project in the specified directory."""
     if app_dir.exists():
         shutil.rmtree(app_dir)
 
@@ -2502,8 +2476,40 @@ def setup_nextjs_project(app_dir: Path) -> bool:
         )
         console.print("")
         return True
-    except subprocess.CalledProcessError:
+    except subprocess.CalledProcessError as e:
+        logger.error("Failed to set up Next.js project: %s", e)
         return False
+
+
+def copy_files_to_web_dir(
+        files_to_download: Dict[str,
+        List[str]],
+        web_dir: Path,
+        session: httpx.Client
+) -> bool:
+    """Download and copy template files to the web directory."""
+    for file in files_to_download["web"]:
+        try:
+            file_url = f"{TEMPLATE_REPO_URL}/contents/{file}"
+            response = session.get(file_url)
+            response.raise_for_status()
+
+            file_content = response.json()["content"]
+            file_decoded = base64.b64decode(file_content)
+            file_path = web_dir / file
+
+            mode = "wb" if file.endswith(".woff2") else "w"
+            encoding = None if file.endswith(".woff2") else "utf-8"
+
+            with open(file_path, mode, encoding=encoding) as f:
+                if mode == "wb":
+                    f.write(file_decoded)
+                else:
+                    f.write(file_decoded.decode("utf-8"))
+        except Exception as e:
+            logger.error("Failed to download or save %s: %s", file, e)
+            return False
+    return True
 
 
 def setup_web_environment(
@@ -2513,6 +2519,7 @@ def setup_web_environment(
         app_dir: Path,
         session: httpx.Client
 ) -> bool:
+    """Set up the web environment including template files and Next.js project."""
     try:
         files_to_download = {
             "web": [
@@ -2524,27 +2531,8 @@ def setup_web_environment(
             ]
         }
 
-        for file in files_to_download["web"]:
-            try:
-                file_url = f"{TEMPLATE_REPO_URL}/contents/{file}"
-                response = session.get(file_url)
-                response.raise_for_status()
-
-                file_content = response.json()["content"]
-                file_decoded = base64.b64decode(file_content)
-                file_path = web_dir / file
-
-                mode = "wb" if file.endswith(".woff2") else "w"
-                encoding = None if file.endswith(".woff2") else "utf-8"
-
-                with open(file_path, mode, encoding=encoding) as f:
-                    if mode == "wb":
-                        f.write(file_decoded)
-                    else:
-                        f.write(file_decoded.decode("utf-8"))
-            except Exception as e:
-                logger.error("Failed to download or save %s: %s", file, e)
-                raise
+        if not copy_files_to_web_dir(files_to_download, web_dir, session):
+            return False
 
         if not check_node_and_run_npm_install(web_dir):
             return False
@@ -2553,18 +2541,18 @@ def setup_web_environment(
             shutil.rmtree(app_dir, ignore_errors=True)
             return False
 
-        public_dir = app_dir / "public"
-        public_dir.mkdir(parents=True, exist_ok=True)
-
-        pages_dir = app_dir / "pages"
-        pages_dir.mkdir(parents=True, exist_ok=True)
+        for subdir in ["public", "pages"]:
+            dir_path = app_dir / subdir
+            dir_path.mkdir(parents=True, exist_ok=True)
 
         index_source = flatpack_dir / "app" / "pages" / "index.tsx"
 
         if index_source.exists():
-            index_dest = pages_dir / "index.tsx"
+            index_dest = app_dir / "pages" / "index.tsx"
+
             if index_dest.exists():
                 index_dest.unlink()
+
             shutil.copy2(index_source, index_dest)
             logger.info("Copied index.tsx to app directory")
 
@@ -2576,11 +2564,132 @@ def setup_web_environment(
         return False
 
 
+def setup_flatpack_environment(
+        flatpack_dir: Path,
+        session: httpx.Client
+) -> Tuple[bool, Optional[DirectoryPaths]]:
+    """
+    Sets up the complete flatpack environment including directory structure, symlinks, and web environment.
+    Returns (success, (build_dir, web_dir, app_dir, output_dir))
+    """
+    try:
+        web_dir = flatpack_dir / "web"
+        build_dir = flatpack_dir / "build"
+        app_dir = web_dir / "app"
+        output_dir = build_dir / "output"
+
+        directories_to_check = {
+            'web': web_dir,
+            'build': build_dir,
+            'output': output_dir
+        }
+
+        for dir_name, dir_path in directories_to_check.items():
+            if not dir_path.exists():
+                dir_path.mkdir(
+                    parents=True,
+                    exist_ok=True
+                )
+                logger.info("Created directory: %s", dir_path)
+
+        eval_data_path = output_dir / "eval_data.json"
+
+        if not eval_data_path.exists():
+            with open(eval_data_path, "w") as f:
+                json.dump([], f)
+
+            logger.info("Created eval_data.json")
+
+        if not setup_web_environment(
+                flatpack_dir,
+                build_dir,
+                web_dir,
+                app_dir,
+                session
+        ):
+            logger.error("Failed to set up web environment")
+            return False, None
+
+        app_public_dir = app_dir / "public"
+        app_output_dir = app_public_dir / "output"
+        web_output_dir = web_dir / "output"
+
+        if app_output_dir.exists() and not app_output_dir.is_symlink():
+            app_output_dir.unlink(missing_ok=True)
+        if web_output_dir.exists() and not web_output_dir.is_symlink():
+            web_output_dir.unlink(missing_ok=True)
+
+        if not app_output_dir.exists():
+            app_output_dir.symlink_to(
+                output_dir.resolve(),
+                target_is_directory=True
+            )
+            logger.info("Created symlink: %s -> %s", app_output_dir,
+                        output_dir)
+
+        if not web_output_dir.exists():
+            web_output_dir.symlink_to(
+                output_dir.resolve(),
+                target_is_directory=True
+            )
+            logger.info(
+                "Created symlink: %s -> %s",
+                web_output_dir,
+                output_dir
+            )
+
+        return True, (build_dir, web_dir, app_dir, output_dir)
+
+    except Exception as e:
+        logger.error("Failed to set up flatpack environment: %s", e)
+        return False, None
+
+
+def cleanup_flatpack_dir(flatpack_dir: Path) -> None:
+    """Safely clean up the flatpack directory if it exists."""
+    if flatpack_dir.exists():
+        try:
+            shutil.rmtree(flatpack_dir, ignore_errors=True)
+        except Exception as e:
+            logger.error(
+                "Failed to clean up directory %s: %s", flatpack_dir, e
+            )
+
+
+def unbox_from_local_directory(
+        directory_name: str,
+        session: httpx.Client
+) -> bool:
+    """Unbox from a local directory."""
+    global flatpack_directory
+
+    flatpack_dir = Path.cwd() / directory_name
+    flatpack_directory = str(flatpack_dir.resolve())
+
+    toml_path = flatpack_dir / "flatpack.toml"
+
+    if not toml_path.exists():
+        logger.error(
+            "flatpack.toml not found in the specified directory: '%s'.",
+            directory_name
+        )
+        return False
+
+    try:
+        success, paths = setup_flatpack_environment(flatpack_dir, session)
+        return success
+    except Exception as e:
+        logger.error("Failed to set up local directory: %s", e)
+        cleanup_flatpack_dir(flatpack_dir)
+        return False
+
+
 def unbox_from_local_fpk(
         directory_name: str,
         fpk_path: Path,
         session: httpx.Client
 ) -> bool:
+    """Unbox from a local .fpk file."""
     import tempfile
     global flatpack_directory
 
@@ -2598,37 +2707,22 @@ def unbox_from_local_fpk(
     try:
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)
-
-            for item in temp_path.iterdir():
-                if item.is_dir():
-                    shutil.rmtree(item)
-                else:
-                    item.unlink()
-
             package_manager.unpack(str(fpk_path), str(temp_path))
 
             flatpack_dir.mkdir(parents=True, exist_ok=True)
-            build_dir, web_dir, app_dir, output_dir = setup_flatpack_directories(
-                flatpack_dir
-            )
+            success, paths = setup_flatpack_environment(flatpack_dir, session)
+
+            if not success:
+                cleanup_flatpack_dir(flatpack_dir)
+                return False
 
             for item in temp_path.iterdir():
                 dest_path = flatpack_dir / item.name
+
                 if item.is_dir():
                     shutil.copytree(item, dest_path, dirs_exist_ok=True)
                 else:
                     shutil.copy2(item, dest_path)
-
-            if not setup_web_environment(
-                    flatpack_dir,
-                    build_dir,
-                    web_dir,
-                    app_dir,
-                    session
-            ):
-                logger.error("Failed to set up web environment")
-                shutil.rmtree(flatpack_dir)
-                return False
 
             return True
 
@@ -2636,78 +2730,12 @@ def unbox_from_local_fpk(
         logger.error(
             "Failed to decompress .fpk file or set up environment: %s", e
         )
-        shutil.rmtree(flatpack_dir, ignore_errors=True)
-        return False
-
-
-def unbox_from_local_directory(
-        directory_name: str,
-        session: httpx.Client
-) -> bool:
-    global flatpack_directory
-
-    flatpack_dir = Path.cwd() / directory_name
-    flatpack_directory = str(flatpack_dir.resolve())
-
-    toml_path = flatpack_dir / "flatpack.toml"
-    if not toml_path.exists():
-        logger.error(
-            "flatpack.toml not found in the specified directory: '%s'.",
-            directory_name)
-        return False
-
-    try:
-        web_dir = flatpack_dir / "web"
-        build_dir = flatpack_dir / "build"
-        app_dir = web_dir / "app"
-        output_dir = build_dir / "output"
-
-        directories_to_check = {
-            'web': web_dir,
-            'build': build_dir,
-            'output': output_dir
-        }
-
-        for dir_name, dir_path in directories_to_check.items():
-            if not dir_path.exists():
-                dir_path.mkdir(parents=True, exist_ok=True)
-                logger.info("Created missing directory: %s", dir_path)
-
-        eval_data_path = output_dir / "eval_data.json"
-
-        if not eval_data_path.exists():
-            with open(eval_data_path, "w") as f:
-                json.dump([], f)
-
-            logger.info("Created missing eval_data.json")
-
-        web_output_dir = web_dir / "output"
-
-        if web_output_dir.exists() and not web_output_dir.is_symlink():
-            web_output_dir.unlink(missing_ok=True)
-
-        if not web_output_dir.exists():
-            relative_path = os.path.relpath(output_dir, web_output_dir.parent)
-            web_output_dir.symlink_to(relative_path, target_is_directory=True)
-
-        if not setup_web_environment(
-                flatpack_dir,
-                build_dir,
-                web_dir,
-                app_dir,
-                session
-        ):
-            logger.error("Failed to set up web environment")
-            return False
-
-        return True
-
-    except Exception as e:
-        logger.error("Failed to set up local directory: %s", e)
+        cleanup_flatpack_dir(flatpack_dir)
         return False
 
 
 def unbox_from_online(directory_name: str, session: httpx.Client) -> bool:
+    """Unbox from an online source."""
     import tempfile
     global flatpack_directory
 
@@ -2738,30 +2766,20 @@ def unbox_from_online(directory_name: str, session: httpx.Client) -> bool:
             flatpack_dir.mkdir(parents=True, exist_ok=True)
             flatpack_directory = str(flatpack_dir.resolve())
 
-            build_dir, web_dir, app_dir, output_dir = setup_flatpack_directories(
-                flatpack_dir
-            )
-            package_manager.unpack(temp_path, str(build_dir))
-
-            if not setup_web_environment(
-                    flatpack_dir,
-                    build_dir,
-                    web_dir,
-                    app_dir,
-                    session
-            ):
-                logger.warning(
-                    "Cleaning up: Removing the flatpack directory due to setup failure."
-                )
-                shutil.rmtree(flatpack_dir)
+            success, paths = setup_flatpack_environment(flatpack_dir, session)
+            if not success:
+                cleanup_flatpack_dir(flatpack_dir)
                 return False
 
+            package_manager.unpack(
+                temp_path,
+                str(paths[0])
+            )
             return True
 
     except Exception as e:
         logger.error("Failed during online unboxing: %s", e)
-        if flatpack_dir.exists():
-            shutil.rmtree(flatpack_dir, ignore_errors=True)
+        cleanup_flatpack_dir(flatpack_dir)
         return False
 
 
@@ -2771,11 +2789,12 @@ def fpk_unbox(
         local: bool = False,
         fpk_path: Union[str, Path, None] = None
 ) -> bool:
+    """Main entry point for unboxing flatpacks."""
     if not directory_name or not isinstance(
-            directory_name,
-            str
+            directory_name, str
     ) or not fpk_valid_directory_name(
-        directory_name):
+        directory_name
+    ):
         logger.error("Invalid directory name: %s", directory_name)
         return False
 
@@ -2790,14 +2809,14 @@ def fpk_unbox(
             logger.error("Invalid .fpk file: %s", fpk_file)
             return False
 
-        if not unbox_from_local_fpk(directory_name, fpk_file, session):
-            return False
+        success = unbox_from_local_fpk(directory_name, fpk_file, session)
     elif local:
-        if not unbox_from_local_directory(directory_name, session):
-            return False
+        success = unbox_from_local_directory(directory_name, session)
     else:
-        if not unbox_from_online(directory_name, session):
-            return False
+        success = unbox_from_online(directory_name, session)
+
+    if not success:
+        return False
 
     flatpack_dir = Path.cwd() / directory_name
     build_dir = flatpack_dir / "build"
@@ -2818,26 +2837,19 @@ def fpk_unbox(
 
         safe_script_path = shlex.quote(str(bash_script_path.resolve()))
         subprocess.run(['/bin/bash', safe_script_path], check=True)
-    except Exception as e:
-        logger.error("Failed to execute bash script: %s", e)
-        return False
 
-    files_to_copy = ["app/pages/index.tsx"]
-    for file in files_to_copy:
-        source = build_dir / file
-        destination = web_dir / file
+        for file in ["app/pages/index.tsx"]:
+            source = build_dir / file
+            destination = web_dir / file
 
-        try:
             if source.exists():
                 destination.parent.mkdir(parents=True, exist_ok=True)
 
                 if destination.exists():
                     destination.unlink()
-                shutil.copy2(source, destination)
-        except Exception as e:
-            logger.error("Failed to copy %s: %s", file, e)
 
-    try:
+                shutil.copy2(source, destination)
+
         pkgdir = sys.modules['flatpack'].__path__[0]
         executor_src = Path(pkgdir) / 'python_executor.py'
         executor_dest = build_dir / 'python_executor.py'
@@ -2845,11 +2857,14 @@ def fpk_unbox(
 
         flatpack_dir_str = str(flatpack_dir.resolve())
         initialize_database_manager(flatpack_dir_str)
+
         sync_hooks_to_db_on_startup()
         sync_connections_from_file()
         sync_sources_from_file()
+
         fpk_cache_unbox(flatpack_dir_str)
         return True
+
     except Exception as e:
         logger.error("Failed during final initialization steps: %s", e)
         return False
@@ -2919,6 +2934,7 @@ def fpk_update(
 
     for dir_name, files in files_to_update.items():
         target_dir = web_dir if dir_name == "web" else build_dir
+
         for file in files:
             file_url = f"{TEMPLATE_REPO_URL}/contents/{file}?ref={branch}"
             local_file_path = target_dir / file
@@ -2936,8 +2952,12 @@ def fpk_update(
                             local_file.write(file_content)
                     else:
                         content = file_content.decode("utf-8")
-                        with open(local_file_path, "w",
-                                  encoding="utf-8") as local_file:
+
+                        with open(
+                                local_file_path,
+                                "w", encoding="utf-8"
+                        ) as local_file:
+
                             local_file.write(content)
 
                     if local_file_path.exists():
