@@ -2585,7 +2585,6 @@ def unbox_from_local_fpk(
     global flatpack_directory
 
     package_manager = PackageManager()
-
     flatpack_dir = Path.cwd() / directory_name
     flatpack_directory = str(flatpack_dir.resolve())
 
@@ -2599,6 +2598,13 @@ def unbox_from_local_fpk(
     try:
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)
+
+            for item in temp_path.iterdir():
+                if item.is_dir():
+                    shutil.rmtree(item)
+                else:
+                    item.unlink()
+
             package_manager.unpack(str(fpk_path), str(temp_path))
 
             flatpack_dir.mkdir(parents=True, exist_ok=True)
@@ -2608,29 +2614,28 @@ def unbox_from_local_fpk(
 
             for item in temp_path.iterdir():
                 dest_path = flatpack_dir / item.name
-
                 if item.is_dir():
                     shutil.copytree(item, dest_path, dirs_exist_ok=True)
                 else:
                     shutil.copy2(item, dest_path)
 
-        if not setup_web_environment(
-                flatpack_dir,
-                build_dir,
-                web_dir,
-                app_dir,
-                session
-        ):
-            logger.error("Failed to set up web environment")
-            shutil.rmtree(flatpack_dir)
-            return False
+            if not setup_web_environment(
+                    flatpack_dir,
+                    build_dir,
+                    web_dir,
+                    app_dir,
+                    session
+            ):
+                logger.error("Failed to set up web environment")
+                shutil.rmtree(flatpack_dir)
+                return False
 
-        return True
+            return True
 
     except Exception as e:
         logger.error(
-            "Failed to decompress .fpk file or set up environment: %s", e)
-
+            "Failed to decompress .fpk file or set up environment: %s", e
+        )
         shutil.rmtree(flatpack_dir, ignore_errors=True)
         return False
 

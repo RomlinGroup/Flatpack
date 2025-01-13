@@ -9,6 +9,7 @@ from cryptography.hazmat.primitives.asymmetric import padding
 
 
 class PackageManager:
+    @staticmethod
     def _validate_flatpack_path(self, path, is_input=True, operation=None):
         absolute_path = os.path.abspath(path)
 
@@ -156,12 +157,7 @@ class PackageManager:
             final_output_path = output_path if output_path else \
                 os.path.splitext(abs_input_path)[0]
 
-            if os.path.exists(final_output_path):
-                raise FileExistsError(
-                    f"The directory '{final_output_path}' already exists."
-                )
-
-            os.makedirs(final_output_path)
+            os.makedirs(final_output_path, exist_ok=True)
 
             with open(abs_input_path, 'rb') as f:
                 compressed_data = f.read()
