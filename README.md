@@ -69,7 +69,15 @@ Flatpack 目前仍处于实验阶段。请勿用于生产环境。
 Learn more about [Docker Engine security](https://docs.docker.com/engine/security/).
 
 ```bash
-docker run -it -p 3000:3000 -p 8000:8000 flatpackai/flatpack-image bash
+mkdir -p ~/flatpacks
+```
+
+```bash
+docker run -it \
+  -p 3000:3000 \
+  -p 8000:8000 \
+  -v ~/flatpacks:/home/flatpackuser/flatpacks \
+  flatpackai/flatpack-image bash
 ```
 
 ### Getting started
