@@ -3291,6 +3291,12 @@ def setup_arg_parser():
         help="Fetch flatpack from the online warehouse"
     )
 
+    parser_unbox.add_argument(
+        "--overwrite",
+        action="store_true",
+        help="Overwrite existing build directory if it exists"
+    )
+
     parser_unbox.set_defaults(func=fpk_cli_handle_unbox)
 
     # Update flatpack
@@ -5797,11 +5803,11 @@ def fpk_cli_handle_unbox(args, session):
         )
         return
 
+    overwrite = getattr(args, 'overwrite', False)
     directory_name = args.input
     input_path = Path(args.input)
 
     if input_path.suffix == ".fpk":
-
         if not input_path.exists() or not input_path.is_file():
             console.print(
                 f"The .fpk file '{input_path}' does not exist.",
@@ -5851,32 +5857,61 @@ def fpk_cli_handle_unbox(args, session):
 
     if target_dir.exists():
         build_dir = target_dir / "build"
+        web_dir = target_dir / "web"
+        dirs_exist = []
 
         if build_dir.exists():
+            dirs_exist.append("build")
+        if web_dir.exists():
+            dirs_exist.append("web")
+
+        if dirs_exist:
+            if not overwrite:
+                console.print(
+                    f"Cannot unbox: '{directory_name}' already contains {' and '.join(dirs_exist)} director{'y' if len(dirs_exist) == 1 else 'ies'}.",
+                    style="bold red"
+                )
+                console.print(
+                    "Use --overwrite to force unboxing and replace existing contents.",
+                    style="bold yellow"
+                )
+                return
+            else:
+                console.print(
+                    f"[bold yellow]Warning:[/bold yellow] Overwriting existing {' and '.join(dirs_exist)} director{'y' if len(dirs_exist) == 1 else 'ies'} in '{directory_name}'."
+                )
+                try:
+                    if build_dir.exists():
+                        shutil.rmtree(build_dir)
+                    if web_dir.exists():
+                        shutil.rmtree(web_dir)
+                except Exception as e:
+                    console.print(
+                        f"Error removing existing directories: {e}",
+                        style="bold red"
+                    )
+                    return
+
+    if not overwrite:
+        fpk_display_disclaimer(directory_name, local=local)
+
+        while True:
+            user_response = input().strip().upper()
+
+            if user_response == "YES":
+                break
+
+            if user_response == "NO":
+                console.print(
+                    "Installation aborted by user.",
+                    style="bold yellow"
+                )
+                return
+
             console.print(
-                f"Cannot unbox: '{directory_name}' already contains a build directory.",
+                "Invalid input. Please type 'YES' to accept or 'NO' to decline.",
                 style="bold red"
             )
-            return
-
-    fpk_display_disclaimer(directory_name, local=local)
-
-    while True:
-        user_response = input().strip().upper()
-
-        if user_response == "YES":
-            break
-        if user_response == "NO":
-            console.print(
-                "Installation aborted by user.",
-                style="bold yellow"
-            )
-            return
-
-        console.print(
-            "Invalid input. Please type 'YES' to accept or 'NO' to decline.",
-            style="bold red"
-        )
 
     try:
         unbox_result = fpk_unbox(
