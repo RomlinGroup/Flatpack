@@ -2155,7 +2155,7 @@ https://fpk.ai/w/{directory_name}
 
     disclaimer_message = disclaimer_template.format(
         please_note=please_note_content
-    )
+    ).strip()
     console.print(disclaimer_message)
 
 
@@ -5915,6 +5915,8 @@ def fpk_cli_handle_unbox(args, session):
                 "Invalid input. Please type 'YES' to accept or 'NO' to decline.",
                 style="bold red"
             )
+
+    console.print("")
 
     console.print(
         f"Starting to unbox flatpack '{directory_name}'...",
