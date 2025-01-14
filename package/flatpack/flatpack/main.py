@@ -5917,6 +5917,7 @@ def fpk_cli_handle_unbox(args, session):
             user_response = input().strip().upper()
 
             if user_response == "YES":
+                console.print("")
                 break
 
             if user_response == "NO":
@@ -5930,8 +5931,6 @@ def fpk_cli_handle_unbox(args, session):
                 "Invalid input. Please type 'YES' to accept or 'NO' to decline.",
                 style="bold red"
             )
-
-    console.print("")
 
     console.print(
         f"Starting to unbox flatpack '{directory_name}'...",
