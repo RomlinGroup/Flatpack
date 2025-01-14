@@ -84,6 +84,7 @@ if not IMPORT_CACHE_FILE.exists():
     console.print(
         "[bold green]First-time initialisation complete! ✨[/bold green]"
     )
+    console.print("")
 
 _cache_lock = threading.RLock()
 _runtime_cache = {}
@@ -1901,8 +1902,14 @@ async def fpk_build(directory: Union[str, None], use_euxo: bool = False):
     log_filename = f"build_{datetime.utcnow().strftime('%Y_%m_%d_%H_%M_%S')}.log"
     build_log_file_path = log_dir / log_filename
 
+    stdbuf_cmd = f"stdbuf -i0 -o0 -e0 python3 -u -c {shlex.quote('import sys; sys.stdout = sys.stderr')}"
+    bash_cmd = f"bash {shlex.quote(str(building_script_path))}"
+    tee_cmd = f"tee {shlex.quote(str(build_log_file_path))}"
+
+    full_command = f"{stdbuf_cmd} && {bash_cmd} | {tee_cmd}"
+
     process = subprocess.Popen(
-        f"stdbuf -i0 -o0 -e0 python3 -u -c 'import sys; sys.stdout = sys.stderr' && bash {building_script_path} | tee {build_log_file_path}",
+        full_command,
         bufsize=1,
         shell=True,
         stdin=sys.stdin,
@@ -2108,7 +2115,6 @@ def fpk_display_disclaimer(directory_name: str, local: bool):
         local (bool): Indicates if the flatpack is local.
     """
     disclaimer_template = """
------------------------------------------------------
 [bold red]STOP AND READ BEFORE YOU PROCEED[/bold red]
 https://pypi.org/project/flatpack
 [bold]Copyright 2024 Romlin Group AB[/bold]
@@ -2128,7 +2134,6 @@ See the License for the specific language governing
 permissions and limitations under the License.
 {please_note}
 [bold yellow]To accept, type 'YES'. To decline, type 'NO'.[/bold yellow]
------------------------------------------------------
     """
 
     if not local:
@@ -5787,6 +5792,7 @@ def fpk_cli_handle_set_api_key(args, session):
 
     try:
         test_key = fpk_get_api_key()
+
         if test_key == api_key:
             logger.info("Verification successful: API key matches.")
         else:
@@ -5877,9 +5883,6 @@ def fpk_cli_handle_unbox(args, session):
                 )
                 return
             else:
-                console.print(
-                    f"[bold yellow]Warning:[/bold yellow] Overwriting existing {' and '.join(dirs_exist)} director{'y' if len(dirs_exist) == 1 else 'ies'} in '{directory_name}'."
-                )
                 try:
                     if build_dir.exists():
                         shutil.rmtree(build_dir)
@@ -5912,6 +5915,11 @@ def fpk_cli_handle_unbox(args, session):
                 "Invalid input. Please type 'YES' to accept or 'NO' to decline.",
                 style="bold red"
             )
+
+    console.print(
+        f"Starting to unbox flatpack '{directory_name}'...",
+        style="bold blue"
+    )
 
     try:
         unbox_result = fpk_unbox(
