@@ -2707,7 +2707,7 @@ def finalize_setup(flatpack_dir: Path) -> bool:
         build_dir = flatpack_dir / "build"
 
         for file in ["app/pages/index.tsx"]:
-            source = build_dir / file
+            source = flatpack_dir / file
             destination = web_dir / file
 
             if source.exists():
