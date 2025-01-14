@@ -4976,6 +4976,18 @@ def setup_routes(fastapi_app):
         else:
             raise HTTPException(status_code=404, detail="Log file not found")
 
+    @fastapi_app.get("/api/nextjs-url")
+    async def get_nextjs_url(request: Request):
+        """Get the Next.js URL when ngrok is active."""
+        if hasattr(request.app.state, "nextjs_url"):
+            return JSONResponse(
+                content={"nextjs_url": request.app.state.nextjs_url}
+            )
+        return JSONResponse(
+            content={"error": "Next.js URL not available"},
+            status_code=404
+        )
+
     @fastapi_app.post("/api/save-file", dependencies=[Depends(csrf_protect)])
     async def save_file(
             request: Request,
@@ -5108,8 +5120,10 @@ def setup_routes(fastapi_app):
                 detail=f"An error occurred while deleting the schedule entry: {e}",
             )
 
-    @fastapi_app.post("/api/source-hook-mappings",
-                      response_model=MappingResults)
+    @fastapi_app.post(
+        "/api/source-hook-mappings",
+        response_model=MappingResults
+    )
     async def add_source_hook_mappings(
             mappings: List[SourceHookMapping],
             token: str = Depends(authenticate_token)
@@ -5550,6 +5564,7 @@ def fpk_cli_handle_run(args, session):
                 app.state.public_url = fastapi_url
 
                 nextjs_domain = f"next-{args.domain}" if args.domain else None
+
                 if nextjs_domain:
                     nextjs_listener = ngrok.connect(
                         f"{host}:{nextjs_port}",
