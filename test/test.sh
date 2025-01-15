@@ -88,14 +88,14 @@ echo_success "Flatpack installed successfully"
 
 echo_stage "Verifying flatpack list"
 output=$(flatpack list)
-if [[ "$output" == *"Directory Name"* ]]; then
+if [[ "$output" == *"Flatpack Name"* ]]; then
   echo_success "Flatpack list command executed successfully"
 else
   echo_failure "Flatpack list execution failed"
 fi
 
 echo_stage "Unboxing test directory"
-echo "YES" | flatpack unbox test.fpk --local
+echo "YES" | flatpack unbox test.fpk
 echo_success "Flatpack unbox test completed"
 
 echo_stage "Checking test folder structure"

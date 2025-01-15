@@ -62,13 +62,14 @@ USER flatpackuser
 WORKDIR /home/flatpackuser
 
 RUN mkdir -p ${NVM_DIR} && \
-    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash && \
+    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash && \
     . ${NVM_DIR}/nvm.sh && \
     nvm install ${NODE_VERSION} && \
     nvm use ${NODE_VERSION} && \
     nvm alias default ${NODE_VERSION} && \
     chmod 700 ${NVM_DIR}
 
+RUN pip3 install --upgrade pip setuptools wheel
 RUN pip3 install flatpack
 
 EXPOSE 3000
